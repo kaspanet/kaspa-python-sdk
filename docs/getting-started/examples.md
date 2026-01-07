@@ -9,6 +9,63 @@ A handful of brief examples showing core features of the Kaspa Python SDK.
 
     Never store your private keys in plain text, or directly in source code. Store securely offline. Anyone with access to this phrase has full control over your funds.
 
+## Interacting with the Kaspa Network via RPC
+
+```python
+import asyncio
+from kaspa import RpcClient, Resolver, NetworkId
+
+async def main():
+    # Create a resolver to use available PNN nodes
+    resolver = Resolver()
+    
+    # Create RPC client
+    client = RpcClient(
+        resolver=resolver,
+        network_id=NetworkId("mainnet")
+    )
+    
+    # Connect to the network
+    await client.connect()
+    print(f"Connected to: {client.url}")
+    
+    # Get BlockDAG info
+    info = await client.get_block_dag_info()
+    print(f"BlockDAG Info: {info}")
+    
+    await client.disconnect()
+
+asyncio.run(main())
+```
+
+## Checking Balances
+
+Query the balance of an address:
+
+```python
+import asyncio
+from kaspa import RpcClient, Resolver, Address
+
+async def check_balance(address_str: str):
+    client = RpcClient(resolver=Resolver(), network_id="mainnet")
+    await client.connect()
+    
+    try:
+        result = await client.get_balance_by_address({
+            "address": address_str
+        })
+        
+        # Balance is in sompi (1 KAS = 100,000,000 sompi)
+        balance_sompi = result.get("balance", 0)
+        balance_kas = balance_sompi / 100_000_000
+        print(f"Balance: {balance_kas} KAS")
+        
+    finally:
+        await client.disconnect()
+
+asyncio.run(check_balance("kaspa:qz..."))
+```
+
 ## Creating a Wallet
 
 ```python
@@ -74,64 +131,6 @@ if Mnemonic.validate(phrase):
     # Derive additional addresses as needed...
 else:
     print("Invalid seed phrase!")
-```
-
-## Interacting with the Kaspa Network via RPC
-
-```python
-import asyncio
-from kaspa import RpcClient, Resolver, NetworkId
-
-async def main():
-    # Create a resolver to use available PNN nodes
-    resolver = Resolver()
-    
-    # Create RPC client
-    client = RpcClient(
-        resolver=resolver,
-        network_id=NetworkId("mainnet")
-    )
-    
-    # Connect to the network
-    await client.connect()
-    print(f"Connected to: {client.url}")
-    
-    # Get network info
-    info = await client.get_info()
-    print(f"Network: {info}")
-    
-    # Always disconnect when done
-    await client.disconnect()
-
-asyncio.run(main())
-```
-
-## Checking Balances
-
-Query the balance of an address:
-
-```python
-import asyncio
-from kaspa import RpcClient, Resolver, Address
-
-async def check_balance(address_str: str):
-    client = RpcClient(resolver=Resolver(), network_id="mainnet")
-    await client.connect()
-    
-    try:
-        result = await client.get_balance_by_address({
-            "address": address_str
-        })
-        
-        # Balance is in sompi (1 KAS = 100,000,000 sompi)
-        balance_sompi = result.get("balance", 0)
-        balance_kas = balance_sompi / 100_000_000
-        print(f"Balance: {balance_kas} KAS")
-        
-    finally:
-        await client.disconnect()
-
-asyncio.run(check_balance("kaspa:qz..."))
 ```
 
 ## Building a Transaction

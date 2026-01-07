@@ -1,7 +1,7 @@
 # Kaspa Python SDK
 
 > [!CAUTION]
-> **This repository is a proof of concept. Intended solely to assess feasibility of moving Kaspa Python SDK into its own repository.**
+> **This repository is under active development. Intended solely to assess feasibility of moving Kaspa Python SDK into its own repository.**
 >
 > **Do NOT use this repository.**
 > 
@@ -9,17 +9,19 @@
 
 ---
 
-A Python SDK for interacting with the Kaspa blockchain, built as a native extension module from Rust using [PyO3](https://pyo3.rs/) and [Maturin](https://www.maturin.rs/).
+The Kaspa Python SDK provides bindings to Rust & [Rusty-Kaspa](https://github.com/kaspanet/rusty-kaspa) source for use in Python applications. Allowing Python developers to interact with the Kaspa BlockDAG.
 
-This project wraps the [rusty-kaspa](https://github.com/kaspanet/rusty-kaspa) implementation to provide Python bindings for Kaspa functionality.
+A native extension module, `kaspa`, is built from these bindings using [PyO3](https://pyo3.rs/v0.20.0/) and [Maturin](https://www.maturin.rs).
 
 ## Documentation
 
-Full documentation is available at the [documentation site](https://smartgoo.github.io/kaspa-python-sdk/), including:
+Full documentation is available at the [documentation site](https://smartgoo.github.io/kaspa-python-sdk/dev/), including:
 
-- [Installation Guide](https://smartgoo.github.io/kaspa-python-sdk/getting-started/installation/)
-- [Quickstart](https://smartgoo.github.io/kaspa-python-sdk/getting-started/quickstart/)
-- [API Reference](https://smartgoo.github.io/kaspa-python-sdk/reference/)
+- [Installation Guide](https://smartgoo.github.io/kaspa-python-sdk/dev/getting-started/installation/)
+- [Examples](https://smartgoo.github.io/kaspa-python-sdk/dev/getting-started/examples/)
+- [API Reference](https://smartgoo.github.io/kaspa-python-sdk/dev/reference/)
+
+And more.
 
 ## Quick Install
 
@@ -27,15 +29,27 @@ Full documentation is available at the [documentation site](https://smartgoo.git
 pip install kaspa
 ```
 
-## Contributing
+## Example
 
-Interested in contributing? See the [Contributing Guide](https://smartgoo.github.io/kaspa-python-sdk/contributing/) for:
+A very basic example:
 
-- [Development Setup](https://smartgoo.github.io/kaspa-python-sdk/contributing/setup/) - Environment setup and build instructions
-- [Architecture](https://smartgoo.github.io/kaspa-python-sdk/contributing/architecture/) - How the Rust-PyO3-Python bridge works
-- [PyO3 Reference](https://smartgoo.github.io/kaspa-python-sdk/contributing/pyo3-reference/) - Detailed technical reference for CPython/PyO3 integration
-- [Development Workflow](https://smartgoo.github.io/kaspa-python-sdk/contributing/development-workflow/) - Building, testing, and iterating
-- [Code Style](https://smartgoo.github.io/kaspa-python-sdk/contributing/code-style/) - Coding conventions
+```python
+import asyncio
+from kaspa import Resolver, RpcClient
+
+async def main():
+    client = RpcClient(resolver=Resolver())
+    await client.connect()
+    print(await client.get_server_info())
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+
+## Contributing & Core Concepts
+
+The [Contributing Guide](https://smartgoo.github.io/kaspa-python-sdk/dev/contributing/) details various technical core concepts and workflows used by this project.
 
 ## License
 
