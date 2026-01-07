@@ -22,8 +22,12 @@ else
     maturin --version
 fi
 
+STUB_COMMAND="cargo run --bin stub-gen"
+echo "Generating stub file (.pyi) with command: '$STUB_COMMAND'"
+$STUB_COMMAND
+
 BUILD_CMD="maturin develop --target-dir target"
-echo "Building with command '$BUILD_CMD'"
+echo "Building Python package with command: '$BUILD_CMD'"
 $BUILD_CMD
 
 echo "Build complete."

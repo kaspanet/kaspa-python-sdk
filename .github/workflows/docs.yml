@@ -1,0 +1,87 @@
+name: Deploy Documentation
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to deploy (e.g., 1.0.0). Leave empty for dev.'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: '3.12'
+
+jobs:
+  deploy-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Build wheel
+        uses: PyO3/maturin-action@v1
+        with:
+          command: build
+          args: --release --out dist
+          sccache: 'true'
+
+      - name: Install wheel and documentation dependencies
+        run: |
+          pip install dist/*.whl
+          pip install .[docs]
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+            echo "alias=latest" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            VERSION="${{ github.ref_name }}"
+            VERSION="${VERSION#v}"
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            # Only set 'latest' alias for stable releases (no dev/alpha/beta/rc)
+            if [[ ! "$VERSION" =~ (dev|a[0-9]|b[0-9]|rc[0-9]) ]]; then
+              echo "alias=latest" >> $GITHUB_OUTPUT
+            else
+              echo "alias=" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "version=dev" >> $GITHUB_OUTPUT
+            echo "alias=" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Deploy with mike
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          ALIAS="${{ steps.version.outputs.alias }}"
+          
+          if [ -n "$ALIAS" ]; then
+            mike deploy --push --update-aliases "$VERSION" "$ALIAS"
+            mike set-default --push latest
+          else
+            mike deploy --push "$VERSION"
+          fi

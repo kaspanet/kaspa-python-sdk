@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "kaspa"
-version = "1.0.1.post2"
+version = "2.0.0.dev0"
 description = "Kaspa Python SDK"
 requires-python = ">=3.9,<=3.14"
 readme = "README.md"
@@ -34,4 +34,26 @@ strip = true
 include = [
     "LICENSE",
     "CHANGELOG.md"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+]
+docs = [
+    "mkdocs>=1.6",
+    "mkdocs-material>=9.5",
+    "mkdocstrings[python]>=0.26",
+    "mkdocs-gen-files>=0.5",
+    "mkdocs-literate-nav>=0.6",
+    "mike>=2.1",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+testpaths = ["tests"]
+filterwarnings = [
+    "ignore::DeprecationWarning",
 ]

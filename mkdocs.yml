@@ -1,0 +1,119 @@
+site_name: Kaspa Python SDK
+site_description: Kaspa Python SDK
+site_url: https://smartgoo.github.io/kaspa-python-sdk/
+# repo_url: https://github.com/smartgoo/kaspa-python-sdk
+repo_name: kaspa-python-sdk
+# edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.top
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+    - toc.follow
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+  - autorefs
+  - gen-files:
+      scripts:
+        - docs/gen_ref_pages.py
+  - literate-nav:
+      nav_file: SUMMARY.md
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          options:
+            show_source: false
+            show_root_heading: true
+            show_root_full_path: false
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            members_order: alphabetical
+            docstring_style: google
+            docstring_section_style: spacy
+            merge_init_into_class: true
+            show_signature_annotations: true
+            signature_crossrefs: true
+            separate_signature: true
+            show_if_no_docstring: true
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - toc:
+      permalink: true
+  - attr_list
+  - md_in_html
+  - tables
+
+extra_css:
+  - stylesheets/extra.css
+
+extra:
+  version:
+    provider: mike
+    default: latest
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/your-org/kaspa-python
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: getting-started/installation.md
+      - Examples: getting-started/examples.md
+  - Guides:
+      - Addresses: guides/addresses.md
+      - Mnemonics: guides/mnemonics.md
+      - Key Derivation: guides/key-derivation.md
+      - Transactions: guides/transactions.md
+      - Message Signing: guides/message-signing.md
+      - RPC Client: guides/rpc-client.md
+  - API Reference: reference/
+  - Contributing:
+      - Overview: contributing/index.md
+      - Development Setup: contributing/setup.md
+      - Building: contributing/building.md
+      - Testing: contributing/testing.md
+      - Documentation: contributing/documentation.md
+      - Releasing: contributing/releasing.md
+      - Architecture & Design: contributing/architecture-design.md
+      - PyO3 Core Concepts: contributing/pyo3-core-concepts.md
+  - Changelog: CHANGELOG.md
+

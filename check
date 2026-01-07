@@ -1,0 +1,29 @@
+#!/bin/bash
+
+set -e
+
+# Rust lints
+cargo fmt --all
+cargo clippy -- -D warnings
+
+# Build development
+echo "Running build-dev..."
+./build-dev
+
+# Activate virtual environment (build-dev creates it)
+source env/bin/activate
+
+# Install optional dependencies (dev + docs)
+echo "Installing optional dependencies..."
+pip install -e ".[dev,docs]"
+
+# Run pytest
+echo "Running pytest..."
+pytest tests/unit -v
+pytest tests/integration -v
+
+# Test mkdocs builds successfully
+echo "Testing mkdocs build..."
+mkdocs build --strict
+
+echo "All checks passed!"
