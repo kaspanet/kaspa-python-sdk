@@ -73,6 +73,14 @@ impl PyGeneratorSummary {
     pub fn get_final_transaction_id(&self) -> Option<String> {
         self.0.final_transaction_id().map(|id| id.to_string())
     }
+
+    // Cannot be derived via pyclass(eq)
+    fn __eq__(&self, other: &PyGeneratorSummary) -> bool {
+        match (bincode::serialize(&self.0), bincode::serialize(&other.0)) {
+            (Ok(a), Ok(b)) => a == b,
+            _ => false,
+        }
+    }
 }
 
 impl From<core::GeneratorSummary> for PyGeneratorSummary {

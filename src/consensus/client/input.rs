@@ -136,6 +136,14 @@ impl PyTransactionInput {
     pub fn get_utxo(&self) -> Option<PyUtxoEntryReference> {
         self.0.inner().utxo.clone().map(PyUtxoEntryReference::from)
     }
+
+    // Cannot be derived via pyclass(eq) as wrapped PyTransactionInput type does not derive PartialEq/Eq
+    fn __eq__(&self, other: &PyTransactionInput) -> bool {
+        match (bincode::serialize(&self.0), bincode::serialize(&other.0)) {
+            (Ok(a), Ok(b)) => a == b,
+            _ => false,
+        }
+    }
 }
 
 impl From<TransactionInput> for PyTransactionInput {

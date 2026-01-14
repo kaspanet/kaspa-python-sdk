@@ -67,6 +67,14 @@ impl PyTransactionOutput {
     pub fn set_script_public_key(&mut self, value: PyScriptPublicKey) {
         self.0.inner().script_public_key = value.clone().into();
     }
+
+    // Cannot be derived via pyclass(eq) as wrapped PyTransactionOutput type does not derive PartialEq/Eq
+    fn __eq__(&self, other: &PyTransactionOutput) -> bool {
+        match (bincode::serialize(&self.0), bincode::serialize(&other.0)) {
+            (Ok(a), Ok(b)) => a == b,
+            _ => false,
+        }
+    }
 }
 
 impl From<TransactionOutput> for PyTransactionOutput {

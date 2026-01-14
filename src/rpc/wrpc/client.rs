@@ -61,7 +61,7 @@ use workflow_rpc::{client::Ctl, encoding::Encoding};
 ///
 /// Category: RPC/Core
 #[gen_stub_pyclass_enum]
-#[pyclass(name = "NotificationEvent", skip_from_py_object)]
+#[pyclass(name = "NotificationEvent", skip_from_py_object, eq)]
 #[derive(Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum PyNotificationEvent {

@@ -310,6 +310,14 @@ impl PyTransaction {
     pub fn set_mass(&mut self, value: u64) {
         self.0.inner().mass = value;
     }
+
+    // Cannot be derived via pyclass(eq) as wrapped Transaction type does not derive PartialEq/Eq
+    fn __eq__(&self, other: &PyTransaction) -> bool {
+        match (bincode::serialize(&self.0), bincode::serialize(&other.0)) {
+            (Ok(a), Ok(b)) => a == b,
+            _ => false,
+        }
+    }
 }
 
 impl From<Transaction> for PyTransaction {

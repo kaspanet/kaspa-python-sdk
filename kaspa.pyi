@@ -23,6 +23,7 @@ class AccountKind:
     
     Category: Wallet/Core
     """
+    def __eq__(self, other: builtins.object) -> builtins.bool: ...
     def __new__(cls, kind: builtins.str) -> AccountKind:
         r"""
         Create a new AccountKind from a string.
@@ -38,7 +39,7 @@ class AccountKind:
         """
     def __str__(self) -> builtins.str:
         r"""
-        Get the string representation.
+        The string representation.
         
         Returns:
             str: The account kind as a string.
@@ -104,6 +105,7 @@ class Address:
         Returns:
             str: The payload portion of the address.
         """
+    def __eq__(self, other: builtins.object) -> builtins.bool: ...
     def __new__(cls, address: builtins.str) -> Address:
         r"""
         Create a new Address from a string.
@@ -145,6 +147,13 @@ class Address:
         Returns:
             str: A shortened address string in the format `prefix:start....end`.
         """
+    def __str__(self) -> builtins.str:
+        r"""
+        The string representation.
+        
+        Returns:
+            str: The address as a string
+        """
 
 @typing.final
 class Binary:
@@ -173,6 +182,7 @@ class DerivationPath:
     
     Category: Wallet/Keys
     """
+    def __eq__(self, other: builtins.object) -> builtins.bool: ...
     def __new__(cls, path: builtins.str) -> DerivationPath:
         r"""
         Create a derivation path from a string.
@@ -352,6 +362,7 @@ class GeneratorSummary:
         Returns:
             str | None: The transaction ID, or None if not yet generated.
         """
+    def __eq__(self, other: GeneratorSummary) -> builtins.bool: ...
 
 @typing.final
 class Hash:
@@ -362,6 +373,7 @@ class Hash:
     
     Category: Core/Types
     """
+    def __eq__(self, other: builtins.object) -> builtins.bool: ...
     def __new__(cls, hex_str: builtins.str) -> Hash:
         r"""
         Create a new Hash from a hex string.
@@ -381,6 +393,17 @@ class Hash:
         
         Returns:
             str: A 64-character hex string.
+        """
+    def __str__(self) -> builtins.str:
+        r"""
+        The string representation.
+        
+        Returns:
+            str: The Hash as a hex string
+        """
+    def __bytes__(self) -> bytes:
+        r"""
+        The byte representation
         """
 
 @typing.final
@@ -607,6 +630,7 @@ class NetworkId:
         Returns:
             int: The default P2P port number.
         """
+    def __eq__(self, other: builtins.object) -> builtins.bool: ...
     def __new__(cls, network_id: typing.Any) -> NetworkId:
         r"""
         Create a new NetworkId.
@@ -659,6 +683,13 @@ class NetworkId:
         
         Returns:
             str: The prefix string ("kaspa", "kaspatest", "kaspadev", or "kaspasim").
+        """
+    def __str__(self) -> builtins.str:
+        r"""
+        The string representation.
+        
+        Returns:
+            str: The NetworkId as a string
         """
 
 @typing.final
@@ -713,7 +744,7 @@ class PaymentOutput:
     
     Category: Wallet/Transactions
     """
-    ...
+    def __eq__(self, other: PaymentOutput) -> builtins.bool: ...
 
 @typing.final
 class PendingTransaction:
@@ -1829,6 +1860,7 @@ class ScriptBuilder:
         Raises:
             Exception: If encoding fails.
         """
+    def __eq__(self, other: ScriptBuilder) -> builtins.bool: ...
 
 @typing.final
 class ScriptPublicKey:
@@ -1848,6 +1880,7 @@ class ScriptPublicKey:
         Returns:
             str: The script data encoded as hexadecimal.
         """
+    def __eq__(self, other: builtins.object) -> builtins.bool: ...
     def __new__(cls, version: builtins.int, script: Binary) -> ScriptPublicKey:
         r"""
         Create a new script public key.
@@ -1858,6 +1891,17 @@ class ScriptPublicKey:
         
         Returns:
             ScriptPublicKey: A new ScriptPublicKey instance.
+        """
+    def __str__(self) -> builtins.str:
+        r"""
+        The string representation.
+        
+        Returns:
+            str: The address as a hex string
+        """
+    def __bytes__(self) -> bytes:
+        r"""
+        The byte representation
         """
 
 @typing.final
@@ -2054,6 +2098,7 @@ class Transaction:
         Returns:
             list[Address]: List of unique addresses referenced by inputs.
         """
+    def __eq__(self, other: Transaction) -> builtins.bool: ...
 
 @typing.final
 class TransactionInput:
@@ -2150,6 +2195,7 @@ class TransactionInput:
         Returns:
             TransactionInput: A new TransactionInput instance.
         """
+    def __eq__(self, other: TransactionInput) -> builtins.bool: ...
 
 @typing.final
 class TransactionOutpoint:
@@ -2194,6 +2240,7 @@ class TransactionOutpoint:
         Returns:
             str: A string in format "transaction_id-index".
         """
+    def __eq__(self, other: TransactionOutpoint) -> builtins.bool: ...
 
 @typing.final
 class TransactionOutput:
@@ -2248,6 +2295,7 @@ class TransactionOutput:
         Returns:
             TransactionOutput: A new TransactionOutput instance.
         """
+    def __eq__(self, other: TransactionOutput) -> builtins.bool: ...
 
 @typing.final
 class UtxoEntries:
@@ -2302,6 +2350,7 @@ class UtxoEntries:
         Returns:
             int: The sum of all UTXO values in sompi.
         """
+    def __eq__(self, other: UtxoEntries) -> builtins.bool: ...
 
 @typing.final
 class UtxoEntry:
@@ -2361,6 +2410,7 @@ class UtxoEntry:
         Returns:
             bool: True if this is a coinbase UTXO.
         """
+    def __eq__(self, other: UtxoEntry) -> builtins.bool: ...
 
 @typing.final
 class UtxoEntryReference:
@@ -2427,6 +2477,7 @@ class UtxoEntryReference:
         Returns:
             ScriptPublicKey: The script public key.
         """
+    def __eq__(self, other: builtins.object) -> builtins.bool: ...
 
 @typing.final
 class XOnlyPublicKey:

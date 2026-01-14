@@ -9,8 +9,8 @@ use std::str::FromStr;
 ///
 /// Category: Wallet/Keys
 #[gen_stub_pyclass]
-#[pyclass(name = "DerivationPath")]
-#[derive(Clone)]
+#[pyclass(name = "DerivationPath", eq)]
+#[derive(Clone, PartialEq)]
 pub struct PyDerivationPath(kaspa_bip32::DerivationPath);
 
 #[gen_stub_pymethods]

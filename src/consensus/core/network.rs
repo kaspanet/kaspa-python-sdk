@@ -74,8 +74,8 @@ impl From<&PyNetworkType> for NetworkType {
 ///
 /// Category: Core/Types
 #[gen_stub_pyclass]
-#[derive(Clone)]
-#[pyclass(name = "NetworkId", skip_from_py_object)]
+#[pyclass(name = "NetworkId", skip_from_py_object, eq)]
+#[derive(Clone, PartialEq)]
 pub struct PyNetworkId(NetworkId);
 
 #[gen_stub_pymethods]
@@ -180,6 +180,14 @@ impl PyNetworkId {
     ///     str: The prefix string ("kaspa", "kaspatest", "kaspadev", or "kaspasim").
     pub fn address_prefix(&self) -> String {
         Prefix::from(self.0.network_type).to_string()
+    }
+
+    /// The string representation.
+    ///
+    /// Returns:
+    ///     str: The NetworkId as a string
+    pub fn __str__(&self) -> String {
+        self.0.to_string()
     }
 }
 

@@ -59,8 +59,8 @@ impl<'py> FromPyObject<'_, 'py> for PyAddressVersion {
 ///
 /// Category: Core/Types
 #[gen_stub_pyclass]
-#[pyclass(name = "Address")]
-#[derive(Clone)]
+#[pyclass(name = "Address", eq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct PyAddress(pub Address);
 
 #[gen_stub_pymethods]
@@ -162,6 +162,14 @@ impl PyAddress {
     ///     str: A shortened address string in the format `prefix:start....end`.
     pub fn short(&self, n: usize) -> String {
         self.0.short(n)
+    }
+
+    /// The string representation.
+    ///
+    /// Returns:
+    ///     str: The address as a string
+    pub fn __str__(&self) -> String {
+        self.0.address_to_string()
     }
 }
 

@@ -77,6 +77,14 @@ impl PyUtxoEntry {
     pub fn get_is_coinbase(&self) -> bool {
         self.0.is_coinbase
     }
+
+    // Cannot be derived via pyclass(eq) as wrapped PyUtxoEntry type does not derive PartialEq/Eq
+    fn __eq__(&self, other: &PyUtxoEntry) -> bool {
+        match (bincode::serialize(&self.0), bincode::serialize(&other.0)) {
+            (Ok(a), Ok(b)) => a == b,
+            _ => false,
+        }
+    }
 }
 
 impl From<PyUtxoEntry> for UtxoEntry {
@@ -142,6 +150,14 @@ impl PyUtxoEntries {
     pub fn amount(&self) -> u64 {
         self.0.iter().map(|e| e.amount()).sum()
     }
+
+    // Cannot be derived via pyclass(eq) as wrapped PyUtxoEntries type does not derive PartialEq/Eq
+    fn __eq__(&self, other: &PyUtxoEntries) -> bool {
+        match (bincode::serialize(&self.0), bincode::serialize(&other.0)) {
+            (Ok(a), Ok(b)) => a == b,
+            _ => false,
+        }
+    }
 }
 
 /// A reference to a UTXO entry.
@@ -150,8 +166,8 @@ impl PyUtxoEntries {
 ///
 /// Category: Wallet/Transactions
 #[gen_stub_pyclass]
-#[pyclass(name = "UtxoEntryReference")]
-#[derive(Clone)]
+#[pyclass(name = "UtxoEntryReference", eq)]
+#[derive(Clone, PartialEq)]
 pub struct PyUtxoEntryReference(UtxoEntryReference);
 
 #[gen_stub_pymethods]

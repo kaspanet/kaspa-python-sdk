@@ -1,7 +1,7 @@
 use crate::types::PyBinary;
 use kaspa_consensus_core::tx::ScriptPublicKey;
 use kaspa_utils::hex::FromHex;
-use pyo3::{exceptions::PyException, prelude::*};
+use pyo3::{exceptions::PyException, prelude::*, types::PyBytes};
 use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
 use std::str::FromStr;
 
@@ -12,8 +12,8 @@ use std::str::FromStr;
 ///
 /// Category: Core/Types
 #[gen_stub_pyclass]
-#[pyclass(name = "ScriptPublicKey")]
-#[derive(Clone)]
+#[pyclass(name = "ScriptPublicKey", eq)]
+#[derive(Clone, PartialEq)]
 pub struct PyScriptPublicKey(ScriptPublicKey);
 
 #[gen_stub_pymethods]
@@ -39,8 +39,20 @@ impl PyScriptPublicKey {
     ///     str: The script data encoded as hexadecimal.
     #[getter]
     pub fn get_script(&self) -> String {
-        // self.0.script.to_hex()
         self.0.script_as_hex()
+    }
+
+    /// The string representation.
+    ///
+    /// Returns:
+    ///     str: The address as a hex string
+    pub fn __str__(&self) -> String {
+        self.0.script_as_hex()
+    }
+
+    /// The byte representation
+    pub fn __bytes__<'py>(&self, py: Python<'py>) -> Bound<'py, PyBytes> {
+        PyBytes::new(py, self.0.script())
     }
 }
 

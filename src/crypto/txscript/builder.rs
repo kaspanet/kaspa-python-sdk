@@ -248,6 +248,17 @@ impl PyScriptBuilder {
 
         Ok(generated_script.to_hex())
     }
+
+    // Cannot be derived via pyclass(eq)
+    fn __eq__(&self, other: &PyScriptBuilder) -> bool {
+        match (
+            bincode::serialize(&self.inner().script()),
+            bincode::serialize(&other.inner().script()),
+        ) {
+            (Ok(a), Ok(b)) => a == b,
+            _ => false,
+        }
+    }
 }
 
 // TODO change to PyOpcode struct and handle similar to PyBinary?

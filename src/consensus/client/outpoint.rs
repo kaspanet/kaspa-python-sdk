@@ -61,6 +61,14 @@ impl PyTransactionOutpoint {
     pub fn get_index(&self) -> TransactionIndexType {
         self.0.inner().index
     }
+
+    // Cannot be derived via pyclass(eq) as wrapped PyTransactionOutpoint does not derive PartialEq/Eq
+    fn __eq__(&self, other: &PyTransactionOutpoint) -> bool {
+        match (bincode::serialize(&self.0), bincode::serialize(&other.0)) {
+            (Ok(a), Ok(b)) => a == b,
+            _ => false,
+        }
+    }
 }
 
 impl From<PyTransactionOutpoint> for TransactionOutpoint {

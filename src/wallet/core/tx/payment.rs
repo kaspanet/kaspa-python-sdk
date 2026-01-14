@@ -4,7 +4,7 @@ use pyo3::{
     prelude::*,
     types::PyDict,
 };
-use pyo3_stub_gen::derive::gen_stub_pyclass;
+use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::address::PyAddress;
 
@@ -18,6 +18,18 @@ use crate::address::PyAddress;
 #[pyclass(name = "PaymentOutput")]
 #[derive(Clone)]
 pub struct PyPaymentOutput(PaymentOutput);
+
+#[gen_stub_pymethods]
+#[pymethods]
+impl PyPaymentOutput {
+    // Cannot be derived via pyclass(eq)
+    fn __eq__(&self, other: &PyPaymentOutput) -> bool {
+        match (bincode::serialize(&self.0), bincode::serialize(&other.0)) {
+            (Ok(a), Ok(b)) => a == b,
+            _ => false,
+        }
+    }
+}
 
 impl From<PyPaymentOutput> for PaymentOutput {
     fn from(value: PyPaymentOutput) -> Self {

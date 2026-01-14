@@ -149,6 +149,20 @@ class TestTransaction:
         tx = Transaction(0, [input], [output], 0, "0" * 40, 0, "", 0)
         assert tx is not None
 
+    def test_transaction_equality(self):
+        """Test transaction equality works."""
+        tx_hash = Hash("0" * 64)
+        outpoint = TransactionOutpoint(tx_hash, 0)
+        input = TransactionInput(outpoint, "", 0, 1)
+        
+        spk = ScriptPublicKey(0, "51")
+        output = TransactionOutput(1000000, spk)
+        
+        tx1 = Transaction(0, [input], [output], 0, "0" * 40, 0, "", 0)
+        tx2 = Transaction(0, [input], [output], 0, "0" * 40, 0, "", 0)
+        assert tx1 == tx2
+
+
     def test_transaction_properties(self):
         """Test Transaction properties."""
         tx_hash = Hash("0" * 64)
@@ -234,7 +248,6 @@ class TestCreateTransaction:
         """Test that create_transaction function is importable."""
         # The create_transaction function exists and can be called
         # Exact signature may vary based on implementation
-        assert create_transaction is not None
         assert callable(create_transaction)
 
 

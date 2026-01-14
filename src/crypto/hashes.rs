@@ -1,5 +1,5 @@
 use kaspa_hashes::Hash;
-use pyo3::{exceptions::PyException, prelude::*};
+use pyo3::{exceptions::PyException, prelude::*, types::PyBytes};
 use pyo3_stub_gen::derive::*;
 use std::str::FromStr;
 
@@ -9,8 +9,8 @@ use std::str::FromStr;
 ///
 /// Category: Core/Types
 #[gen_stub_pyclass]
-#[pyclass(name = "Hash")]
-#[derive(Clone)]
+#[pyclass(name = "Hash", eq)]
+#[derive(Clone, PartialEq)]
 pub struct PyHash(Hash);
 
 #[gen_stub_pymethods]
@@ -40,6 +40,19 @@ impl PyHash {
     #[pyo3(name = "to_string")]
     pub fn py_to_string(&self) -> String {
         self.0.to_string()
+    }
+
+    /// The string representation.
+    ///
+    /// Returns:
+    ///     str: The Hash as a hex string
+    pub fn __str__(&self) -> String {
+        self.0.to_string()
+    }
+
+    /// The byte representation
+    pub fn __bytes__<'py>(&self, py: Python<'py>) -> Bound<'py, PyBytes> {
+        PyBytes::new(py, &self.0.as_bytes())
     }
 }
 

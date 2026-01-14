@@ -19,8 +19,8 @@ use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
 ///
 /// Category: Wallet/Core
 #[gen_stub_pyclass]
-#[pyclass(name = "AccountKind")]
-#[derive(Clone)]
+#[pyclass(name = "AccountKind", eq)]
+#[derive(Clone, PartialEq)]
 pub struct PyAccountKind(AccountKind);
 
 #[gen_stub_pymethods]
@@ -43,7 +43,7 @@ impl PyAccountKind {
         Ok(Self(inner))
     }
 
-    /// Get the string representation.
+    /// The string representation.
     ///
     /// Returns:
     ///     str: The account kind as a string.
