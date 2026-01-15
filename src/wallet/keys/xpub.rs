@@ -12,8 +12,6 @@ use workflow_core::hex::ToHex;
 ///
 /// Allows hierarchical deterministic address generation without
 /// access to private keys. Useful for watch-only wallets.
-///
-/// Category: Wallet/Keys
 #[gen_stub_pyclass]
 #[pyclass(name = "XPub")]
 #[derive(Clone)]

@@ -9,8 +9,6 @@ use crate::wallet::keys::{privatekey::PyPrivateKey, xprv::PyXPrv};
 /// Generator for deriving private keys from an extended private key.
 ///
 /// Used for creating wallets that can sign transactions.
-///
-/// Category: Wallet/Keys
 #[gen_stub_pyclass]
 #[pyclass(name = "PrivateKeyGenerator")]
 pub struct PyPrivateKeyGenerator {

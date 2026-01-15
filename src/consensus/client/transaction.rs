@@ -19,8 +19,6 @@ use workflow_core::hex::{FromHex, ToHex};
 ///
 /// Represents a complete transaction with inputs, outputs, and metadata.
 /// Transactions are the fundamental unit of value transfer on the Kaspa network.
-///
-/// Category: Wallet/Transactions
 #[gen_stub_pyclass]
 #[pyclass(name = "Transaction")]
 #[derive(Clone)]

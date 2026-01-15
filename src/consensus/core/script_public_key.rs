@@ -9,8 +9,6 @@ use std::str::FromStr;
 ///
 /// Represents the locking conditions for an output. This script defines
 /// the conditions that must be met to spend the associated funds.
-///
-/// Category: Core/Types
 #[gen_stub_pyclass]
 #[pyclass(name = "ScriptPublicKey", eq)]
 #[derive(Clone, PartialEq)]

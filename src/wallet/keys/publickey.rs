@@ -8,8 +8,6 @@ use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
 /// A public key for verifying signatures and deriving addresses.
 ///
 /// Can be created from a private key or parsed from a hex string.
-///
-/// Category: Wallet/Keys
 #[gen_stub_pyclass]
 #[pyclass(name = "PublicKey")]
 #[derive(Clone)]
@@ -130,8 +128,6 @@ impl From<PyPublicKey> for PublicKey {
 /// An x-only public key (32 bytes, Schnorr compatible).
 ///
 /// Used for Schnorr signatures and Taproot-style addresses.
-///
-/// Category: Wallet/Keys
 #[gen_stub_pyclass]
 #[pyclass(name = "XOnlyPublicKey")]
 pub struct PyXOnlyPublicKey(XOnlyPublicKey);

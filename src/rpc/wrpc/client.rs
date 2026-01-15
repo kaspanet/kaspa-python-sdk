@@ -58,8 +58,6 @@ use workflow_rpc::{client::Ctl, encoding::Encoding};
 ///     - NewBlockTemplate: Triggered when a new block template is available for mining.
 ///     - Connect: Triggered when the RPC client connects to a node.
 ///     - Disconnect: Triggered when the RPC client disconnects from a node.
-///
-/// Category: RPC/Core
 #[gen_stub_pyclass_enum]
 #[pyclass(name = "NotificationEvent", skip_from_py_object, eq)]
 #[derive(Clone, Eq, PartialEq, Serialize, Deserialize)]
@@ -254,8 +252,6 @@ impl Inner {
 /// Provides methods for querying blockchain state, submitting transactions,
 /// and subscribing to real-time notifications. Supports both Borsh and JSON
 /// encodings.
-///
-/// Category: RPC/Core
 #[gen_stub_pyclass]
 #[pyclass(name = "RpcClient")]
 #[derive(Clone)]

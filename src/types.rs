@@ -13,8 +13,6 @@ use pyo3_stub_gen::derive::gen_stub_pyclass;
 ///     - str: A hexadecimal string (e.g., "deadbeef").
 ///     - bytes: Python bytes object.
 ///     - list[int]: A list of byte values (0-255).
-///
-/// Category: Core/Types
 #[gen_stub_pyclass]
 #[pyclass(name = "Binary")]
 pub struct PyBinary {

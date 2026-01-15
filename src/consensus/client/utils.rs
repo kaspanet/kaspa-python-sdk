@@ -16,8 +16,6 @@ use workflow_core::hex::ToHex;
 ///
 /// Returns:
 ///     ScriptPublicKey: The locking script for the address.
-///
-/// Category: Wallet/Core
 #[gen_stub_pyfunction]
 #[pyfunction]
 #[pyo3(name = "pay_to_address_script")]
@@ -32,8 +30,6 @@ pub fn py_pay_to_address_script(address: PyAddress) -> PyResult<PyScriptPublicKe
 ///
 /// Returns:
 ///     ScriptPublicKey: The P2SH locking script.
-///
-/// Category: Wallet/Core
 #[gen_stub_pyfunction]
 #[pyfunction]
 #[pyo3(name = "pay_to_script_hash_script")]
@@ -52,8 +48,6 @@ pub fn py_pay_to_script_hash_script(redeem_script: PyBinary) -> PyResult<PyScrip
 ///
 /// Raises:
 ///     Exception: If script creation fails.
-///
-/// Category: Wallet/Core
 #[gen_stub_pyfunction]
 #[pyfunction]
 #[pyo3(name = "pay_to_script_hash_signature_script")]
@@ -77,8 +71,6 @@ pub fn py_pay_to_script_hash_signature_script(
 ///
 /// Raises:
 ///     Exception: If address extraction fails.
-///
-/// Category: Wallet/Core
 #[gen_stub_pyfunction]
 #[pyfunction]
 #[pyo3(name = "address_from_script_public_key")]
@@ -102,8 +94,6 @@ pub fn py_address_from_script_public_key(
 ///
 /// Returns:
 ///     bool: True if the script is a P2PK script.
-///
-/// Category: Wallet/Core
 #[gen_stub_pyfunction]
 #[pyfunction]
 #[pyo3(name = "is_script_pay_to_pubkey")]
@@ -118,8 +108,6 @@ pub fn py_is_script_pay_to_pubkey(script: PyBinary) -> PyResult<bool> {
 ///
 /// Returns:
 ///     bool: True if the script is a P2PK-ECDSA script.
-///
-/// Category: Wallet/Core
 #[gen_stub_pyfunction]
 #[pyfunction]
 #[pyo3(name = "is_script_pay_to_pubkey_ecdsa")]
@@ -134,8 +122,6 @@ pub fn py_is_script_pay_to_pubkey_ecdsa(script: PyBinary) -> PyResult<bool> {
 ///
 /// Returns:
 ///     bool: True if the script is a P2SH script.
-///
-/// Category: Wallet/Core
 #[gen_stub_pyfunction]
 #[pyfunction]
 #[pyo3(name = "is_script_pay_to_script_hash")]

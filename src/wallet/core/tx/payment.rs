@@ -12,8 +12,6 @@ use crate::address::PyAddress;
 ///
 /// Represents a single output in a transaction, specifying where funds
 /// should be sent and how much. Used with Generator and create_transactions.
-///
-/// Category: Wallet/Transactions
 #[gen_stub_pyclass]
 #[pyclass(name = "PaymentOutput")]
 #[derive(Clone)]

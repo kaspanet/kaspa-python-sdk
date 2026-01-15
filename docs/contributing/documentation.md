@@ -67,8 +67,6 @@ mkdocs build --strict     # Production build to site/
 /// Brief description of the class.
 ///
 /// Extended description with additional details.
-///
-/// Category: Group/Subgroup
 #[gen_stub_pyclass]
 #[pyclass(name = "ClassName")]
 pub struct PyClassName(pub NativeType);

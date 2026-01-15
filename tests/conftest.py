@@ -44,21 +44,9 @@ TEST_MAINNET_ADDRESS = "kaspa:qr0lr4ml9fn3chekrqmjdkergxl93l4wrk3dankcgvjq776s9w
 # =============================================================================
 
 @pytest.fixture
-def known_mnemonic_phrase() -> str:
-    """Return the known test mnemonic phrase."""
-    return TEST_MNEMONIC_PHRASE
-
-
-@pytest.fixture
-def known_mnemonic(known_mnemonic_phrase) -> Mnemonic:
+def known_mnemonic() -> Mnemonic:
     """Return a Mnemonic object from the known test phrase."""
-    return Mnemonic(phrase=known_mnemonic_phrase)
-
-
-@pytest.fixture
-def random_mnemonic() -> Mnemonic:
-    """Return a randomly generated Mnemonic."""
-    return Mnemonic.random()
+    return Mnemonic(phrase=TEST_MNEMONIC_PHRASE)
 
 
 # =============================================================================
@@ -66,33 +54,15 @@ def random_mnemonic() -> Mnemonic:
 # =============================================================================
 
 @pytest.fixture
-def known_private_key_hex() -> str:
-    """Return the known test private key hex string."""
-    return TEST_PRIVATE_KEY_HEX
-
-
-@pytest.fixture
-def known_private_key(known_private_key_hex) -> PrivateKey:
+def known_private_key() -> PrivateKey:
     """Return a PrivateKey object from the known test hex."""
-    return PrivateKey(known_private_key_hex)
+    return PrivateKey(TEST_PRIVATE_KEY_HEX)
 
 
 @pytest.fixture
-def known_public_key_hex() -> str:
-    """Return the known test public key hex string (x-only)."""
-    return TEST_PUBLIC_KEY_HEX
-
-
-@pytest.fixture
-def known_public_key(known_public_key_hex) -> PublicKey:
+def known_public_key() -> PublicKey:
     """Return a PublicKey object from the known test hex."""
-    return PublicKey(known_public_key_hex)
-
-
-@pytest.fixture
-def known_compressed_public_key_hex() -> str:
-    """Return the known test compressed public key hex string."""
-    return TEST_COMPRESSED_PUBLIC_KEY_HEX
+    return PublicKey(TEST_PUBLIC_KEY_HEX)
 
 
 @pytest.fixture
@@ -101,21 +71,9 @@ def known_keypair(known_private_key) -> Keypair:
     return known_private_key.to_keypair()
 
 
-@pytest.fixture
-def random_keypair() -> Keypair:
-    """Return a randomly generated Keypair."""
-    return Keypair.random()
-
-
 # =============================================================================
 # XPrv/XPub Fixtures
 # =============================================================================
-
-@pytest.fixture
-def known_master_xprv_string() -> str:
-    """Return the known master XPrv string."""
-    return TEST_MASTER_XPRV
-
 
 @pytest.fixture
 def known_xprv_from_mnemonic(known_mnemonic) -> XPrv:
@@ -129,15 +87,9 @@ def known_xprv_from_mnemonic(known_mnemonic) -> XPrv:
 # =============================================================================
 
 @pytest.fixture
-def known_mainnet_address_string() -> str:
-    """Return a known valid mainnet address string."""
-    return TEST_MAINNET_ADDRESS
-
-
-@pytest.fixture
-def known_mainnet_address(known_mainnet_address_string) -> Address:
+def known_mainnet_address() -> Address:
     """Return an Address object from the known mainnet address."""
-    return Address(known_mainnet_address_string)
+    return Address(TEST_MAINNET_ADDRESS)
 
 
 # =============================================================================
@@ -148,23 +100,10 @@ def known_mainnet_address(known_mainnet_address_string) -> Address:
 async def testnet_rpc_client():
     """
     Session-scoped async fixture for RPC client connected to testnet.
-    
+
     This fixture is used for integration tests that require network access.
     """
     client = RpcClient(resolver=Resolver(), network_id="testnet-10")
     await client.connect()
     yield client
     await client.disconnect()
-
-
-@pytest.fixture
-def testnet_network_id() -> str:
-    """Return the testnet network ID."""
-    return "testnet-10"
-
-
-@pytest.fixture
-def mainnet_network_id() -> str:
-    """Return the mainnet network ID."""
-    return "mainnet"
-

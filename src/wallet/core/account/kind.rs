@@ -16,8 +16,6 @@ use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
 ///     - `multisig`: Multi-signature account
 ///     - `keypair`: Simple keypair account
 ///     - `bip32watch`: Watch-only BIP-32 account
-///
-/// Category: Wallet/Core
 #[gen_stub_pyclass]
 #[pyclass(name = "AccountKind", eq)]
 #[derive(Clone, PartialEq)]

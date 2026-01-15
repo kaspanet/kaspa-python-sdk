@@ -10,8 +10,6 @@ use workflow_core::hex::ToHex;
 /// A transaction input referencing a previous output.
 ///
 /// Inputs reference UTXOs (unspent transaction outputs) that are being spent.
-///
-/// Category: Wallet/Transactions
 #[gen_stub_pyclass]
 #[pyclass(name = "TransactionInput")]
 #[derive(Clone)]

@@ -12,8 +12,6 @@ use pyo3_stub_gen::derive::gen_stub_pyfunction;
 ///
 /// Returns:
 ///     int: The maximum standard transaction mass.
-///
-/// Category: Wallet/Transactions
 #[gen_stub_pyfunction]
 #[pyfunction]
 #[pyo3(name = "maximum_standard_transaction_mass")]
@@ -33,8 +31,6 @@ pub fn py_maximum_standard_transaction_mass() -> u64 {
 ///
 /// Raises:
 ///     Exception: If mass calculation fails.
-///
-/// Category: Wallet/Transactions
 #[gen_stub_pyfunction]
 #[pyfunction]
 #[pyo3(name = "calculate_transaction_mass")]
@@ -66,8 +62,6 @@ pub fn py_calculate_unsigned_transaction_mass(
 ///
 /// Raises:
 ///     Exception: If mass calculation fails.
-///
-/// Category: Wallet/Transactions
 #[gen_stub_pyfunction]
 #[pyfunction]
 #[pyo3(name = "update_transaction_mass")]
@@ -104,8 +98,6 @@ pub fn py_update_unsigned_transaction_mass(
 ///
 /// Raises:
 ///     Exception: If mass calculation fails.
-///
-/// Category: Wallet/Transactions
 #[gen_stub_pyfunction]
 #[pyfunction]
 #[pyo3(name = "calculate_transaction_fee")]
@@ -143,8 +135,6 @@ pub fn py_calculate_unsigned_transaction_fee(
 ///
 /// Returns:
 ///     int | None: The storage mass, or None if not applicable.
-///
-/// Category: Wallet/Transactions
 #[gen_stub_pyfunction]
 #[pyfunction]
 #[pyo3(name = "calculate_storage_mass")]

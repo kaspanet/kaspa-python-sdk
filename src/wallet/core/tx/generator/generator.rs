@@ -23,8 +23,6 @@ use workflow_core::prelude::Abortable;
 /// Accepts:
 ///     list[UtxoEntryReference]: A list of UtxoEntryReference objects.
 ///     list[dict]: A list of dicts with UtxoEntryReference-compatible keys.
-///
-/// Category: Wallet/Transactions
 #[gen_stub_pyclass]
 #[pyclass(name = "UtxoEntries")]
 pub struct PyUtxoEntries {
@@ -67,8 +65,6 @@ impl<'py> FromPyObject<'_, 'py> for PyUtxoEntries {
 /// Accepts:
 ///     list[PaymentOutput]: A list of PaymentOutput objects.
 ///     list[dict]: A list of dicts with `address` and `amount` keys.
-///
-/// Category: Wallet/Transactions
 #[gen_stub_pyclass]
 #[pyclass(name = "Outputs")]
 pub struct PyOutputs {
@@ -108,8 +104,6 @@ impl<'py> FromPyObject<'_, 'py> for PyOutputs {
 ///
 /// Handles UTXO selection, fee calculation, change outputs, and transaction
 /// splitting for large transfers.
-///
-/// Category: Wallet/Transactions
 #[gen_stub_pyclass]
 #[pyclass(name = "Generator")]
 pub struct PyGenerator(Arc<native::Generator>);

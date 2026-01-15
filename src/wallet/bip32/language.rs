@@ -5,11 +5,6 @@ use std::str::FromStr;
 
 crate::wrap_unit_enum_for_py!(
     /// BIP-39 mnemonic word list language.
-    ///
-    /// Variants:
-    ///     English: English word list (2048 words).
-    ///
-    /// Category: Wallet/Keys
     PyLanguage, "Language", Language, { English }
 );
 

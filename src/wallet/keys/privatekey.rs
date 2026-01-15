@@ -11,8 +11,6 @@ use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
 /// A private key for signing transactions and messages.
 ///
 /// Private keys should be kept secret and never shared.
-///
-/// Category: Wallet/Keys
 #[gen_stub_pyclass]
 #[pyclass(name = "PrivateKey")]
 pub struct PyPrivateKey(PrivateKey);

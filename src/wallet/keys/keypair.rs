@@ -12,8 +12,6 @@ use zeroize::Zeroize;
 ///
 /// Provides convenient access to all key forms needed for signing
 /// and address generation.
-///
-/// Category: Wallet/Keys
 #[gen_stub_pyclass]
 #[pyclass(name = "Keypair")]
 pub struct PyKeypair {

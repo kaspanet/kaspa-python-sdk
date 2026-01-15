@@ -5,16 +5,6 @@ use std::str::FromStr;
 
 crate::wrap_unit_enum_for_py!(
     /// Kaspa signature hash types for transaction signing.
-    ///
-    /// Variants:
-    ///     - All: Sign all inputs and outputs.
-    ///     - None: Sign all inputs, no outputs.
-    ///     - Single: Sign all inputs and corresponding output.
-    ///     - AllAnyOneCanPay: Sign single input and all outputs.
-    ///     - NoneAnyOneCanPay: Sign single input, no outputs.
-    ///     - SingleAnyOneCanPay: Sign single input and corresponding output.
-    ///
-    /// Category: Wallet/Core
     PySighashType, "SighashType", SighashType, {
     All,
     None,

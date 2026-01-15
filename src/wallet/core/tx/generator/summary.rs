@@ -11,8 +11,6 @@ use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
 ///
 /// See Also:
 ///     create_transactions, Generator
-///
-/// Category: Wallet/Transactions
 #[gen_stub_pyclass]
 #[pyclass(name = "GeneratorSummary")]
 pub struct PyGeneratorSummary(core::GeneratorSummary);

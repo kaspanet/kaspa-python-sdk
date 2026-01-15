@@ -20,8 +20,6 @@ class AccountKind:
         - `multisig`: Multi-signature account
         - `keypair`: Simple keypair account
         - `bip32watch`: Watch-only BIP-32 account
-    
-    Category: Wallet/Core
     """
     def __eq__(self, other: builtins.object) -> builtins.bool: ...
     def __new__(cls, kind: builtins.str) -> AccountKind:
@@ -60,8 +58,6 @@ class Address:
     In string form, the Kaspa addresses are represented by a `bech32`-encoded
     address string combined with a network type prefix. The `bech32` string encoding is
     comprised of a public key, the public key version and the resulting checksum.
-    
-    Category: Core/Types
     """
     @property
     def version(self) -> builtins.str:
@@ -168,8 +164,6 @@ class Binary:
         - str: A hexadecimal string (e.g., "deadbeef").
         - bytes: Python bytes object.
         - list[int]: A list of byte values (0-255).
-    
-    Category: Core/Types
     """
     ...
 
@@ -179,8 +173,6 @@ class DerivationPath:
     A BIP-32 derivation path for hierarchical key derivation.
     
     Represents a path like "m/44'/111111'/0'/0/0" for deriving keys.
-    
-    Category: Wallet/Keys
     """
     def __eq__(self, other: builtins.object) -> builtins.bool: ...
     def __new__(cls, path: builtins.str) -> DerivationPath:
@@ -243,8 +235,6 @@ class Generator:
     
     Handles UTXO selection, fee calculation, change outputs, and transaction
     splitting for large transfers.
-    
-    Category: Wallet/Transactions
     """
     def __new__(cls, network_id: NetworkId, entries: UtxoEntries, change_address: Address, outputs: typing.Optional[Outputs] = None, payload: typing.Optional[Binary] = None, fee_rate: typing.Optional[builtins.float] = None, priority_fee: typing.Optional[builtins.int] = None, priority_entries: typing.Optional[UtxoEntries] = None, sig_op_count: typing.Optional[builtins.int] = None, minimum_signatures: typing.Optional[builtins.int] = None) -> Generator:
         r"""
@@ -311,8 +301,6 @@ class GeneratorSummary:
     
     See Also:
         create_transactions, Generator
-    
-    Category: Wallet/Transactions
     """
     @property
     def network_type(self) -> builtins.str:
@@ -370,8 +358,6 @@ class Hash:
     A 32-byte hash value.
     
     Used for transaction IDs, block hashes, and other cryptographic purposes.
-    
-    Category: Core/Types
     """
     def __eq__(self, other: builtins.object) -> builtins.bool: ...
     def __new__(cls, hex_str: builtins.str) -> Hash:
@@ -413,8 +399,6 @@ class Keypair:
     
     Provides convenient access to all key forms needed for signing
     and address generation.
-    
-    Category: Wallet/Keys
     """
     @property
     def xonly_public_key(self) -> builtins.str:
@@ -506,8 +490,6 @@ class Mnemonic:
     Mnemonic phrases (also called seed phrases or recovery phrases) are
     human-readable representations of cryptographic seeds used for HD wallet
     generation.
-    
-    Category: Wallet/Keys
     """
     @property
     def entropy(self) -> builtins.str:
@@ -603,8 +585,6 @@ class NetworkId:
     
     Represents a specific Kaspa network, optionally with a numeric suffix
     for testnets (e.g., "testnet-10", "testnet-11").
-    
-    Category: Core/Types
     """
     @property
     def network_type(self) -> NetworkType:
@@ -712,8 +692,6 @@ class Notification:
         - VirtualDaaScoreChanged: The virtual DAA score changed.
         - SinkBlueScoreChanged: The sink blue score changed.
         - VirtualChainChanged: The virtual chain changed.
-    
-    Category: RPC/Core
     """
     ...
 
@@ -729,8 +707,6 @@ class Outputs:
     Accepts:
         list[PaymentOutput]: A list of PaymentOutput objects.
         list[dict]: A list of dicts with `address` and `amount` keys.
-    
-    Category: Wallet/Transactions
     """
     ...
 
@@ -741,8 +717,6 @@ class PaymentOutput:
     
     Represents a single output in a transaction, specifying where funds
     should be sent and how much. Used with Generator and create_transactions.
-    
-    Category: Wallet/Transactions
     """
     def __eq__(self, other: PaymentOutput) -> builtins.bool: ...
 
@@ -753,8 +727,6 @@ class PendingTransaction:
     
     Created by iterating over a Generator. Contains the transaction
     along with metadata about fees, amounts, and UTXOs being spent.
-    
-    Category: Wallet/Transactions
     """
     @property
     def id(self) -> builtins.str:
@@ -919,8 +891,6 @@ class PrivateKey:
     A private key for signing transactions and messages.
     
     Private keys should be kept secret and never shared.
-    
-    Category: Wallet/Keys
     """
     def __new__(cls, key: builtins.str) -> PrivateKey:
         r"""
@@ -995,8 +965,6 @@ class PrivateKeyGenerator:
     Generator for deriving private keys from an extended private key.
     
     Used for creating wallets that can sign transactions.
-    
-    Category: Wallet/Keys
     """
     def __new__(cls, xprv: str | XPrv, is_multisig: builtins.bool, account_index: builtins.int, cosigner_index: typing.Optional[builtins.int] = None) -> PrivateKeyGenerator:
         r"""
@@ -1047,8 +1015,6 @@ class PublicKey:
     A public key for verifying signatures and deriving addresses.
     
     Can be created from a private key or parsed from a hex string.
-    
-    Category: Wallet/Keys
     """
     def __new__(cls, key: builtins.str) -> PublicKey:
         r"""
@@ -1118,8 +1084,6 @@ class PublicKeyGenerator:
     
     Useful for creating watch-only wallets that can generate addresses
     without access to private keys.
-    
-    Category: Wallet/Keys
     """
     @staticmethod
     def from_xpub(kpub: builtins.str, cosigner_index: typing.Optional[builtins.int] = None) -> PublicKeyGenerator:
@@ -1395,8 +1359,6 @@ class Resolver:
     Resolvers help clients find available nodes on a network by querying
     a list of known resolver URLs. Useful for automatic node discovery
     and load balancing.
-    
-    Category: RPC/Core
     """
     def __new__(cls, urls: typing.Optional[typing.Sequence[builtins.str]] = None, tls: typing.Optional[builtins.bool] = None) -> Resolver:
         r"""
@@ -1453,8 +1415,6 @@ class RpcClient:
     Provides methods for querying blockchain state, submitting transactions,
     and subscribing to real-time notifications. Supports both Borsh and JSON
     encodings.
-    
-    Category: RPC/Core
     """
     @property
     def url(self) -> typing.Optional[builtins.str]:
@@ -1716,8 +1676,6 @@ class ScriptBuilder:
     Provides a fluent interface for building custom scripts with opcodes and data.
     Used for creating complex spending conditions like multi-signature or time-locked
     transactions.
-    
-    Category: Wallet/Transactions
     """
     def __new__(cls) -> ScriptBuilder:
         r"""
@@ -1869,8 +1827,6 @@ class ScriptPublicKey:
     
     Represents the locking conditions for an output. This script defines
     the conditions that must be met to spend the associated funds.
-    
-    Category: Core/Types
     """
     @property
     def script(self) -> builtins.str:
@@ -1911,8 +1867,6 @@ class Transaction:
     
     Represents a complete transaction with inputs, outputs, and metadata.
     Transactions are the fundamental unit of value transfer on the Kaspa network.
-    
-    Category: Wallet/Transactions
     """
     @property
     def id(self) -> builtins.str:
@@ -2106,8 +2060,6 @@ class TransactionInput:
     A transaction input referencing a previous output.
     
     Inputs reference UTXOs (unspent transaction outputs) that are being spent.
-    
-    Category: Wallet/Transactions
     """
     @property
     def previous_outpoint(self) -> TransactionOutpoint:
@@ -2203,8 +2155,6 @@ class TransactionOutpoint:
     Reference to a specific output in a previous transaction.
     
     An outpoint uniquely identifies a UTXO by its transaction ID and output index.
-    
-    Category: Wallet/Transactions
     """
     @property
     def transaction_id(self) -> builtins.str:
@@ -2249,8 +2199,6 @@ class TransactionOutput:
     
     Outputs specify an amount and a locking script (script_public_key)
     that defines the conditions for spending.
-    
-    Category: Wallet/Transactions
     """
     @property
     def value(self) -> builtins.int:
@@ -2309,8 +2257,6 @@ class UtxoEntries:
     Accepts:
         list[UtxoEntryReference]: A list of UtxoEntryReference objects.
         list[dict]: A list of dicts with UtxoEntryReference-compatible keys.
-    
-    Category: Wallet/Transactions
     """
     ...
 
@@ -2320,8 +2266,6 @@ class UtxoEntries:
     A collection of UTXO entry references.
     
     Provides methods for managing and querying multiple UTXOs.
-    
-    Category: Wallet/Transactions
     """
     @property
     def items(self) -> builtins.list[UtxoEntryReference]:
@@ -2359,8 +2303,6 @@ class UtxoEntry:
     
     Represents a spendable output from a previous transaction.
     Contains information about the amount, locking script, and block position.
-    
-    Category: Wallet/Transactions
     """
     @property
     def address(self) -> typing.Optional[Address]:
@@ -2418,8 +2360,6 @@ class UtxoEntryReference:
     A reference to a UTXO entry.
     
     Provides access to UTXO data for transaction building and signing.
-    
-    Category: Wallet/Transactions
     """
     @property
     def entry(self) -> UtxoEntry:
@@ -2485,8 +2425,6 @@ class XOnlyPublicKey:
     An x-only public key (32 bytes, Schnorr compatible).
     
     Used for Schnorr signatures and Taproot-style addresses.
-    
-    Category: Wallet/Keys
     """
     def __new__(cls, key: builtins.str) -> XOnlyPublicKey:
         r"""
@@ -2550,8 +2488,6 @@ class XPrv:
     
     Allows hierarchical deterministic key derivation from a seed.
     All keys in an HD wallet can be derived from a single XPrv.
-    
-    Category: Wallet/Keys
     """
     @property
     def xprv(self) -> builtins.str:
@@ -2700,8 +2636,6 @@ class XPub:
     
     Allows hierarchical deterministic address generation without
     access to private keys. Useful for watch-only wallets.
-    
-    Category: Wallet/Keys
     """
     @property
     def xpub(self) -> builtins.str:
@@ -2827,8 +2761,6 @@ class NotificationEvent(enum.Enum):
         - NewBlockTemplate: Triggered when a new block template is available for mining.
         - Connect: Triggered when the RPC client connects to a node.
         - Disconnect: Triggered when the RPC client disconnects from a node.
-    
-    Category: RPC/Core
     """
     All = ...
     BlockAdded = ...
@@ -2850,8 +2782,6 @@ class AddressVersion(enum.Enum):
     -  PubKey addresses always have the version byte set to 0
     - PubKey ECDSA addresses always have the version byte set to 1
     - ScriptHash addresses always have the version byte set to 8
-    
-    Category: Core/Types
     """
     PubKey = ...
     PubKeyECDSA = ...
@@ -2861,12 +2791,6 @@ class AddressVersion(enum.Enum):
 class Encoding(enum.Enum):
     r"""
     wRPC protocol encoding
-    
-    Variants:
-        - Borsh
-        - JSON
-    
-    Category: RPC/Core
     """
     Borsh = ...
     SerdeJson = ...
@@ -2875,11 +2799,6 @@ class Encoding(enum.Enum):
 class Language(enum.Enum):
     r"""
     BIP-39 mnemonic word list language.
-    
-    Variants:
-        English: English word list (2048 words).
-    
-    Category: Wallet/Keys
     """
     English = ...
 
@@ -2887,14 +2806,6 @@ class Language(enum.Enum):
 class NetworkType(enum.Enum):
     r"""
     Kaspa network type enumeration.
-    
-    Variants:
-        - Mainnet: The production Kaspa network.
-        - Testnet: The test network for development.
-        - Devnet: The development network.
-        - Simnet: The simulation network for testing.
-    
-    Category: Core/Types
     """
     Mainnet = ...
     Testnet = ...
@@ -2912,8 +2823,6 @@ class Opcodes(enum.Enum):
     
     These opcodes are used in ScriptBuilder to construct locking and
     unlocking scripts for Kaspa transactions.
-    
-    Category: Wallet/Transactions
     """
     OpFalse = ...
     OpData1 = ...
@@ -3179,16 +3088,6 @@ class Opcodes(enum.Enum):
 class SighashType(enum.Enum):
     r"""
     Kaspa signature hash types for transaction signing.
-    
-    Variants:
-        - All: Sign all inputs and outputs.
-        - None: Sign all inputs, no outputs.
-        - Single: Sign all inputs and corresponding output.
-        - AllAnyOneCanPay: Sign single input and all outputs.
-        - NoneAnyOneCanPay: Sign single input, no outputs.
-        - SingleAnyOneCanPay: Sign single input and corresponding output.
-    
-    Category: Wallet/Core
     """
     All = ...
     _None = ...
@@ -3210,8 +3109,6 @@ def address_from_script_public_key(script_public_key: ScriptPublicKey, network: 
     
     Raises:
         Exception: If address extraction fails.
-    
-    Category: Wallet/Core
     """
 
 def calculate_storage_mass(network_id: NetworkId, input_values: typing.Sequence[builtins.int], output_values: typing.Sequence[builtins.int]) -> typing.Optional[builtins.int]:
@@ -3228,8 +3125,6 @@ def calculate_storage_mass(network_id: NetworkId, input_values: typing.Sequence[
     
     Returns:
         int | None: The storage mass, or None if not applicable.
-    
-    Category: Wallet/Transactions
     """
 
 def calculate_transaction_fee(network_id: NetworkId, tx: Transaction, minimum_signatures: typing.Optional[builtins.int] = None) -> typing.Optional[builtins.int]:
@@ -3246,8 +3141,6 @@ def calculate_transaction_fee(network_id: NetworkId, tx: Transaction, minimum_si
     
     Raises:
         Exception: If mass calculation fails.
-    
-    Category: Wallet/Transactions
     """
 
 def calculate_transaction_mass(network_id: NetworkId, tx: Transaction, minimum_signatures: typing.Optional[builtins.int] = None) -> builtins.int:
@@ -3264,8 +3157,6 @@ def calculate_transaction_mass(network_id: NetworkId, tx: Transaction, minimum_s
     
     Raises:
         Exception: If mass calculation fails.
-    
-    Category: Wallet/Transactions
     """
 
 def create_input_signature(tx: Transaction, input_index: builtins.int, private_key: PrivateKey, sighash_type: str | SighashType | None = SighashType.All) -> builtins.str:
@@ -3283,8 +3174,6 @@ def create_input_signature(tx: Transaction, input_index: builtins.int, private_k
     
     Raises:
         Exception: If signing fails.
-    
-    Category: Wallet/Transactions
     """
 
 def create_multisig_address(minimum_signatures: builtins.int, keys: typing.Sequence[PublicKey], network_type: str | NetworkType, ecdsa: typing.Optional[builtins.bool] = False, account_kind: typing.Optional[AccountKind] = None) -> Address:
@@ -3303,8 +3192,6 @@ def create_multisig_address(minimum_signatures: builtins.int, keys: typing.Seque
     
     Raises:
         Exception: If address creation fails.
-    
-    Category: Wallet/Core
     """
 
 def create_transaction(utxo_entry_source: UtxoEntries, outputs: Outputs, priority_fee: builtins.int, payload: typing.Optional[Binary] = None, sig_op_count: typing.Optional[builtins.int] = None) -> Transaction:
@@ -3323,8 +3210,6 @@ def create_transaction(utxo_entry_source: UtxoEntries, outputs: Outputs, priorit
     
     Raises:
         Exception: If transaction creation fails or fee exceeds input amount.
-    
-    Category: Wallet/Transactions
     """
 
 def create_transactions(network_id: NetworkId, entries: UtxoEntries, change_address: Address, outputs: typing.Optional[Outputs] = None, payload: typing.Optional[Binary] = None, fee_rate: typing.Optional[builtins.float] = None, priority_fee: typing.Optional[builtins.int] = None, priority_entries: typing.Optional[UtxoEntries] = None, sig_op_count: typing.Optional[builtins.int] = None, minimum_signatures: typing.Optional[builtins.int] = None) -> dict:
@@ -3350,8 +3235,6 @@ def create_transactions(network_id: NetworkId, entries: UtxoEntries, change_addr
     
     Raises:
         Exception: If transaction creation fails.
-    
-    Category: Wallet/Transactions
     """
 
 def estimate_transactions(network_id: NetworkId, entries: UtxoEntries, change_address: Address, outputs: typing.Optional[Outputs] = None, payload: typing.Optional[Binary] = None, fee_rate: typing.Optional[builtins.float] = None, priority_fee: typing.Optional[builtins.int] = None, priority_entries: typing.Optional[UtxoEntries] = None, sig_op_count: typing.Optional[builtins.int] = None, minimum_signatures: typing.Optional[builtins.int] = None) -> GeneratorSummary:
@@ -3375,8 +3258,6 @@ def estimate_transactions(network_id: NetworkId, entries: UtxoEntries, change_ad
     
     Raises:
         Exception: If estimation fails.
-    
-    Category: Wallet/Transactions
     """
 
 def is_script_pay_to_pubkey(script: Binary) -> builtins.bool:
@@ -3388,8 +3269,6 @@ def is_script_pay_to_pubkey(script: Binary) -> builtins.bool:
     
     Returns:
         bool: True if the script is a P2PK script.
-    
-    Category: Wallet/Core
     """
 
 def is_script_pay_to_pubkey_ecdsa(script: Binary) -> builtins.bool:
@@ -3401,8 +3280,6 @@ def is_script_pay_to_pubkey_ecdsa(script: Binary) -> builtins.bool:
     
     Returns:
         bool: True if the script is a P2PK-ECDSA script.
-    
-    Category: Wallet/Core
     """
 
 def is_script_pay_to_script_hash(script: Binary) -> builtins.bool:
@@ -3414,8 +3291,6 @@ def is_script_pay_to_script_hash(script: Binary) -> builtins.bool:
     
     Returns:
         bool: True if the script is a P2SH script.
-    
-    Category: Wallet/Core
     """
 
 def kaspa_to_sompi(kaspa: builtins.float) -> builtins.int:
@@ -3427,8 +3302,6 @@ def kaspa_to_sompi(kaspa: builtins.float) -> builtins.int:
     
     Returns:
         int: The amount in sompi.
-    
-    Category: Core/Utils
     """
 
 def maximum_standard_transaction_mass() -> builtins.int:
@@ -3437,8 +3310,6 @@ def maximum_standard_transaction_mass() -> builtins.int:
     
     Returns:
         int: The maximum standard transaction mass.
-    
-    Category: Wallet/Transactions
     """
 
 def pay_to_address_script(address: Address) -> ScriptPublicKey:
@@ -3450,8 +3321,6 @@ def pay_to_address_script(address: Address) -> ScriptPublicKey:
     
     Returns:
         ScriptPublicKey: The locking script for the address.
-    
-    Category: Wallet/Core
     """
 
 def pay_to_script_hash_script(redeem_script: Binary) -> ScriptPublicKey:
@@ -3463,8 +3332,6 @@ def pay_to_script_hash_script(redeem_script: Binary) -> ScriptPublicKey:
     
     Returns:
         ScriptPublicKey: The P2SH locking script.
-    
-    Category: Wallet/Core
     """
 
 def pay_to_script_hash_signature_script(redeem_script: Binary, signature: Binary) -> builtins.str:
@@ -3480,8 +3347,6 @@ def pay_to_script_hash_signature_script(redeem_script: Binary, signature: Binary
     
     Raises:
         Exception: If script creation fails.
-    
-    Category: Wallet/Core
     """
 
 def sign_message(message: builtins.str, private_key: PrivateKey, no_aux_rand: builtins.bool = False) -> builtins.str:
@@ -3498,8 +3363,6 @@ def sign_message(message: builtins.str, private_key: PrivateKey, no_aux_rand: bu
     
     Raises:
         Exception: If signing fails.
-    
-    Category: Wallet/Core
     """
 
 def sign_script_hash(script_hash: builtins.str, privkey: PrivateKey) -> builtins.str:
@@ -3515,8 +3378,6 @@ def sign_script_hash(script_hash: builtins.str, privkey: PrivateKey) -> builtins
     
     Raises:
         Exception: If signing fails.
-    
-    Category: Wallet/Transactions
     """
 
 def sign_transaction(tx: Transaction, signer: list, verify_sig: builtins.bool) -> Transaction:
@@ -3533,8 +3394,6 @@ def sign_transaction(tx: Transaction, signer: list, verify_sig: builtins.bool) -
     
     Raises:
         Exception: If signing or verification fails.
-    
-    Category: Wallet/Transactions
     """
 
 def sompi_to_kaspa(sompi: builtins.int) -> builtins.float:
@@ -3546,8 +3405,6 @@ def sompi_to_kaspa(sompi: builtins.int) -> builtins.float:
     
     Returns:
         float: The amount in KAS.
-    
-    Category: Core/Utils
     """
 
 def sompi_to_kaspa_string_with_suffix(sompi: builtins.int, network: str | NetworkType) -> builtins.str:
@@ -3560,8 +3417,6 @@ def sompi_to_kaspa_string_with_suffix(sompi: builtins.int, network: str | Networ
     
     Returns:
         str: Formatted string like "1.5 KAS" or "1.5 TKAS".
-    
-    Category: Core/Utils
     """
 
 def update_transaction_mass(network_id: NetworkId, tx: Transaction, minimum_signatures: typing.Optional[builtins.int] = None) -> builtins.bool:
@@ -3578,8 +3433,6 @@ def update_transaction_mass(network_id: NetworkId, tx: Transaction, minimum_sign
     
     Raises:
         Exception: If mass calculation fails.
-    
-    Category: Wallet/Transactions
     """
 
 def verify_message(message: builtins.str, signature: builtins.str, public_key: PublicKey) -> builtins.bool:
@@ -3596,8 +3449,6 @@ def verify_message(message: builtins.str, signature: builtins.str, public_key: P
     
     Raises:
         Exception: If the signature format is invalid.
-    
-    Category: Wallet/Core
     """
 
 # =============================================================================

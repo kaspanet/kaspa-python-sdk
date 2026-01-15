@@ -9,8 +9,6 @@ use workflow_core::hex::ToHex;
 /// Mnemonic phrases (also called seed phrases or recovery phrases) are
 /// human-readable representations of cryptographic seeds used for HD wallet
 /// generation.
-///
-/// Category: Wallet/Keys
 #[gen_stub_pyclass]
 #[pyclass(name = "Mnemonic")]
 pub struct PyMnemonic(Mnemonic);

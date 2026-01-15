@@ -20,8 +20,6 @@ use serde_pyobject::to_pyobject;
 ///     - VirtualDaaScoreChanged: The virtual DAA score changed.
 ///     - SinkBlueScoreChanged: The sink blue score changed.
 ///     - VirtualChainChanged: The virtual chain changed.
-///
-/// Category: RPC/Core
 #[gen_stub_pyclass]
 #[pyclass(name = "Notification")]
 pub struct PyNotification(pub Notification);

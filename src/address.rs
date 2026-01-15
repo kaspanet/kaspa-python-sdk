@@ -9,8 +9,6 @@ crate::wrap_unit_enum_for_py!(
     ///-  PubKey addresses always have the version byte set to 0
     /// - PubKey ECDSA addresses always have the version byte set to 1
     /// - ScriptHash addresses always have the version byte set to 8
-    ///
-    /// Category: Core/Types
     PyAddressVersion, "AddressVersion", Version, {
         PubKey,
         PubKeyECDSA,
@@ -56,8 +54,6 @@ impl<'py> FromPyObject<'_, 'py> for PyAddressVersion {
 /// In string form, the Kaspa addresses are represented by a `bech32`-encoded
 /// address string combined with a network type prefix. The `bech32` string encoding is
 /// comprised of a public key, the public key version and the resulting checksum.
-///
-/// Category: Core/Types
 #[gen_stub_pyclass]
 #[pyclass(name = "Address", eq)]
 #[derive(Clone, Debug, PartialEq)]

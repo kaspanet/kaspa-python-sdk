@@ -9,8 +9,6 @@ use std::sync::Arc;
 /// Resolvers help clients find available nodes on a network by querying
 /// a list of known resolver URLs. Useful for automatic node discovery
 /// and load balancing.
-///
-/// Category: RPC/Core
 #[gen_stub_pyclass]
 #[pyclass(name = "Resolver")]
 #[derive(Debug, Clone)]

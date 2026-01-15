@@ -14,8 +14,6 @@ use std::sync::Arc;
 ///
 /// Represents a spendable output from a previous transaction.
 /// Contains information about the amount, locking script, and block position.
-///
-/// Category: Wallet/Transactions
 #[gen_stub_pyclass]
 #[pyclass(name = "UtxoEntry")]
 #[derive(Clone)]
@@ -102,8 +100,6 @@ impl From<UtxoEntry> for PyUtxoEntry {
 /// A collection of UTXO entry references.
 ///
 /// Provides methods for managing and querying multiple UTXOs.
-///
-/// Category: Wallet/Transactions
 #[gen_stub_pyclass]
 #[pyclass(name = "UtxoEntries")]
 #[derive(Clone)]
@@ -163,8 +159,6 @@ impl PyUtxoEntries {
 /// A reference to a UTXO entry.
 ///
 /// Provides access to UTXO data for transaction building and signing.
-///
-/// Category: Wallet/Transactions
 #[gen_stub_pyclass]
 #[pyclass(name = "UtxoEntryReference", eq)]
 #[derive(Clone, PartialEq)]

@@ -7,8 +7,6 @@ use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
 /// Reference to a specific output in a previous transaction.
 ///
 /// An outpoint uniquely identifies a UTXO by its transaction ID and output index.
-///
-/// Category: Wallet/Transactions
 #[gen_stub_pyclass]
 #[pyclass(name = "TransactionOutpoint")]
 #[derive(Clone)]

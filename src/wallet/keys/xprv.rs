@@ -15,8 +15,6 @@ use workflow_core::hex::ToHex;
 ///
 /// Allows hierarchical deterministic key derivation from a seed.
 /// All keys in an HD wallet can be derived from a single XPrv.
-///
-/// Category: Wallet/Keys
 #[gen_stub_pyclass]
 #[pyclass(name = "XPrv")]
 #[derive(Clone)]

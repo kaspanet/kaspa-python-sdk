@@ -6,8 +6,6 @@ use std::str::FromStr;
 /// A BIP-32 derivation path for hierarchical key derivation.
 ///
 /// Represents a path like "m/44'/111111'/0'/0/0" for deriving keys.
-///
-/// Category: Wallet/Keys
 #[gen_stub_pyclass]
 #[pyclass(name = "DerivationPath", eq)]
 #[derive(Clone, PartialEq)]
