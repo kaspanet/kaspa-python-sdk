@@ -7,7 +7,7 @@
 >
 > This repository is the potential future home of Kaspa Python SDK source. It has reached parity (feature, stability, etc.) with the existing codebase.
 > 
-> **You can build/install the `kaspa` Python package from this repository. See instructions [here](https://smartgoo.github.io/kaspa-python-sdk/dev/getting-started/installation/#installation-from-source).**
+> **You can build/install the `kaspa` Python package from this repository. See instructions [here](https://kaspanet.github.io/kaspa-python-sdk/dev/getting-started/installation/#installation-from-source).**
 
 ---
 
@@ -26,11 +26,11 @@ Most feature gaps with Kaspa WASM SDK exist around Wallet functionality. Over ti
 
 ## Documentation
 
-Full documentation is available on the [documentation site](https://smartgoo.github.io/kaspa-python-sdk/dev/), including:
+Full documentation is available on the [documentation site](https://kaspanet.github.io/kaspa-python-sdk/dev/), including:
 
-- [Installation Guide](https://smartgoo.github.io/kaspa-python-sdk/dev/getting-started/installation/)
-- [Examples](https://smartgoo.github.io/kaspa-python-sdk/dev/getting-started/examples/)
-- [API Reference](https://smartgoo.github.io/kaspa-python-sdk/dev/reference/)
+- [Installation Guide](https://kaspanet.github.io/kaspa-python-sdk/dev/getting-started/installation/)
+- [Examples](https://kaspanet.github.io/kaspa-python-sdk/dev/getting-started/examples/)
+- [API Reference](https://kaspanet.github.io/kaspa-python-sdk/dev/reference/)
 
 And more.
 
@@ -60,7 +60,7 @@ if __name__ == "__main__":
 
 ## Contributing & Core Concepts
 
-The [Contributing Guide](https://smartgoo.github.io/kaspa-python-sdk/dev/contributing/) details various technical core concepts and workflows used by this project.
+The [Contributing Guide](https://kaspanet.github.io/kaspa-python-sdk/dev/contributing/) details various technical core concepts and workflows used by this project.
 
 ## License
 

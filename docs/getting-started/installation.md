@@ -37,7 +37,7 @@ Support for alternate targets will require [building from source](#installation-
 
 2. Clone the Kaspa Python SDK repository:
 ```bash
-git clone https://github.com/smartgoo/kaspa-python-sdk.git
+git clone https://github.com/kaspanet/kaspa-python-sdk.git
 cd kaspa-python-sdk
 ```
 

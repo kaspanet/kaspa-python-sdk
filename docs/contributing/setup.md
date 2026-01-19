@@ -13,7 +13,7 @@ This SDK is built from Rust source code and leverages native rusty-kaspa. You'll
 **3.) Clone the repository:**
 
 ```bash
-git clone https://github.com/smartgoo/kaspa-python-sdk.git
+git clone https://github.com/kaspanet/kaspa-python-sdk.git
 cd kaspa-python-sdk
 ```
 
