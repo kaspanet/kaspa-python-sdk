@@ -4,7 +4,7 @@ The Kaspa Python SDK provides bindings to Rust & [Rusty-Kaspa](https://github.co
 
 A native extension module, `kaspa`, is built from these bindings using [PyO3](https://pyo3.rs/v0.20.0/) and [Maturin](https://www.maturin.rs).
 
-> [!INFO]
+> [!IMPORTANT]
 > This project has moved! Welcome to the new home of Kaspa Python SDK, which historically lived [here](https://github.com/aspectron/rusty-kaspa/tree/python).
 > 
 > Versions < 1.1.0 were built from the old repository.
