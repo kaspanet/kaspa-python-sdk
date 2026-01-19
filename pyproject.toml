@@ -31,11 +31,11 @@ classifiers = [
 dependencies = []
 
 [project.urls]
-Homepage = "https://github.com/smartgoo/kaspa-python-sdk"
-Repository = "https://github.com/smartgoo/kaspa-python-sdk"
-Documentation = "https://smartgoo.github.io/kaspa-python-sdk/latest"
-Changelog = "https://smartgoo.github.io/kaspa-python-sdk/latest/CHANGELOG/"
-Issues = "https://github.com/smartgoo/kaspa-python-sdk/issues"
+Homepage = "https://github.com/kaspanet/kaspa-python-sdk"
+Repository = "https://github.com/kaspanet/kaspa-python-sdk"
+Documentation = "https://kaspanet.github.io/kaspa-python-sdk/latest"
+Changelog = "https://kaspanet.github.io/kaspa-python-sdk/latest/CHANGELOG/"
+Issues = "https://github.com/kaspanet/kaspa-python-sdk/issues"
 
 [project.optional-dependencies]
 dev = [

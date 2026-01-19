@@ -11,7 +11,7 @@ This page contains a handful of brief examples showing core features of the Kasp
 
 ## Examples on Github
 
-In addition to the examples below, a collection of examples can be found in the Github repository [here](https://github.com/smartgoo/kaspa-python-sdk/tree/master/examples).
+In addition to the examples below, a collection of examples can be found in the Github repository [here](https://github.com/kaspanet/kaspa-python-sdk/tree/master/examples).
 
 ## Kaspa RPC Client
 
