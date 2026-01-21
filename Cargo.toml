@@ -27,6 +27,7 @@ kaspa-txscript = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "1
 kaspa-utils = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "1a2f98a" }
 kaspa-wallet-core = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "1a2f98a" }
 kaspa-wallet-keys = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "1a2f98a" }
+kaspa-wallet-pskt = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "1a2f98a" }
 kaspa-wrpc-client = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "1a2f98a" }
 paste = "1.0"
 pyo3 = { version = "0.27.1", features = ['multiple-pymethods'] }

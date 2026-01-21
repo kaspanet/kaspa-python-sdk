@@ -2170,6 +2170,7 @@ dependencies = [
  "kaspa-utils",
  "kaspa-wallet-core",
  "kaspa-wallet-keys",
+ "kaspa-wallet-pskt",
  "kaspa-wrpc-client",
  "paste",
  "pyo3",
