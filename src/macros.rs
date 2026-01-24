@@ -69,7 +69,7 @@ macro_rules! create_py_exception {
         #[gen_stub_pyclass]
         #[pyclass(name = $py_name, extends = PyException)]
         pub struct $name;
-        
+
         impl $name {
             pub fn new_err<A>(args: A) -> PyErr
             where

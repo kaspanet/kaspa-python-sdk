@@ -1455,9 +1455,72 @@ class PublicKeyGenerator:
         """
 
 @typing.final
+class PyPsktConsensusClientError(builtins.Exception):
+    r"""
+    PSKT Consensus Client Error
+    """
+    ...
+
+@typing.final
+class PyPsktCreateNotAllowedError(builtins.Exception):
+    r"""
+    PSKT Creation Not Allowed Error
+    """
+    ...
+
+@typing.final
+class PyPsktCtorError(builtins.Exception):
+    r"""
+    PSKT Constructor Error
+    """
+    ...
+
+@typing.final
 class PyPsktCustomError(builtins.Exception):
     r"""
     Custom PSKT Error
+    """
+    ...
+
+@typing.final
+class PyPsktError(builtins.Exception):
+    r"""
+    PSKT Error
+    """
+    ...
+
+@typing.final
+class PyPsktExpectedStateError(builtins.Exception):
+    r"""
+    PSKT Expected State Error
+    """
+    ...
+
+@typing.final
+class PyPsktInvalidPayloadError(builtins.Exception):
+    r"""
+    PSKT Invalid Payload Error
+    """
+    ...
+
+@typing.final
+class PyPsktNotInitializedError(builtins.Exception):
+    r"""
+    PSKT Not Initialized Error
+    """
+    ...
+
+@typing.final
+class PyPsktStateError(builtins.Exception):
+    r"""
+    PSKT State Error
+    """
+    ...
+
+@typing.final
+class PyPsktTxNotFinalizedError(builtins.Exception):
+    r"""
+    PSKT Tx Not Finalized Error
     """
     ...
 

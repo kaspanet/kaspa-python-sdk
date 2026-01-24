@@ -4,7 +4,7 @@ use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::gen_stub_pyclass;
 
-pub struct PyPsktError(pub Error);
+pub struct PsktError(pub Error);
 
 crate::create_py_exception!(
     /// Custom PSKT Error
@@ -56,19 +56,8 @@ crate::create_py_exception!(
     PyPsktError, "PsktError"
 );
 
-// create_exception!("kaspa.exceptions", PsktCustomError, PyException);
-// create_exception!("kaspa.exceptions", PsktStateError, PyException);
-// create_exception!("kaspa.exceptions", PsktExpectedStateError, PyException);
-// create_exception!("kaspa.exceptions", PsktCtorError, PyException);
-// create_exception!("kaspa.exceptions", PsktInvalidPayloadError, PyException);
-// create_exception!("kaspa.exceptions", PsktTxNotFinalizedError, PyException);
-// create_exception!("kaspa.exceptions", PsktCreateNotAllowedError, PyException);
-// create_exception!("kaspa.exceptions", PsktNotInitializedError, PyException);
-// create_exception!("kaspa.exceptions", PsktConsensusClientError, PyException);
-// create_exception!("kaspa.exceptions", PsktError, PyException);
-
-impl From<PyPsktError> for PyErr {
-    fn from(value: PyPsktError) -> Self {
+impl From<PsktError> for PyErr {
+    fn from(value: PsktError) -> Self {
         match value.0 {
             Error::Custom(msg) => PyPsktCustomError::new_err(msg),
             Error::State(msg) => PyPsktStateError::new_err(msg),
@@ -89,8 +78,8 @@ impl From<PyPsktError> for PyErr {
     }
 }
 
-impl From<Error> for PyPsktError {
+impl From<Error> for PsktError {
     fn from(value: Error) -> Self {
-        PyPsktError(value)
+        PsktError(value)
     }
 }
