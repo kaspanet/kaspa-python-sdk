@@ -4,7 +4,7 @@ use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::gen_stub_pyclass;
 
-pub struct PsktError(pub Error);
+// Custom Python Exceptions
 
 crate::create_py_exception!(
     /// Custom PSKT Error
@@ -55,6 +55,9 @@ crate::create_py_exception!(
     /// PSKT Error
     PyPsktError, "PsktError"
 );
+
+// Rust error that maps to Python error
+pub struct PsktError(Error);
 
 impl From<PsktError> for PyErr {
     fn from(value: PsktError) -> Self {
