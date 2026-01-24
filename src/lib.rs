@@ -164,43 +164,46 @@ fn kaspa(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<wallet::keys::xprv::PyXPrv>()?;
     m.add_class::<wallet::keys::xpub::PyXPub>()?;
 
-    m.add(
+    exceptions.add(
         "PsktCustomError",
         py.get_type::<wallet::pskt::error::PyPsktCustomError>(),
     )?;
-    m.add(
+    exceptions.add(
         "PsktStateError",
         py.get_type::<wallet::pskt::error::PyPsktStateError>(),
     )?;
-    m.add(
+    exceptions.add(
         "PsktExpectedStateError",
         py.get_type::<wallet::pskt::error::PyPsktExpectedStateError>(),
     )?;
-    m.add(
+    exceptions.add(
         "PsktCtorError",
         py.get_type::<wallet::pskt::error::PyPsktCtorError>(),
     )?;
-    m.add(
+    exceptions.add(
         "PsktInvalidPayloadError",
         py.get_type::<wallet::pskt::error::PyPsktInvalidPayloadError>(),
     )?;
-    m.add(
+    exceptions.add(
         "PsktTxNotFinalizedError",
         py.get_type::<wallet::pskt::error::PyPsktTxNotFinalizedError>(),
     )?;
-    m.add(
+    exceptions.add(
         "PsktCreateNotAllowedError",
         py.get_type::<wallet::pskt::error::PyPsktCreateNotAllowedError>(),
     )?;
-    m.add(
+    exceptions.add(
         "PsktNotInitializedError",
         py.get_type::<wallet::pskt::error::PyPsktNotInitializedError>(),
     )?;
-    m.add(
+    exceptions.add(
         "PsktConsensusClientError",
         py.get_type::<wallet::pskt::error::PyPsktConsensusClientError>(),
     )?;
-    m.add("PsktError", py.get_type::<wallet::pskt::error::PyPsktError>())?;
+    exceptions.add(
+        "PsktError",
+        py.get_type::<wallet::pskt::error::PyPsktError>(),
+    )?;
 
     m.add_class::<wallet::pskt::PyPSKT>()?;
 
