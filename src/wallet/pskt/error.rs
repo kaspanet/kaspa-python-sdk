@@ -1,25 +1,40 @@
 use kaspa_wallet_pskt::wasm::error::Error;
-use pyo3::create_exception;
+use pyo3::{PyErrArguments, create_exception};
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
+use pyo3_stub_gen::derive::gen_stub_pyclass;
 
 pub struct PyPsktError(pub Error);
 
-create_exception!("kaspa", PsktCustomError, PyException);
-create_exception!("kaspa", PsktStateError, PyException);
-create_exception!("kaspa", PsktExpectedStateError, PyException);
-create_exception!("kaspa", PsktCtorError, PyException);
-create_exception!("kaspa", PsktInvalidPayloadError, PyException);
-create_exception!("kaspa", PsktTxNotFinalizedError, PyException);
-create_exception!("kaspa", PsktCreateNotAllowedError, PyException);
-create_exception!("kaspa", PsktNotInitializedError, PyException);
-create_exception!("kaspa", PsktConsensusClientError, PyException);
-create_exception!("kaspa", PsktError, PyException);
+#[gen_stub_pyclass]
+#[pyclass(name = "PsktCustomError", extends = PyException)]
+pub struct PyPsktCustomError;
+
+impl PyPsktCustomError {
+    pub fn new_err<A>(args: A) -> PyErr
+    where
+        A: PyErrArguments + Send + Sync + 'static,
+    {
+        PyErr::new::<Self, A>(args)
+    }
+}
+
+// #[gen_stub_pyclass]
+// create_exception!("kaspa.exceptions", PsktCustomError, PyException);
+create_exception!("kaspa.exceptions", PsktStateError, PyException);
+create_exception!("kaspa.exceptions", PsktExpectedStateError, PyException);
+create_exception!("kaspa.exceptions", PsktCtorError, PyException);
+create_exception!("kaspa.exceptions", PsktInvalidPayloadError, PyException);
+create_exception!("kaspa.exceptions", PsktTxNotFinalizedError, PyException);
+create_exception!("kaspa.exceptions", PsktCreateNotAllowedError, PyException);
+create_exception!("kaspa.exceptions", PsktNotInitializedError, PyException);
+create_exception!("kaspa.exceptions", PsktConsensusClientError, PyException);
+create_exception!("kaspa.exceptions", PsktError, PyException);
 
 impl From<PyPsktError> for PyErr {
     fn from(value: PyPsktError) -> Self {
         match value.0 {
-            Error::Custom(msg) => PsktCustomError::new_err(msg),
+            Error::Custom(msg) => PyPsktCustomError::new_err(msg),
             Error::State(msg) => PsktStateError::new_err(msg),
             Error::ExpectedState(msg) => PsktExpectedStateError::new_err(msg),
             Error::Ctor(msg) => PsktCtorError::new_err(msg),

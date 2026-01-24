@@ -13,7 +13,14 @@ define_stub_info_gatherer!(stub_info);
 
 #[pymodule]
 fn kaspa(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
+    // Init logging bridge
     pyo3_log::init();
+
+    // Create/register exceptions submodule
+    let exceptions = PyModule::new(py, "exceptions")?;
+    m.add_submodule(&exceptions)?;
+
+    // Register classes & functions
 
     m.add_class::<address::PyAddress>()?;
     m.add_class::<address::PyAddressVersion>()?;
@@ -159,7 +166,7 @@ fn kaspa(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     m.add(
         "PsktCustomError",
-        py.get_type::<wallet::pskt::error::PsktCustomError>(),
+        py.get_type::<wallet::pskt::error::PyPsktCustomError>(),
     )?;
     m.add(
         "PsktStateError",
