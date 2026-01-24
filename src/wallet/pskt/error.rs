@@ -1,4 +1,4 @@
-use kaspa_wallet_pskt::wasm::error::Error;
+use kaspa_wallet_pskt::wasm::error::Error as NativeError;
 use pyo3::PyErrArguments;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
@@ -56,35 +56,39 @@ crate::create_py_exception!(
     PyPsktError, "PsktError"
 );
 
-// Rust error that maps to Python error
-pub struct PsktError(Error);
+// Rust error internal custom Python exception over Rust/Python interface
+pub struct Error(NativeError);
 
-impl From<PsktError> for PyErr {
-    fn from(value: PsktError) -> Self {
+impl From<Error> for PyErr {
+    fn from(value: Error) -> Self {
         match value.0 {
-            Error::Custom(msg) => PyPsktCustomError::new_err(msg),
-            Error::State(msg) => PyPsktStateError::new_err(msg),
-            Error::ExpectedState(msg) => PyPsktExpectedStateError::new_err(msg),
-            Error::Ctor(msg) => PyPsktCtorError::new_err(msg),
-            Error::InvalidPayload => {
-                PyPsktInvalidPayloadError::new_err(Error::InvalidPayload.to_string())
+            NativeError::Custom(msg) => PyPsktCustomError::new_err(msg),
+            NativeError::State(msg) => PyPsktStateError::new_err(msg),
+            NativeError::ExpectedState(msg) => PyPsktExpectedStateError::new_err(msg),
+            NativeError::Ctor(msg) => PyPsktCtorError::new_err(msg),
+            NativeError::InvalidPayload => {
+                PyPsktInvalidPayloadError::new_err(NativeError::InvalidPayload.to_string())
             }
-            Error::TxNotFinalized(inner) => PyPsktTxNotFinalizedError::new_err(inner.to_string()),
-            Error::CreateNotAllowed => {
-                PyPsktCreateNotAllowedError::new_err(Error::CreateNotAllowed.to_string())
+            NativeError::TxNotFinalized(inner) => {
+                PyPsktTxNotFinalizedError::new_err(inner.to_string())
             }
-            Error::NotInitialized => {
-                PyPsktNotInitializedError::new_err(Error::NotInitialized.to_string())
+            NativeError::CreateNotAllowed => {
+                PyPsktCreateNotAllowedError::new_err(NativeError::CreateNotAllowed.to_string())
             }
-            Error::ConsensusClient(inner) => PyPsktConsensusClientError::new_err(inner.to_string()),
-            Error::Pskt(inner) => PyPsktError::new_err(inner.to_string()),
+            NativeError::NotInitialized => {
+                PyPsktNotInitializedError::new_err(NativeError::NotInitialized.to_string())
+            }
+            NativeError::ConsensusClient(inner) => {
+                PyPsktConsensusClientError::new_err(inner.to_string())
+            }
+            NativeError::Pskt(inner) => PyPsktError::new_err(inner.to_string()),
             _ => PyException::new_err("Unhandled error type"),
         }
     }
 }
 
-impl From<Error> for PsktError {
-    fn from(value: Error) -> Self {
-        PsktError(value)
+impl From<NativeError> for Error {
+    fn from(value: NativeError) -> Self {
+        Error(value)
     }
 }
