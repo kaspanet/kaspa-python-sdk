@@ -2052,6 +2052,30 @@ class Transaction:
         Returns:
             list[Address]: List of unique addresses referenced by inputs.
         """
+    def to_dict(self) -> dict:
+        r"""
+        Get a dictionary representation of the Transaction.
+        Note that this creates a second separate object on the Python heap.
+        
+        Returns:
+            dict: the Transaction in dictionary form.
+        """
+    @classmethod
+    def from_dict(cls, dict: dict) -> Transaction:
+        r"""
+        Create a Transaction from a dictionary.
+        
+        Args:
+            dict: Dictionary containing transaction fields with keys:
+                'id', 'version', `inputs`, `outputs`, `lockTime`,
+                `subnetworkId, `gas`, `payload`, `mass`.
+        
+        Returns:
+            Transaction: A new Transaction instance.
+        
+        Raises:
+            Exception: If required keys are missing or values are invalid.
+        """
     def __eq__(self, other: Transaction) -> builtins.bool: ...
 
 @typing.final
@@ -2147,6 +2171,29 @@ class TransactionInput:
         Returns:
             TransactionInput: A new TransactionInput instance.
         """
+    def to_dict(self) -> dict:
+        r"""
+        Get a dictionary representation of the TransactionInput.
+        Note that this creates a second separate object on the Python heap.
+        
+        Returns:
+            dict: the TransactionInput in dictionary form.
+        """
+    @classmethod
+    def from_dict(cls, dict: dict) -> TransactionInput:
+        r"""
+        Create a TransactionInput from a dictionary.
+        
+        Args:
+            dict: Dictionary containing transaction input fields with keys:
+                'previousOutpoint', 'signatureScript', 'sequence', 'sigOpCount'.
+        
+        Returns:
+            TransactionInput: A new TransactionInput instance.
+        
+        Raises:
+            Exception: If required keys are missing or values are invalid.
+        """
     def __eq__(self, other: TransactionInput) -> builtins.bool: ...
 
 @typing.final
@@ -2189,6 +2236,29 @@ class TransactionOutpoint:
         
         Returns:
             str: A string in format "transaction_id-index".
+        """
+    def to_dict(self) -> dict:
+        r"""
+        Get a dictionary representation of the TransactionOutpoint.
+        Note that this creates a second separate object on the Python heap.
+        
+        Returns:
+            dict: the TransactionOutpoint in dictionary form.
+        """
+    @classmethod
+    def from_dict(cls, dict: dict) -> TransactionOutpoint:
+        r"""
+        Create a TransactionOutpoint from a dictionary.
+        
+        Args:
+            dict: Dictionary containing transaction outpoint fields with keys:
+                'transactionId', 'index'.
+        
+        Returns:
+            TransactionOutpoint: A new TransactionOutpoint instance.
+        
+        Raises:
+            Exception: If required keys are missing or values are invalid.
         """
     def __eq__(self, other: TransactionOutpoint) -> builtins.bool: ...
 
@@ -2243,6 +2313,29 @@ class TransactionOutput:
         Returns:
             TransactionOutput: A new TransactionOutput instance.
         """
+    def to_dict(self) -> dict:
+        r"""
+        Get a dictionary representation of the TransactionOutput.
+        Note that this creates a second separate object on the Python heap.
+        
+        Returns:
+            dict: the TransactionOutput in dictionary form.
+        """
+    @classmethod
+    def from_dict(cls, dict: dict) -> TransactionOutput:
+        r"""
+        Create a TransactionOutput from a dictionary.
+        
+        Args:
+            dict: Dictionary containing transaction output fields with keys:
+                'value', 'scriptPublicKey'.
+        
+        Returns:
+            TransactionOutput: A new TransactionOutput instance.
+        
+        Raises:
+            Exception: If required keys are missing or values are invalid.
+        """
     def __eq__(self, other: TransactionOutput) -> builtins.bool: ...
 
 @typing.final
@@ -2278,6 +2371,14 @@ class UtxoEntries:
         
         Returns:
             int: The sum of all UTXO values in sompi.
+        """
+    def to_dict(self) -> dict:
+        r"""
+        Get a dictionary representation of the UtxoEntries.
+        Note that this creates a second separate object on the Python heap.
+        
+        Returns:
+            dict: the UtxoEntries in dictionary form.
         """
     def __eq__(self, other: UtxoEntries) -> builtins.bool: ...
 
@@ -2352,6 +2453,30 @@ class UtxoEntry:
         Returns:
             bool: True if this is a coinbase UTXO.
         """
+    def to_dict(self) -> dict:
+        r"""
+        Get a dictionary representation of the UtxoEntry.
+        Note that this creates a second separate object on the Python heap.
+        
+        Returns:
+            dict: the UtxoEntry in dictionary form.
+        """
+    @classmethod
+    def from_dict(cls, dict: dict) -> UtxoEntry:
+        r"""
+        Create a UtxoEntry from a dictionary.
+        
+        Args:
+            dict: Dictionary containing utxo entry fields with keys:
+                'address', 'outpoint', `amount`, `scriptPublicKey`,
+                `blockDaaScore`, `isCoinbase`.
+        
+        Returns:
+            UtxoEntry: A new UtxoEntry instance.
+        
+        Raises:
+            Exception: If required keys are missing or values are invalid.
+        """
     def __eq__(self, other: UtxoEntry) -> builtins.bool: ...
 
 @typing.final
@@ -2418,6 +2543,14 @@ class UtxoEntryReference:
             ScriptPublicKey: The script public key.
         """
     def __eq__(self, other: builtins.object) -> builtins.bool: ...
+    def to_dict(self) -> dict:
+        r"""
+        Get a dictionary representation of the Transaction.
+        Note that this creates a second separate object on the Python heap.
+        
+        Returns:
+            dict: the Transaction in dictionary form.
+        """
 
 @typing.final
 class XOnlyPublicKey:
