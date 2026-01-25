@@ -4,14 +4,15 @@ use crate::consensus::client::output::PyTransactionOutput;
 use crate::consensus::core::network::PyNetworkType;
 use crate::crypto::hashes::PyHash;
 use crate::types::PyBinary;
-use kaspa_consensus_client::{Transaction, TransactionInput, TransactionOutput};
+use kaspa_consensus_client::{Transaction, TransactionInner, TransactionInput, TransactionOutput};
 use kaspa_consensus_core::network::NetworkType;
 use kaspa_consensus_core::subnets;
 use kaspa_consensus_core::subnets::SubnetworkId;
 use kaspa_consensus_core::tx as cctx;
 use kaspa_txscript::extract_script_pub_key_address;
-use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
+use pyo3::types::PyType;
+use pyo3::{exceptions::PyException, types::PyDict};
 use pyo3_stub_gen::derive::*;
 use workflow_core::hex::{FromHex, ToHex};
 
@@ -309,6 +310,33 @@ impl PyTransaction {
         self.0.inner().mass = value;
     }
 
+    /// Get a dictionary representation of the Transaction.
+    /// Note that this creates a second separate object on the Python heap.
+    ///
+    /// Returns:
+    ///     dict: the Transaction in dictionary form.
+    fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+        let dict = serde_pyobject::to_pyobject(py, &self.inner().clone())?;
+        Ok(dict.cast_into()?)
+    }
+
+    /// Create a Transaction from a dictionary.
+    ///
+    /// Args:
+    ///     dict: Dictionary containing transaction fields with keys:
+    ///         'id', 'version', `inputs`, `outputs`, `lockTime`,
+    ///         `subnetworkId, `gas`, `payload`, `mass`.
+    ///
+    /// Returns:
+    ///     Transaction: A new Transaction instance.
+    ///
+    /// Raises:
+    ///     Exception: If required keys are missing or values are invalid.
+    #[classmethod]
+    fn from_dict(_cls: &Bound<'_, PyType>, dict: &Bound<'_, PyDict>) -> PyResult<Self> {
+        Self::try_from(dict)
+    }
+
     // Cannot be derived via pyclass(eq) as wrapped Transaction type does not derive PartialEq/Eq
     fn __eq__(&self, other: &PyTransaction) -> bool {
         match (bincode::serialize(&self.0), bincode::serialize(&other.0)) {
@@ -333,5 +361,25 @@ impl From<PyTransaction> for Transaction {
 impl From<&PyTransaction> for cctx::Transaction {
     fn from(value: &PyTransaction) -> Self {
         cctx::Transaction::from(&value.0)
+    }
+}
+
+impl TryFrom<&Bound<'_, PyDict>> for PyTransaction {
+    type Error = PyErr;
+    fn try_from(dict: &Bound<PyDict>) -> PyResult<Self> {
+        let inner: TransactionInner = serde_pyobject::from_pyobject(dict.clone())?;
+        let tx = Transaction::new(
+            Some(inner.id),
+            inner.version,
+            inner.inputs,
+            inner.outputs,
+            inner.lock_time,
+            inner.subnetwork_id,
+            inner.gas,
+            inner.payload,
+            inner.mass,
+        )
+        .map_err(|err| PyException::new_err(err.to_string()))?;
+        Ok(Self(tx))
     }
 }

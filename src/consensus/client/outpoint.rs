@@ -1,7 +1,10 @@
 use crate::crypto::hashes::PyHash;
 use kaspa_consensus_client::{TransactionOutpoint, TransactionOutpointInner};
 use kaspa_consensus_core::tx::TransactionIndexType;
-use pyo3::{prelude::*, types::PyDict};
+use pyo3::{
+    prelude::*,
+    types::{PyDict, PyType},
+};
 use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 /// Reference to a specific output in a previous transaction.
@@ -58,6 +61,32 @@ impl PyTransactionOutpoint {
     #[getter]
     pub fn get_index(&self) -> TransactionIndexType {
         self.0.inner().index
+    }
+
+    /// Get a dictionary representation of the TransactionOutpoint.
+    /// Note that this creates a second separate object on the Python heap.
+    ///
+    /// Returns:
+    ///     dict: the TransactionOutpoint in dictionary form.
+    fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+        let dict = serde_pyobject::to_pyobject(py, &self.0.clone())?;
+        Ok(dict.cast_into()?)
+    }
+
+    /// Create a TransactionOutpoint from a dictionary.
+    ///
+    /// Args:
+    ///     dict: Dictionary containing transaction outpoint fields with keys:
+    ///         'transactionId', 'index'.
+    ///
+    /// Returns:
+    ///     TransactionOutpoint: A new TransactionOutpoint instance.
+    ///
+    /// Raises:
+    ///     Exception: If required keys are missing or values are invalid.
+    #[classmethod]
+    fn from_dict(_cls: &Bound<'_, PyType>, dict: &Bound<'_, PyDict>) -> PyResult<Self> {
+        Self::try_from(dict)
     }
 
     // Cannot be derived via pyclass(eq) as wrapped PyTransactionOutpoint does not derive PartialEq/Eq

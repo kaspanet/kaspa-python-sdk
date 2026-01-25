@@ -2,8 +2,11 @@ use crate::{
     consensus::client::{outpoint::PyTransactionOutpoint, utxo::PyUtxoEntryReference},
     types::PyBinary,
 };
-use kaspa_consensus_client::{TransactionInput, UtxoEntryReference};
-use pyo3::prelude::*;
+use kaspa_consensus_client::{TransactionInput, TransactionInputInner, UtxoEntryReference};
+use pyo3::{
+    prelude::*,
+    types::{PyDict, PyType},
+};
 use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
 use workflow_core::hex::ToHex;
 
@@ -135,6 +138,32 @@ impl PyTransactionInput {
         self.0.inner().utxo.clone().map(PyUtxoEntryReference::from)
     }
 
+    /// Get a dictionary representation of the TransactionInput.
+    /// Note that this creates a second separate object on the Python heap.
+    ///
+    /// Returns:
+    ///     dict: the TransactionInput in dictionary form.
+    fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+        let dict = serde_pyobject::to_pyobject(py, &self.0.clone())?;
+        Ok(dict.cast_into()?)
+    }
+
+    /// Create a TransactionInput from a dictionary.
+    ///
+    /// Args:
+    ///     dict: Dictionary containing transaction input fields with keys:
+    ///         'previousOutpoint', 'signatureScript', 'sequence', 'sigOpCount'.
+    ///
+    /// Returns:
+    ///     TransactionInput: A new TransactionInput instance.
+    ///
+    /// Raises:
+    ///     Exception: If required keys are missing or values are invalid.
+    #[classmethod]
+    fn from_dict(_cls: &Bound<'_, PyType>, dict: &Bound<'_, PyDict>) -> PyResult<Self> {
+        Self::try_from(dict)
+    }
+
     // Cannot be derived via pyclass(eq) as wrapped PyTransactionInput type does not derive PartialEq/Eq
     fn __eq__(&self, other: &PyTransactionInput) -> bool {
         match (bincode::serialize(&self.0), bincode::serialize(&other.0)) {
@@ -153,5 +182,20 @@ impl From<TransactionInput> for PyTransactionInput {
 impl From<PyTransactionInput> for TransactionInput {
     fn from(value: PyTransactionInput) -> Self {
         value.0
+    }
+}
+
+impl TryFrom<&Bound<'_, PyDict>> for PyTransactionInput {
+    type Error = PyErr;
+    fn try_from(dict: &Bound<PyDict>) -> PyResult<Self> {
+        let inner: TransactionInputInner = serde_pyobject::from_pyobject(dict.clone())?;
+        let input = TransactionInput::new(
+            inner.previous_outpoint,
+            inner.signature_script,
+            inner.sequence,
+            inner.sig_op_count,
+            inner.utxo,
+        );
+        Ok(Self(input))
     }
 }

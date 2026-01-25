@@ -5,7 +5,7 @@ use kaspa_utils::hex::FromHex;
 use pyo3::{
     exceptions::{PyException, PyKeyError},
     prelude::*,
-    types::PyDict,
+    types::{PyDict, PyType},
 };
 use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
 use std::sync::Arc;
@@ -76,6 +76,33 @@ impl PyUtxoEntry {
         self.0.is_coinbase
     }
 
+    /// Get a dictionary representation of the UtxoEntry.
+    /// Note that this creates a second separate object on the Python heap.
+    ///
+    /// Returns:
+    ///     dict: the UtxoEntry in dictionary form.
+    fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+        let dict = serde_pyobject::to_pyobject(py, &self.0.clone())?;
+        Ok(dict.cast_into()?)
+    }
+
+    /// Create a UtxoEntry from a dictionary.
+    ///
+    /// Args:
+    ///     dict: Dictionary containing utxo entry fields with keys:
+    ///         'address', 'outpoint', `amount`, `scriptPublicKey`,
+    ///         `blockDaaScore`, `isCoinbase`.
+    ///
+    /// Returns:
+    ///     UtxoEntry: A new UtxoEntry instance.
+    ///
+    /// Raises:
+    ///     Exception: If required keys are missing or values are invalid.
+    #[classmethod]
+    fn from_dict(_cls: &Bound<'_, PyType>, dict: &Bound<'_, PyDict>) -> PyResult<Self> {
+        Self::try_from(dict)
+    }
+
     // Cannot be derived via pyclass(eq) as wrapped PyUtxoEntry type does not derive PartialEq/Eq
     fn __eq__(&self, other: &PyUtxoEntry) -> bool {
         match (bincode::serialize(&self.0), bincode::serialize(&other.0)) {
@@ -94,6 +121,14 @@ impl From<PyUtxoEntry> for UtxoEntry {
 impl From<UtxoEntry> for PyUtxoEntry {
     fn from(value: UtxoEntry) -> Self {
         Self(value)
+    }
+}
+
+impl TryFrom<&Bound<'_, PyDict>> for PyUtxoEntry {
+    type Error = PyErr;
+    fn try_from(dict: &Bound<PyDict>) -> PyResult<Self> {
+        let utxo_entry: UtxoEntry = serde_pyobject::from_pyobject(dict.clone())?;
+        Ok(Self(utxo_entry))
     }
 }
 
@@ -145,6 +180,16 @@ impl PyUtxoEntries {
     #[pyo3(name = "amount")]
     pub fn amount(&self) -> u64 {
         self.0.iter().map(|e| e.amount()).sum()
+    }
+
+    /// Get a dictionary representation of the UtxoEntries.
+    /// Note that this creates a second separate object on the Python heap.
+    ///
+    /// Returns:
+    ///     dict: the UtxoEntries in dictionary form.
+    fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+        let dict = serde_pyobject::to_pyobject(py, &self.0.clone())?;
+        Ok(dict.cast_into()?)
     }
 
     // Cannot be derived via pyclass(eq) as wrapped PyUtxoEntries type does not derive PartialEq/Eq
@@ -228,6 +273,16 @@ impl PyUtxoEntryReference {
     #[getter]
     pub fn get_script_public_key(&self) -> PyScriptPublicKey {
         self.0.utxo.script_public_key.clone().into()
+    }
+
+    /// Get a dictionary representation of the Transaction.
+    /// Note that this creates a second separate object on the Python heap.
+    ///
+    /// Returns:
+    ///     dict: the Transaction in dictionary form.
+    fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+        let dict = serde_pyobject::to_pyobject(py, &self.0.clone())?;
+        Ok(dict.cast_into()?)
     }
 }
 
