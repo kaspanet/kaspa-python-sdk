@@ -2,834 +2,834 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/CHANGELOG/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/contributing/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/contributing/architecture-design/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/contributing/building/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/contributing/documentation/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/contributing/pyo3-core-concepts/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/contributing/releasing/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/contributing/setup/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/contributing/testing/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/getting-started/examples/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/getting-started/installation/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/guides/addresses/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/guides/key-derivation/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/guides/message-signing/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/guides/mnemonics/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/guides/rpc-client/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/guides/transactions/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/SUMMARY/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Classes/AccountKind/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Classes/Address/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Classes/Binary/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Classes/DerivationPath/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Classes/Generator/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Classes/GeneratorSummary/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Classes/Hash/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Classes/Keypair/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Classes/Mnemonic/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Classes/NetworkId/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Classes/Notification/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Classes/Outputs/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Classes/PaymentOutput/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Classes/PendingTransaction/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Classes/PrivateKey/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Classes/PrivateKeyGenerator/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Classes/PublicKey/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Classes/PublicKeyGenerator/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Classes/Resolver/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Classes/RpcClient/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Classes/ScriptBuilder/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Classes/ScriptPublicKey/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Classes/Transaction/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Classes/TransactionInput/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Classes/TransactionOutpoint/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Classes/TransactionOutput/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Classes/UtxoEntries/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Classes/UtxoEntry/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Classes/UtxoEntryReference/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Classes/XOnlyPublicKey/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Classes/XPrv/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Classes/XPub/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Enums/AddressVersion/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Enums/Encoding/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Enums/Language/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Enums/NetworkType/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Enums/NotificationEvent/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Enums/Opcodes/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Enums/RpcDataVerbosityLevel/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Enums/SighashType/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Functions/address_from_script_public_key/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Functions/calculate_storage_mass/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Functions/calculate_transaction_fee/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Functions/calculate_transaction_mass/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Functions/create_input_signature/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Functions/create_multisig_address/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Functions/create_transaction/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Functions/create_transactions/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Functions/estimate_transactions/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Functions/is_script_pay_to_pubkey/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Functions/is_script_pay_to_pubkey_ecdsa/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Functions/is_script_pay_to_script_hash/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Functions/kaspa_to_sompi/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Functions/maximum_standard_transaction_mass/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Functions/pay_to_address_script/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Functions/pay_to_script_hash_script/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Functions/pay_to_script_hash_signature_script/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Functions/sign_message/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Functions/sign_script_hash/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Functions/sign_transaction/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Functions/sompi_to_kaspa/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Functions/sompi_to_kaspa_string_with_suffix/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Functions/update_transaction_mass/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/Functions/verify_message/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/AddPeerRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/AddPeerResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/BanRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/BanResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/BandwidthMetrics/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/ConnectionMetrics/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/ConnectionsProfileData/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/ConsensusMetrics/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/EstimateNetworkHashesPerSecondRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/EstimateNetworkHashesPerSecondResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetBalanceByAddressRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetBalanceByAddressResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetBalancesByAddressesRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetBalancesByAddressesResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetBlockCountRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetBlockCountResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetBlockDagInfoRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetBlockDagInfoResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetBlockRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetBlockResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetBlockTemplateRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetBlockTemplateResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetBlocksRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetBlocksResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetCoinSupplyRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetCoinSupplyResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetConnectedPeerInfoRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetConnectedPeerInfoResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetConnectionsRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetConnectionsResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetCurrentBlockColorRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetCurrentBlockColorResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetCurrentNetworkRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetCurrentNetworkResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetDaaScoreTimestampEstimateRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetDaaScoreTimestampEstimateResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetFeeEstimateExperimentalRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetFeeEstimateExperimentalResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetFeeEstimateRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetFeeEstimateResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetHeadersRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetHeadersResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetInfoRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetInfoResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetMempoolEntriesByAddressesRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetMempoolEntriesByAddressesResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetMempoolEntriesRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetMempoolEntriesResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetMempoolEntryRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetMempoolEntryResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetMetricsRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetMetricsResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetPeerAddressesRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetPeerAddressesResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetServerInfoRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetServerInfoResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetSinkBlueScoreRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetSinkBlueScoreResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetSinkRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetSinkResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetSubnetworkRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetSubnetworkResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetSyncStatusRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetSyncStatusResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetSystemInfoRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetSystemInfoResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetUtxoReturnAddressRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetUtxoReturnAddressResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetUtxosByAddressesRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetUtxosByAddressesResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetVirtualChainFromBlockRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetVirtualChainFromBlockResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetVirtualChainFromBlockV2Request/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/GetVirtualChainFromBlockV2Response/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/PingRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/PingResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/ProcessMetrics/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/ResolveFinalityConflictRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/ResolveFinalityConflictResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcAcceptedTransactionIds/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcBalancesByAddressesEntry/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcBlock/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcBlockHeader/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcBlockVerboseData/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcChainBlockAcceptedTransactions/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcFeeEstimate/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcFeeRateBucket/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcMempoolEntry/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcMempoolEntryByAddress/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcOptionalHeader/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcOptionalTransaction/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcOptionalTransactionInput/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcOptionalTransactionInputVerboseData/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcOptionalTransactionOutpoint/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcOptionalTransactionOutput/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcOptionalTransactionOutputVerboseData/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcOptionalTransactionVerboseData/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcOptionalUtxoEntry/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcOptionalUtxoEntryVerboseData/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcOutpoint/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcPeerAddress/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcPeerInfo/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcRawBlock/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcRawHeader/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcScriptPublicKey/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcStorageMetrics/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcTransaction/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcTransactionInput/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcTransactionOutput/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcTransactionOutputVerboseData/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcTransactionVerboseData/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcUtxoEntry/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcUtxosByAddressesEntry/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/RpcVerboseData/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/ShutdownRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/ShutdownResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/SubmitBlockRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/SubmitBlockResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/SubmitTransactionReplacementRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/SubmitTransactionReplacementResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/SubmitTransactionRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/SubmitTransactionResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/UnbanRequest/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
     <url>
          <loc>https://kaspanet.github.io/kaspa-python-sdk/dev/reference/TypedDicts/UnbanResponse/</loc>
-         <lastmod>2026-01-20</lastmod>
+         <lastmod>2026-01-25</lastmod>
     </url>
 </urlset>
