@@ -152,6 +152,58 @@ class Address:
         """
 
 @typing.final
+class Balance:
+    r"""
+    UTXO context balance summary.
+    """
+    @property
+    def mature(self) -> builtins.int:
+        r"""
+        Total mature balance in sompi.
+        """
+    @property
+    def pending(self) -> builtins.int:
+        r"""
+        Total pending balance in sompi.
+        """
+    @property
+    def outgoing(self) -> builtins.int:
+        r"""
+        Total outgoing balance in sompi.
+        """
+    @property
+    def mature_utxo_count(self) -> builtins.int:
+        r"""
+        Number of mature UTXOs.
+        """
+    @property
+    def pending_utxo_count(self) -> builtins.int:
+        r"""
+        Number of pending UTXOs.
+        """
+    @property
+    def stasis_utxo_count(self) -> builtins.int:
+        r"""
+        Number of stasis (coinbase) UTXOs.
+        """
+
+@typing.final
+class BalanceStrings:
+    r"""
+    String-formatted balance values with network suffix.
+    """
+    @property
+    def mature(self) -> builtins.str:
+        r"""
+        Mature balance formatted as a string (e.g., "1.23 KAS").
+        """
+    @property
+    def pending(self) -> typing.Optional[builtins.str]:
+        r"""
+        Pending balance formatted as a string (if any).
+        """
+
+@typing.final
 class Binary:
     r"""
     Binary data type for flexible input handling.
@@ -2339,6 +2391,60 @@ class TransactionOutput:
     def __eq__(self, other: TransactionOutput) -> builtins.bool: ...
 
 @typing.final
+class UtxoContext:
+    r"""
+    UTXO context for tracking addresses and balances.
+    """
+    @property
+    def is_active(self) -> builtins.bool:
+        r"""
+        Whether the underlying processor is connected and running.
+        """
+    @property
+    def mature_length(self) -> builtins.int:
+        r"""
+        Number of mature UTXO entries.
+        """
+    @property
+    def balance(self) -> typing.Optional[Balance]:
+        r"""
+        Current balance for this context (if available).
+        """
+    @property
+    def balance_strings(self) -> typing.Optional[BalanceStrings]:
+        r"""
+        Current balance formatted as strings (if available).
+        """
+    def __new__(cls, processor: UtxoProcessor, id: typing.Optional[typing.Any] = None) -> UtxoContext:
+        r"""
+        Create a new UtxoContext.
+        
+        Args:
+            processor: The UtxoProcessor to bind to.
+            id: Optional 32-byte hex id (string) or Hash.
+        """
+    def track_addresses(self, addresses: Sequence[Address] | Sequence[str], current_daa_score: typing.Optional[builtins.int] = None) -> typing.Any:
+        r"""
+        Track and scan a list of addresses (async).
+        
+        Args:
+            addresses: List of Address objects or address strings.
+            current_daa_score: Optional current DAA score for scan context.
+        """
+    def unregister_addresses(self, addresses: Sequence[Address] | Sequence[str]) -> typing.Any:
+        r"""
+        Unregister a list of addresses (async).
+        """
+    def clear(self) -> typing.Any:
+        r"""
+        Clear all tracked addresses and UTXOs (async).
+        """
+    def mature_range(self, start: builtins.int, end: builtins.int) -> builtins.list[UtxoEntryReference]:
+        r"""
+        Return a range of mature UTXO entries.
+        """
+
+@typing.final
 class UtxoEntries:
     r"""
     A collection of UTXO entry references.
@@ -2550,6 +2656,47 @@ class UtxoEntryReference:
         
         Returns:
             dict: the Transaction in dictionary form.
+        """
+
+@typing.final
+class UtxoProcessor:
+    r"""
+    UTXO processor coordinating address tracking and UTXO updates.
+    """
+    @property
+    def rpc(self) -> RpcClient:
+        r"""
+        The associated RPC client.
+        """
+    @property
+    def network_id(self) -> typing.Optional[NetworkId]:
+        r"""
+        The network id used by the processor (if set).
+        """
+    @property
+    def is_active(self) -> builtins.bool:
+        r"""
+        Whether the processor is connected and running.
+        """
+    def __new__(cls, rpc: RpcClient, network_id: NetworkId) -> UtxoProcessor:
+        r"""
+        Create a new UtxoProcessor.
+        
+        Args:
+            rpc: The RPC client to use for network communication.
+            network_id: Network identifier for UTXO processing.
+        """
+    def start(self) -> typing.Any:
+        r"""
+        Start UTXO processing (async).
+        """
+    def stop(self) -> typing.Any:
+        r"""
+        Stop UTXO processing (async).
+        """
+    def set_network_id(self, network_id: NetworkId) -> None:
+        r"""
+        Set the network id for the processor.
         """
 
 @typing.final

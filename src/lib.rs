@@ -95,6 +95,10 @@ fn kaspa(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<wallet::core::tx::generator::generator::PyGenerator>()?;
     m.add_class::<wallet::core::tx::generator::pending::PendingTransaction>()?;
     m.add_class::<wallet::core::tx::generator::summary::PyGeneratorSummary>()?;
+    m.add_class::<wallet::core::utxo::balance::PyBalance>()?;
+    m.add_class::<wallet::core::utxo::balance::PyBalanceStrings>()?;
+    m.add_class::<wallet::core::utxo::context::PyUtxoContext>()?;
+    m.add_class::<wallet::core::utxo::processor::PyUtxoProcessor>()?;
 
     m.add_function(wrap_pyfunction!(
         wallet::core::tx::mass::py_maximum_standard_transaction_mass,

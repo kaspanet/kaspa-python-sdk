@@ -190,6 +190,12 @@ impl From<PyNetworkId> for NetworkId {
     }
 }
 
+impl From<NetworkId> for PyNetworkId {
+    fn from(value: NetworkId) -> Self {
+        Self(value)
+    }
+}
+
 impl FromStr for PyNetworkId {
     type Err = PyErr;
 
