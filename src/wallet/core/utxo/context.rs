@@ -3,10 +3,11 @@ use crate::consensus::client::utxo::PyUtxoEntryReference;
 use crate::crypto::hashes::PyHash;
 use crate::wallet::core::utxo::balance::{PyBalance, PyBalanceStrings};
 use crate::wallet::core::utxo::processor::PyUtxoProcessor;
+use futures::stream::StreamExt;
 use kaspa_addresses::Address;
 use kaspa_hashes::Hash;
 use kaspa_wallet_core::utxo::balance::BalanceStrings;
-use kaspa_wallet_core::utxo::{UtxoContext, UtxoContextBinding, UtxoContextId, UtxoIterator};
+use kaspa_wallet_core::utxo::{UtxoContext, UtxoContextBinding, UtxoContextId, UtxoStream};
 use pyo3::{exceptions::PyException, prelude::*};
 use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
 use std::str::FromStr;
@@ -147,9 +148,14 @@ impl PyUtxoContext {
         if start == end {
             return Ok(vec![]);
         }
-        Ok(UtxoIterator::new(&self.0)
-            .skip(start)
-            .take(end - start)
+        let entries = futures::executor::block_on(
+            UtxoStream::new(&self.0)
+                .skip(start)
+                .take(end - start)
+                .collect::<Vec<_>>(),
+        );
+        Ok(entries
+            .into_iter()
             .map(PyUtxoEntryReference::from)
             .collect())
     }
