@@ -7550,7 +7550,7 @@
 
 <h1 id="releasing">Releasing<a class="headerlink" href="#releasing" title="Permanent link">&para;</a></h1>
 <h2 id="cicd-workflows">CI/CD Workflows<a class="headerlink" href="#cicd-workflows" title="Permanent link">&para;</a></h2>
-<p>Three GitHub Actions workflows automate the project:</p>
+<p>Three GitHub Actions workflows are in place:</p>
 <h3 id="ciyml-continuous-integration"><code>ci.yml</code> — Continuous Integration<a class="headerlink" href="#ciyml-continuous-integration" title="Permanent link">&para;</a></h3>
 <p><strong>Triggers:</strong> All pushes and pull requests</p>
 <table>
@@ -7606,7 +7606,7 @@
 </table>
 <h3 id="releaseyml-release-builds"><code>release.yml</code> — Release Builds<a class="headerlink" href="#releaseyml-release-builds" title="Permanent link">&para;</a></h3>
 <p><strong>Triggers:</strong> GitHub Release published</p>
-<p>Builds wheels for all platforms (Linux, macOS, Windows) and supported Python versions, then attaches them to the GitHub Release.</p>
+<p>Builds wheels for all platforms (Linux, macOS, Windows) and supported Python versions, then uploads to the GitHub Release.</p>
 <h2 id="branch-tags">Branch &amp; Tags<a class="headerlink" href="#branch-tags" title="Permanent link">&para;</a></h2>
 <ol>
 <li>Development in feature branches, merged to <code>main</code></li>

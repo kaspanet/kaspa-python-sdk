@@ -7297,13 +7297,7 @@
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pytest<span class="w"> </span>tests/integration<span class="w"> </span>-v
 </span></code></pre></div>
 <h2 id="test-fixtures">Test Fixtures<a class="headerlink" href="#test-fixtures" title="Permanent link">&para;</a></h2>
-<p>Shared test fixtures are defined in <code>tests/conftest.py</code>. These provide deterministic test values:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Example fixtures available</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">known_mnemonic_phrase</span>    <span class="c1"># Known test mnemonic</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">known_private_key</span>        <span class="c1"># Known test private key</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">known_mainnet_address</span>    <span class="c1"># Known valid address</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">testnet_rpc_client</span>       <span class="c1"># Connected RPC client (integration tests)</span>
-</span></code></pre></div>
+<p>Shared test fixtures are defined in <code>tests/conftest.py</code>. These provide deterministic test values (keys, addresses, etc.) used throughout tests.</p>
 
 
 

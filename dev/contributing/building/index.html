@@ -7285,7 +7285,7 @@
 <h1 id="building">Building<a class="headerlink" href="#building" title="Permanent link">&para;</a></h1>
 <p>The project includes several shell scripts to streamline common tasks.</p>
 <h2 id="development-build-script">Development Build Script<a class="headerlink" href="#development-build-script" title="Permanent link">&para;</a></h2>
-<p>Use this to build development version of the package:</p>
+<p>Builds a development version of the package:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>./build-dev
 </span></code></pre></div>
 <p>This script:</p>
@@ -7300,14 +7300,15 @@
 </span></code></pre></div>
 <p>The <code>kaspa</code> Python module can than be imported and used in Python.</p>
 <h2 id="release-build-script">Release Build Script<a class="headerlink" href="#release-build-script" title="Permanent link">&para;</a></h2>
-<p>Use this to build release version and wheels of the package:</p>
+<p>Builds a release version and wheels of the package:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>./build-release
 </span></code></pre></div>
 <p>This script:</p>
 <ol>
-<li>Creates/activates a virtual environment</li>
-<li>Generates stub files (release mode)</li>
-<li>Builds optimized wheel (<code>.whl</code>) and source distribution</li>
+<li>Creates/activates a virtual environment (<code>env/</code>)</li>
+<li>Installs Maturin if not present</li>
+<li>Generates Python stub files (<code>.pyi</code>)</li>
+<li>Builds optimized wheel (<code>.whl</code>)</li>
 </ol>
 <p>Output files are placed in <code>target/wheels/</code>.</p>
 <h2 id="approximate-ci-validation-script">(Approximate) CI Validation Script<a class="headerlink" href="#approximate-ci-validation-script" title="Permanent link">&para;</a></h2>

@@ -7117,17 +7117,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#categories" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Categories
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -7403,17 +7392,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#categories" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Categories
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -7483,7 +7461,7 @@
 
 
 <h1 id="documentation">Documentation<a class="headerlink" href="#documentation" title="Permanent link">&para;</a></h1>
-<p>Reference for how the documentation site is built, including stub generation, API reference generation, and doc comment format.</p>
+<p>This page provides reference for how the documentation site is built. Including stub generation, API reference generation, and doc comment format.</p>
 <h2 id="site-overview">Site Overview<a class="headerlink" href="#site-overview" title="Permanent link">&para;</a></h2>
 <p>The documentation site is built with <a href="https://www.mkdocs.org/">MkDocs</a> using the <a href="https://squidfunk.github.io/mkdocs-material/">Material theme</a>. Configuration lives in <code>mkdocs.yml</code>.</p>
 <table>
@@ -7529,8 +7507,7 @@
 <p>At docs build time (<code>mkdocs build</code> or <code>mkdocs serve</code>):</p>
 <ol>
 <li><code>docs/gen_ref_pages.py</code> parses <code>kaspa.pyi</code> for classes, functions, and enums</li>
-<li>Extracts <code>Category:</code> tags from docstrings</li>
-<li>Groups objects by category (Core, RPC, Wallet)</li>
+<li>Groups objects by type (Class, Enum, Function, TypedDict)</li>
 <li>Generates <code>reference/*.md</code> pages (one per class/function)</li>
 <li><code>mkdocstrings</code> renders final HTML from the docstrings</li>
 </ol>
@@ -7616,63 +7593,8 @@
 <td><code>Example:</code></td>
 <td>Code examples</td>
 </tr>
-<tr>
-<td><code>Category:</code></td>
-<td>API Reference category</td>
-</tr>
 </tbody>
 </table>
-<h2 id="categories">Categories<a class="headerlink" href="#categories" title="Permanent link">&para;</a></h2>
-<p>Categories organize items in the API Reference. Specified via <code>Category:</code> tag in docstrings.</p>
-<table>
-<thead>
-<tr>
-<th>Category</th>
-<th>Contents</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>Core/Types</code></td>
-<td>Address, NetworkId, Hash, ScriptPublicKey</td>
-</tr>
-<tr>
-<td><code>Core/Utils</code></td>
-<td>Utility functions</td>
-</tr>
-<tr>
-<td><code>RPC/Core</code></td>
-<td>RpcClient, Resolver</td>
-</tr>
-<tr>
-<td><code>RPC/Messages</code></td>
-<td>Request/Response types</td>
-</tr>
-<tr>
-<td><code>RPC/Types</code></td>
-<td>RPC-related types</td>
-</tr>
-<tr>
-<td><code>Wallet/Core</code></td>
-<td>Mnemonic, derivation utilities</td>
-</tr>
-<tr>
-<td><code>Wallet/Keys</code></td>
-<td>PrivateKey, PublicKey, XPrv, XPub, generators</td>
-</tr>
-<tr>
-<td><code>Wallet/Transactions</code></td>
-<td>Transaction, Generator, PaymentOutput</td>
-</tr>
-</tbody>
-</table>
-<p>Auto-categorization rules (when no <code>Category:</code> specified):</p>
-<ul>
-<li><code>*Request</code> / <code>*Response</code> suffix → <code>RPC/Messages</code></li>
-<li><code>Rpc*</code> prefix → <code>RPC/Types</code></li>
-<li>All others → <code>Other</code></li>
-</ul>
-<p>Categories are defined in <code>docs/gen_ref_pages.py</code>.</p>
 
 
 
