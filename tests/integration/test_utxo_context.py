@@ -46,3 +46,22 @@ class TestUtxoContext:
                 context.mature_range(1, 0)
         finally:
             await processor.stop()
+
+    async def test_track_addresses_invalid_address(self, testnet_rpc_client):
+        processor = UtxoProcessor(testnet_rpc_client, NetworkId("testnet-10"))
+        await processor.start()
+        try:
+            context = UtxoContext(processor)
+            with pytest.raises(Exception):
+                await context.track_addresses(["not-a-valid-address"])
+        finally:
+            await processor.stop()
+
+    async def test_context_invalid_id(self, testnet_rpc_client):
+        processor = UtxoProcessor(testnet_rpc_client, NetworkId("testnet-10"))
+        await processor.start()
+        try:
+            with pytest.raises(Exception):
+                UtxoContext(processor, "not-hex")
+        finally:
+            await processor.stop()
