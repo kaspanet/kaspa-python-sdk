@@ -25,7 +25,7 @@ async def main():
     mature_length = context.mature_length
     end = min(5, mature_length)
     print(f"Mature length: {mature_length}")
-    print(f"Mature range (0..{end}): {context.mature_range(0, end)}")
+    print(f"Mature range (0..{end}): {context.mature_range(from_=0, to=end)}")
     print(f"Balance: {context.balance}")
     print(f"Balance strings: {context.balance_strings}")
 

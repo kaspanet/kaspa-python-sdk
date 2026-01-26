@@ -130,28 +130,24 @@ impl PyUtxoContext {
     }
 
     /// Return a range of mature UTXO entries.
-    fn mature_range(
-        &self,
-        mut start: usize,
-        mut end: usize,
-    ) -> PyResult<Vec<PyUtxoEntryReference>> {
+    fn mature_range(&self, mut from_: usize, mut to: usize) -> PyResult<Vec<PyUtxoEntryReference>> {
         let total = self.0.mature_utxo_size();
-        if start > end {
-            return Err(PyException::new_err("'start' must be <= 'end'"));
+        if from_ > to {
+            return Err(PyException::new_err("'from_' must be <= 'to'"));
         }
-        if start > total {
-            start = total;
+        if from_ > total {
+            from_ = total;
         }
-        if end > total {
-            end = total;
+        if to > total {
+            to = total;
         }
-        if start == end {
+        if from_ == to {
             return Ok(vec![]);
         }
         let entries = futures::executor::block_on(
             UtxoStream::new(&self.0)
-                .skip(start)
-                .take(end - start)
+                .skip(from_)
+                .take(to - from_)
                 .collect::<Vec<_>>(),
         );
         Ok(entries

@@ -2439,7 +2439,7 @@ class UtxoContext:
         r"""
         Clear all tracked addresses and UTXOs (async).
         """
-    def mature_range(self, start: builtins.int, end: builtins.int) -> builtins.list[UtxoEntryReference]:
+    def mature_range(self, from_: builtins.int, to: builtins.int) -> builtins.list[UtxoEntryReference]:
         r"""
         Return a range of mature UTXO entries.
         """
