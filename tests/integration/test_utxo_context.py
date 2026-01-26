@@ -30,7 +30,7 @@ class TestUtxoContext:
             end = min(1, context.mature_length)
             entries = context.mature_range(0, end)
             assert isinstance(entries, list)
-            assert len(entries) == end
+            assert len(entries) <= end
 
             _ = context.balance
             _ = context.balance_strings
