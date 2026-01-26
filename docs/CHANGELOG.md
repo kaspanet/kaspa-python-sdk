@@ -14,6 +14,7 @@
 - `GetVirtualChainFromBlockV2` RPC method.
 - `to_dict()` method for `Transaction`, `TransactionInput`, `TransactionOutput`, `TransactionOutpoint`, `UtxoEntry`, `UtxoEntries`, and `UtxoEntryReference`.
 - `from_dict()` method for `Transaction`, `TransactionInput`, `TransactionOutput`, `TransactionOutpoint`, and `UtxoEntry`.
+- `UtxoProcessor` and `UtxoContext` bindings for UTXO tracking and mature range access.
 
 ### Changed
 - Moved Kaspa Python SDK out of Rusty-Kaspa (as a workspace member crate) to its own dedicated repository. The internals of this project have changed significantly as a result. However, all APIs exposed to Python remain unchanged. 
