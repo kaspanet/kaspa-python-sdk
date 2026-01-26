@@ -4,7 +4,7 @@ The project includes several shell scripts to streamline common tasks.
 
 ## Development Build Script
 
-Use this to build development version of the package:
+Builds a development version of the package:
 
 ```bash
 ./build-dev
@@ -27,7 +27,7 @@ The `kaspa` Python module can than be imported and used in Python.
 
 ## Release Build Script
 
-Use this to build release version and wheels of the package:
+Builds a release version and wheels of the package:
 
 ```bash
 ./build-release
@@ -35,9 +35,10 @@ Use this to build release version and wheels of the package:
 
 This script:
 
-1. Creates/activates a virtual environment
-2. Generates stub files (release mode)
-3. Builds optimized wheel (`.whl`) and source distribution
+1. Creates/activates a virtual environment (`env/`)
+2. Installs Maturin if not present
+3. Generates Python stub files (`.pyi`)
+4. Builds optimized wheel (`.whl`)
 
 Output files are placed in `target/wheels/`.
 

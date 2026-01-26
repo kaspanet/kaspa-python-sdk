@@ -8,7 +8,7 @@ This guide details local development environment setup.
 
 This SDK is built from Rust source code and leverages native rusty-kaspa. You'll need the full Rust/rusty-kaspa environment: [rusty-kaspa installation guide](https://github.com/kaspanet/rusty-kaspa?tab=readme-ov-file#installation).
 
-**2.) Ensure Python 3.9 - 3.14 is installed, as well as pip.**
+**2.) Ensure Python 3.10 - 3.14 is installed, as well as pip.**
 
 **3.) Clone the repository:**
 

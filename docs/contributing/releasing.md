@@ -2,7 +2,7 @@
 
 ## CI/CD Workflows
 
-Three GitHub Actions workflows automate the project:
+Three GitHub Actions workflows are in place:
 
 ### `ci.yml` — Continuous Integration
 
@@ -30,7 +30,7 @@ Builds versioned documentation with [MkDocs](https://www.mkdocs.org/) + [mike](h
 
 **Triggers:** GitHub Release published
 
-Builds wheels for all platforms (Linux, macOS, Windows) and supported Python versions, then attaches them to the GitHub Release.
+Builds wheels for all platforms (Linux, macOS, Windows) and supported Python versions, then uploads to the GitHub Release.
 
 ## Branch & Tags
 
