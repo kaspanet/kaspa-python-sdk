@@ -27,7 +27,6 @@
 - `PrivateKeyGenerator` constructor accepts `xprv` parameter as both a `str` or `XPrv` instance now.
 - `PublicKeyGenerator.from_master_xprv()` accepts `xprv` parameter as both a `str` or `XPrv` instance now.
 - Python 3.9 is no longer supported. Minimum supported version is now 3.10.
-- `UtxoContext.mature_range` parameters renamed to `from_`/`to` for WASM parity.
 
 ### Fixed
 
