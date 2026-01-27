@@ -15,6 +15,7 @@
 - `to_dict()` method for `Transaction`, `TransactionInput`, `TransactionOutput`, `TransactionOutpoint`, `UtxoEntry`, `UtxoEntries`, and `UtxoEntryReference`.
 - `from_dict()` method for `Transaction`, `TransactionInput`, `TransactionOutput`, `TransactionOutpoint`, and `UtxoEntry`.
 - `UtxoProcessor` and `UtxoContext` bindings for UTXO tracking and mature range access.
+- `UtxoProcessor` maturity setters (`set_coinbase_transaction_maturity_daa`, `set_user_transaction_maturity_daa`).
 
 ### Changed
 - Moved Kaspa Python SDK out of Rusty-Kaspa (as a workspace member crate) to its own dedicated repository. The internals of this project have changed significantly as a result. However, all APIs exposed to Python remain unchanged. 
@@ -26,6 +27,7 @@
 - `PrivateKeyGenerator` constructor accepts `xprv` parameter as both a `str` or `XPrv` instance now.
 - `PublicKeyGenerator.from_master_xprv()` accepts `xprv` parameter as both a `str` or `XPrv` instance now.
 - Python 3.9 is no longer supported. Minimum supported version is now 3.10.
+- `UtxoContext.mature_range` parameters renamed to `from_`/`to` for WASM parity.
 
 ### Fixed
 
