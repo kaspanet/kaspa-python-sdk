@@ -1,7 +1,10 @@
 use crate::consensus::core::network::PyNetworkId;
 use crate::rpc::wrpc::client::PyRpcClient;
 use kaspa_wallet_core::rpc::{DynRpcApi, Rpc};
-use kaspa_wallet_core::utxo::UtxoProcessor;
+use kaspa_wallet_core::utxo::{
+    UtxoProcessor, set_coinbase_transaction_maturity_period_daa,
+    set_user_transaction_maturity_period_daa,
+};
 use pyo3::{exceptions::PyException, prelude::*};
 use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
 use std::sync::Arc;
@@ -79,6 +82,20 @@ impl PyUtxoProcessor {
     /// Set the network id for the processor.
     pub fn set_network_id(&self, network_id: PyNetworkId) {
         self.processor.set_network_id(&network_id.into());
+    }
+
+    /// Set the coinbase transaction maturity period DAA for a network.
+    #[staticmethod]
+    pub fn set_coinbase_transaction_maturity_daa(network_id: PyNetworkId, value: u64) {
+        let network_id = network_id.into();
+        set_coinbase_transaction_maturity_period_daa(&network_id, value);
+    }
+
+    /// Set the user transaction maturity period DAA for a network.
+    #[staticmethod]
+    pub fn set_user_transaction_maturity_daa(network_id: PyNetworkId, value: u64) {
+        let network_id = network_id.into();
+        set_user_transaction_maturity_period_daa(&network_id, value);
     }
 
     /// Whether the processor is connected and running.

@@ -2698,6 +2698,16 @@ class UtxoProcessor:
         r"""
         Set the network id for the processor.
         """
+    @staticmethod
+    def set_coinbase_transaction_maturity_daa(network_id: NetworkId, value: builtins.int) -> None:
+        r"""
+        Set the coinbase transaction maturity period DAA for a network.
+        """
+    @staticmethod
+    def set_user_transaction_maturity_daa(network_id: NetworkId, value: builtins.int) -> None:
+        r"""
+        Set the user transaction maturity period DAA for a network.
+        """
 
 @typing.final
 class XOnlyPublicKey:
