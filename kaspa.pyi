@@ -2443,6 +2443,10 @@ class UtxoContext:
         r"""
         Return a range of mature UTXO entries.
         """
+    def pending(self) -> builtins.list[UtxoEntryReference]:
+        r"""
+        Return pending UTXO entries.
+        """
 
 @typing.final
 class UtxoEntries:

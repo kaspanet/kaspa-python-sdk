@@ -156,6 +156,23 @@ impl PyUtxoContext {
             .collect())
     }
 
+    /// Return pending UTXO entries.
+    fn pending(&self) -> PyResult<Vec<PyUtxoEntryReference>> {
+        let context_id = self.0.id();
+        let entries = self
+            .0
+            .processor()
+            .pending()
+            .iter()
+            .filter_map(|pending| {
+                let entry = pending.value();
+                (entry.utxo_context().id() == context_id).then(|| entry.entry().clone())
+            })
+            .map(PyUtxoEntryReference::from)
+            .collect();
+        Ok(entries)
+    }
+
     /// Current balance for this context (if available).
     #[getter]
     fn get_balance(&self) -> Option<PyBalance> {
