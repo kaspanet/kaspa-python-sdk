@@ -1,5 +1,7 @@
-use kaspa_consensus_client::{TransactionOutput, TransactionOutputInner};
+use kaspa_consensus_client::TransactionOutput;
+use kaspa_utils::hex::FromHex;
 use pyo3::{
+    exceptions::PyValueError,
     prelude::*,
     types::{PyDict, PyType},
 };
@@ -118,8 +120,19 @@ impl From<PyTransactionOutput> for TransactionOutput {
 impl TryFrom<&Bound<'_, PyDict>> for PyTransactionOutput {
     type Error = PyErr;
     fn try_from(dict: &Bound<PyDict>) -> PyResult<Self> {
-        let inner: TransactionOutputInner = serde_pyobject::from_pyobject(dict.clone())?;
-        let output = TransactionOutput::new(inner.value, inner.script_public_key);
-        Ok(Self(output))
+        let value = dict.as_any().get_item("value")?.extract::<u64>()?;
+
+        let spk_obj = dict.as_any().get_item("scriptPublicKey")?;
+        let spk = if let Ok(spk) = spk_obj.extract::<PyScriptPublicKey>() {
+            spk
+        } else if let Ok(hex_str) = spk_obj.extract::<String>() {
+            PyScriptPublicKey::from_hex(&hex_str)?
+        } else {
+            return Err(PyValueError::new_err(
+                "Value for `scriptPublicKey` must be type ScriptPublicKey or str",
+            ));
+        };
+
+        Ok(Self::ctor(value, spk))
     }
 }

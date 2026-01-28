@@ -2651,11 +2651,26 @@ class UtxoEntryReference:
     def __eq__(self, other: builtins.object) -> builtins.bool: ...
     def to_dict(self) -> dict:
         r"""
-        Get a dictionary representation of the Transaction.
+        Get a dictionary representation of the UtxoEntryReference.
         Note that this creates a second separate object on the Python heap.
         
         Returns:
-            dict: the Transaction in dictionary form.
+            dict: the UtxoEntryReference in dictionary form.
+        """
+    @classmethod
+    def from_dict(cls, dict: dict) -> UtxoEntryReference:
+        r"""
+        Create a UtxoEntryReference from a dictionary.
+        
+        Args:
+            dict: Dictionary containing UTXO entry reference fields with keys:
+                'address', 'outpoint', 'utxoEntry'.
+        
+        Returns:
+            UtxoEntryReference: A new UtxoEntryReference instance.
+        
+        Raises:
+            Exception: If required keys are missing or values are invalid.
         """
 
 @typing.final

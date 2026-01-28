@@ -1,5 +1,8 @@
 use super::outpoint::PyTransactionOutpoint;
-use crate::{address::PyAddress, consensus::{convert::TryToPyDict, core::script_public_key::PyScriptPublicKey}};
+use crate::{
+    address::PyAddress,
+    consensus::{convert::TryToPyDict, core::script_public_key::PyScriptPublicKey},
+};
 use kaspa_consensus_client::{UtxoEntry, UtxoEntryReference};
 use kaspa_utils::hex::FromHex;
 use pyo3::{
@@ -233,7 +236,8 @@ impl PyUtxoEntries {
     /// Returns:
     ///     dict: the UtxoEntries in dictionary form.
     fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
-        let utxos = self.0
+        let utxos = self
+            .0
             .clone()
             .iter()
             .map(|utxo_ref| utxo_ref.try_to_pydict(py))
