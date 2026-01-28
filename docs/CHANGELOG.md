@@ -18,7 +18,6 @@
 - `UtxoProcessor` maturity setters (`set_coinbase_transaction_maturity_daa`, `set_user_transaction_maturity_daa`).
 - `Generator`, `create_transactions`, and `estimate_transactions` now accept `UtxoContext` entries (network_id optional for context inputs).
 - `UtxoContext.pending()` for pending UTXO access (implemented via processor pending map; exact snapshot parity would require rusty-kaspa exposure).
-- UtxoContext transaction examples (`utxo_context_generator.py`, `utxo_context_create_transactions.py`).
 
 ### Changed
 - Moved Kaspa Python SDK out of Rusty-Kaspa (as a workspace member crate) to its own dedicated repository. The internals of this project have changed significantly as a result. However, all APIs exposed to Python remain unchanged. 
