@@ -1,3 +1,4 @@
+use super::TryToPyDict;
 use kaspa_consensus_client::{
     Transaction, TransactionInput, TransactionOutpoint, TransactionOutput, UtxoEntry,
     UtxoEntryReference,
@@ -6,21 +7,6 @@ use kaspa_consensus_core::tx::ScriptPublicKey;
 use kaspa_utils::hex::ToHex;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
-
-/// Trait for converting Rust types to Python dictionaries.
-///
-/// This trait provides a standardized way to convert Rust types
-/// to Python dicts with a flat structure (no unnecessary nesting).
-///
-/// A custom trait is required as `py: Python` is required fn arg so
-/// that dict can be created on the Python heap.
-pub trait TryToPyDict {
-    fn try_to_pydict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>>;
-}
-
-// **********************************************
-// Trait impls for rusty-kaspa native types
-// **********************************************
 
 impl TryToPyDict for ScriptPublicKey {
     fn try_to_pydict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
