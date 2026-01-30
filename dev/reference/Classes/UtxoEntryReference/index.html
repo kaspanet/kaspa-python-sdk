@@ -2034,6 +2034,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#kaspa.UtxoEntryReference.from_dict" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;from_dict
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#kaspa.UtxoEntryReference.to_dict" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7492,6 +7503,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#kaspa.UtxoEntryReference.from_dict" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;from_dict
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#kaspa.UtxoEntryReference.to_dict" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -8002,6 +8024,116 @@
 <div class="doc doc-object doc-function">
 
 
+<h2 id="kaspa.UtxoEntryReference.from_dict" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">from_dict</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#kaspa.UtxoEntryReference.from_dict" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">from_dict</span><span class="p">(</span><span class="nb">dict</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title=" UtxoEntryReference (kaspa.UtxoEntryReference)" href="#kaspa.UtxoEntryReference">UtxoEntryReference</a></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Create a UtxoEntryReference from a dictionary.</p>
+<p>Supports two formats:</p>
+
+
+<details class="flat-format" open>
+  <summary>Flat format</summary>
+  <ul>
+<li>'address' (str | None): The address string</li>
+<li>'outpoint' (dict): Transaction outpoint with 'transactionId' and 'index'</li>
+<li>'amount' (int): The UTXO value in sompi</li>
+<li>'scriptPublicKey' (dict | str): Dict with 'version' and 'script', or hex string</li>
+<li>'blockDaaScore' (int): Block DAA score</li>
+<li>'isCoinbase' (bool): Whether from coinbase transaction</li>
+</ul>
+</details>
+
+<details class="nested-format" open>
+  <summary>Nested format</summary>
+  <ul>
+<li>'address' (str | None): The address string</li>
+<li>'outpoint' (dict): Transaction outpoint with 'transactionId' and 'index'</li>
+<li>'utxoEntry' (dict): Nested dict containing amount, scriptPublicKey, blockDaaScore, isCoinbase</li>
+</ul>
+</details>
+
+<table>
+      <thead>
+        <tr>
+          <th><span class="doc-section-title">RETURNS</span></th>
+          <th><span>DESCRIPTION</span></th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>UtxoEntryReference</code>
+            </td>
+            <td class="doc-returns-details">
+              <div class="doc-md-description">
+                <p>A new UtxoEntryReference instance.</p>
+              </div>
+                <p>
+                  <span class="doc-returns-annotation">
+                    <b>TYPE:</b>
+                      <code><a class="autorefs autorefs-internal" title=" UtxoEntryReference (kaspa.UtxoEntryReference)" href="#kaspa.UtxoEntryReference">UtxoEntryReference</a></code>
+                  </span>
+                </p>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<table>
+      <thead>
+        <tr>
+          <th><span class="doc-section-title">RAISES</span></th>
+          <th><span>DESCRIPTION</span></th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+              <span class="doc-raises-annotation">
+                  <code><span title="KeyError">KeyError</span></code>
+              </span>
+            </td>
+            <td class="doc-raises-details">
+              <div class="doc-md-description">
+                <p>If required keys are missing.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+              <span class="doc-raises-annotation">
+                  <code><span title="ValueError">ValueError</span></code>
+              </span>
+            </td>
+            <td class="doc-raises-details">
+              <div class="doc-md-description">
+                <p>If values are invalid.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
 <h2 id="kaspa.UtxoEntryReference.to_dict" class="doc doc-heading">
 <code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">to_dict</span>
 
@@ -8012,7 +8144,7 @@
 
     <div class="doc doc-contents ">
 
-        <p>Get a dictionary representation of the Transaction.
+        <p>Get a dictionary representation of the UtxoEntryReference.
 Note that this creates a second separate object on the Python heap.</p>
 
 
@@ -8030,7 +8162,7 @@ Note that this creates a second separate object on the Python heap.</p>
             </td>
             <td class="doc-returns-details">
               <div class="doc-md-description">
-                <p>the Transaction in dictionary form.</p>
+                <p>the UtxoEntryReference in dictionary form.</p>
               </div>
                 <p>
                   <span class="doc-returns-annotation">

@@ -7826,7 +7826,8 @@
             <td class="doc-param-details">
               <div class="doc-md-description">
                 <p>Dictionary containing transaction outpoint fields with keys:
-'transactionId', 'index'.</p>
+- 'transactionId' (str): The transaction ID as hex string
+- 'index' (int): The output index</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -7879,12 +7880,24 @@
           <tr class="doc-section-item">
             <td>
               <span class="doc-raises-annotation">
-                  <code><span title="Exception">Exception</span></code>
+                  <code><span title="KeyError">KeyError</span></code>
               </span>
             </td>
             <td class="doc-raises-details">
               <div class="doc-md-description">
-                <p>If required keys are missing or values are invalid.</p>
+                <p>If required keys are missing.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+              <span class="doc-raises-annotation">
+                  <code><span title="ValueError">ValueError</span></code>
+              </span>
+            </td>
+            <td class="doc-raises-details">
+              <div class="doc-md-description">
+                <p>If values are invalid.</p>
               </div>
             </td>
           </tr>
