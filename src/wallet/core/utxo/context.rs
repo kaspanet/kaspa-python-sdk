@@ -160,6 +160,8 @@ impl PyUtxoContext {
     /// Return pending UTXO entries.
     fn pending(&self) -> PyResult<Vec<PyUtxoEntryReference>> {
         let context_id = self.0.id();
+        // Pending entries are stored on the processor; filter by context id to
+        // approximate context-local pending until rusty-kaspa exposes a snapshot.
         let entries = self
             .0
             .processor()
@@ -202,6 +204,8 @@ impl From<PyUtxoContext> for UtxoContext {
 }
 
 fn purge_processor_pending(context: &UtxoContext) {
+    // Keep pending() consistent after clear(): purge processor-wide pending
+    // entries for this context since pending is not context-owned in RK.
     let context_id = context.id();
     let pending = context.processor().pending();
     let keys = pending

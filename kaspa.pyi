@@ -288,7 +288,7 @@ class Generator:
     Handles UTXO selection, fee calculation, change outputs, and transaction
     splitting for large transfers.
     """
-    def __new__(cls, network_id: typing.Optional[NetworkId] = None, entries: UtxoEntries | UtxoContext = None, change_address: typing.Optional[Address] = None, outputs: typing.Optional[Outputs] = None, payload: typing.Optional[Binary] = None, fee_rate: typing.Optional[builtins.float] = None, priority_fee: typing.Optional[builtins.int] = None, priority_entries: typing.Optional[UtxoEntries] = None, sig_op_count: typing.Optional[builtins.int] = None, minimum_signatures: typing.Optional[builtins.int] = None) -> Generator:
+    def __new__(cls, network_id: typing.Optional[NetworkId] = None, *, entries: UtxoEntries | UtxoContext, change_address: Address, outputs: typing.Optional[Outputs] = None, payload: typing.Optional[Binary] = None, fee_rate: typing.Optional[builtins.float] = None, priority_fee: typing.Optional[builtins.int] = None, priority_entries: typing.Optional[UtxoEntries] = None, sig_op_count: typing.Optional[builtins.int] = None, minimum_signatures: typing.Optional[builtins.int] = None) -> Generator:
         r"""
         Create a new transaction generator.
         
@@ -3555,7 +3555,7 @@ def create_transaction(utxo_entry_source: UtxoEntries, outputs: Outputs, priorit
         Exception: If transaction creation fails or fee exceeds input amount.
     """
 
-def create_transactions(network_id: typing.Optional[NetworkId] = None, entries: UtxoEntries | UtxoContext = None, change_address: typing.Optional[Address] = None, outputs: typing.Optional[Outputs] = None, payload: typing.Optional[Binary] = None, fee_rate: typing.Optional[builtins.float] = None, priority_fee: typing.Optional[builtins.int] = None, priority_entries: typing.Optional[UtxoEntries] = None, sig_op_count: typing.Optional[builtins.int] = None, minimum_signatures: typing.Optional[builtins.int] = None) -> dict:
+def create_transactions(network_id: typing.Optional[NetworkId] = None, *, entries: UtxoEntries | UtxoContext, change_address: Address, outputs: typing.Optional[Outputs] = None, payload: typing.Optional[Binary] = None, fee_rate: typing.Optional[builtins.float] = None, priority_fee: typing.Optional[builtins.int] = None, priority_entries: typing.Optional[UtxoEntries] = None, sig_op_count: typing.Optional[builtins.int] = None, minimum_signatures: typing.Optional[builtins.int] = None) -> dict:
     r"""
     Create one or more transactions with automatic UTXO selection and change handling.
     
@@ -3580,7 +3580,7 @@ def create_transactions(network_id: typing.Optional[NetworkId] = None, entries: 
         Exception: If transaction creation fails.
     """
 
-def estimate_transactions(network_id: typing.Optional[NetworkId] = None, entries: UtxoEntries | UtxoContext = None, change_address: typing.Optional[Address] = None, outputs: typing.Optional[Outputs] = None, payload: typing.Optional[Binary] = None, fee_rate: typing.Optional[builtins.float] = None, priority_fee: typing.Optional[builtins.int] = None, priority_entries: typing.Optional[UtxoEntries] = None, sig_op_count: typing.Optional[builtins.int] = None, minimum_signatures: typing.Optional[builtins.int] = None) -> GeneratorSummary:
+def estimate_transactions(network_id: typing.Optional[NetworkId] = None, *, entries: UtxoEntries | UtxoContext, change_address: Address, outputs: typing.Optional[Outputs] = None, payload: typing.Optional[Binary] = None, fee_rate: typing.Optional[builtins.float] = None, priority_fee: typing.Optional[builtins.int] = None, priority_entries: typing.Optional[UtxoEntries] = None, sig_op_count: typing.Optional[builtins.int] = None, minimum_signatures: typing.Optional[builtins.int] = None) -> GeneratorSummary:
     r"""
     Estimate transaction fees and count without creating transactions.
     

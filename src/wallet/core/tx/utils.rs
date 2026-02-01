@@ -112,14 +112,12 @@ pub fn py_create_transaction(
 #[gen_stub_pyfunction]
 #[pyfunction]
 #[pyo3(name = "create_transactions")]
-#[pyo3(signature = (network_id=None, entries=None, change_address=None, outputs=None, payload=None, fee_rate=None, priority_fee=None, priority_entries=None, sig_op_count=None, minimum_signatures=None))]
+#[pyo3(signature = (network_id=None, *, entries, change_address, outputs=None, payload=None, fee_rate=None, priority_fee=None, priority_entries=None, sig_op_count=None, minimum_signatures=None))]
 pub fn py_create_transactions<'a>(
     py: Python<'a>,
     network_id: Option<PyNetworkId>,
-    #[gen_stub(override_type(type_repr = "UtxoEntries | UtxoContext"))] entries: Option<
-        Bound<'_, PyAny>,
-    >,
-    change_address: Option<PyAddress>,
+    #[gen_stub(override_type(type_repr = "UtxoEntries | UtxoContext"))] entries: Bound<'_, PyAny>,
+    change_address: PyAddress,
     outputs: Option<PyOutputs>,
     payload: Option<PyBinary>,
     fee_rate: Option<f64>,
@@ -175,13 +173,11 @@ pub fn py_create_transactions<'a>(
 #[gen_stub_pyfunction]
 #[pyfunction]
 #[pyo3(name = "estimate_transactions")]
-#[pyo3(signature = (network_id=None, entries=None, change_address=None, outputs=None, payload=None, fee_rate=None, priority_fee=None, priority_entries=None, sig_op_count=None, minimum_signatures=None))]
+#[pyo3(signature = (network_id=None, *, entries, change_address, outputs=None, payload=None, fee_rate=None, priority_fee=None, priority_entries=None, sig_op_count=None, minimum_signatures=None))]
 pub fn py_estimate_transactions(
     network_id: Option<PyNetworkId>,
-    #[gen_stub(override_type(type_repr = "UtxoEntries | UtxoContext"))] entries: Option<
-        Bound<'_, PyAny>,
-    >,
-    change_address: Option<PyAddress>,
+    #[gen_stub(override_type(type_repr = "UtxoEntries | UtxoContext"))] entries: Bound<'_, PyAny>,
+    change_address: PyAddress,
     outputs: Option<PyOutputs>,
     payload: Option<PyBinary>,
     fee_rate: Option<f64>,
