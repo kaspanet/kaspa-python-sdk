@@ -78,10 +78,30 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           ALIAS="${{ steps.version.outputs.alias }}"
-          
+
           if [ -n "$ALIAS" ]; then
             mike deploy --push --update-aliases "$VERSION" "$ALIAS"
             mike set-default --push latest
           else
             mike deploy --push "$VERSION"
+          fi
+
+      - name: Add root-level llms.txt
+        continue-on-error: true
+        run: |
+          git fetch origin gh-pages
+          git checkout gh-pages
+
+          # Copy from latest if available, otherwise from dev
+          if [ -f "latest/llms.txt" ]; then
+            cp latest/llms.txt llms.txt
+          elif [ -f "dev/llms.txt" ]; then
+            cp dev/llms.txt llms.txt
+          fi
+
+          # Commit and push if changed
+          if [ -f "llms.txt" ]; then
+            git add llms.txt
+            git diff --staged --quiet || git commit -m "Update root llms.txt"
+            git push origin gh-pages
           fi
