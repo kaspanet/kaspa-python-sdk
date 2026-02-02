@@ -1,7 +1,7 @@
 site_name: Kaspa Python SDK
 site_description: Kaspa Python SDK
-site_url: https://kaspanet.github.io/kaspa-python-sdk/
-repo_url: https://github.com/kaspanet/kaspa-python-sdk
+site_url: https://smartgoo.github.io/kaspa-python-sdk/
+repo_url: https://github.com/smartgoo/kaspa-python-sdk
 repo_name: kaspa-python-sdk
 edit_uri: edit/main/docs/
 
