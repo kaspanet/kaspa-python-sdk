@@ -1,0 +1,30 @@
+# Kaspa Python SDK
+
+> Python SDK for interacting with the Kaspa cryptocurrency network. Includes tooling for RPC Client, wallet, and transactions. Native extension built with PyO3/Maturin from Rust bindings to rusty-kaspa.
+
+Install: `pip install kaspa` or [build from source](https://kaspanet.github.io/kaspa-python-sdk/latest/getting-started/installation/).
+
+```python
+import asyncio
+from kaspa import RpcClient, Resolver
+
+async def main():
+    client = RpcClient(resolver=Resolver(), network_id="mainnet")
+    await client.connect()
+    print(await client.get_server_info())
+
+asyncio.run(main())
+```
+
+Docs are versioned (base URL requires version path like `/latest/` or `/dev/`).
+
+## Documentation
+
+- [API Reference](https://kaspanet.github.io/kaspa-python-sdk/latest/reference/): Full API documentation
+- [Examples](https://kaspanet.github.io/kaspa-python-sdk/latest/getting-started/examples/): Code examples
+- [Guides](https://kaspanet.github.io/kaspa-python-sdk/latest/guides/): Feature guides for RPC, transactions, addresses, etc.
+- [Source](https://github.com/kaspanet/kaspa-python-sdk): GitHub repository
+
+## Optional
+
+- [kaspa.pyi](https://github.com/kaspanet/kaspa-python-sdk/blob/main/kaspa.pyi): Type stub file with detailed API signatures
