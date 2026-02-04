@@ -107,6 +107,7 @@ impl PyUtxoContext {
                 .clear()
                 .await
                 .map_err(|err| PyException::new_err(err.to_string()))?;
+            purge_processor_pending(&context);
             Ok(())
         })
     }
@@ -156,6 +157,25 @@ impl PyUtxoContext {
             .collect())
     }
 
+    /// Return pending UTXO entries.
+    fn pending(&self) -> PyResult<Vec<PyUtxoEntryReference>> {
+        let context_id = self.0.id();
+        // Pending entries are stored on the processor; filter by context id to
+        // approximate context-local pending until rusty-kaspa exposes a snapshot.
+        let entries = self
+            .0
+            .processor()
+            .pending()
+            .iter()
+            .filter_map(|pending| {
+                let entry = pending.value();
+                (entry.utxo_context().id() == context_id).then(|| entry.entry().clone())
+            })
+            .map(PyUtxoEntryReference::from)
+            .collect();
+        Ok(entries)
+    }
+
     /// Current balance for this context (if available).
     #[getter]
     fn get_balance(&self) -> Option<PyBalance> {
@@ -180,6 +200,21 @@ impl PyUtxoContext {
 impl From<PyUtxoContext> for UtxoContext {
     fn from(value: PyUtxoContext) -> Self {
         value.0
+    }
+}
+
+fn purge_processor_pending(context: &UtxoContext) {
+    // Keep pending() consistent after clear(): purge processor-wide pending
+    // entries for this context since pending is not context-owned in RK.
+    let context_id = context.id();
+    let pending = context.processor().pending();
+    let keys = pending
+        .iter()
+        .filter(|entry| entry.value().utxo_context().id() == context_id)
+        .map(|entry| entry.key().clone())
+        .collect::<Vec<_>>();
+    for key in keys {
+        pending.remove(&key);
     }
 }
 

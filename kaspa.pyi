@@ -288,13 +288,13 @@ class Generator:
     Handles UTXO selection, fee calculation, change outputs, and transaction
     splitting for large transfers.
     """
-    def __new__(cls, network_id: NetworkId, entries: UtxoEntries, change_address: Address, outputs: typing.Optional[Outputs] = None, payload: typing.Optional[Binary] = None, fee_rate: typing.Optional[builtins.float] = None, priority_fee: typing.Optional[builtins.int] = None, priority_entries: typing.Optional[UtxoEntries] = None, sig_op_count: typing.Optional[builtins.int] = None, minimum_signatures: typing.Optional[builtins.int] = None) -> Generator:
+    def __new__(cls, entries: UtxoEntries | UtxoContext, change_address: Address, network_id: typing.Optional[NetworkId] = None, outputs: typing.Optional[Outputs] = None, payload: typing.Optional[Binary] = None, fee_rate: typing.Optional[builtins.float] = None, priority_fee: typing.Optional[builtins.int] = None, priority_entries: typing.Optional[UtxoEntries] = None, sig_op_count: typing.Optional[builtins.int] = None, minimum_signatures: typing.Optional[builtins.int] = None) -> Generator:
         r"""
         Create a new transaction generator.
         
         Args:
-            network_id: The network to build transactions for.
-            entries: List of UTXO entries to spend from.
+            network_id: The network to build transactions for (required for UTXO entries).
+            entries: UtxoContext or list of UTXO entries to spend from.
             change_address: Address to send change to.
             outputs: Optional list of payment outputs.
             payload: Optional transaction payload (OP_RETURN data).
@@ -2460,6 +2460,10 @@ class UtxoContext:
         r"""
         Return a range of mature UTXO entries.
         """
+    def pending(self) -> builtins.list[UtxoEntryReference]:
+        r"""
+        Return pending UTXO entries.
+        """
 
 @typing.final
 class UtxoEntries:
@@ -3551,15 +3555,15 @@ def create_transaction(utxo_entry_source: UtxoEntries, outputs: Outputs, priorit
         Exception: If transaction creation fails or fee exceeds input amount.
     """
 
-def create_transactions(network_id: NetworkId, entries: UtxoEntries, change_address: Address, outputs: typing.Optional[Outputs] = None, payload: typing.Optional[Binary] = None, fee_rate: typing.Optional[builtins.float] = None, priority_fee: typing.Optional[builtins.int] = None, priority_entries: typing.Optional[UtxoEntries] = None, sig_op_count: typing.Optional[builtins.int] = None, minimum_signatures: typing.Optional[builtins.int] = None) -> dict:
+def create_transactions(entries: UtxoEntries | UtxoContext, change_address: Address, network_id: typing.Optional[NetworkId] = None, outputs: typing.Optional[Outputs] = None, payload: typing.Optional[Binary] = None, fee_rate: typing.Optional[builtins.float] = None, priority_fee: typing.Optional[builtins.int] = None, priority_entries: typing.Optional[UtxoEntries] = None, sig_op_count: typing.Optional[builtins.int] = None, minimum_signatures: typing.Optional[builtins.int] = None) -> dict:
     r"""
     Create one or more transactions with automatic UTXO selection and change handling.
     
     Handles large transfers that may require multiple transactions due to mass limits.
     
     Args:
-        network_id: The network to build transactions for.
-        entries: List of UTXO entries to spend from.
+        network_id: The network to build transactions for (required for UTXO entries).
+        entries: UtxoContext or list of UTXO entries to spend from.
         change_address: Address to send change to.
         outputs: Optional list of payment outputs.
         payload: Optional transaction payload data.
@@ -3576,13 +3580,13 @@ def create_transactions(network_id: NetworkId, entries: UtxoEntries, change_addr
         Exception: If transaction creation fails.
     """
 
-def estimate_transactions(network_id: NetworkId, entries: UtxoEntries, change_address: Address, outputs: typing.Optional[Outputs] = None, payload: typing.Optional[Binary] = None, fee_rate: typing.Optional[builtins.float] = None, priority_fee: typing.Optional[builtins.int] = None, priority_entries: typing.Optional[UtxoEntries] = None, sig_op_count: typing.Optional[builtins.int] = None, minimum_signatures: typing.Optional[builtins.int] = None) -> GeneratorSummary:
+def estimate_transactions(entries: UtxoEntries | UtxoContext, change_address: Address, network_id: typing.Optional[NetworkId] = None, outputs: typing.Optional[Outputs] = None, payload: typing.Optional[Binary] = None, fee_rate: typing.Optional[builtins.float] = None, priority_fee: typing.Optional[builtins.int] = None, priority_entries: typing.Optional[UtxoEntries] = None, sig_op_count: typing.Optional[builtins.int] = None, minimum_signatures: typing.Optional[builtins.int] = None) -> GeneratorSummary:
     r"""
     Estimate transaction fees and count without creating transactions.
     
     Args:
-        network_id: The network to estimate for.
-        entries: List of UTXO entries to spend from.
+        network_id: The network to estimate for (required for UTXO entries).
+        entries: UtxoContext or list of UTXO entries to spend from.
         change_address: Address to send change to.
         outputs: Optional list of payment outputs.
         payload: Optional transaction payload data.

@@ -93,8 +93,8 @@ pub fn py_create_transaction(
 /// Handles large transfers that may require multiple transactions due to mass limits.
 ///
 /// Args:
-///     network_id: The network to build transactions for.
-///     entries: List of UTXO entries to spend from.
+///     network_id: The network to build transactions for (required for UTXO entries).
+///     entries: UtxoContext or list of UTXO entries to spend from.
 ///     change_address: Address to send change to.
 ///     outputs: Optional list of payment outputs.
 ///     payload: Optional transaction payload data.
@@ -112,12 +112,12 @@ pub fn py_create_transaction(
 #[gen_stub_pyfunction]
 #[pyfunction]
 #[pyo3(name = "create_transactions")]
-#[pyo3(signature = (network_id, entries, change_address, outputs=None, payload=None, fee_rate=None, priority_fee=None, priority_entries=None, sig_op_count=None, minimum_signatures=None))]
+#[pyo3(signature = (entries, change_address, network_id=None, outputs=None, payload=None, fee_rate=None, priority_fee=None, priority_entries=None, sig_op_count=None, minimum_signatures=None))]
 pub fn py_create_transactions<'a>(
     py: Python<'a>,
-    network_id: PyNetworkId,
-    entries: PyUtxoEntries,
+    #[gen_stub(override_type(type_repr = "UtxoEntries | UtxoContext"))] entries: Bound<'_, PyAny>,
     change_address: PyAddress,
+    network_id: Option<PyNetworkId>,
     outputs: Option<PyOutputs>,
     payload: Option<PyBinary>,
     fee_rate: Option<f64>,
@@ -127,9 +127,9 @@ pub fn py_create_transactions<'a>(
     minimum_signatures: Option<u16>,
 ) -> PyResult<Bound<'a, PyDict>> {
     let generator = PyGenerator::ctor(
-        network_id,
         entries,
         change_address,
+        network_id,
         outputs,
         payload,
         fee_rate,
@@ -154,8 +154,8 @@ pub fn py_create_transactions<'a>(
 /// Estimate transaction fees and count without creating transactions.
 ///
 /// Args:
-///     network_id: The network to estimate for.
-///     entries: List of UTXO entries to spend from.
+///     network_id: The network to estimate for (required for UTXO entries).
+///     entries: UtxoContext or list of UTXO entries to spend from.
 ///     change_address: Address to send change to.
 ///     outputs: Optional list of payment outputs.
 ///     payload: Optional transaction payload data.
@@ -173,11 +173,11 @@ pub fn py_create_transactions<'a>(
 #[gen_stub_pyfunction]
 #[pyfunction]
 #[pyo3(name = "estimate_transactions")]
-#[pyo3(signature = (network_id, entries, change_address, outputs=None, payload=None, fee_rate=None, priority_fee=None, priority_entries=None, sig_op_count=None, minimum_signatures=None))]
+#[pyo3(signature = (entries, change_address, network_id=None, outputs=None, payload=None, fee_rate=None, priority_fee=None, priority_entries=None, sig_op_count=None, minimum_signatures=None))]
 pub fn py_estimate_transactions(
-    network_id: PyNetworkId,
-    entries: PyUtxoEntries,
+    #[gen_stub(override_type(type_repr = "UtxoEntries | UtxoContext"))] entries: Bound<'_, PyAny>,
     change_address: PyAddress,
+    network_id: Option<PyNetworkId>,
     outputs: Option<PyOutputs>,
     payload: Option<PyBinary>,
     fee_rate: Option<f64>,
@@ -187,9 +187,9 @@ pub fn py_estimate_transactions(
     minimum_signatures: Option<u16>,
 ) -> PyResult<PyGeneratorSummary> {
     let generator = PyGenerator::ctor(
-        network_id,
         entries,
         change_address,
+        network_id,
         outputs,
         payload,
         fee_rate,

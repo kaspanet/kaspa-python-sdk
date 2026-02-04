@@ -4,6 +4,7 @@ use super::summary::PyGeneratorSummary;
 use crate::consensus::core::network::PyNetworkId;
 use crate::{
     consensus::client::utxo::PyUtxoEntryReference, wallet::core::tx::payment::PyPaymentOutput,
+    wallet::core::utxo::context::PyUtxoContext,
 };
 use kaspa_consensus_client::UtxoEntryReference;
 use kaspa_wallet_core::result::Result;
@@ -114,8 +115,8 @@ impl PyGenerator {
     /// Create a new transaction generator.
     ///
     /// Args:
-    ///     network_id: The network to build transactions for.
-    ///     entries: List of UTXO entries to spend from.
+    ///     network_id: The network to build transactions for (required for UTXO entries).
+    ///     entries: UtxoContext or list of UTXO entries to spend from.
     ///     change_address: Address to send change to.
     ///     outputs: Optional list of payment outputs.
     ///     payload: Optional transaction payload (OP_RETURN data).
@@ -131,11 +132,14 @@ impl PyGenerator {
     /// Raises:
     ///     Exception: If generator creation fails.
     #[new]
-    #[pyo3(signature = (network_id, entries, change_address, outputs=None, payload=None, fee_rate=None, priority_fee=None, priority_entries=None, sig_op_count=None, minimum_signatures=None))]
+    #[pyo3(signature = (entries, change_address, network_id=None, outputs=None, payload=None, fee_rate=None, priority_fee=None, priority_entries=None, sig_op_count=None, minimum_signatures=None))]
     pub fn ctor(
-        network_id: PyNetworkId,
-        entries: PyUtxoEntries,
+        #[gen_stub(override_type(type_repr = "UtxoEntries | UtxoContext"))] entries: Bound<
+            '_,
+            PyAny,
+        >,
         change_address: PyAddress,
+        network_id: Option<PyNetworkId>,
         outputs: Option<PyOutputs>,
         payload: Option<PyBinary>,
         fee_rate: Option<f64>,
@@ -144,17 +148,18 @@ impl PyGenerator {
         sig_op_count: Option<u8>,
         minimum_signatures: Option<u16>,
     ) -> PyResult<Self> {
+        let source = parse_generator_source(entries)?;
         let settings = GeneratorSettings::new(
             outputs,
             change_address.into(),
             fee_rate,
             priority_fee,
-            entries.entries,
+            source,
             priority_entries.map(|p| p.entries),
             sig_op_count,
             minimum_signatures,
             payload.map(Into::into),
-            &network_id.to_string(),
+            network_id.map(Into::into),
         );
 
         let settings = match settings.source {
@@ -179,14 +184,34 @@ impl PyGenerator {
                     settings.sig_op_count,
                     settings.minimum_signatures,
                     settings.final_transaction_destination,
-                    None,
+                    settings.fee_rate,
                     settings.final_priority_fee,
                     settings.payload,
                     settings.multiplexer,
                 )
                 .map_err(|err| PyException::new_err(err.to_string()))?
             }
-            GeneratorSource::UtxoContext(_) => unimplemented!(),
+            GeneratorSource::UtxoContext(utxo_context) => {
+                let change_address = settings.change_address.ok_or_else(|| {
+                    PyException::new_err(
+                        "changeAddress is required for Generator constructor with UTXO entries",
+                    )
+                })?;
+
+                native::GeneratorSettings::try_new_with_context(
+                    utxo_context,
+                    settings.priority_utxo_entries,
+                    change_address,
+                    settings.sig_op_count,
+                    settings.minimum_signatures,
+                    settings.final_transaction_destination,
+                    settings.fee_rate,
+                    settings.final_priority_fee,
+                    settings.payload,
+                    settings.multiplexer,
+                )
+                .map_err(|err| PyException::new_err(err.to_string()))?
+            }
         };
 
         let abortable = Abortable::default();
@@ -260,6 +285,18 @@ impl PyGenerator {
     }
 }
 
+fn parse_generator_source(entries: Bound<'_, PyAny>) -> PyResult<GeneratorSource> {
+    if let Ok(context) = entries.extract::<PyUtxoContext>() {
+        Ok(GeneratorSource::UtxoContext(context.into()))
+    } else if let Ok(entries) = entries.extract::<PyUtxoEntries>() {
+        Ok(GeneratorSource::UtxoEntries(entries.entries))
+    } else {
+        Err(PyException::new_err(
+            "entries must be a UtxoContext or list of UtxoEntryReference-compatible items",
+        ))
+    }
+}
+
 #[allow(dead_code)]
 enum GeneratorSource {
     UtxoEntries(Vec<UtxoEntryReference>),
@@ -288,15 +325,13 @@ impl GeneratorSettings {
         change_address: Address,
         fee_rate: Option<f64>,
         priority_fee: Option<u64>,
-        entries: Vec<UtxoEntryReference>,
+        source: GeneratorSource,
         priority_entries: Option<Vec<UtxoEntryReference>>,
         sig_op_count: Option<u8>,
         minimum_signatures: Option<u16>,
         payload: Option<Vec<u8>>,
-        network_id: &str,
+        network_id: Option<NetworkId>,
     ) -> GeneratorSettings {
-        let network_id = NetworkId::from_str(network_id).unwrap();
-
         let final_transaction_destination = match outputs {
             Some(py_outputs) => PaymentOutputs {
                 outputs: py_outputs.outputs,
@@ -313,16 +348,13 @@ impl GeneratorSettings {
             None => Fees::None,
         };
 
-        // TODO support GeneratorSource::UtxoContext when available
-        let generator_source = GeneratorSource::UtxoEntries(entries);
-
         let sig_op_count = sig_op_count.unwrap_or(1);
 
         let minimum_signatures = minimum_signatures.unwrap_or(1);
 
         GeneratorSettings {
-            network_id: Some(network_id),
-            source: generator_source,
+            network_id,
+            source,
             priority_utxo_entries: priority_entries,
             multiplexer: None,
             final_transaction_destination,

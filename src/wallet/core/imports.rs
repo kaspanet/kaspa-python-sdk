@@ -9,6 +9,5 @@ pub use pyo3::{
     prelude::*,
     types::{PyDict, PyList},
 };
-pub use std::str::FromStr;
 pub use std::sync::Arc;
 pub use workflow_core::channel::Multiplexer;
