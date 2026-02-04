@@ -7415,12 +7415,16 @@
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>The network to build transactions for.</p>
+                <p>The network to build transactions for (required for UTXO entries).</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
                     <b>TYPE:</b>
-                      <code><a class="autorefs autorefs-internal" title=" NetworkId (kaspa.NetworkId)" href="../../Classes/NetworkId/#kaspa.NetworkId">NetworkId</a></code>
+                      <code><span title="typing.Optional">Optional</span>[<a class="autorefs autorefs-internal" title=" NetworkId (kaspa.NetworkId)" href="../../Classes/NetworkId/#kaspa.NetworkId">NetworkId</a>]</code>
+                  </span>
+                  <span class="doc-param-default">
+                    <b>DEFAULT:</b>
+                      <code>None</code>
                   </span>
               </p>
             </td>
@@ -7431,12 +7435,12 @@
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>List of UTXO entries to spend from.</p>
+                <p>UtxoContext or list of UTXO entries to spend from.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
                     <b>TYPE:</b>
-                      <code><a class="autorefs autorefs-internal" title=" UtxoEntries (kaspa.UtxoEntries)" href="../../Classes/UtxoEntries/#kaspa.UtxoEntries">UtxoEntries</a></code>
+                      <code><a class="autorefs autorefs-internal" title=" UtxoEntries (kaspa.UtxoEntries)" href="../../Classes/UtxoEntries/#kaspa.UtxoEntries">UtxoEntries</a> | <a class="autorefs autorefs-internal" title=" UtxoContext (kaspa.UtxoContext)" href="../../Classes/UtxoContext/#kaspa.UtxoContext">UtxoContext</a></code>
                   </span>
               </p>
             </td>
