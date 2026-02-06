@@ -90,19 +90,25 @@ impl PyUtxoProcessor {
     }
 
     fn start_notification_task(&self, py: Python) -> PyResult<bool> {
-        if self.notification_task.load(Ordering::SeqCst) {
+        if self
+            .notification_task
+            .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+            .is_err()
+        {
             return Ok(false);
         }
-        self.notification_task.store(true, Ordering::SeqCst);
 
         let ctl_receiver = self.notification_ctl.request.receiver.clone();
         let ctl_sender = self.notification_ctl.response.sender.clone();
         let channel = self.processor.multiplexer().channel();
         let this = self.clone();
 
-        let _ = pyo3_async_runtimes::tokio::future_into_py(py, async move {
+        let fut = async move {
             loop {
                 select_biased! {
+                    _ = ctl_receiver.recv().fuse() => {
+                        break;
+                    }
                     msg = channel.receiver.recv().fuse() => {
                         match msg {
                             Ok(notification) => {
@@ -163,9 +169,6 @@ impl PyUtxoProcessor {
                             }
                         }
                     }
-                    _ = ctl_receiver.recv().fuse() => {
-                        break;
-                    }
                 }
             }
 
@@ -173,7 +176,12 @@ impl PyUtxoProcessor {
             this.notification_task.store(false, Ordering::SeqCst);
             ctl_sender.send(()).await.ok();
             Python::attach(|_| Ok(()))
-        });
+        };
+
+        if let Err(err) = pyo3_async_runtimes::tokio::future_into_py(py, fut) {
+            self.notification_task.store(false, Ordering::SeqCst);
+            return Err(err);
+        }
 
         Ok(true)
     }
