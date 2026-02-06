@@ -18,6 +18,7 @@ fn post_process_stub_file(path: &str) {
     let content = rename_none_enum_variant(content);
     let content = fix_rpc_method_signatures(content);
     let content = remove_duplicate_default_none(content);
+    let content = fix_utxo_processor_event_listener_overloads(content);
     let content = append_rpc_types(content);
 
     fs::write(path, content).unwrap();
@@ -93,6 +94,51 @@ fn remove_duplicate_default_none(content: String) -> String {
     // (possibly with dots like `Language.English` or `Encoding.Borsh`)
     let re = Regex::new(r"(= \w+(?:\.\w+)?) = None\b").unwrap();
     re.replace_all(&content, "$1").to_string()
+}
+
+/// Inserts overload stubs for UtxoProcessor event listener APIs.
+///
+/// The Rust/PyO3 signature supports two call patterns:
+/// - add_event_listener(callback, *args, **kwargs)
+/// - add_event_listener(targets, callback, *args, **kwargs)
+///
+/// pyo3-stub-gen currently emits a single signature with `callback: Optional[Any] = None`,
+/// which makes the `callback` appear optional in all cases. Overloads improve type checking
+/// without changing runtime behavior.
+fn fix_utxo_processor_event_listener_overloads(content: String) -> String {
+    let add_impl = "    def add_event_listener(self, event_or_callback: typing.Any, callback: typing.Optional[typing.Any] = None, *args: typing.Any, **kwargs: typing.Any) -> None:";
+    let add_overloads = concat!(
+        "    @typing.overload\n",
+        "    def add_event_listener(self, callback: typing.Callable[..., typing.Any], *args: typing.Any, **kwargs: typing.Any) -> None: ...\n",
+        "    @typing.overload\n",
+        "    def add_event_listener(self, event_or_callback: builtins.str | typing.Sequence[builtins.str], callback: typing.Callable[..., typing.Any], *args: typing.Any, **kwargs: typing.Any) -> None: ...\n",
+    );
+
+    let remove_impl = "    def remove_event_listener(self, event_or_callback: typing.Any, callback: typing.Optional[typing.Any] = None) -> None:";
+    let remove_overloads = concat!(
+        "    @typing.overload\n",
+        "    def remove_event_listener(self, event_or_callback: typing.Callable[..., typing.Any]) -> None: ...\n",
+        "    @typing.overload\n",
+        "    def remove_event_listener(self, event_or_callback: builtins.str | typing.Sequence[builtins.str], callback: typing.Optional[typing.Callable[..., typing.Any]] = None) -> None: ...\n",
+    );
+
+    let mut out = content;
+
+    if out.contains(add_impl) {
+        out = out.replace(add_impl, &format!("{add_overloads}{add_impl}"));
+    } else {
+        eprintln!("Warning: Could not find UtxoProcessor.add_event_listener signature to overload");
+    }
+
+    if out.contains(remove_impl) {
+        out = out.replace(remove_impl, &format!("{remove_overloads}{remove_impl}"));
+    } else {
+        eprintln!(
+            "Warning: Could not find UtxoProcessor.remove_event_listener signature to overload"
+        );
+    }
+
+    out
 }
 
 /// Converts a snake_case string to PascalCase.

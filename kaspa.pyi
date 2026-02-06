@@ -2761,6 +2761,10 @@ class UtxoProcessor:
         r"""
         Set the user transaction maturity period DAA for a network.
         """
+    @typing.overload
+    def add_event_listener(self, callback: typing.Callable[..., typing.Any], *args: typing.Any, **kwargs: typing.Any) -> None: ...
+    @typing.overload
+    def add_event_listener(self, event_or_callback: builtins.str | typing.Sequence[builtins.str], callback: typing.Callable[..., typing.Any], *args: typing.Any, **kwargs: typing.Any) -> None: ...
     def add_event_listener(self, event_or_callback: typing.Any, callback: typing.Optional[typing.Any] = None, *args: typing.Any, **kwargs: typing.Any) -> None:
         r"""
         Register a callback for UtxoProcessor events.
@@ -2778,6 +2782,10 @@ class UtxoProcessor:
             Callback will be invoked as: callback(*args, event, **kwargs)
             Where event is a dict like: {"type": str, "data": ...}
         """
+    @typing.overload
+    def remove_event_listener(self, event_or_callback: typing.Callable[..., typing.Any]) -> None: ...
+    @typing.overload
+    def remove_event_listener(self, event_or_callback: builtins.str | typing.Sequence[builtins.str], callback: typing.Optional[typing.Callable[..., typing.Any]] = None) -> None: ...
     def remove_event_listener(self, event_or_callback: typing.Any, callback: typing.Optional[typing.Any] = None) -> None:
         r"""
         Remove an event listener.
