@@ -1,6 +1,7 @@
 use crate::consensus::core::network::PyNetworkId;
 use crate::rpc::wrpc::client::PyRpcClient;
 use ahash::AHashMap;
+use futures::*;
 use kaspa_wallet_core::events::EventKind;
 use kaspa_wallet_core::rpc::{DynRpcApi, Rpc};
 use kaspa_wallet_core::utxo::{
@@ -15,8 +16,13 @@ use pyo3::{
 use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
 use std::{
     str::FromStr,
-    sync::{Arc, Mutex},
+    sync::{
+        Arc, Mutex,
+        atomic::{AtomicBool, Ordering},
+    },
 };
+use workflow_core::channel::DuplexChannel;
+use workflow_log::*;
 
 /// UTXO processor coordinating address tracking and UTXO updates.
 #[gen_stub_pyclass]
@@ -26,11 +32,123 @@ pub struct PyUtxoProcessor {
     processor: UtxoProcessor,
     rpc: PyRpcClient,
     callbacks: Arc<Mutex<AHashMap<EventKind, Vec<PyCallback>>>>,
+    notification_task: Arc<AtomicBool>,
+    notification_ctl: DuplexChannel,
 }
 
 impl PyUtxoProcessor {
     pub fn inner(&self) -> &UtxoProcessor {
         &self.processor
+    }
+
+    fn notification_callbacks(&self, event: EventKind) -> Option<Vec<PyCallback>> {
+        let notification_callbacks = self.callbacks.lock().unwrap();
+        let all = notification_callbacks.get(&EventKind::All).cloned();
+        let target = notification_callbacks.get(&event).cloned();
+        match (all, target) {
+            (Some(mut vec_all), Some(vec_target)) => {
+                vec_all.extend(vec_target);
+                Some(vec_all)
+            }
+            (Some(vec_all), None) => Some(vec_all),
+            (None, Some(vec_target)) => Some(vec_target),
+            (None, None) => None,
+        }
+    }
+
+    fn start_notification_task(&self, py: Python) -> PyResult<()> {
+        if self.notification_task.load(Ordering::SeqCst) {
+            return Ok(());
+        }
+        self.notification_task.store(true, Ordering::SeqCst);
+
+        let ctl_receiver = self.notification_ctl.request.receiver.clone();
+        let ctl_sender = self.notification_ctl.response.sender.clone();
+        let channel = self.processor.multiplexer().channel();
+        let this = self.clone();
+
+        let _ = pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            loop {
+                select_biased! {
+                    msg = channel.receiver.recv().fuse() => {
+                        match msg {
+                            Ok(notification) => {
+                                let event_type = EventKind::from(notification.as_ref());
+                                if let Some(handlers) = this.notification_callbacks(event_type) {
+                                    for handler in handlers.into_iter() {
+                                        if let Err(err) = Python::attach(|py| -> PyResult<()> {
+                                            let event_any = match serde_pyobject::to_pyobject(py, notification.as_ref()) {
+                                                Ok(obj) => obj,
+                                                Err(err) => {
+                                                    log_error!("UtxoProcessor: failed to serialize event `{}`: {}", event_type, err);
+                                                    return Ok(());
+                                                }
+                                            };
+
+                                            let event = match event_any.cast::<PyDict>() {
+                                                Ok(dict) => dict,
+                                                Err(err) => {
+                                                    log_error!(
+                                                        "UtxoProcessor: serialized event `{}` is not a dict: {}",
+                                                        event_type,
+                                                        err
+                                                    );
+                                                    return Ok(());
+                                                }
+                                            };
+
+                                            if event.get_item("data")?.is_none() {
+                                                event.set_item("data", py.None())?;
+                                            }
+
+                                            if let Err(err) = handler.execute(py, (*event).clone()) {
+                                                log_error!(
+                                                    "UtxoProcessor: error while executing event listener for `{}`: {}",
+                                                    event_type,
+                                                    err
+                                                );
+                                            }
+
+                                            Ok(())
+                                        }) {
+                                            log_error!(
+                                                "UtxoProcessor: error while building event payload for `{}`: {}",
+                                                event_type,
+                                                err
+                                            );
+                                        }
+                                    }
+                                }
+                            }
+                            Err(err) => {
+                                log_error!("UtxoProcessor: error while receiving multiplexer event: {err}");
+                                break;
+                            }
+                        }
+                    }
+                    _ = ctl_receiver.recv().fuse() => {
+                        break;
+                    }
+                }
+            }
+
+            channel.close();
+            this.notification_task.store(false, Ordering::SeqCst);
+            ctl_sender.send(()).await.ok();
+            Python::attach(|_| Ok(()))
+        });
+
+        Ok(())
+    }
+
+    async fn stop_notification_task(
+        &self,
+    ) -> std::result::Result<(), workflow_core::channel::ChannelError<()>> {
+        if self.notification_task.load(Ordering::SeqCst) {
+            self.notification_ctl.signal(()).await?;
+            self.notification_task.store(false, Ordering::SeqCst);
+        }
+        Ok(())
     }
 }
 
@@ -105,17 +223,21 @@ impl PyUtxoProcessor {
             processor,
             rpc,
             callbacks: Arc::new(Mutex::new(Default::default())),
+            notification_task: Arc::new(AtomicBool::new(false)),
+            notification_ctl: DuplexChannel::oneshot(),
         })
     }
 
     /// Start UTXO processing (async).
     fn start<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let processor = self.processor.clone();
+        let slf = self.clone();
+        self.start_notification_task(py)?;
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            processor
-                .start()
-                .await
-                .map_err(|err| PyException::new_err(err.to_string()))?;
+            if let Err(err) = processor.start().await {
+                slf.stop_notification_task().await.ok();
+                return Err(PyException::new_err(err.to_string()));
+            }
             Ok(())
         })
     }
@@ -123,11 +245,16 @@ impl PyUtxoProcessor {
     /// Stop UTXO processing (async).
     fn stop<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let processor = self.processor.clone();
+        let slf = self.clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            processor
-                .stop()
-                .await
-                .map_err(|err| PyException::new_err(err.to_string()))?;
+            let stop_result = processor.stop().await;
+            let notification_stop_result = slf.stop_notification_task().await;
+
+            if let Err(err) = stop_result {
+                return Err(PyException::new_err(err.to_string()));
+            }
+
+            notification_stop_result.map_err(|err| PyException::new_err(err.to_string()))?;
             Ok(())
         })
     }
