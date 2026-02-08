@@ -24,10 +24,22 @@ impl PyGeneratorSummary {
         self.0.network_type().to_string()
     }
 
+    /// The network id used for generation.
+    #[getter]
+    pub fn get_network_id(&self) -> String {
+        self.0.network_id().to_string()
+    }
+
     /// The total number of UTXOs consumed.
     #[getter]
     pub fn get_utxos(&self) -> usize {
         self.0.aggregated_utxos()
+    }
+
+    /// The total mass of the generated transactions.
+    #[getter]
+    pub fn get_mass(&self) -> u64 {
+        self.0.aggregate_mass()
     }
 
     /// The total fees across all generated transactions in sompi.
@@ -40,6 +52,12 @@ impl PyGeneratorSummary {
     #[getter]
     pub fn get_transactions(&self) -> usize {
         self.0.number_of_generated_transactions()
+    }
+
+    /// The number of generated stages.
+    #[getter]
+    pub fn get_stages(&self) -> usize {
+        self.0.number_of_generated_stages()
     }
 
     /// The final transaction amount in sompi, or None if not applicable.
