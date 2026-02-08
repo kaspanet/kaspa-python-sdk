@@ -338,19 +338,13 @@ impl PyRpcClient {
         )
     }
 
-    /// The current connection URL.
-    ///
-    /// Returns:
-    ///     str | None: The WebSocket URL, or None if not connected.
+    /// The current WebSocket connection URL, or None if not connected.
     #[getter]
     fn get_url(&self) -> Option<String> {
         self.0.client.url()
     }
 
-    /// The resolver used for node discovery.
-    ///
-    /// Returns:
-    ///     Resolver | None: The resolver, or None if not set.
+    /// The resolver used for node discovery, or None if not set.
     #[getter]
     fn get_resolver(&self) -> Option<PyResolver> {
         self.0.resolver.clone().map(PyResolver::new)
@@ -386,28 +380,19 @@ impl PyRpcClient {
         Ok(())
     }
 
-    /// Whether the client is currently connected.
-    ///
-    /// Returns:
-    ///     bool: True if connected to a node.
+    /// Whether the client is currently connected to a node.
     #[getter]
     fn get_is_connected(&self) -> bool {
         self.0.client.is_connected()
     }
 
-    /// The RPC encoding format.
-    ///
-    /// Returns:
-    ///     str: The encoding ("borsh" or "json").
+    /// The RPC encoding format ("borsh" or "json").
     #[getter]
     fn get_encoding(&self) -> String {
         self.0.client.encoding().to_string()
     }
 
-    /// The unique identifier of the connected node.
-    ///
-    /// Returns:
-    ///     str | None: The node ID, or None if not connected via resolver.
+    /// The unique identifier of the connected node, or None if not connected via resolver.
     #[getter]
     fn get_node_id(&self) -> Option<String> {
         self.0.client.node_descriptor().map(|node| node.uid.clone())

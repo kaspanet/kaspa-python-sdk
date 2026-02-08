@@ -57,10 +57,7 @@ impl PyTransaction {
         Ok(self.0.inner().id.into())
     }
 
-    /// The transaction ID (hash).
-    ///
-    /// Returns:
-    ///     str: The transaction ID as a hex string.
+    /// The transaction ID (hash) as a hex string.
     #[getter]
     pub fn get_id(&self) -> String {
         self.0.inner().id.to_string()
@@ -115,10 +112,7 @@ impl PyTransaction {
         Ok(Self(inner))
     }
 
-    /// The list of transaction inputs.
-    ///
-    /// Returns:
-    ///     list[TransactionInput]: List of inputs spending previous outputs.
+    /// The list of transaction inputs spending previous outputs.
     #[getter]
     pub fn get_inputs(&self) -> PyResult<Vec<PyTransactionInput>> {
         Ok(self
@@ -168,10 +162,7 @@ impl PyTransaction {
         Ok(list.into_iter().map(PyAddress::from).collect())
     }
 
-    /// The list of transaction outputs.
-    ///
-    /// Returns:
-    ///     list[TransactionOutput]: List of outputs defining value destinations.
+    /// The list of transaction outputs defining value destinations.
     #[getter]
     pub fn get_outputs(&self) -> PyResult<Vec<PyTransactionOutput>> {
         Ok(self
@@ -194,9 +185,6 @@ impl PyTransaction {
     }
 
     /// The transaction version number.
-    ///
-    /// Returns:
-    ///     int: The version number.
     #[getter]
     pub fn get_version(&self) -> u16 {
         self.0.inner().version
@@ -211,11 +199,7 @@ impl PyTransaction {
         self.0.inner().version = value;
     }
 
-    /// The transaction lock time.
-    /// Represents a DAA score or Unix timestamp before which the transaction cannot be included.
-    ///
-    /// Returns:
-    ///     int: The lock time value.
+    /// The transaction lock time (DAA score or Unix timestamp before which the transaction cannot be included).
     #[getter]
     pub fn get_lock_time(&self) -> u64 {
         self.0.inner().lock_time
@@ -231,9 +215,6 @@ impl PyTransaction {
     }
 
     /// The gas limit for smart contract execution.
-    ///
-    /// Returns:
-    ///     int: The gas limit.
     #[getter]
     pub fn get_gas(&self) -> u64 {
         self.0.inner().gas
@@ -248,10 +229,7 @@ impl PyTransaction {
         self.0.inner().gas = value;
     }
 
-    /// The subnetwork identifier.
-    ///
-    /// Returns:
-    ///     str: The subnetwork ID as a hex string.
+    /// The subnetwork identifier as a hex string.
     #[getter]
     pub fn get_subnetwork(&self) -> String {
         self.0.inner().subnetwork_id.to_string()
@@ -277,10 +255,7 @@ impl PyTransaction {
         Ok(())
     }
 
-    /// The transaction payload data.
-    ///
-    /// Returns:
-    ///     str: The payload as a hex string.
+    /// The transaction payload data as a hex string.
     #[getter]
     pub fn get_payload(&self) -> String {
         self.0.inner().payload.to_hex()
@@ -296,9 +271,6 @@ impl PyTransaction {
     }
 
     /// The transaction mass used for fee calculation.
-    ///
-    /// Returns:
-    ///     int: The transaction mass.
     #[getter]
     pub fn get_mass(&self) -> u64 {
         self.0.inner().mass

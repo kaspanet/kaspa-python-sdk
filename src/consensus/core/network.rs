@@ -113,9 +113,6 @@ impl PyNetworkId {
     }
 
     /// The base network type (Mainnet, Testnet, Devnet, Simnet).
-    ///
-    /// Returns:
-    ///     NetworkType: The network type.
     #[getter]
     pub fn get_network_type(&self) -> PyNetworkType {
         self.0.network_type.into()
@@ -129,19 +126,13 @@ impl PyNetworkId {
         self.0.is_mainnet()
     }
 
-    /// The optional numeric suffix (e.g., 10 for testnet-10).
-    ///
-    /// Returns:
-    ///     int | None: The suffix, or None if not set.
+    /// The optional numeric suffix (e.g., 10 for testnet-10), or None if not set.
     #[getter]
     pub fn get_suffix(&self) -> Option<u32> {
         self.0.suffix()
     }
 
     /// The default P2P port for this network.
-    ///
-    /// Returns:
-    ///     int: The default P2P port number.
     #[getter]
     pub fn get_default_p2p_port(&self) -> u16 {
         self.0.default_p2p_port()
