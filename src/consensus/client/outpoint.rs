@@ -46,18 +46,12 @@ impl PyTransactionOutpoint {
     }
 
     /// The ID of the transaction containing the referenced output.
-    ///
-    /// Returns:
-    ///     str: The transaction ID as a hex string.
     #[getter]
     pub fn get_transaction_id(&self) -> String {
         self.0.inner().transaction_id.to_string()
     }
 
     /// The index of the output within the transaction.
-    ///
-    /// Returns:
-    ///     int: The output index.
     #[getter]
     pub fn get_index(&self) -> TransactionIndexType {
         self.0.inner().index

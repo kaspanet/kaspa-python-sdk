@@ -101,26 +101,13 @@ impl PyAddress {
         self.0.address_to_string()
     }
 
-    /// The string representation of the address version.
-    /// Versions are `PubKey`, `PubKeyECDSA`, or `ScriptHash`.
-    ///
-    /// Returns:
-    ///     str: The address version.
+    /// The address version (`PubKey`, `PubKeyECDSA`, or `ScriptHash`).
     #[getter]
     pub fn get_version(&self) -> String {
         self.0.version.to_string()
     }
 
-    /// The network prefix of the address. Prefix is based on the network type (mainnet, testnet, etc..)
-    ///
-    /// Returns:
-    ///     str: The network prefix string.
-    ///
-    /// Note:
-    ///     - Mainnet prefix is `kaspa`
-    ///     - Testnet prefix is `kaspatest`
-    ///     - Simnet prefix is `kaspasim`
-    ///     - Devnet prefix is `kaspadev`
+    /// The network prefix of the address (`kaspa`, `kaspatest`, `kaspasim`, or `kaspadev`).
     #[getter]
     pub fn get_prefix(&self) -> String {
         self.0.prefix.to_string()
@@ -141,9 +128,6 @@ impl PyAddress {
     }
 
     /// The bech32 encoded payload of the address.
-    ///
-    /// Returns:
-    ///     str: The payload portion of the address.
     #[getter]
     pub fn get_payload(&self) -> String {
         self.0.payload_to_string()

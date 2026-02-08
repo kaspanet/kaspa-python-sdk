@@ -38,9 +38,6 @@ impl PyTransactionOutput {
     }
 
     /// The output value in sompi (1 KAS = 100,000,000 sompi).
-    ///
-    /// Returns:
-    ///     int: The amount in sompi.
     #[getter]
     pub fn get_value(&self) -> u64 {
         self.0.inner().value
@@ -56,9 +53,6 @@ impl PyTransactionOutput {
     }
 
     /// The locking script that defines spending conditions.
-    ///
-    /// Returns:
-    ///     ScriptPublicKey: The script public key.
     #[getter]
     pub fn get_script_public_key(&self) -> PyScriptPublicKey {
         self.0.inner().script_public_key.clone().into()

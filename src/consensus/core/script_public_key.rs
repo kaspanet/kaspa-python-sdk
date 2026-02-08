@@ -32,9 +32,6 @@ impl PyScriptPublicKey {
     }
 
     /// The script bytes as a hex string.
-    ///
-    /// Returns:
-    ///     str: The script data encoded as hexadecimal.
     #[getter]
     pub fn get_script(&self) -> String {
         self.0.script_as_hex()

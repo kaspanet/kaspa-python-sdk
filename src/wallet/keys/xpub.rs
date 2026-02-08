@@ -126,9 +126,6 @@ impl PyXPub {
     }
 
     /// The serialized extended public key string.
-    ///
-    /// Returns:
-    ///     str: The xpub string.
     #[getter]
     pub fn get_xpub(&self) -> PyResult<String> {
         let str = self
@@ -140,36 +137,24 @@ impl PyXPub {
     }
 
     /// The derivation depth (0 for master key).
-    ///
-    /// Returns:
-    ///     int: The depth.
     #[getter]
     pub fn get_depth(&self) -> u8 {
         self.0.inner().attrs().depth
     }
 
     /// The parent key's fingerprint as hex.
-    ///
-    /// Returns:
-    ///     str: The parent fingerprint.
     #[getter]
     pub fn get_parent_fingerprint(&self) -> String {
         self.0.inner().attrs().parent_fingerprint.to_vec().to_hex()
     }
 
     /// The child number used to derive this key.
-    ///
-    /// Returns:
-    ///     int: The child number.
     #[getter]
     pub fn get_child_number(&self) -> u32 {
         self.0.inner().attrs().child_number.into()
     }
 
     /// The chain code as hex.
-    ///
-    /// Returns:
-    ///     str: The chain code.
     #[getter]
     pub fn get_chain_code(&self) -> String {
         self.0.inner().attrs().chain_code.to_vec().to_hex()
