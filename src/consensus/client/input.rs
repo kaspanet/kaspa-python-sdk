@@ -1,6 +1,6 @@
 use crate::{
     consensus::client::{outpoint::PyTransactionOutpoint, utxo::PyUtxoEntryReference},
-    consensus::convert::TryToPyDict,
+    traits::TryToPyDict,
     types::PyBinary,
 };
 use kaspa_consensus_client::{TransactionInput, UtxoEntryReference};

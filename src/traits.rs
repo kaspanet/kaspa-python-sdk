@@ -10,8 +10,6 @@
 //! PyTransactionOutput::from_dict creates a new PyTransactionOutput instance
 //! PyTransactionOutput::to_dict calls try_to_pydict on the wrapped type
 
-pub mod native;
-
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 
