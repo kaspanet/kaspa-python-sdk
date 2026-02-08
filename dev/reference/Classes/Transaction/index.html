@@ -7816,34 +7816,6 @@ Transactions are the fundamental unit of value transfer on the Kaspa network.</p
 
         <p>The gas limit for smart contract execution.</p>
 
-
-<table>
-      <thead>
-        <tr>
-          <th><span class="doc-section-title">RETURNS</span></th>
-          <th><span>DESCRIPTION</span></th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>int</code>
-            </td>
-            <td class="doc-returns-details">
-              <div class="doc-md-description">
-                <p>The gas limit.</p>
-              </div>
-                <p>
-                  <span class="doc-returns-annotation">
-                    <b>TYPE:</b>
-                      <code><span title="builtins.int">int</span></code>
-                  </span>
-                </p>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
     </div>
 
 </div>
@@ -7866,35 +7838,7 @@ Transactions are the fundamental unit of value transfer on the Kaspa network.</p
 
     <div class="doc doc-contents ">
 
-        <p>The transaction ID (hash).</p>
-
-
-<table>
-      <thead>
-        <tr>
-          <th><span class="doc-section-title">RETURNS</span></th>
-          <th><span>DESCRIPTION</span></th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>str</code>
-            </td>
-            <td class="doc-returns-details">
-              <div class="doc-md-description">
-                <p>The transaction ID as a hex string.</p>
-              </div>
-                <p>
-                  <span class="doc-returns-annotation">
-                    <b>TYPE:</b>
-                      <code><span title="builtins.str">str</span></code>
-                  </span>
-                </p>
-            </td>
-          </tr>
-      </tbody>
-    </table>
+        <p>The transaction ID (hash) as a hex string.</p>
 
     </div>
 
@@ -7919,31 +7863,7 @@ Transactions are the fundamental unit of value transfer on the Kaspa network.</p
 
     <div class="doc doc-contents ">
 
-        <p>The list of transaction inputs.</p>
-
-
-<table>
-      <thead>
-        <tr>
-          <th><span class="doc-section-title">RETURNS</span></th>
-          <th><span>DESCRIPTION</span></th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <span class="doc-returns-annotation">
-                    <code><span title="builtins.list">list</span>[<a class="autorefs autorefs-internal" title=" TransactionInput (kaspa.TransactionInput)" href="../TransactionInput/#kaspa.TransactionInput">TransactionInput</a>]</code>
-                </span>
-            </td>
-            <td class="doc-returns-details">
-              <div class="doc-md-description">
-                <p>list[TransactionInput]: List of inputs spending previous outputs.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
+        <p>The list of transaction inputs spending previous outputs.</p>
 
     </div>
 
@@ -7968,36 +7888,7 @@ Transactions are the fundamental unit of value transfer on the Kaspa network.</p
 
     <div class="doc doc-contents ">
 
-        <p>The transaction lock time.
-Represents a DAA score or Unix timestamp before which the transaction cannot be included.</p>
-
-
-<table>
-      <thead>
-        <tr>
-          <th><span class="doc-section-title">RETURNS</span></th>
-          <th><span>DESCRIPTION</span></th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>int</code>
-            </td>
-            <td class="doc-returns-details">
-              <div class="doc-md-description">
-                <p>The lock time value.</p>
-              </div>
-                <p>
-                  <span class="doc-returns-annotation">
-                    <b>TYPE:</b>
-                      <code><span title="builtins.int">int</span></code>
-                  </span>
-                </p>
-            </td>
-          </tr>
-      </tbody>
-    </table>
+        <p>The transaction lock time (DAA score or Unix timestamp before which the transaction cannot be included).</p>
 
     </div>
 
@@ -8024,34 +7915,6 @@ Represents a DAA score or Unix timestamp before which the transaction cannot be 
 
         <p>The transaction mass used for fee calculation.</p>
 
-
-<table>
-      <thead>
-        <tr>
-          <th><span class="doc-section-title">RETURNS</span></th>
-          <th><span>DESCRIPTION</span></th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>int</code>
-            </td>
-            <td class="doc-returns-details">
-              <div class="doc-md-description">
-                <p>The transaction mass.</p>
-              </div>
-                <p>
-                  <span class="doc-returns-annotation">
-                    <b>TYPE:</b>
-                      <code><span title="builtins.int">int</span></code>
-                  </span>
-                </p>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
     </div>
 
 </div>
@@ -8075,31 +7938,7 @@ Represents a DAA score or Unix timestamp before which the transaction cannot be 
 
     <div class="doc doc-contents ">
 
-        <p>The list of transaction outputs.</p>
-
-
-<table>
-      <thead>
-        <tr>
-          <th><span class="doc-section-title">RETURNS</span></th>
-          <th><span>DESCRIPTION</span></th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <span class="doc-returns-annotation">
-                    <code><span title="builtins.list">list</span>[<a class="autorefs autorefs-internal" title=" TransactionOutput (kaspa.TransactionOutput)" href="../TransactionOutput/#kaspa.TransactionOutput">TransactionOutput</a>]</code>
-                </span>
-            </td>
-            <td class="doc-returns-details">
-              <div class="doc-md-description">
-                <p>list[TransactionOutput]: List of outputs defining value destinations.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
+        <p>The list of transaction outputs defining value destinations.</p>
 
     </div>
 
@@ -8124,35 +7963,7 @@ Represents a DAA score or Unix timestamp before which the transaction cannot be 
 
     <div class="doc doc-contents ">
 
-        <p>The transaction payload data.</p>
-
-
-<table>
-      <thead>
-        <tr>
-          <th><span class="doc-section-title">RETURNS</span></th>
-          <th><span>DESCRIPTION</span></th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>str</code>
-            </td>
-            <td class="doc-returns-details">
-              <div class="doc-md-description">
-                <p>The payload as a hex string.</p>
-              </div>
-                <p>
-                  <span class="doc-returns-annotation">
-                    <b>TYPE:</b>
-                      <code><span title="builtins.str">str</span></code>
-                  </span>
-                </p>
-            </td>
-          </tr>
-      </tbody>
-    </table>
+        <p>The transaction payload data as a hex string.</p>
 
     </div>
 
@@ -8176,35 +7987,7 @@ Represents a DAA score or Unix timestamp before which the transaction cannot be 
 
     <div class="doc doc-contents ">
 
-        <p>The subnetwork identifier.</p>
-
-
-<table>
-      <thead>
-        <tr>
-          <th><span class="doc-section-title">RETURNS</span></th>
-          <th><span>DESCRIPTION</span></th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>str</code>
-            </td>
-            <td class="doc-returns-details">
-              <div class="doc-md-description">
-                <p>The subnetwork ID as a hex string.</p>
-              </div>
-                <p>
-                  <span class="doc-returns-annotation">
-                    <b>TYPE:</b>
-                      <code><span title="builtins.str">str</span></code>
-                  </span>
-                </p>
-            </td>
-          </tr>
-      </tbody>
-    </table>
+        <p>The subnetwork identifier as a hex string.</p>
 
     </div>
 
@@ -8230,34 +8013,6 @@ Represents a DAA score or Unix timestamp before which the transaction cannot be 
     <div class="doc doc-contents ">
 
         <p>The transaction version number.</p>
-
-
-<table>
-      <thead>
-        <tr>
-          <th><span class="doc-section-title">RETURNS</span></th>
-          <th><span>DESCRIPTION</span></th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>int</code>
-            </td>
-            <td class="doc-returns-details">
-              <div class="doc-md-description">
-                <p>The version number.</p>
-              </div>
-                <p>
-                  <span class="doc-returns-annotation">
-                    <b>TYPE:</b>
-                      <code><span title="builtins.int">int</span></code>
-                  </span>
-                </p>
-            </td>
-          </tr>
-      </tbody>
-    </table>
 
     </div>
 

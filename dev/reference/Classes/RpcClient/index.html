@@ -9134,35 +9134,7 @@ encodings.</p>
 
     <div class="doc doc-contents ">
 
-        <p>The RPC encoding format.</p>
-
-
-<table>
-      <thead>
-        <tr>
-          <th><span class="doc-section-title">RETURNS</span></th>
-          <th><span>DESCRIPTION</span></th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>str</code>
-            </td>
-            <td class="doc-returns-details">
-              <div class="doc-md-description">
-                <p>The encoding ("borsh" or "json").</p>
-              </div>
-                <p>
-                  <span class="doc-returns-annotation">
-                    <b>TYPE:</b>
-                      <code><span title="builtins.str">str</span></code>
-                  </span>
-                </p>
-            </td>
-          </tr>
-      </tbody>
-    </table>
+        <p>The RPC encoding format ("borsh" or "json").</p>
 
     </div>
 
@@ -9186,35 +9158,7 @@ encodings.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Whether the client is currently connected.</p>
-
-
-<table>
-      <thead>
-        <tr>
-          <th><span class="doc-section-title">RETURNS</span></th>
-          <th><span>DESCRIPTION</span></th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>bool</code>
-            </td>
-            <td class="doc-returns-details">
-              <div class="doc-md-description">
-                <p>True if connected to a node.</p>
-              </div>
-                <p>
-                  <span class="doc-returns-annotation">
-                    <b>TYPE:</b>
-                      <code><span title="builtins.bool">bool</span></code>
-                  </span>
-                </p>
-            </td>
-          </tr>
-      </tbody>
-    </table>
+        <p>Whether the client is currently connected to a node.</p>
 
     </div>
 
@@ -9238,31 +9182,7 @@ encodings.</p>
 
     <div class="doc doc-contents ">
 
-        <p>The unique identifier of the connected node.</p>
-
-
-<table>
-      <thead>
-        <tr>
-          <th><span class="doc-section-title">RETURNS</span></th>
-          <th><span>DESCRIPTION</span></th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <span class="doc-returns-annotation">
-                    <code><span title="typing.Optional">Optional</span>[<span title="builtins.str">str</span>]</code>
-                </span>
-            </td>
-            <td class="doc-returns-details">
-              <div class="doc-md-description">
-                <p>str | None: The node ID, or None if not connected via resolver.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
+        <p>The unique identifier of the connected node, or None if not connected via resolver.</p>
 
     </div>
 
@@ -9286,31 +9206,7 @@ encodings.</p>
 
     <div class="doc doc-contents ">
 
-        <p>The resolver used for node discovery.</p>
-
-
-<table>
-      <thead>
-        <tr>
-          <th><span class="doc-section-title">RETURNS</span></th>
-          <th><span>DESCRIPTION</span></th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <span class="doc-returns-annotation">
-                    <code><span title="typing.Optional">Optional</span>[<a class="autorefs autorefs-internal" title=" Resolver (kaspa.Resolver)" href="../Resolver/#kaspa.Resolver">Resolver</a>]</code>
-                </span>
-            </td>
-            <td class="doc-returns-details">
-              <div class="doc-md-description">
-                <p>Resolver | None: The resolver, or None if not set.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
+        <p>The resolver used for node discovery, or None if not set.</p>
 
     </div>
 
@@ -9334,31 +9230,7 @@ encodings.</p>
 
     <div class="doc doc-contents ">
 
-        <p>The current connection URL.</p>
-
-
-<table>
-      <thead>
-        <tr>
-          <th><span class="doc-section-title">RETURNS</span></th>
-          <th><span>DESCRIPTION</span></th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <span class="doc-returns-annotation">
-                    <code><span title="typing.Optional">Optional</span>[<span title="builtins.str">str</span>]</code>
-                </span>
-            </td>
-            <td class="doc-returns-details">
-              <div class="doc-md-description">
-                <p>str | None: The WebSocket URL, or None if not connected.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
+        <p>The current WebSocket connection URL, or None if not connected.</p>
 
     </div>
 

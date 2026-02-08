@@ -7637,31 +7637,7 @@ Contains information about the amount, locking script, and block position.</p>
 
     <div class="doc doc-contents ">
 
-        <p>The address associated with this UTXO.</p>
-
-
-<table>
-      <thead>
-        <tr>
-          <th><span class="doc-section-title">RETURNS</span></th>
-          <th><span>DESCRIPTION</span></th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <span class="doc-returns-annotation">
-                    <code><span title="typing.Optional">Optional</span>[<a class="autorefs autorefs-internal" title=" Address (kaspa.Address)" href="../Address/#kaspa.Address">Address</a>]</code>
-                </span>
-            </td>
-            <td class="doc-returns-details">
-              <div class="doc-md-description">
-                <p>Address | None: The address, or None if not available.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
+        <p>The address associated with this UTXO, or None if not available.</p>
 
     </div>
 
@@ -7687,34 +7663,6 @@ Contains information about the amount, locking script, and block position.</p>
 
         <p>The amount in sompi (1 KAS = 100,000,000 sompi).</p>
 
-
-<table>
-      <thead>
-        <tr>
-          <th><span class="doc-section-title">RETURNS</span></th>
-          <th><span>DESCRIPTION</span></th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>int</code>
-            </td>
-            <td class="doc-returns-details">
-              <div class="doc-md-description">
-                <p>The UTXO value in sompi.</p>
-              </div>
-                <p>
-                  <span class="doc-returns-annotation">
-                    <b>TYPE:</b>
-                      <code><span title="builtins.int">int</span></code>
-                  </span>
-                </p>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
     </div>
 
 </div>
@@ -7738,34 +7686,6 @@ Contains information about the amount, locking script, and block position.</p>
     <div class="doc doc-contents ">
 
         <p>The DAA score of the block containing this UTXO.</p>
-
-
-<table>
-      <thead>
-        <tr>
-          <th><span class="doc-section-title">RETURNS</span></th>
-          <th><span>DESCRIPTION</span></th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>int</code>
-            </td>
-            <td class="doc-returns-details">
-              <div class="doc-md-description">
-                <p>The block DAA score.</p>
-              </div>
-                <p>
-                  <span class="doc-returns-annotation">
-                    <b>TYPE:</b>
-                      <code><span title="builtins.int">int</span></code>
-                  </span>
-                </p>
-            </td>
-          </tr>
-      </tbody>
-    </table>
 
     </div>
 
@@ -7791,34 +7711,6 @@ Contains information about the amount, locking script, and block position.</p>
 
         <p>Whether this UTXO is from a coinbase transaction.</p>
 
-
-<table>
-      <thead>
-        <tr>
-          <th><span class="doc-section-title">RETURNS</span></th>
-          <th><span>DESCRIPTION</span></th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>bool</code>
-            </td>
-            <td class="doc-returns-details">
-              <div class="doc-md-description">
-                <p>True if this is a coinbase UTXO.</p>
-              </div>
-                <p>
-                  <span class="doc-returns-annotation">
-                    <b>TYPE:</b>
-                      <code><span title="builtins.bool">bool</span></code>
-                  </span>
-                </p>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
     </div>
 
 </div>
@@ -7843,34 +7735,6 @@ Contains information about the amount, locking script, and block position.</p>
 
         <p>The outpoint identifying this UTXO.</p>
 
-
-<table>
-      <thead>
-        <tr>
-          <th><span class="doc-section-title">RETURNS</span></th>
-          <th><span>DESCRIPTION</span></th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>TransactionOutpoint</code>
-            </td>
-            <td class="doc-returns-details">
-              <div class="doc-md-description">
-                <p>The transaction outpoint reference.</p>
-              </div>
-                <p>
-                  <span class="doc-returns-annotation">
-                    <b>TYPE:</b>
-                      <code><a class="autorefs autorefs-internal" title=" TransactionOutpoint (kaspa.TransactionOutpoint)" href="../TransactionOutpoint/#kaspa.TransactionOutpoint">TransactionOutpoint</a></code>
-                  </span>
-                </p>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
     </div>
 
 </div>
@@ -7894,34 +7758,6 @@ Contains information about the amount, locking script, and block position.</p>
     <div class="doc doc-contents ">
 
         <p>The locking script for this UTXO.</p>
-
-
-<table>
-      <thead>
-        <tr>
-          <th><span class="doc-section-title">RETURNS</span></th>
-          <th><span>DESCRIPTION</span></th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>ScriptPublicKey</code>
-            </td>
-            <td class="doc-returns-details">
-              <div class="doc-md-description">
-                <p>The script public key.</p>
-              </div>
-                <p>
-                  <span class="doc-returns-annotation">
-                    <b>TYPE:</b>
-                      <code><a class="autorefs autorefs-internal" title=" ScriptPublicKey (kaspa.ScriptPublicKey)" href="../ScriptPublicKey/#kaspa.ScriptPublicKey">ScriptPublicKey</a></code>
-                  </span>
-                </p>
-            </td>
-          </tr>
-      </tbody>
-    </table>
 
     </div>
 

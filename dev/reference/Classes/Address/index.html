@@ -7640,34 +7640,6 @@ comprised of a public key, the public key version and the resulting checksum.</p
 
         <p>The bech32 encoded payload of the address.</p>
 
-
-<table>
-      <thead>
-        <tr>
-          <th><span class="doc-section-title">RETURNS</span></th>
-          <th><span>DESCRIPTION</span></th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>str</code>
-            </td>
-            <td class="doc-returns-details">
-              <div class="doc-md-description">
-                <p>The payload portion of the address.</p>
-              </div>
-                <p>
-                  <span class="doc-returns-annotation">
-                    <b>TYPE:</b>
-                      <code><span title="builtins.str">str</span></code>
-                  </span>
-                </p>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
     </div>
 
 </div>
@@ -7691,46 +7663,8 @@ comprised of a public key, the public key version and the resulting checksum.</p
 
     <div class="doc doc-contents ">
 
-        <p>The network prefix of the address. Prefix is based on the network type (mainnet, testnet, etc..)</p>
+        <p>The network prefix of the address (<code>kaspa</code>, <code>kaspatest</code>, <code>kaspasim</code>, or <code>kaspadev</code>).</p>
 
-
-<table>
-      <thead>
-        <tr>
-          <th><span class="doc-section-title">RETURNS</span></th>
-          <th><span>DESCRIPTION</span></th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>str</code>
-            </td>
-            <td class="doc-returns-details">
-              <div class="doc-md-description">
-                <p>The network prefix string.</p>
-              </div>
-                <p>
-                  <span class="doc-returns-annotation">
-                    <b>TYPE:</b>
-                      <code><span title="builtins.str">str</span></code>
-                  </span>
-                </p>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-<details class="note" open>
-  <summary>Note</summary>
-  <ul>
-<li>Mainnet prefix is <code>kaspa</code></li>
-<li>Testnet prefix is <code>kaspatest</code></li>
-<li>Simnet prefix is <code>kaspasim</code></li>
-<li>Devnet prefix is <code>kaspadev</code></li>
-</ul>
-</details>
     </div>
 
 </div>
@@ -7753,36 +7687,7 @@ comprised of a public key, the public key version and the resulting checksum.</p
 
     <div class="doc doc-contents ">
 
-        <p>The string representation of the address version.
-Versions are <code>PubKey</code>, <code>PubKeyECDSA</code>, or <code>ScriptHash</code>.</p>
-
-
-<table>
-      <thead>
-        <tr>
-          <th><span class="doc-section-title">RETURNS</span></th>
-          <th><span>DESCRIPTION</span></th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>str</code>
-            </td>
-            <td class="doc-returns-details">
-              <div class="doc-md-description">
-                <p>The address version.</p>
-              </div>
-                <p>
-                  <span class="doc-returns-annotation">
-                    <b>TYPE:</b>
-                      <code><span title="builtins.str">str</span></code>
-                  </span>
-                </p>
-            </td>
-          </tr>
-      </tbody>
-    </table>
+        <p>The address version (<code>PubKey</code>, <code>PubKeyECDSA</code>, or <code>ScriptHash</code>).</p>
 
     </div>
 

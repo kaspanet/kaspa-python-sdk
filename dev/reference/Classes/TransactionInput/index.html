@@ -7661,34 +7661,6 @@
 
         <p>The outpoint referencing the UTXO being spent.</p>
 
-
-<table>
-      <thead>
-        <tr>
-          <th><span class="doc-section-title">RETURNS</span></th>
-          <th><span>DESCRIPTION</span></th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>TransactionOutpoint</code>
-            </td>
-            <td class="doc-returns-details">
-              <div class="doc-md-description">
-                <p>The previous output reference.</p>
-              </div>
-                <p>
-                  <span class="doc-returns-annotation">
-                    <b>TYPE:</b>
-                      <code><a class="autorefs autorefs-internal" title=" TransactionOutpoint (kaspa.TransactionOutpoint)" href="../TransactionOutpoint/#kaspa.TransactionOutpoint">TransactionOutpoint</a></code>
-                  </span>
-                </p>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
     </div>
 
 </div>
@@ -7713,34 +7685,6 @@
     <div class="doc doc-contents ">
 
         <p>The sequence number used for relative time locks.</p>
-
-
-<table>
-      <thead>
-        <tr>
-          <th><span class="doc-section-title">RETURNS</span></th>
-          <th><span>DESCRIPTION</span></th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>int</code>
-            </td>
-            <td class="doc-returns-details">
-              <div class="doc-md-description">
-                <p>The sequence number.</p>
-              </div>
-                <p>
-                  <span class="doc-returns-annotation">
-                    <b>TYPE:</b>
-                      <code><span title="builtins.int">int</span></code>
-                  </span>
-                </p>
-            </td>
-          </tr>
-      </tbody>
-    </table>
 
     </div>
 
@@ -7767,34 +7711,6 @@
 
         <p>The number of signature operations in this input.</p>
 
-
-<table>
-      <thead>
-        <tr>
-          <th><span class="doc-section-title">RETURNS</span></th>
-          <th><span>DESCRIPTION</span></th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>int</code>
-            </td>
-            <td class="doc-returns-details">
-              <div class="doc-md-description">
-                <p>The signature operation count.</p>
-              </div>
-                <p>
-                  <span class="doc-returns-annotation">
-                    <b>TYPE:</b>
-                      <code><span title="builtins.int">int</span></code>
-                  </span>
-                </p>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
     </div>
 
 </div>
@@ -7817,31 +7733,7 @@
 
     <div class="doc doc-contents ">
 
-        <p>The unlocking script (signature) that proves ownership of the UTXO.</p>
-
-
-<table>
-      <thead>
-        <tr>
-          <th><span class="doc-section-title">RETURNS</span></th>
-          <th><span>DESCRIPTION</span></th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <span class="doc-returns-annotation">
-                    <code><span title="typing.Optional">Optional</span>[<span title="builtins.str">str</span>]</code>
-                </span>
-            </td>
-            <td class="doc-returns-details">
-              <div class="doc-md-description">
-                <p>str | None: The signature script as a hex string, or None if not set.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
+        <p>The unlocking script (signature) as a hex string, or None if not set.</p>
 
     </div>
 
@@ -7865,31 +7757,7 @@
 
     <div class="doc doc-contents ">
 
-        <p>The UTXO entry reference for transaction signing.</p>
-
-
-<table>
-      <thead>
-        <tr>
-          <th><span class="doc-section-title">RETURNS</span></th>
-          <th><span>DESCRIPTION</span></th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <span class="doc-returns-annotation">
-                    <code><span title="typing.Optional">Optional</span>[<a class="autorefs autorefs-internal" title=" UtxoEntryReference (kaspa.UtxoEntryReference)" href="../UtxoEntryReference/#kaspa.UtxoEntryReference">UtxoEntryReference</a>]</code>
-                </span>
-            </td>
-            <td class="doc-returns-details">
-              <div class="doc-md-description">
-                <p>UtxoEntryReference | None: The UTXO reference, or None if not set.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
+        <p>The UTXO entry reference for transaction signing, or None if not set.</p>
 
     </div>
 
