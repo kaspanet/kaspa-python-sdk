@@ -62,25 +62,12 @@ class Address:
     @property
     def version(self) -> builtins.str:
         r"""
-        The string representation of the address version.
-        Versions are `PubKey`, `PubKeyECDSA`, or `ScriptHash`.
-        
-        Returns:
-            str: The address version.
+        The address version (`PubKey`, `PubKeyECDSA`, or `ScriptHash`).
         """
     @property
     def prefix(self) -> builtins.str:
         r"""
-        The network prefix of the address. Prefix is based on the network type (mainnet, testnet, etc..)
-        
-        Returns:
-            str: The network prefix string.
-        
-        Note:
-            - Mainnet prefix is `kaspa`
-            - Testnet prefix is `kaspatest`
-            - Simnet prefix is `kaspasim`
-            - Devnet prefix is `kaspadev`
+        The network prefix of the address (`kaspa`, `kaspatest`, `kaspasim`, or `kaspadev`).
         """
     @prefix.setter
     def prefix(self, value: builtins.str) -> None:
@@ -97,9 +84,6 @@ class Address:
     def payload(self) -> builtins.str:
         r"""
         The bech32 encoded payload of the address.
-        
-        Returns:
-            str: The payload portion of the address.
         """
     def __eq__(self, other: builtins.object) -> builtins.bool: ...
     def __new__(cls, address: builtins.str) -> Address:
@@ -358,49 +342,31 @@ class GeneratorSummary:
     def network_type(self) -> builtins.str:
         r"""
         The network type used for generation.
-        
-        Returns:
-            str: The network type string.
         """
     @property
     def utxos(self) -> builtins.int:
         r"""
         The total number of UTXOs consumed.
-        
-        Returns:
-            int: The UTXO count.
         """
     @property
     def fees(self) -> builtins.int:
         r"""
         The total fees across all generated transactions in sompi.
-        
-        Returns:
-            int: The aggregate fee amount.
         """
     @property
     def transactions(self) -> builtins.int:
         r"""
         The number of transactions generated.
-        
-        Returns:
-            int: The transaction count.
         """
     @property
     def final_amount(self) -> typing.Optional[builtins.int]:
         r"""
-        The final transaction amount in sompi.
-        
-        Returns:
-            int | None: The final amount, or None if not applicable.
+        The final transaction amount in sompi, or None if not applicable.
         """
     @property
     def final_transaction_id(self) -> typing.Optional[builtins.str]:
         r"""
-        The ID of the final transaction.
-        
-        Returns:
-            str | None: The transaction ID, or None if not yet generated.
+        The ID of the final transaction, or None if not yet generated.
         """
     def __eq__(self, other: GeneratorSummary) -> builtins.bool: ...
 
@@ -456,25 +422,16 @@ class Keypair:
     def xonly_public_key(self) -> builtins.str:
         r"""
         The x-only public key as hex.
-        
-        Returns:
-            str: The x-only public key.
         """
     @property
     def public_key(self) -> builtins.str:
         r"""
         The full public key as hex.
-        
-        Returns:
-            str: The public key.
         """
     @property
     def private_key(self) -> builtins.str:
         r"""
         The private key as hex.
-        
-        Returns:
-            str: The private key.
         """
     def __new__(cls, secret_key: builtins.str, public_key: builtins.str, xonly_public_key: builtins.str) -> Keypair:
         r"""
@@ -547,9 +504,6 @@ class Mnemonic:
     def entropy(self) -> builtins.str:
         r"""
         The entropy bytes as a hex string.
-        
-        Returns:
-            str: The raw entropy in hexadecimal.
         """
     @entropy.setter
     def entropy(self, value: builtins.str) -> None:
@@ -562,10 +516,7 @@ class Mnemonic:
     @property
     def phrase(self) -> builtins.str:
         r"""
-        The mnemonic phrase as a string.
-        
-        Returns:
-            str: The space-separated word phrase.
+        The mnemonic phrase as a space-separated word string.
         """
     @phrase.setter
     def phrase(self, value: builtins.str) -> None:
@@ -642,25 +593,16 @@ class NetworkId:
     def network_type(self) -> NetworkType:
         r"""
         The base network type (Mainnet, Testnet, Devnet, Simnet).
-        
-        Returns:
-            NetworkType: The network type.
         """
     @property
     def suffix(self) -> typing.Optional[builtins.int]:
         r"""
-        The optional numeric suffix (e.g., 10 for testnet-10).
-        
-        Returns:
-            int | None: The suffix, or None if not set.
+        The optional numeric suffix (e.g., 10 for testnet-10), or None if not set.
         """
     @property
     def default_p2p_port(self) -> builtins.int:
         r"""
         The default P2P port for this network.
-        
-        Returns:
-            int: The default P2P port number.
         """
     def __eq__(self, other: builtins.object) -> builtins.bool: ...
     def __new__(cls, network_id: typing.Any) -> NetworkId:
@@ -783,82 +725,52 @@ class PendingTransaction:
     @property
     def id(self) -> builtins.str:
         r"""
-        The transaction ID (hash).
-        
-        Returns:
-            str: The transaction ID as a hex string.
+        The transaction ID (hash) as a hex string.
         """
     @property
     def payment_amount(self) -> typing.Optional[builtins.int]:
         r"""
-        The total payment amount in sompi (excluding change and fees).
-        
-        Returns:
-            int | None: The payment amount, or None for sweep transactions.
+        The total payment amount in sompi (excluding change and fees), or None for sweep transactions.
         """
     @property
     def change_amount(self) -> builtins.int:
         r"""
         The change amount returned to the sender in sompi.
-        
-        Returns:
-            int: The change amount.
         """
     @property
     def fee_amount(self) -> builtins.int:
         r"""
         The transaction fee in sompi.
-        
-        Returns:
-            int: The fee amount.
         """
     @property
     def mass(self) -> builtins.int:
         r"""
         The transaction mass (used for fee calculation).
-        
-        Returns:
-            int: The transaction mass.
         """
     @property
     def minimum_signatures(self) -> builtins.int:
         r"""
         The minimum number of signatures required.
-        
-        Returns:
-            int: The minimum signature count.
         """
     @property
     def aggregate_input_amount(self) -> builtins.int:
         r"""
         The total value of all inputs in sompi.
-        
-        Returns:
-            int: The aggregate input amount.
         """
     @property
     def aggregate_output_amount(self) -> builtins.int:
         r"""
         The total value of all outputs in sompi.
-        
-        Returns:
-            int: The aggregate output amount.
         """
     @property
     def transaction_type(self) -> builtins.str:
         r"""
         The transaction type: "batch" for intermediate or "final" for last.
-        
-        Returns:
-            str: The transaction type.
         """
     @property
     def transaction(self) -> Transaction:
         r"""
-        The underlying transaction object.
-        
-        Returns:
-            Transaction: The transaction for manual inspection or modification.
+        The underlying transaction object for manual inspection or modification.
         """
     def addresses(self) -> builtins.list[Address]:
         r"""
@@ -1471,42 +1383,27 @@ class RpcClient:
     @property
     def url(self) -> typing.Optional[builtins.str]:
         r"""
-        The current connection URL.
-        
-        Returns:
-            str | None: The WebSocket URL, or None if not connected.
+        The current WebSocket connection URL, or None if not connected.
         """
     @property
     def resolver(self) -> typing.Optional[Resolver]:
         r"""
-        The resolver used for node discovery.
-        
-        Returns:
-            Resolver | None: The resolver, or None if not set.
+        The resolver used for node discovery, or None if not set.
         """
     @property
     def is_connected(self) -> builtins.bool:
         r"""
-        Whether the client is currently connected.
-        
-        Returns:
-            bool: True if connected to a node.
+        Whether the client is currently connected to a node.
         """
     @property
     def encoding(self) -> builtins.str:
         r"""
-        The RPC encoding format.
-        
-        Returns:
-            str: The encoding ("borsh" or "json").
+        The RPC encoding format ("borsh" or "json").
         """
     @property
     def node_id(self) -> typing.Optional[builtins.str]:
         r"""
-        The unique identifier of the connected node.
-        
-        Returns:
-            str | None: The node ID, or None if not connected via resolver.
+        The unique identifier of the connected node, or None if not connected via resolver.
         """
     def __new__(cls, resolver: typing.Optional[Resolver] = None, url: typing.Optional[builtins.str] = None, encoding: str | Encoding | None = Encoding.Borsh, network_id: typing.Optional[NetworkId] = None) -> RpcClient:
         r"""
@@ -1884,9 +1781,6 @@ class ScriptPublicKey:
     def script(self) -> builtins.str:
         r"""
         The script bytes as a hex string.
-        
-        Returns:
-            str: The script data encoded as hexadecimal.
         """
     def __eq__(self, other: builtins.object) -> builtins.bool: ...
     def __new__(cls, version: builtins.int, script: Binary) -> ScriptPublicKey:
@@ -1923,18 +1817,12 @@ class Transaction:
     @property
     def id(self) -> builtins.str:
         r"""
-        The transaction ID (hash).
-        
-        Returns:
-            str: The transaction ID as a hex string.
+        The transaction ID (hash) as a hex string.
         """
     @property
     def inputs(self) -> builtins.list[TransactionInput]:
         r"""
-        The list of transaction inputs.
-        
-        Returns:
-            list[TransactionInput]: List of inputs spending previous outputs.
+        The list of transaction inputs spending previous outputs.
         """
     @inputs.setter
     def inputs(self, value: builtins.list[TransactionInput]) -> None:
@@ -1947,10 +1835,7 @@ class Transaction:
     @property
     def outputs(self) -> builtins.list[TransactionOutput]:
         r"""
-        The list of transaction outputs.
-        
-        Returns:
-            list[TransactionOutput]: List of outputs defining value destinations.
+        The list of transaction outputs defining value destinations.
         """
     @outputs.setter
     def outputs(self, value: builtins.list[TransactionOutput]) -> None:
@@ -1964,9 +1849,6 @@ class Transaction:
     def version(self) -> builtins.int:
         r"""
         The transaction version number.
-        
-        Returns:
-            int: The version number.
         """
     @version.setter
     def version(self, value: builtins.int) -> None:
@@ -1979,11 +1861,7 @@ class Transaction:
     @property
     def lock_time(self) -> builtins.int:
         r"""
-        The transaction lock time.
-        Represents a DAA score or Unix timestamp before which the transaction cannot be included.
-        
-        Returns:
-            int: The lock time value.
+        The transaction lock time (DAA score or Unix timestamp before which the transaction cannot be included).
         """
     @lock_time.setter
     def lock_time(self, value: builtins.int) -> None:
@@ -1997,9 +1875,6 @@ class Transaction:
     def gas(self) -> builtins.int:
         r"""
         The gas limit for smart contract execution.
-        
-        Returns:
-            int: The gas limit.
         """
     @gas.setter
     def gas(self, value: builtins.int) -> None:
@@ -2012,18 +1887,12 @@ class Transaction:
     @property
     def subnetwork(self) -> builtins.str:
         r"""
-        The subnetwork identifier.
-        
-        Returns:
-            str: The subnetwork ID as a hex string.
+        The subnetwork identifier as a hex string.
         """
     @property
     def payload(self) -> builtins.str:
         r"""
-        The transaction payload data.
-        
-        Returns:
-            str: The payload as a hex string.
+        The transaction payload data as a hex string.
         """
     @payload.setter
     def payload(self, value: Binary) -> None:
@@ -2037,9 +1906,6 @@ class Transaction:
     def mass(self) -> builtins.int:
         r"""
         The transaction mass used for fee calculation.
-        
-        Returns:
-            int: The transaction mass.
         """
     @mass.setter
     def mass(self, value: builtins.int) -> None:
@@ -2149,9 +2015,6 @@ class TransactionInput:
     def previous_outpoint(self) -> TransactionOutpoint:
         r"""
         The outpoint referencing the UTXO being spent.
-        
-        Returns:
-            TransactionOutpoint: The previous output reference.
         """
     @previous_outpoint.setter
     def previous_outpoint(self, value: TransactionOutpoint) -> None:
@@ -2164,18 +2027,12 @@ class TransactionInput:
     @property
     def signature_script_as_hex(self) -> typing.Optional[builtins.str]:
         r"""
-        The unlocking script (signature) that proves ownership of the UTXO.
-        
-        Returns:
-            str | None: The signature script as a hex string, or None if not set.
+        The unlocking script (signature) as a hex string, or None if not set.
         """
     @property
     def sequence(self) -> builtins.int:
         r"""
         The sequence number used for relative time locks.
-        
-        Returns:
-            int: The sequence number.
         """
     @sequence.setter
     def sequence(self, value: builtins.int) -> None:
@@ -2189,9 +2046,6 @@ class TransactionInput:
     def sig_op_count(self) -> builtins.int:
         r"""
         The number of signature operations in this input.
-        
-        Returns:
-            int: The signature operation count.
         """
     @sig_op_count.setter
     def sig_op_count(self, value: builtins.int) -> None:
@@ -2204,10 +2058,7 @@ class TransactionInput:
     @property
     def utxo(self) -> typing.Optional[UtxoEntryReference]:
         r"""
-        The UTXO entry reference for transaction signing.
-        
-        Returns:
-            UtxoEntryReference | None: The UTXO reference, or None if not set.
+        The UTXO entry reference for transaction signing, or None if not set.
         """
     @signature_script.setter
     def signature_script(self, value: Binary) -> None:
@@ -2272,17 +2123,11 @@ class TransactionOutpoint:
     def transaction_id(self) -> builtins.str:
         r"""
         The ID of the transaction containing the referenced output.
-        
-        Returns:
-            str: The transaction ID as a hex string.
         """
     @property
     def index(self) -> builtins.int:
         r"""
         The index of the output within the transaction.
-        
-        Returns:
-            int: The output index.
         """
     def __new__(cls, transaction_id: Hash, index: builtins.int) -> TransactionOutpoint:
         r"""
@@ -2341,9 +2186,6 @@ class TransactionOutput:
     def value(self) -> builtins.int:
         r"""
         The output value in sompi (1 KAS = 100,000,000 sompi).
-        
-        Returns:
-            int: The amount in sompi.
         """
     @value.setter
     def value(self, value: builtins.int) -> None:
@@ -2357,9 +2199,6 @@ class TransactionOutput:
     def script_public_key(self) -> ScriptPublicKey:
         r"""
         The locking script that defines spending conditions.
-        
-        Returns:
-            ScriptPublicKey: The script public key.
         """
     @script_public_key.setter
     def script_public_key(self, value: ScriptPublicKey) -> None:
@@ -2476,9 +2315,6 @@ class UtxoEntries:
     def items(self) -> builtins.list[UtxoEntryReference]:
         r"""
         The list of UTXO entry references.
-        
-        Returns:
-            list[UtxoEntryReference]: List of UTXO references.
         """
     @items.setter
     def items(self, value: builtins.list[UtxoEntryReference]) -> None:
@@ -2535,50 +2371,32 @@ class UtxoEntry:
     @property
     def address(self) -> typing.Optional[Address]:
         r"""
-        The address associated with this UTXO.
-        
-        Returns:
-            Address | None: The address, or None if not available.
+        The address associated with this UTXO, or None if not available.
         """
     @property
     def outpoint(self) -> TransactionOutpoint:
         r"""
         The outpoint identifying this UTXO.
-        
-        Returns:
-            TransactionOutpoint: The transaction outpoint reference.
         """
     @property
     def amount(self) -> builtins.int:
         r"""
         The amount in sompi (1 KAS = 100,000,000 sompi).
-        
-        Returns:
-            int: The UTXO value in sompi.
         """
     @property
     def script_public_key(self) -> ScriptPublicKey:
         r"""
         The locking script for this UTXO.
-        
-        Returns:
-            ScriptPublicKey: The script public key.
         """
     @property
     def block_daa_score(self) -> builtins.int:
         r"""
         The DAA score of the block containing this UTXO.
-        
-        Returns:
-            int: The block DAA score.
         """
     @property
     def is_coinbase(self) -> builtins.bool:
         r"""
         Whether this UTXO is from a coinbase transaction.
-        
-        Returns:
-            bool: True if this is a coinbase UTXO.
         """
     def to_dict(self) -> dict:
         r"""
@@ -2622,57 +2440,36 @@ class UtxoEntryReference:
     def entry(self) -> UtxoEntry:
         r"""
         The underlying UTXO entry.
-        
-        Returns:
-            UtxoEntry: The UTXO entry data.
         """
     @property
     def outpoint(self) -> TransactionOutpoint:
         r"""
         The outpoint identifying this UTXO.
-        
-        Returns:
-            TransactionOutpoint: The transaction outpoint reference.
         """
     @property
     def address(self) -> typing.Optional[Address]:
         r"""
-        The address associated with this UTXO.
-        
-        Returns:
-            Address | None: The address, or None if not available.
+        The address associated with this UTXO, or None if not available.
         """
     @property
     def amount(self) -> builtins.int:
         r"""
         The amount in sompi (1 KAS = 100,000,000 sompi).
-        
-        Returns:
-            int: The UTXO value in sompi.
         """
     @property
     def is_coinbase(self) -> builtins.bool:
         r"""
         Whether this UTXO is from a coinbase transaction.
-        
-        Returns:
-            bool: True if this is a coinbase UTXO.
         """
     @property
     def block_daa_score(self) -> builtins.int:
         r"""
         The DAA score of the block containing this UTXO.
-        
-        Returns:
-            int: The block DAA score.
         """
     @property
     def script_public_key(self) -> ScriptPublicKey:
         r"""
         The locking script for this UTXO.
-        
-        Returns:
-            ScriptPublicKey: The script public key.
         """
     def __eq__(self, other: builtins.object) -> builtins.bool: ...
     def to_dict(self) -> dict:
@@ -2836,49 +2633,31 @@ class XPrv:
     def xprv(self) -> builtins.str:
         r"""
         The serialized extended private key string.
-        
-        Returns:
-            str: The xprv string.
         """
     @property
     def private_key(self) -> builtins.str:
         r"""
         The private key as a hex string.
-        
-        Returns:
-            str: The private key hex.
         """
     @property
     def depth(self) -> builtins.int:
         r"""
         The derivation depth (0 for master key).
-        
-        Returns:
-            int: The depth.
         """
     @property
     def parent_fingerprint(self) -> builtins.str:
         r"""
         The parent key's fingerprint as hex.
-        
-        Returns:
-            str: The parent fingerprint.
         """
     @property
     def child_number(self) -> builtins.int:
         r"""
         The child number used to derive this key.
-        
-        Returns:
-            int: The child number.
         """
     @property
     def chain_code(self) -> builtins.str:
         r"""
         The chain code as hex.
-        
-        Returns:
-            str: The chain code.
         """
     def __new__(cls, seed: builtins.str) -> XPrv:
         r"""
@@ -2984,41 +2763,26 @@ class XPub:
     def xpub(self) -> builtins.str:
         r"""
         The serialized extended public key string.
-        
-        Returns:
-            str: The xpub string.
         """
     @property
     def depth(self) -> builtins.int:
         r"""
         The derivation depth (0 for master key).
-        
-        Returns:
-            int: The depth.
         """
     @property
     def parent_fingerprint(self) -> builtins.str:
         r"""
         The parent key's fingerprint as hex.
-        
-        Returns:
-            str: The parent fingerprint.
         """
     @property
     def child_number(self) -> builtins.int:
         r"""
         The child number used to derive this key.
-        
-        Returns:
-            int: The child number.
         """
     @property
     def chain_code(self) -> builtins.str:
         r"""
         The chain code as hex.
-        
-        Returns:
-            str: The chain code.
         """
     def __new__(cls, xpub: builtins.str) -> XPub:
         r"""
@@ -3425,7 +3189,10 @@ class Opcodes(enum.Enum):
     OpInvalidOpCode = ...
 
     @property
-    def value(self) -> builtins.int: ...
+    def value(self) -> builtins.int:
+        r"""
+        The numeric value of the opcode.
+        """
 
 @typing.final
 class SighashType(enum.Enum):
