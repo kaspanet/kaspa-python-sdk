@@ -344,9 +344,19 @@ class GeneratorSummary:
         The network type used for generation.
         """
     @property
+    def network_id(self) -> builtins.str:
+        r"""
+        The network id used for generation.
+        """
+    @property
     def utxos(self) -> builtins.int:
         r"""
         The total number of UTXOs consumed.
+        """
+    @property
+    def mass(self) -> builtins.int:
+        r"""
+        The total mass of the generated transactions.
         """
     @property
     def fees(self) -> builtins.int:
@@ -357,6 +367,11 @@ class GeneratorSummary:
     def transactions(self) -> builtins.int:
         r"""
         The number of transactions generated.
+        """
+    @property
+    def stages(self) -> builtins.int:
+        r"""
+        The number of generated stages.
         """
     @property
     def final_amount(self) -> typing.Optional[builtins.int]:

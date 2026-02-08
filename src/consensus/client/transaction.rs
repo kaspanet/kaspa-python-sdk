@@ -1,9 +1,9 @@
 use crate::address::PyAddress;
 use crate::consensus::client::input::PyTransactionInput;
 use crate::consensus::client::output::PyTransactionOutput;
-use crate::consensus::convert::TryToPyDict;
 use crate::consensus::core::network::PyNetworkType;
 use crate::crypto::hashes::PyHash;
+use crate::traits::TryToPyDict;
 use crate::types::PyBinary;
 use kaspa_consensus_client::{Transaction, TransactionInput, TransactionOutput};
 use kaspa_consensus_core::network::NetworkType;

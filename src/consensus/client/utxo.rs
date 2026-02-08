@@ -1,7 +1,6 @@
 use super::outpoint::PyTransactionOutpoint;
 use crate::{
-    address::PyAddress,
-    consensus::{convert::TryToPyDict, core::script_public_key::PyScriptPublicKey},
+    address::PyAddress, consensus::core::script_public_key::PyScriptPublicKey, traits::TryToPyDict,
     types::PyBinary,
 };
 use kaspa_consensus_client::{UtxoEntry, UtxoEntryReference};

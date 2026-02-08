@@ -3,6 +3,7 @@ mod consensus;
 mod crypto;
 mod macros;
 mod rpc;
+mod traits;
 mod types;
 mod wallet;
 

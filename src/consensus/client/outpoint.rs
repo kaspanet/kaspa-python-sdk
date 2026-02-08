@@ -1,4 +1,4 @@
-use crate::{consensus::convert::TryToPyDict, crypto::hashes::PyHash};
+use crate::{crypto::hashes::PyHash, traits::TryToPyDict};
 use kaspa_consensus_client::{TransactionOutpoint, TransactionOutpointInner};
 use kaspa_consensus_core::tx::TransactionIndexType;
 use pyo3::{
