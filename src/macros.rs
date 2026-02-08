@@ -61,3 +61,37 @@ macro_rules! wrap_unit_enum_for_py {
         // }
     };
 }
+
+// PyO3 provides create_exception! macro. However we cannot use it.
+// Because we need to use proc macro #[gen_stub_pyclass] to include the defined
+// exception in the stub file. When using create_exception!, we cannot apply
+// #[gen_stub_pyclass].
+// When PyO3 is able to generate stub files (currently experimental)
+// this could likely be removed in favor of that approach.
+#[macro_export]
+macro_rules! create_py_exception {
+    ($(#[$meta:meta])* $name:ident, $py_name:literal) => {
+        $(#[$meta])*
+        #[allow(dead_code)]
+        #[gen_stub_pyclass]
+        #[pyclass(name = $py_name, extends = PyException)]
+        pub struct $name {
+            message: String,
+        }
+
+        // This is required, otherwise PyO3 cannot initialize the Exception on Python side
+        #[pymethods]
+        impl $name {
+            #[new]
+            pub fn new(message: String) -> Self {
+                Self { message }
+            }
+        }
+
+        impl $name {
+            pub fn new_err(message: impl Into<String>) -> PyErr {
+                PyErr::new::<Self, _>(message.into())
+            }
+        }
+    };
+}

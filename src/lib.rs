@@ -13,8 +13,15 @@ use pyo3_stub_gen::define_stub_info_gatherer;
 define_stub_info_gatherer!(stub_info);
 
 #[pymodule]
-fn kaspa(m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn kaspa(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
+    // Init logging bridge
     pyo3_log::init();
+
+    // Create/register exceptions submodule
+    let exceptions = PyModule::new(py, "exceptions")?;
+    m.add_submodule(&exceptions)?;
+
+    // Register classes & functions
 
     m.add_class::<address::PyAddress>()?;
     m.add_class::<address::PyAddressVersion>()?;
@@ -157,6 +164,49 @@ fn kaspa(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<wallet::keys::publickey::PyXOnlyPublicKey>()?;
     m.add_class::<wallet::keys::xprv::PyXPrv>()?;
     m.add_class::<wallet::keys::xpub::PyXPub>()?;
+
+    exceptions.add(
+        "PsktCustomError",
+        py.get_type::<wallet::pskt::error::PyPsktCustomError>(),
+    )?;
+    exceptions.add(
+        "PsktStateError",
+        py.get_type::<wallet::pskt::error::PyPsktStateError>(),
+    )?;
+    exceptions.add(
+        "PsktExpectedStateError",
+        py.get_type::<wallet::pskt::error::PyPsktExpectedStateError>(),
+    )?;
+    exceptions.add(
+        "PsktCtorError",
+        py.get_type::<wallet::pskt::error::PyPsktCtorError>(),
+    )?;
+    exceptions.add(
+        "PsktInvalidPayloadError",
+        py.get_type::<wallet::pskt::error::PyPsktInvalidPayloadError>(),
+    )?;
+    exceptions.add(
+        "PsktTxNotFinalizedError",
+        py.get_type::<wallet::pskt::error::PyPsktTxNotFinalizedError>(),
+    )?;
+    exceptions.add(
+        "PsktCreateNotAllowedError",
+        py.get_type::<wallet::pskt::error::PyPsktCreateNotAllowedError>(),
+    )?;
+    exceptions.add(
+        "PsktNotInitializedError",
+        py.get_type::<wallet::pskt::error::PyPsktNotInitializedError>(),
+    )?;
+    exceptions.add(
+        "PsktConsensusClientError",
+        py.get_type::<wallet::pskt::error::PyPsktConsensusClientError>(),
+    )?;
+    exceptions.add(
+        "PsktError",
+        py.get_type::<wallet::pskt::error::PyPsktError>(),
+    )?;
+
+    m.add_class::<wallet::pskt::PyPSKT>()?;
 
     Ok(())
 }
