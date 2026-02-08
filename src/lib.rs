@@ -13,8 +13,15 @@ use pyo3_stub_gen::define_stub_info_gatherer;
 define_stub_info_gatherer!(stub_info);
 
 #[pymodule]
-fn kaspa(m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn kaspa(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
+    // Init logging bridge
     pyo3_log::init();
+
+    // Add exceptions submodule
+    let exceptions = PyModule::new(py, "exceptions")?;
+    m.add_submodule(&exceptions)?;
+
+    // Register classes and functions to module
 
     m.add_class::<address::PyAddress>()?;
     m.add_class::<address::PyAddressVersion>()?;
