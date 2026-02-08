@@ -1,6 +1,6 @@
-// use crate::imports::*;
+use crate::traits::TryToPyDict;
 use kaspa_wallet_core::tx::generator as core;
-use pyo3::prelude::*;
+use pyo3::{prelude::*, types::PyDict};
 use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 /// A class containing a summary produced by transaction Generator.
@@ -72,6 +72,14 @@ impl PyGeneratorSummary {
         self.0.final_transaction_id().map(|id| id.to_string())
     }
 
+    /// Get a dictionary representation of the GeneratorSummary.
+    ///
+    /// Returns:
+    ///     dict: the GeneratorSummary in dictionary form.
+    fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+        self.0.try_to_pydict(py)
+    }
+
     // Cannot be derived via pyclass(eq)
     fn __eq__(&self, other: &PyGeneratorSummary) -> bool {
         match (bincode::serialize(&self.0), bincode::serialize(&other.0)) {
@@ -84,5 +92,12 @@ impl PyGeneratorSummary {
 impl From<core::GeneratorSummary> for PyGeneratorSummary {
     fn from(inner: core::GeneratorSummary) -> Self {
         Self(inner)
+    }
+}
+
+impl TryToPyDict for core::GeneratorSummary {
+    fn try_to_pydict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, pyo3::types::PyDict>> {
+        let dict = serde_pyobject::to_pyobject(py, self)?;
+        Ok(dict.cast_into::<PyDict>()?)
     }
 }

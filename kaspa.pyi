@@ -383,6 +383,13 @@ class GeneratorSummary:
         r"""
         The ID of the final transaction, or None if not yet generated.
         """
+    def to_dict(self) -> dict:
+        r"""
+        Get a dictionary representation of the GeneratorSummary.
+        
+        Returns:
+            dict: the GeneratorSummary in dictionary form.
+        """
     def __eq__(self, other: GeneratorSummary) -> builtins.bool: ...
 
 @typing.final
