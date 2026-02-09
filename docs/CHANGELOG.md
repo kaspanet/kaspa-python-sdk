@@ -17,6 +17,7 @@
 - `UtxoProcessor` and `UtxoContext` bindings for UTXO tracking and mature range access.
 - `UtxoProcessor` maturity setters (`set_coinbase_transaction_maturity_daa`, `set_user_transaction_maturity_daa`).
 - `UtxoContext.pending()` for pending UTXO access (implemented via processor pending map; exact snapshot parity would require rusty-kaspa exposure).
+- Submodule `exceptions` where custom exceptions will be located. Currently empty given no custom exceptions exist (yet).
 
 ### Changed
 - Moved Kaspa Python SDK out of Rusty-Kaspa (as a workspace member crate) to its own dedicated repository. The internals of this project have changed significantly as a result. However, all APIs exposed to Python remain unchanged. 
