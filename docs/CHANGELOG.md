@@ -10,7 +10,6 @@
 - Documentation site using [MkDocs](https://www.mkdocs.org/), [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/), and [mike](https://github.com/jimporter/mike).
 - Automatic generation of (most of) the stub (.pyi) file using `pyo3-stub-gen` crate and a binary. RPC TypedDicts (Request/Response structures, RPC types) are manually maintained in `kaspa_rpc.pyi` still.
 - Unit and integration tests with [pytest]https://docs.pytest.org/en/stable/.
-- Bumped rusty-kaspa dependency version to commit 1a2f98a.
 - `GetVirtualChainFromBlockV2` RPC method.
 - `to_dict()` method for `Transaction`, `TransactionInput`, `TransactionOutput`, `TransactionOutpoint`, `UtxoEntry`, `UtxoEntries`, and `UtxoEntryReference`.
 - `from_dict()` method for `Transaction`, `TransactionInput`, `TransactionOutput`, `TransactionOutpoint`, and `UtxoEntry`.
@@ -20,6 +19,7 @@
 - Submodule `exceptions` where custom exceptions will be located. Currently empty given no custom exceptions exist (yet).
 
 ### Changed
+- Bumped rusty-kaspa dependency version to commit a311302.
 - Moved Kaspa Python SDK out of Rusty-Kaspa (as a workspace member crate) to its own dedicated repository. The internals of this project have changed significantly as a result. However, all APIs exposed to Python remain unchanged. 
 - All Python-exposed structs and enums are prefixed with `Py` (e.g. `PyAddress`) internally. The corresponding Python class name has not changed (prefix is dropped in Python).
 - All Python-exposed functions are prefixed with `py_` (e.g. `py_sign_message`) internally. The corresponding Python function name has not changed (prefix is dropped in Python).
