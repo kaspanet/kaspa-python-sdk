@@ -9,6 +9,7 @@ crate::wrap_c_enum_for_py!(
     /// unlocking scripts for Kaspa transactions.
     PyOpcodes, "Opcodes", Opcodes, {
     OpFalse = 0x00,
+
     OpData1 = 0x01,
     OpData2 = 0x02,
     OpData3 = 0x03,
@@ -84,12 +85,17 @@ crate::wrap_c_enum_for_py!(
     OpData73 = 0x49,
     OpData74 = 0x4a,
     OpData75 = 0x4b,
+
     OpPushData1 = 0x4c,
     OpPushData2 = 0x4d,
     OpPushData4 = 0x4e,
+
     Op1Negate = 0x4f,
+
     OpReserved = 0x50,
+
     OpTrue = 0x51,
+
     Op2 = 0x52,
     Op3 = 0x53,
     Op4 = 0x54,
@@ -105,18 +111,21 @@ crate::wrap_c_enum_for_py!(
     Op14 = 0x5e,
     Op15 = 0x5f,
     Op16 = 0x60,
+
     OpNop = 0x61,
     OpVer = 0x62,
     OpIf = 0x63,
     OpNotIf = 0x64,
     OpVerIf = 0x65,
     OpVerNotIf = 0x66,
+
     OpElse = 0x67,
     OpEndIf = 0x68,
     OpVerify = 0x69,
     OpReturn = 0x6a,
     OpToAltStack = 0x6b,
     OpFromAltStack = 0x6c,
+
     Op2Drop = 0x6d,
     Op2Dup = 0x6e,
     Op3Dup = 0x6f,
@@ -130,23 +139,33 @@ crate::wrap_c_enum_for_py!(
     OpNip = 0x77,
     OpOver = 0x78,
     OpPick = 0x79,
+
     OpRoll = 0x7a,
     OpRot = 0x7b,
     OpSwap = 0x7c,
     OpTuck = 0x7d,
+
+    // Splice opcodes
     OpCat = 0x7e,
-    OpSubStr = 0x7f,
+    OpSubstr = 0x7f,
     OpLeft = 0x80,
     OpRight = 0x81,
+
     OpSize = 0x82,
+
+    // Bitwise logic opcodes
     OpInvert = 0x83,
     OpAnd = 0x84,
     OpOr = 0x85,
     OpXor = 0x86,
+
     OpEqual = 0x87,
     OpEqualVerify = 0x88,
+
     OpReserved1 = 0x89,
     OpReserved2 = 0x8a,
+
+    // Numeric related opcodes
     Op1Add = 0x8b,
     Op1Sub = 0x8c,
     Op2Mul = 0x8d,
@@ -155,6 +174,7 @@ crate::wrap_c_enum_for_py!(
     OpAbs = 0x90,
     OpNot = 0x91,
     Op0NotEqual = 0x92,
+
     OpAdd = 0x93,
     OpSub = 0x94,
     OpMul = 0x95,
@@ -162,11 +182,14 @@ crate::wrap_c_enum_for_py!(
     OpMod = 0x97,
     OpLShift = 0x98,
     OpRShift = 0x99,
+
     OpBoolAnd = 0x9a,
     OpBoolOr = 0x9b,
+
     OpNumEqual = 0x9c,
     OpNumEqualVerify = 0x9d,
     OpNumNotEqual = 0x9e,
+
     OpLessThan = 0x9f,
     OpGreaterThan = 0xa0,
     OpLessThanOrEqual = 0xa1,
@@ -174,10 +197,16 @@ crate::wrap_c_enum_for_py!(
     OpMin = 0xa3,
     OpMax = 0xa4,
     OpWithin = 0xa5,
-    OpUnknown166 = 0xa6,
+    
+    // Undefined opcodes
+    OpZkPrecompile = 0xa6,
     OpUnknown167 = 0xa7,
+
+    // Crypto opcodes
     OpSHA256 = 0xa8,
+
     OpCheckMultiSigECDSA = 0xa9,
+
     OpBlake2b = 0xaa,
     OpCheckSigECDSA = 0xab,
     OpCheckSig = 0xac,
@@ -186,6 +215,8 @@ crate::wrap_c_enum_for_py!(
     OpCheckMultiSigVerify = 0xaf,
     OpCheckLockTimeVerify = 0xb0,
     OpCheckSequenceVerify = 0xb1,
+
+    // Undefined opcodes
     OpUnknown178 = 0xb2,
     OpUnknown179 = 0xb3,
     OpUnknown180 = 0xb4,
@@ -258,6 +289,7 @@ crate::wrap_c_enum_for_py!(
     OpUnknown247 = 0xf7,
     OpUnknown248 = 0xf8,
     OpUnknown249 = 0xf9,
+
     OpSmallInteger = 0xfa,
     OpPubKeys = 0xfb,
     OpUnknown252 = 0xfc,
