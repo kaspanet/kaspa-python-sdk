@@ -197,7 +197,7 @@ crate::wrap_c_enum_for_py!(
     OpMin = 0xa3,
     OpMax = 0xa4,
     OpWithin = 0xa5,
-    
+
     // Undefined opcodes
     OpZkPrecompile = 0xa6,
     OpUnknown167 = 0xa7,
