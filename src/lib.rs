@@ -67,6 +67,7 @@ fn kaspa(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<consensus::core::network::PyNetworkId>()?;
     m.add_class::<consensus::core::network::PyNetworkType>()?;
     m.add_class::<consensus::core::script_public_key::PyScriptPublicKey>()?;
+    m.add_class::<consensus::core::tx::PyCovenantBinding>()?;
     m.add_class::<consensus::core::tx::TransactionId>()?;
 
     m.add_class::<wallet::bip32::language::PyLanguage>()?;
