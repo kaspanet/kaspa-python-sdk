@@ -7,7 +7,9 @@ use pyo3::{
 use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::{
-    consensus::core::script_public_key::PyScriptPublicKey, traits::TryToPyDict, types::PyBinary,
+    consensus::core::{script_public_key::PyScriptPublicKey, tx::PyCovenantBinding},
+    traits::TryToPyDict,
+    types::PyBinary,
 };
 
 /// A transaction output defining a payment destination.
@@ -27,12 +29,21 @@ impl PyTransactionOutput {
     /// Args:
     ///     value: Amount in sompi (1 KAS = 100,000,000 sompi).
     ///     script_public_key: The locking script.
+    ///     covenant_id: The covenant ID.
     ///
     /// Returns:
     ///     TransactionOutput: A new TransactionOutput instance.
     #[new]
-    pub fn ctor(value: u64, script_public_key: PyScriptPublicKey) -> Self {
-        let inner = TransactionOutput::new(value, script_public_key.into());
+    pub fn ctor(
+        value: u64,
+        script_public_key: PyScriptPublicKey,
+        covenant_id: Option<PyCovenantBinding>,
+    ) -> Self {
+        let inner = TransactionOutput::new(
+            value,
+            script_public_key.into(),
+            covenant_id.map(PyCovenantBinding::into),
+        );
         Self(inner)
     }
 
@@ -133,6 +144,11 @@ impl TryFrom<&Bound<'_, PyDict>> for PyTransactionOutput {
             ));
         };
 
-        Ok(Self::ctor(value, spk))
+        let covenant_id = dict
+            .as_any()
+            .get_item("covenantId")?
+            .extract::<Option<PyCovenantBinding>>()?;
+
+        Ok(Self::ctor(value, spk, covenant_id))
     }
 }
