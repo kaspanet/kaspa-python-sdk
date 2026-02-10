@@ -1,7 +1,7 @@
 use super::outpoint::PyTransactionOutpoint;
 use crate::{
-    address::PyAddress, consensus::core::script_public_key::PyScriptPublicKey, traits::TryToPyDict,
-    types::PyBinary,
+    address::PyAddress, consensus::core::script_public_key::PyScriptPublicKey,
+    crypto::hashes::PyHash, traits::TryToPyDict, types::PyBinary,
 };
 use kaspa_consensus_client::{UtxoEntry, UtxoEntryReference};
 use kaspa_utils::hex::FromHex;
@@ -166,6 +166,11 @@ impl TryFrom<&Bound<'_, PyDict>> for PyUtxoEntry {
             .ok_or_else(|| PyKeyError::new_err("Key `isCoinbase` not present"))?
             .extract()?;
 
+        let covenant_id: Option<PyHash> = dict
+            .get_item("covenantId")?
+            .ok_or_else(|| PyKeyError::new_err("Key `covenantId` not present"))?
+            .extract()?;
+
         let utxo = UtxoEntry {
             address: address.map(|a| a.into()),
             outpoint: outpoint.into(),
@@ -173,6 +178,7 @@ impl TryFrom<&Bound<'_, PyDict>> for PyUtxoEntry {
             script_public_key: script_public_key.into(),
             block_daa_score,
             is_coinbase,
+            covenant_id: covenant_id.map(PyHash::into),
         };
 
         Ok(Self(utxo))
@@ -428,6 +434,11 @@ impl TryFrom<&Bound<'_, PyDict>> for PyUtxoEntryReference {
             .ok_or_else(|| PyKeyError::new_err("Key `isCoinbase` not present"))?
             .extract()?;
 
+        let covenant_id: Option<PyHash> = source_dict
+            .get_item("covenantId")?
+            .ok_or_else(|| PyKeyError::new_err("Key `covenantId` not present"))?
+            .extract()?;
+
         let utxo = UtxoEntry {
             address: address.map(|a| a.into()),
             outpoint: outpoint.into(),
@@ -435,6 +446,7 @@ impl TryFrom<&Bound<'_, PyDict>> for PyUtxoEntryReference {
             script_public_key: script_public_key.into(),
             block_daa_score,
             is_coinbase,
+            covenant_id: covenant_id.map(PyHash::into),
         };
 
         let inner = UtxoEntryReference {
