@@ -204,6 +204,13 @@ class Binary:
     ...
 
 @typing.final
+class CovenantBinding:
+    r"""
+    Binds a transaction output to the covenant and input authorizing its creation.
+    """
+    def __new__(cls, authorizing_input: builtins.int, covenant_id: Hash) -> CovenantBinding: ...
+
+@typing.final
 class DerivationPath:
     r"""
     A BIP-32 derivation path for hierarchical key derivation.
@@ -2235,13 +2242,14 @@ class TransactionOutput:
         Args:
             value: The script public key.
         """
-    def __new__(cls, value: builtins.int, script_public_key: ScriptPublicKey) -> TransactionOutput:
+    def __new__(cls, value: builtins.int, script_public_key: ScriptPublicKey, covenant_id: typing.Optional[CovenantBinding]) -> TransactionOutput:
         r"""
         Create a new transaction output.
         
         Args:
             value: Amount in sompi (1 KAS = 100,000,000 sompi).
             script_public_key: The locking script.
+            covenant_id: The covenant ID.
         
         Returns:
             TransactionOutput: A new TransactionOutput instance.
@@ -2334,6 +2342,21 @@ class UtxoContext:
 @typing.final
 class UtxoEntries:
     r"""
+    UTXO entries collection for flexible input handling.
+    
+    This type is not intended to be instantiated directly from Python.
+    It serves as a helper type that allows Rust functions to accept a list
+    of UTXO entries in multiple convenient forms.
+    
+    Accepts:
+        list[UtxoEntryReference]: A list of UtxoEntryReference objects.
+        list[dict]: A list of dicts with UtxoEntryReference-compatible keys.
+    """
+    ...
+
+@typing.final
+class UtxoEntries:
+    r"""
     A collection of UTXO entry references.
     
     Provides methods for managing and querying multiple UTXOs.
@@ -2371,21 +2394,6 @@ class UtxoEntries:
             dict: the UtxoEntries in dictionary form.
         """
     def __eq__(self, other: UtxoEntries) -> builtins.bool: ...
-
-@typing.final
-class UtxoEntries:
-    r"""
-    UTXO entries collection for flexible input handling.
-    
-    This type is not intended to be instantiated directly from Python.
-    It serves as a helper type that allows Rust functions to accept a list
-    of UTXO entries in multiple convenient forms.
-    
-    Accepts:
-        list[UtxoEntryReference]: A list of UtxoEntryReference objects.
-        list[dict]: A list of dicts with UtxoEntryReference-compatible keys.
-    """
-    ...
 
 @typing.final
 class UtxoEntry:
@@ -3085,7 +3093,7 @@ class Opcodes(enum.Enum):
     OpSwap = ...
     OpTuck = ...
     OpCat = ...
-    OpSubStr = ...
+    OpSubstr = ...
     OpLeft = ...
     OpRight = ...
     OpSize = ...
@@ -3124,7 +3132,7 @@ class Opcodes(enum.Enum):
     OpMin = ...
     OpMax = ...
     OpWithin = ...
-    OpUnknown166 = ...
+    OpZkPrecompile = ...
     OpUnknown167 = ...
     OpSHA256 = ...
     OpCheckMultiSigECDSA = ...
