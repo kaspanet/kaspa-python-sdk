@@ -220,6 +220,7 @@ impl PendingTransaction {
     ///
     /// Raises:
     ///     Exception: If submission fails.
+    #[gen_stub(override_return_type(type_repr = "str"))]
     fn submit<'py>(
         &self,
         py: Python<'py>,

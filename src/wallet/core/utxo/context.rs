@@ -61,6 +61,7 @@ impl PyUtxoContext {
     ///     addresses: List of Address objects or address strings.
     ///     current_daa_score: Optional current DAA score for scan context.
     #[pyo3(signature = (addresses, current_daa_score=None))]
+    #[gen_stub(override_return_type(type_repr = "None"))]
     fn track_addresses<'py>(
         &self,
         py: Python<'py>,
@@ -81,6 +82,7 @@ impl PyUtxoContext {
     }
 
     /// Unregister a list of addresses (async).
+    #[gen_stub(override_return_type(type_repr = "None"))]
     fn unregister_addresses<'py>(
         &self,
         py: Python<'py>,
@@ -100,6 +102,7 @@ impl PyUtxoContext {
     }
 
     /// Clear all tracked addresses and UTXOs (async).
+    #[gen_stub(override_return_type(type_repr = "None"))]
     fn clear<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let context = self.0.clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
