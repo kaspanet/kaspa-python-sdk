@@ -77,6 +77,7 @@ impl PyResolver {
     ///
     /// Raises:
     ///     Exception: If no node is available or resolution fails.
+    #[gen_stub(override_return_type(type_repr = "dict"))]
     fn get_node<'py>(
         &self,
         py: Python<'py>,
@@ -104,6 +105,7 @@ impl PyResolver {
     ///
     /// Raises:
     ///     Exception: If no node is available or resolution fails.
+    #[gen_stub(override_return_type(type_repr = "str"))]
     fn get_url<'py>(
         &self,
         py: Python<'py>,

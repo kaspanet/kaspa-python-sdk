@@ -857,7 +857,7 @@ class PendingTransaction:
         Raises:
             Exception: If signing fails or transaction is not fully signed.
         """
-    def submit(self, rpc_client: RpcClient) -> typing.Any:
+    def submit(self, rpc_client: RpcClient) -> str:
         r"""
         Submit the signed transaction to the network.
         
@@ -1364,7 +1364,7 @@ class Resolver:
         Returns:
             list[str]: The resolver URL list.
         """
-    def get_node(self, encoding: str | Encoding, network_id: NetworkId) -> typing.Any:
+    def get_node(self, encoding: str | Encoding, network_id: NetworkId) -> dict:
         r"""
         Get a node descriptor from the resolver (async).
         
@@ -1378,7 +1378,7 @@ class Resolver:
         Raises:
             Exception: If no node is available or resolution fails.
         """
-    def get_url(self, encoding: str | Encoding, network_id: NetworkId) -> typing.Any:
+    def get_url(self, encoding: str | Encoding, network_id: NetworkId) -> str:
         r"""
         Get a node URL from the resolver (async).
         
@@ -1463,7 +1463,7 @@ class RpcClient:
         Raises:
             Exception: If setting the network ID fails.
         """
-    def connect(self, block_async_connect: typing.Optional[builtins.bool] = None, strategy: typing.Optional[builtins.str] = None, url: typing.Optional[builtins.str] = None, timeout_duration: typing.Optional[builtins.int] = None, retry_interval: typing.Optional[builtins.int] = None) -> typing.Any:
+    def connect(self, block_async_connect: typing.Optional[builtins.bool] = None, strategy: typing.Optional[builtins.str] = None, url: typing.Optional[builtins.str] = None, timeout_duration: typing.Optional[builtins.int] = None, retry_interval: typing.Optional[builtins.int] = None) -> None:
         r"""
         Connect to a Kaspa node (async).
         
@@ -1477,21 +1477,21 @@ class RpcClient:
         Raises:
             Exception: If connection fails.
         """
-    def disconnect(self) -> typing.Any:
+    def disconnect(self) -> None:
         r"""
         Disconnect from the node (async).
         
         Raises:
             Exception: If disconnection fails.
         """
-    def start(self) -> typing.Any:
+    def start(self) -> None:
         r"""
         Start the RPC client (async).
         
         Raises:
             Exception: If starting fails.
         """
-    def stop(self) -> typing.Any:
+    def stop(self) -> None:
         r"""
         Stop background RPC services (automatically stopped when invoking RpcClient.disconnect).
         """
@@ -1542,7 +1542,7 @@ class RpcClient:
         r"""
         Remove all registered event listeners.
         """
-    def subscribe_utxos_changed(self, addresses: typing.Sequence[Address]) -> typing.Any:
+    def subscribe_utxos_changed(self, addresses: typing.Sequence[Address]) -> None:
         r"""
         Subscribe to UTXO changes for specific addresses (async).
         
@@ -1552,7 +1552,7 @@ class RpcClient:
         Raises:
             Exception: If not connected or subscription fails.
         """
-    def unsubscribe_utxos_changed(self, addresses: typing.Sequence[Address]) -> typing.Any:
+    def unsubscribe_utxos_changed(self, addresses: typing.Sequence[Address]) -> None:
         r"""
         Unsubscribe from UTXO changes for specific addresses (async).
         
@@ -1562,7 +1562,7 @@ class RpcClient:
         Raises:
             Exception: If not connected or unsubscription fails.
         """
-    def subscribe_virtual_chain_changed(self, include_accepted_transaction_ids: builtins.bool) -> typing.Any:
+    def subscribe_virtual_chain_changed(self, include_accepted_transaction_ids: builtins.bool) -> None:
         r"""
         Subscribe to virtual chain changes (async).
         
@@ -1572,7 +1572,7 @@ class RpcClient:
         Raises:
             Exception: If not connected or subscription fails.
         """
-    def unsubscribe_virtual_chain_changed(self, include_accepted_transaction_ids: builtins.bool) -> typing.Any:
+    def unsubscribe_virtual_chain_changed(self, include_accepted_transaction_ids: builtins.bool) -> None:
         r"""
         Unsubscribe from virtual chain changes (async).
         
@@ -1582,20 +1582,20 @@ class RpcClient:
         Raises:
             Exception: If not connected or unsubscription fails.
         """
-    def subscribe_block_added(self) -> typing.Any: ...
-    def unsubscribe_block_added(self) -> typing.Any: ...
-    def subscribe_finality_conflict(self) -> typing.Any: ...
-    def unsubscribe_finality_conflict(self) -> typing.Any: ...
-    def subscribe_finality_conflict_resolved(self) -> typing.Any: ...
-    def unsubscribe_finality_conflict_resolved(self) -> typing.Any: ...
-    def subscribe_new_block_template(self) -> typing.Any: ...
-    def unsubscribe_new_block_template(self) -> typing.Any: ...
-    def subscribe_pruning_point_utxo_set_override(self) -> typing.Any: ...
-    def unsubscribe_pruning_point_utxo_set_override(self) -> typing.Any: ...
-    def subscribe_sink_blue_score_changed(self) -> typing.Any: ...
-    def unsubscribe_sink_blue_score_changed(self) -> typing.Any: ...
-    def subscribe_virtual_daa_score_changed(self) -> typing.Any: ...
-    def unsubscribe_virtual_daa_score_changed(self) -> typing.Any: ...
+    def subscribe_block_added(self) -> None: ...
+    def unsubscribe_block_added(self) -> None: ...
+    def subscribe_finality_conflict(self) -> None: ...
+    def unsubscribe_finality_conflict(self) -> None: ...
+    def subscribe_finality_conflict_resolved(self) -> None: ...
+    def unsubscribe_finality_conflict_resolved(self) -> None: ...
+    def subscribe_new_block_template(self) -> None: ...
+    def unsubscribe_new_block_template(self) -> None: ...
+    def subscribe_pruning_point_utxo_set_override(self) -> None: ...
+    def unsubscribe_pruning_point_utxo_set_override(self) -> None: ...
+    def subscribe_sink_blue_score_changed(self) -> None: ...
+    def unsubscribe_sink_blue_score_changed(self) -> None: ...
+    def subscribe_virtual_daa_score_changed(self) -> None: ...
+    def unsubscribe_virtual_daa_score_changed(self) -> None: ...
     def get_block_count(self, request: GetBlockCountRequest | None = None) -> GetBlockCountResponse: ...
     def get_block_dag_info(self, request: GetBlockDagInfoRequest | None = None) -> GetBlockDagInfoResponse: ...
     def get_coin_supply(self, request: GetCoinSupplyRequest | None = None) -> GetCoinSupplyResponse: ...
@@ -2301,7 +2301,7 @@ class UtxoContext:
             processor: The UtxoProcessor to bind to.
             id: Optional 32-byte hex id (string) or Hash.
         """
-    def track_addresses(self, addresses: Sequence[Address] | Sequence[str], current_daa_score: typing.Optional[builtins.int] = None) -> typing.Any:
+    def track_addresses(self, addresses: Sequence[Address] | Sequence[str], current_daa_score: typing.Optional[builtins.int] = None) -> None:
         r"""
         Track and scan a list of addresses (async).
         
@@ -2309,11 +2309,11 @@ class UtxoContext:
             addresses: List of Address objects or address strings.
             current_daa_score: Optional current DAA score for scan context.
         """
-    def unregister_addresses(self, addresses: Sequence[Address] | Sequence[str]) -> typing.Any:
+    def unregister_addresses(self, addresses: Sequence[Address] | Sequence[str]) -> None:
         r"""
         Unregister a list of addresses (async).
         """
-    def clear(self) -> typing.Any:
+    def clear(self) -> None:
         r"""
         Clear all tracked addresses and UTXOs (async).
         """
@@ -2558,11 +2558,11 @@ class UtxoProcessor:
             rpc: The RPC client to use for network communication.
             network_id: Network identifier for UTXO processing.
         """
-    def start(self) -> typing.Any:
+    def start(self) -> None:
         r"""
         Start UTXO processing (async).
         """
-    def stop(self) -> typing.Any:
+    def stop(self) -> None:
         r"""
         Stop UTXO processing (async).
         """

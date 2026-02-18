@@ -410,6 +410,7 @@ impl PyRpcClient {
     /// Raises:
     ///     Exception: If connection fails.
     #[pyo3(signature = (block_async_connect=None, strategy=None, url=None, timeout_duration=None, retry_interval=None))]
+    #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn connect<'py>(
         &self,
         py: Python<'py>,
@@ -454,6 +455,7 @@ impl PyRpcClient {
     ///
     /// Raises:
     ///     Exception: If disconnection fails.
+    #[gen_stub(override_return_type(type_repr = "None"))]
     fn disconnect<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let client = self.clone();
 
@@ -476,6 +478,7 @@ impl PyRpcClient {
     ///
     /// Raises:
     ///     Exception: If starting fails.
+    #[gen_stub(override_return_type(type_repr = "None"))]
     fn start<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         self.start_notification_task(py)
             .map_err(|err| PyException::new_err(err.to_string()))?;
@@ -491,6 +494,7 @@ impl PyRpcClient {
     }
 
     /// Stop background RPC services (automatically stopped when invoking RpcClient.disconnect).
+    #[gen_stub(override_return_type(type_repr = "None"))]
     fn stop<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let slf = self.clone();
         let inner = self.0.clone();
@@ -567,6 +571,7 @@ impl PyRpcClient {
     ///
     /// Raises:
     ///     Exception: If the event type is invalid.
+    #[gen_stub(override_return_type(type_repr = "None"))]
     #[pyo3(signature = (event, callback=None))]
     fn remove_event_listener(
         &self,
@@ -790,6 +795,7 @@ impl PyRpcClient {
     ///
     /// Raises:
     ///     Exception: If not connected or subscription fails.
+    #[gen_stub(override_return_type(type_repr = "None"))]
     fn subscribe_utxos_changed<'py>(
         &self,
         py: Python<'py>,
@@ -820,6 +826,7 @@ impl PyRpcClient {
     ///
     /// Raises:
     ///     Exception: If not connected or unsubscription fails.
+    #[gen_stub(override_return_type(type_repr = "None"))]
     fn unsubscribe_utxos_changed<'py>(
         &self,
         py: Python<'py>,
@@ -852,6 +859,7 @@ impl PyRpcClient {
     ///
     /// Raises:
     ///     Exception: If not connected or subscription fails.
+    #[gen_stub(override_return_type(type_repr = "None"))]
     fn subscribe_virtual_chain_changed<'py>(
         &self,
         py: Python<'py>,
@@ -883,6 +891,7 @@ impl PyRpcClient {
     ///
     /// Raises:
     ///     Exception: If not connected or unsubscription fails.
+    #[gen_stub(override_return_type(type_repr = "None"))]
     fn unsubscribe_virtual_chain_changed<'py>(
         &self,
         py: Python<'py>,
@@ -922,6 +931,7 @@ macro_rules! build_wrpc_python_subscriptions {
             #[pymethods]
             impl PyRpcClient {
                 $(
+                    #[gen_stub(override_return_type(type_repr="None"))]
                     fn [<subscribe_ $scope:snake>]<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                         if let Some(listener_id) = self.listener_id() {
                             let client = self.0.client.clone();
@@ -935,6 +945,7 @@ macro_rules! build_wrpc_python_subscriptions {
                         }
                     }
 
+                    #[gen_stub(override_return_type(type_repr="None"))]
                     fn [<unsubscribe_ $scope:snake>]<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                         if let Some(listener_id) = self.listener_id() {
                             let client = self.0.client.clone();
