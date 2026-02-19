@@ -64,6 +64,10 @@ fn kaspa(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     )?)?;
 
     m.add_class::<consensus::core::hashing::PySighashType>()?;
+    m.add_function(wrap_pyfunction!(
+        consensus::core::hashing::py_covenant_id,
+        m
+    )?)?;
     m.add_class::<consensus::core::network::PyNetworkId>()?;
     m.add_class::<consensus::core::network::PyNetworkType>()?;
     m.add_class::<consensus::core::script_public_key::PyScriptPublicKey>()?;
