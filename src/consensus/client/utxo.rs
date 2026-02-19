@@ -80,6 +80,7 @@ impl PyUtxoEntry {
     ///         - 'scriptPublicKey' (dict): Dict with 'version' (int) and 'script' (str) keys
     ///         - 'blockDaaScore' (int): Block DAA score
     ///         - 'isCoinbase' (bool): Whether from coinbase transaction
+    ///         - 'covenantId' (str | None): The optional covenant ID of the UTXO.
     ///
     /// Returns:
     ///     UtxoEntry: A new UtxoEntry instance.
@@ -333,11 +334,12 @@ impl PyUtxoEntryReference {
     ///     - 'scriptPublicKey' (dict | str): Dict with 'version' and 'script', or hex string
     ///     - 'blockDaaScore' (int): Block DAA score
     ///     - 'isCoinbase' (bool): Whether from coinbase transaction
+    ///     - 'covenantId' (str | None): The optional covenant ID of the UTXO.
     ///
     /// Nested format:
     ///     - 'address' (str | None): The address string
     ///     - 'outpoint' (dict): Transaction outpoint with 'transactionId' and 'index'
-    ///     - 'utxoEntry' (dict): Nested dict containing amount, scriptPublicKey, blockDaaScore, isCoinbase
+    ///     - 'utxoEntry' (dict): Nested dict containing amount, scriptPublicKey, blockDaaScore, isCoinbase, covenantId
     ///
     /// Returns:
     ///     UtxoEntryReference: A new UtxoEntryReference instance.

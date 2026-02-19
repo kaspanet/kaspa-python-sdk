@@ -34,6 +34,7 @@ impl PyTransactionOutput {
     /// Returns:
     ///     TransactionOutput: A new TransactionOutput instance.
     #[new]
+    #[pyo3(signature = (value, script_public_key, covenant_id=None))]
     pub fn ctor(
         value: u64,
         script_public_key: PyScriptPublicKey,
@@ -92,6 +93,7 @@ impl PyTransactionOutput {
     ///     dict: Dictionary containing transaction output fields with keys:
     ///         - 'value' (int): The output value in sompi
     ///         - 'scriptPublicKey' (dict): Dict with 'version' (int) and 'script' (str) keys
+    ///         - 'covenant' (dict | None): The optional covenant binding.
     ///
     /// Returns:
     ///     TransactionOutput: A new TransactionOutput instance.
@@ -146,7 +148,7 @@ impl TryFrom<&Bound<'_, PyDict>> for PyTransactionOutput {
 
         let covenant_id = dict
             .as_any()
-            .get_item("covenantId")?
+            .get_item("covenant")?
             .extract::<Option<PyCovenantBinding>>()?;
 
         Ok(Self::ctor(value, spk, covenant_id))

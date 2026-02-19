@@ -236,7 +236,7 @@ try_from_args! ( dict : PySubmitTransactionRequest, {
         inputs,
         outputs,
         lock_time: inner.lock_time,
-        subnetwork_id: inner.subnetwork_id.clone(),
+        subnetwork_id: inner.subnetwork_id,
         gas: inner.gas,
         payload: inner.payload.clone(),
         mass: inner.mass,

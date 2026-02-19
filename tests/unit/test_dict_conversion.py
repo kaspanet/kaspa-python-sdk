@@ -150,6 +150,7 @@ class TestUtxoEntryDict:
             "scriptPublicKey": {"version": 0, "script": "20852be1b87fca94453a35027c550a3ccdbebb5913106029f3a8bf18152bf93bffac"},
             "blockDaaScore": 12345,
             "isCoinbase": False,
+            "covenantId": None,
         }
         entry = UtxoEntry.from_dict(entry_dict)
 
@@ -171,6 +172,7 @@ class TestUtxoEntryDict:
             "scriptPublicKey": {"version": 0, "script": "20852be1b87fca94453a35027c550a3ccdbebb5913106029f3a8bf18152bf93bffac"},
             "blockDaaScore": 12345,
             "isCoinbase": False,
+            "covenantId": None,
         }
         original = UtxoEntry.from_dict(entry_dict)
 
@@ -192,6 +194,7 @@ class TestUtxoEntryReferenceDict:
             "scriptPublicKey": {"version": 0, "script": "20852be1b87fca94453a35027c550a3ccdbebb5913106029f3a8bf18152bf93bffac"},
             "blockDaaScore": 12345,
             "isCoinbase": False,
+            "covenantId": None,
         }
         entry_ref = UtxoEntryReference.from_dict(entry_dict)
 
@@ -216,6 +219,7 @@ class TestUtxoEntryReferenceDict:
             "scriptPublicKey": {"version": 0, "script": "20852be1b87fca94453a35027c550a3ccdbebb5913106029f3a8bf18152bf93bffac"},
             "blockDaaScore": 12345,
             "isCoinbase": False,
+            "covenantId": None,
         }
         entry_ref = UtxoEntryReference.from_dict(entry_dict)
         assert entry_ref.amount == 1000000
@@ -230,6 +234,7 @@ class TestUtxoEntryReferenceDict:
                 "scriptPublicKey": {"version": 0, "script": "20852be1b87fca94453a35027c550a3ccdbebb5913106029f3a8bf18152bf93bffac"},
                 "blockDaaScore": 12345,
                 "isCoinbase": False,
+                "covenantId": None,
             },
         }
         entry_ref = UtxoEntryReference.from_dict(entry_dict)
@@ -244,6 +249,7 @@ class TestUtxoEntryReferenceDict:
             "scriptPublicKey": {"version": 0, "script": "20852be1b87fca94453a35027c550a3ccdbebb5913106029f3a8bf18152bf93bffac"},
             "blockDaaScore": 12345,
             "isCoinbase": False,
+            "covenantId": None,
         }
         original = UtxoEntryReference.from_dict(entry_dict)
 
