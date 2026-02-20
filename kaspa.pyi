@@ -1800,6 +1800,11 @@ class ScriptPublicKey:
     the conditions that must be met to spend the associated funds.
     """
     @property
+    def version(self) -> builtins.int:
+        r"""
+        The version number.
+        """
+    @property
     def script(self) -> builtins.str:
         r"""
         The script bytes as a hex string.

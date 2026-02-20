@@ -17,6 +17,7 @@
 - `UtxoProcessor` maturity setters (`set_coinbase_transaction_maturity_daa`, `set_user_transaction_maturity_daa`).
 - `UtxoContext.pending()` for pending UTXO access (implemented via processor pending map; exact snapshot parity would require rusty-kaspa exposure).
 - Submodule `exceptions` where custom exceptions will be located. Currently empty given no custom exceptions exist (yet).
+- Added `version` getter for `ScriptPublicKey`.
 
 ### Changed
 - Bumped rusty-kaspa dependency version to commit a311302.
