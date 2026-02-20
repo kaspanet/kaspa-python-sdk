@@ -25,6 +25,7 @@ import os
 
 from kaspa import (
     CovenantBinding,
+    Hash,
     Keypair,
     Opcodes,
     PrivateKey,
@@ -278,7 +279,7 @@ async def mint(client: RpcClient, owner_key: PrivateKey, funding_utxos: list):
     funding_amount = funding["utxoEntry"]["amount"]
     funding_utxo_ref = UtxoEntryReference.from_dict(funding)
     funding_outpoint = TransactionOutpoint(
-        funding["outpoint"]["transactionId"],
+        Hash(funding["outpoint"]["transactionId"]),
         funding["outpoint"]["index"],
     )
 
@@ -370,7 +371,7 @@ async def transfer(
         },
     })
     tok_outpoint = TransactionOutpoint(
-        token_outpoint["transactionId"],
+        Hash(token_outpoint["transactionId"]),
         token_outpoint["index"],
     )
 

@@ -2,9 +2,10 @@
 Forced-Recipient Covenant — Kaspa KIP-17 Example
 =================================================
 A UTXO whose redeem script enforces that it can *only* be spent to a single
-predetermined address — no matter who has the private key to the input, the
-destination is locked.  This is the simplest useful covenant: output
-introspection with zero on-chain state.
+predetermined address.
+
+AI disclaimer - Credit to Claude for large parts of this example :)
+We just provided the building blocks.
 """
 
 import asyncio
@@ -50,17 +51,15 @@ def build_covenant_redeem_script(recipient_spk, owner_xonly_pubkey_hex: str) -> 
 
     Execution trace when spending (initial stack: [<sig>]):
 
-        OpTxOutputCount       push number of outputs  → [sig, N]
-        OpTrue                push 1                  → [sig, N, 1]
-        OpEqualVerify         assert N == 1           → [sig]
-        OpFalse               push 0 (output index)   → [sig, 0]
-        OpTxOutputSpk         push output[0].spk      → [sig, spk0]
-        <recipient_spk_bytes> push hardcoded SPK       → [sig, spk0, rec_spk]
-        OpEqualVerify         assert spk0 == rec_spk  → [sig]
-        <owner_pubkey>        push 32-byte x-only key → [sig, pubkey]
-        OpCheckSig            verify Schnorr sig       → [true]
-
-    KIP-17 opcodes used: OpTxOutputCount, OpTxOutputSpk
+        OpTxOutputCount       push number of outputs    → [sig, N]
+        OpTrue                push 1                    → [sig, N, 1]
+        OpEqualVerify         assert N == 1             → [sig]
+        OpFalse               push 0 (output index)     → [sig, 0]
+        OpTxOutputSpk         push output[0].spk        → [sig, spk0]
+        <recipient_spk_bytes> push hardcoded SPK        → [sig, spk0, rec_spk]
+        OpEqualVerify         assert spk0 == rec_spk    → [sig]
+        <owner_pubkey>        push 32-byte x-only key   → [sig, pubkey]
+        OpCheckSig            verify Schnorr sig        → [true]
     """
     # OpTxOutputSpk pushes version (2 bytes, big-endian) + script bytes.
     # bytes(spk) returns only the script; prepend the version to match.
