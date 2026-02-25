@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../../assets/kaspa.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.2">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
     
     
       
@@ -9423,7 +9423,7 @@ encodings.</p>
 
 
 <a href="#kaspa.RpcClient.add_event_listener" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">add_event_listener</span><span class="p">(</span><span class="n">event</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.NotificationEvent" href="../../Enums/NotificationEvent/#kaspa.NotificationEvent">NotificationEvent</a></span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">add_event_listener</span><span class="p">(</span><span class="n">event</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.NotificationEvent" href="../../Enums/NotificationEvent/#kaspa.NotificationEvent">NotificationEvent</a></span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="n"><span title="typing.Callable">Callable</span></span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -9466,7 +9466,7 @@ encodings.</p>
               <p>
                   <span class="doc-param-annotation">
                     <b>TYPE:</b>
-                      <code><span title="typing.Any">Any</span></code>
+                      <code><span title="typing.Callable">Callable</span>[..., None]</code>
                   </span>
               </p>
             </td>
@@ -10515,7 +10515,7 @@ encodings.</p>
 
 
 <a href="#kaspa.RpcClient.remove_event_listener" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">remove_event_listener</span><span class="p">(</span><span class="n">event</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.NotificationEvent" href="../../Enums/NotificationEvent/#kaspa.NotificationEvent">NotificationEvent</a></span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">remove_event_listener</span><span class="p">(</span><span class="n">event</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.NotificationEvent" href="../../Enums/NotificationEvent/#kaspa.NotificationEvent">NotificationEvent</a></span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="n"><span title="typing.Callable">Callable</span></span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -10558,7 +10558,7 @@ encodings.</p>
               <p>
                   <span class="doc-param-annotation">
                     <b>TYPE:</b>
-                      <code><span title="typing.Optional">Optional</span>[<span title="typing.Any">Any</span>]</code>
+                      <code>None | <span title="typing.Callable">Callable</span>[..., None]</code>
                   </span>
                   <span class="doc-param-default">
                     <b>DEFAULT:</b>
