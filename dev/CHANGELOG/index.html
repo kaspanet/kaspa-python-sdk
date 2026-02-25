@@ -7596,6 +7596,7 @@
 <li><code>PublicKeyGenerator.from_master_xprv()</code> accepts <code>xprv</code> parameter as both a <code>str</code> or <code>XPrv</code> instance now.</li>
 <li><code>Generator</code>, <code>create_transactions</code>, and <code>estimate_transactions</code> now accept <code>UtxoContext</code> entries (network_id optional for context inputs).</li>
 <li>Python 3.9 is no longer supported. Minimum supported version is now 3.10.</li>
+<li>Fix ScriptBuilder <code>add_op</code>/<code>add_ops</code> functions. <code>add_op</code> incorrectly allowed mulitple ops to be passed. <code>add_ops</code> incorrectly allowed a single op to be passed.</li>
 </ul>
 <h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
 <h3 id="breaking-changes">Breaking Changes<a class="headerlink" href="#breaking-changes" title="Permanent link">&para;</a></h3>
