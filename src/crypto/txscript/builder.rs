@@ -69,7 +69,10 @@ impl PyScriptBuilder {
     ///
     /// Raises:
     ///     Exception: If the opcode is invalid.
-    pub fn add_op(&self, op: &Bound<PyAny>) -> PyResult<Self> {
+    pub fn add_op(
+        &self,
+        #[gen_stub(override_type(type_repr = "int | Opcodes"))] op: &Bound<PyAny>,
+    ) -> PyResult<Self> {
         let op = extract_ops(op)?;
         let mut inner = self.inner();
         inner
@@ -89,7 +92,12 @@ impl PyScriptBuilder {
     ///
     /// Raises:
     ///     Exception: If any opcode is invalid.
-    pub fn add_ops(&self, opcodes: &Bound<PyAny>) -> PyResult<Self> {
+    pub fn add_ops(
+        &self,
+        #[gen_stub(override_type(type_repr = "builtins.list[int | Opcodes]"))] opcodes: &Bound<
+            PyAny,
+        >,
+    ) -> PyResult<Self> {
         let ops = extract_ops(opcodes)?;
         self.inner()
             .add_ops(ops.as_slice())

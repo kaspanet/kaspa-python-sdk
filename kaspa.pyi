@@ -627,7 +627,7 @@ class NetworkId:
         The default P2P port for this network.
         """
     def __eq__(self, other: builtins.object) -> builtins.bool: ...
-    def __new__(cls, network_id: typing.Any) -> NetworkId:
+    def __new__(cls, network_id: str | NetworkType) -> NetworkId:
         r"""
         Create a new NetworkId.
         
@@ -1502,7 +1502,7 @@ class RpcClient:
         This is intended for debug purposes only.
         Can be used to test application reconnection logic.
         """
-    def add_event_listener(self, event: NotificationEvent, callback: typing.Any, *args: typing.Any, **kwargs: typing.Any) -> None:
+    def add_event_listener(self, event: NotificationEvent, callback: typing.Callable[..., None], *args: typing.Any, **kwargs: typing.Any) -> None:
         r"""
         Register a callback for RPC events.
         
@@ -1515,7 +1515,7 @@ class RpcClient:
         Raises:
             Exception: If the event type is invalid.
         """
-    def remove_event_listener(self, event: NotificationEvent, callback: typing.Optional[typing.Any] = None) -> None:
+    def remove_event_listener(self, event: NotificationEvent, callback: None | typing.Callable[..., None] = None) -> None:
         r"""
         Remove an event listener.
         
@@ -1666,7 +1666,7 @@ class ScriptBuilder:
         Returns:
             ScriptBuilder: A new ScriptBuilder initialized with the script.
         """
-    def add_op(self, op: typing.Any) -> ScriptBuilder:
+    def add_op(self, op: int | Opcodes) -> ScriptBuilder:
         r"""
         Add a single opcode to the script.
         
@@ -1679,7 +1679,7 @@ class ScriptBuilder:
         Raises:
             Exception: If the opcode is invalid.
         """
-    def add_ops(self, opcodes: typing.Any) -> ScriptBuilder:
+    def add_ops(self, opcodes: builtins.list[int | Opcodes]) -> ScriptBuilder:
         r"""
         Add multiple opcodes to the script.
         
@@ -2298,7 +2298,7 @@ class UtxoContext:
         r"""
         Current balance formatted as strings (if available).
         """
-    def __new__(cls, processor: UtxoProcessor, id: typing.Optional[typing.Any] = None) -> UtxoContext:
+    def __new__(cls, processor: UtxoProcessor, id: str | Hash = None) -> UtxoContext:
         r"""
         Create a new UtxoContext.
         
@@ -2727,7 +2727,7 @@ class XPrv:
         Raises:
             Exception: If derivation fails.
         """
-    def derive_path(self, path: typing.Any) -> XPrv:
+    def derive_path(self, path: str | DerivationPath) -> XPrv:
         r"""
         Derive a key at the given derivation path.
         

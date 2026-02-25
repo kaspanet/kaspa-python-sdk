@@ -534,7 +534,7 @@ impl PyRpcClient {
         &self,
         py: Python,
         event: PyNotificationEvent,
-        callback: Py<PyAny>,
+        #[gen_stub(override_type(type_repr = "typing.Callable[..., None]"))] callback: Py<PyAny>,
         args: &Bound<'_, PyTuple>,
         kwargs: Option<&Bound<'_, PyDict>>,
     ) -> PyResult<()> {
@@ -576,6 +576,7 @@ impl PyRpcClient {
     fn remove_event_listener(
         &self,
         event: PyNotificationEvent,
+        #[gen_stub(override_type(type_repr = "None | typing.Callable[..., None]"))]
         callback: Option<Py<PyAny>>,
     ) -> PyResult<()> {
         let event: NotificationEvent = event.into();
