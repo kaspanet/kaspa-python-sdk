@@ -82,7 +82,9 @@ impl PyNetworkId {
     /// Raises:
     ///     Exception: If the network_id format is invalid.
     #[new]
-    pub fn new(network_id: Bound<PyAny>) -> PyResult<Self> {
+    pub fn new(
+        #[gen_stub(override_type(type_repr = "str | NetworkType"))] network_id: Bound<PyAny>,
+    ) -> PyResult<Self> {
         if let Ok(network_id) = network_id.extract::<String>() {
             PyNetworkId::from_str(&network_id)
         } else if let Ok(network_type) = network_id.extract::<PyNetworkType>() {
