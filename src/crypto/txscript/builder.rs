@@ -73,10 +73,10 @@ impl PyScriptBuilder {
         &self,
         #[gen_stub(override_type(type_repr = "int | Opcodes"))] op: &Bound<PyAny>,
     ) -> PyResult<Self> {
-        let op = extract_ops(op)?;
+        let op = extract_op(op)?;
         let mut inner = self.inner();
         inner
-            .add_op(op[0])
+            .add_op(op)
             .map_err(|err| PyException::new_err(format!("{}", err)))?;
 
         Ok(self.clone())
@@ -268,28 +268,28 @@ impl PyScriptBuilder {
 }
 
 // TODO change to PyOpcode struct and handle similar to PyBinary?
+// Extracts multiple opcodes from a Python list[int | Opcodes]
 fn extract_ops(input: &Bound<PyAny>) -> PyResult<Vec<u8>> {
-    if let Ok(opcode) = extract_op(input) {
-        // Single u8 or Opcodes variant
-        Ok(vec![opcode])
-    } else if let Ok(list) = input.cast::<pyo3::types::PyList>() {
-        // List of u8 or Opcodes variants
+    if let Ok(list) = input.cast::<pyo3::types::PyList>() {
         list.iter()
             .map(|item| extract_op(&item))
             .collect::<PyResult<Vec<u8>>>()
     } else {
         Err(PyException::new_err(
-            "Expected an Opcodes enum variant or an integer.",
+            "Expected a list containing ints and/or Opcodes enum variants.",
         ))
     }
 }
 
+// Extracts a single opcode from a Python int | Opcodes variant
 fn extract_op(item: &Bound<PyAny>) -> PyResult<u8> {
     if let Ok(op) = item.extract::<u8>() {
         Ok(op)
     } else if let Ok(op) = item.extract::<PyOpcodes>() {
         Ok(op.get_value())
     } else {
-        Err(PyException::new_err("Expected Opcodes enum variant or u8"))
+        Err(PyException::new_err(
+            "Expected int (u8) or Opcodes enum variant.",
+        ))
     }
 }
