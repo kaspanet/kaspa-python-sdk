@@ -31,6 +31,7 @@
 - `PublicKeyGenerator.from_master_xprv()` accepts `xprv` parameter as both a `str` or `XPrv` instance now.
 - `Generator`, `create_transactions`, and `estimate_transactions` now accept `UtxoContext` entries (network_id optional for context inputs).
 - Python 3.9 is no longer supported. Minimum supported version is now 3.10.
+- Fix ScriptBuilder `add_op`/`add_ops` functions. `add_op` incorrectly allowed mulitple ops to be passed. `add_ops` incorrectly allowed a single op to be passed.
 
 ### Fixed
 
