@@ -99,6 +99,7 @@ fn kaspa(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<wallet::core::utxo::balance::PyBalance>()?;
     m.add_class::<wallet::core::utxo::balance::PyBalanceStrings>()?;
     m.add_class::<wallet::core::utxo::context::PyUtxoContext>()?;
+    m.add_class::<wallet::core::utxo::processor::PyUtxoProcessorEvent>()?;
     m.add_class::<wallet::core::utxo::processor::PyUtxoProcessor>()?;
 
     m.add_function(wrap_pyfunction!(

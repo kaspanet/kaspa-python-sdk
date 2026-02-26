@@ -18,6 +18,7 @@
 - `UtxoProcessor` maturity setters (`set_coinbase_transaction_maturity_daa`, `set_user_transaction_maturity_daa`).
 - `UtxoContext.pending()` for pending UTXO access (implemented via processor pending map; exact snapshot parity would require rusty-kaspa exposure).
 - `UtxoProcessor` event listeners (`add_event_listener`, `remove_event_listener`, `remove_all_event_listeners`).
+- Enum `PyUtxoProcessorEvent` exposed to Python as `UtxoProcessorEvent`.
 
 ### Changed
 - Moved Kaspa Python SDK out of Rusty-Kaspa (as a workspace member crate) to its own dedicated repository. The internals of this project have changed significantly as a result. However, all APIs exposed to Python remain unchanged. 

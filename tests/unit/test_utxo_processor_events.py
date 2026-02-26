@@ -1,6 +1,6 @@
 import pytest
 
-from kaspa import NetworkId, Resolver, RpcClient, UtxoProcessor
+from kaspa import NetworkId, Resolver, RpcClient, UtxoProcessor, UtxoProcessorEvent
 
 
 def test_add_event_listener_all_overload_smoke():
@@ -34,6 +34,28 @@ def test_add_event_listener_multiple_targets_smoke():
 
     processor.add_event_listener(["connect", "disconnect"], cb)
     processor.remove_event_listener(["connect", "disconnect"], cb)
+
+
+def test_add_event_listener_enum_target_smoke():
+    client = RpcClient(resolver=Resolver(), network_id="testnet-10")
+    processor = UtxoProcessor(client, NetworkId("testnet-10"))
+
+    def cb(event):
+        _ = event
+
+    processor.add_event_listener(UtxoProcessorEvent.Connect, cb)
+    processor.remove_event_listener(UtxoProcessorEvent.Connect, cb)
+
+
+def test_add_event_listener_mixed_targets_smoke():
+    client = RpcClient(resolver=Resolver(), network_id="testnet-10")
+    processor = UtxoProcessor(client, NetworkId("testnet-10"))
+
+    def cb(event):
+        _ = event
+
+    processor.add_event_listener([UtxoProcessorEvent.Connect, "disconnect"], cb)
+    processor.remove_event_listener([UtxoProcessorEvent.Connect, "disconnect"], cb)
 
 
 def test_remove_all_event_listeners_smoke():

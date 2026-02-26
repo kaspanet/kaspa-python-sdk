@@ -111,7 +111,7 @@ fn fix_utxo_processor_event_listener_overloads(content: String) -> String {
         "    @typing.overload\n",
         "    def add_event_listener(self, callback: typing.Callable[..., typing.Any], *args: typing.Any, **kwargs: typing.Any) -> None: ...\n",
         "    @typing.overload\n",
-        "    def add_event_listener(self, event_or_callback: builtins.str | typing.Sequence[builtins.str], callback: typing.Callable[..., typing.Any], *args: typing.Any, **kwargs: typing.Any) -> None: ...\n",
+        "    def add_event_listener(self, event_or_callback: builtins.str | UtxoProcessorEvent | typing.Sequence[builtins.str | UtxoProcessorEvent], callback: typing.Callable[..., typing.Any], *args: typing.Any, **kwargs: typing.Any) -> None: ...\n",
     );
 
     let remove_impl = "    def remove_event_listener(self, event_or_callback: typing.Any, callback: typing.Optional[typing.Any] = None) -> None:";
@@ -119,7 +119,7 @@ fn fix_utxo_processor_event_listener_overloads(content: String) -> String {
         "    @typing.overload\n",
         "    def remove_event_listener(self, event_or_callback: typing.Callable[..., typing.Any]) -> None: ...\n",
         "    @typing.overload\n",
-        "    def remove_event_listener(self, event_or_callback: builtins.str | typing.Sequence[builtins.str], callback: typing.Optional[typing.Callable[..., typing.Any]] = None) -> None: ...\n",
+        "    def remove_event_listener(self, event_or_callback: builtins.str | UtxoProcessorEvent | typing.Sequence[builtins.str | UtxoProcessorEvent], callback: typing.Optional[typing.Callable[..., typing.Any]] = None) -> None: ...\n",
     );
 
     let mut out = content;

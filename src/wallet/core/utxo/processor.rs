@@ -14,7 +14,8 @@ use pyo3::{
     prelude::*,
     types::{PyDict, PyTuple},
 };
-use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
+use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pyclass_enum, gen_stub_pymethods};
+use serde::{Deserialize, Serialize};
 use std::{
     str::FromStr,
     sync::{
@@ -24,6 +25,72 @@ use std::{
 };
 use workflow_core::channel::DuplexChannel;
 use workflow_log::*;
+
+/// Event types for `UtxoProcessor` listeners.
+#[gen_stub_pyclass_enum]
+#[pyclass(name = "UtxoProcessorEvent", skip_from_py_object, eq)]
+#[derive(Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum PyUtxoProcessorEvent {
+    All,
+    Connect,
+    Disconnect,
+    UtxoIndexNotEnabled,
+    SyncState,
+    ServerStatus,
+    UtxoProcStart,
+    UtxoProcStop,
+    UtxoProcError,
+    DaaScoreChange,
+    Pending,
+    Reorg,
+    Stasis,
+    Maturity,
+    Discovery,
+    Balance,
+    Error,
+}
+
+impl<'py> FromPyObject<'_, 'py> for PyUtxoProcessorEvent {
+    type Error = PyErr;
+
+    fn extract(obj: Borrowed<'_, 'py, PyAny>) -> PyResult<Self> {
+        if let Ok(s) = obj.extract::<String>() {
+            serde_json::from_value::<PyUtxoProcessorEvent>(serde_json::Value::String(s))
+                .map_err(|err| PyException::new_err(err.to_string()))
+        } else if let Ok(t) = obj.cast::<PyUtxoProcessorEvent>() {
+            Ok(t.borrow().clone())
+        } else {
+            Err(PyException::new_err(
+                "Expected type `str` or `UtxoProcessorEvent`",
+            ))
+        }
+    }
+}
+
+impl From<PyUtxoProcessorEvent> for EventKind {
+    fn from(value: PyUtxoProcessorEvent) -> Self {
+        match value {
+            PyUtxoProcessorEvent::All => EventKind::All,
+            PyUtxoProcessorEvent::Connect => EventKind::Connect,
+            PyUtxoProcessorEvent::Disconnect => EventKind::Disconnect,
+            PyUtxoProcessorEvent::UtxoIndexNotEnabled => EventKind::UtxoIndexNotEnabled,
+            PyUtxoProcessorEvent::SyncState => EventKind::SyncState,
+            PyUtxoProcessorEvent::ServerStatus => EventKind::ServerStatus,
+            PyUtxoProcessorEvent::UtxoProcStart => EventKind::UtxoProcStart,
+            PyUtxoProcessorEvent::UtxoProcStop => EventKind::UtxoProcStop,
+            PyUtxoProcessorEvent::UtxoProcError => EventKind::UtxoProcError,
+            PyUtxoProcessorEvent::DaaScoreChange => EventKind::DaaScoreChange,
+            PyUtxoProcessorEvent::Pending => EventKind::Pending,
+            PyUtxoProcessorEvent::Reorg => EventKind::Reorg,
+            PyUtxoProcessorEvent::Stasis => EventKind::Stasis,
+            PyUtxoProcessorEvent::Maturity => EventKind::Maturity,
+            PyUtxoProcessorEvent::Discovery => EventKind::Discovery,
+            PyUtxoProcessorEvent::Balance => EventKind::Balance,
+            PyUtxoProcessorEvent::Error => EventKind::Error,
+        }
+    }
+}
 
 /// UTXO processor coordinating address tracking and UTXO updates.
 #[gen_stub_pyclass]
@@ -306,7 +373,7 @@ impl PyUtxoProcessor {
     /// Register a callback for UtxoProcessor events.
     ///
     /// Args:
-    ///     event_or_callback: Event target as string (kebab-case), a list of strings, "*" / "all", or a callback (listen to all events).
+    ///     event_or_callback: Event target as string (kebab-case), `UtxoProcessorEvent` variant, a list of those, "*" / "all", or a callback (listen to all events).
     ///     callback: Function to call when event occurs (required when event_or_callback is an event target).
     ///     *args: Additional arguments to pass to callback.
     ///     **kwargs: Additional keyword arguments to pass to callback.
@@ -336,7 +403,7 @@ impl PyUtxoProcessor {
                     )
                 } else {
                     return Err(PyException::new_err(
-                        "Expected `str | Sequence[str]` for event_or_callback and `callback` to be callable",
+                        "Expected `str | UtxoProcessorEvent | Sequence[str | UtxoProcessorEvent]` for event_or_callback and `callback` to be callable",
                     ));
                 }
             }
@@ -363,7 +430,7 @@ impl PyUtxoProcessor {
     /// Remove an event listener.
     ///
     /// Args:
-    ///     event_or_callback: Event target as string (kebab-case), a list of strings, "*" / "all", or a callback (remove from all events).
+    ///     event_or_callback: Event target as string (kebab-case), `UtxoProcessorEvent` variant, a list of those, "*" / "all", or a callback (remove from all events).
     ///     callback: Specific callback to remove, or None to remove all callbacks for the event target(s).
     ///
     /// Returns:
@@ -415,22 +482,37 @@ impl PyUtxoProcessor {
 }
 
 fn parse_event_targets(value: Bound<'_, PyAny>) -> PyResult<Vec<EventKind>> {
-    if let Ok(s) = value.extract::<String>() {
-        return Ok(vec![parse_event_kind(&s)?]);
+    if let Ok(event) = parse_event_target_item(&value) {
+        return Ok(vec![event]);
     }
 
-    let iter = value
-        .try_iter()
-        .map_err(|_| PyException::new_err("event target must be a str or sequence of str"))?;
+    let iter = value.try_iter().map_err(|_| {
+        PyException::new_err("event target must be str, UtxoProcessorEvent, or a sequence of those")
+    })?;
 
     iter.map(|item| {
         let item = item?;
-        let s = item
-            .extract::<String>()
-            .map_err(|_| PyException::new_err("event target must be a str or sequence of str"))?;
-        parse_event_kind(&s)
+        parse_event_target_item(&item).map_err(|_| {
+            PyException::new_err(
+                "event target must be str, UtxoProcessorEvent, or a sequence of those",
+            )
+        })
     })
     .collect()
+}
+
+fn parse_event_target_item(value: &Bound<'_, PyAny>) -> PyResult<EventKind> {
+    if let Ok(event) = value.extract::<PyUtxoProcessorEvent>() {
+        return Ok(event.into());
+    }
+
+    if let Ok(s) = value.extract::<String>() {
+        return parse_event_kind(&s);
+    }
+
+    Err(PyException::new_err(
+        "event target must be str, UtxoProcessorEvent, or a sequence of those",
+    ))
 }
 
 fn parse_event_kind(s: &str) -> PyResult<EventKind> {
