@@ -1,4 +1,4 @@
-use super::TryToPyDict;
+use crate::traits::TryToPyDict;
 use kaspa_consensus_client::{
     Transaction, TransactionInput, TransactionOutpoint, TransactionOutput, UtxoEntry,
     UtxoEntryReference,

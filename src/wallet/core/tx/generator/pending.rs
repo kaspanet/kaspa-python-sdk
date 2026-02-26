@@ -26,82 +26,55 @@ pub struct PendingTransaction(native::PendingTransaction);
 #[gen_stub_pymethods]
 #[pymethods]
 impl PendingTransaction {
-    /// The transaction ID (hash).
-    ///
-    /// Returns:
-    ///     str: The transaction ID as a hex string.
+    /// The transaction ID (hash) as a hex string.
     #[getter]
     fn get_id(&self) -> String {
         self.0.id().to_string()
     }
 
-    /// The total payment amount in sompi (excluding change and fees).
-    ///
-    /// Returns:
-    ///     int | None: The payment amount, or None for sweep transactions.
+    /// The total payment amount in sompi (excluding change and fees), or None for sweep transactions.
     #[getter]
     fn get_payment_amount(&self) -> Option<u64> {
         self.0.payment_value()
     }
 
     /// The change amount returned to the sender in sompi.
-    ///
-    /// Returns:
-    ///     int: The change amount.
     #[getter]
     fn get_change_amount(&self) -> u64 {
         self.0.change_value()
     }
 
     /// The transaction fee in sompi.
-    ///
-    /// Returns:
-    ///     int: The fee amount.
     #[getter]
     fn get_fee_amount(&self) -> u64 {
         self.0.fees()
     }
 
     /// The transaction mass (used for fee calculation).
-    ///
-    /// Returns:
-    ///     int: The transaction mass.
     #[getter]
     fn get_mass(&self) -> u64 {
         self.0.mass()
     }
 
     /// The minimum number of signatures required.
-    ///
-    /// Returns:
-    ///     int: The minimum signature count.
     #[getter]
     fn get_minimum_signatures(&self) -> u16 {
         self.0.minimum_signatures()
     }
 
     /// The total value of all inputs in sompi.
-    ///
-    /// Returns:
-    ///     int: The aggregate input amount.
     #[getter]
     fn get_aggregate_input_amount(&self) -> u64 {
         self.0.aggregate_input_value()
     }
 
     /// The total value of all outputs in sompi.
-    ///
-    /// Returns:
-    ///     int: The aggregate output amount.
     #[getter]
     fn get_aggregate_output_amount(&self) -> u64 {
         self.0.aggregate_output_value()
     }
 
     /// The transaction type: "batch" for intermediate or "final" for last.
-    ///
-    /// Returns:
-    ///     str: The transaction type.
     #[getter]
     fn get_transaction_type(&self) -> String {
         if self.0.is_batch() {
@@ -247,6 +220,7 @@ impl PendingTransaction {
     ///
     /// Raises:
     ///     Exception: If submission fails.
+    #[gen_stub(override_return_type(type_repr = "str"))]
     fn submit<'py>(
         &self,
         py: Python<'py>,
@@ -264,10 +238,7 @@ impl PendingTransaction {
         })
     }
 
-    /// The underlying transaction object.
-    ///
-    /// Returns:
-    ///     Transaction: The transaction for manual inspection or modification.
+    /// The underlying transaction object for manual inspection or modification.
     #[getter]
     fn get_transaction(&self) -> PyResult<PyTransaction> {
         Ok(Transaction::from_cctx_transaction(&self.0.transaction(), self.0.utxo_entries()).into())

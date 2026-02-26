@@ -283,19 +283,13 @@ impl PyRpcClient {
         )
     }
 
-    /// The current connection URL.
-    ///
-    /// Returns:
-    ///     str | None: The WebSocket URL, or None if not connected.
+    /// The current WebSocket connection URL, or None if not connected.
     #[getter]
     fn get_url(&self) -> Option<String> {
         self.0.client.url()
     }
 
-    /// The resolver used for node discovery.
-    ///
-    /// Returns:
-    ///     Resolver | None: The resolver, or None if not set.
+    /// The resolver used for node discovery, or None if not set.
     #[getter]
     fn get_resolver(&self) -> Option<PyResolver> {
         self.0.resolver.clone().map(PyResolver::new)
@@ -331,28 +325,19 @@ impl PyRpcClient {
         Ok(())
     }
 
-    /// Whether the client is currently connected.
-    ///
-    /// Returns:
-    ///     bool: True if connected to a node.
+    /// Whether the client is currently connected to a node.
     #[getter]
     fn get_is_connected(&self) -> bool {
         self.0.client.is_connected()
     }
 
-    /// The RPC encoding format.
-    ///
-    /// Returns:
-    ///     str: The encoding ("borsh" or "json").
+    /// The RPC encoding format ("borsh" or "json").
     #[getter]
     fn get_encoding(&self) -> String {
         self.0.client.encoding().to_string()
     }
 
-    /// The unique identifier of the connected node.
-    ///
-    /// Returns:
-    ///     str | None: The node ID, or None if not connected via resolver.
+    /// The unique identifier of the connected node, or None if not connected via resolver.
     #[getter]
     fn get_node_id(&self) -> Option<String> {
         self.0.client.node_descriptor().map(|node| node.uid.clone())
@@ -370,6 +355,7 @@ impl PyRpcClient {
     /// Raises:
     ///     Exception: If connection fails.
     #[pyo3(signature = (block_async_connect=None, strategy=None, url=None, timeout_duration=None, retry_interval=None))]
+    #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn connect<'py>(
         &self,
         py: Python<'py>,
@@ -414,6 +400,7 @@ impl PyRpcClient {
     ///
     /// Raises:
     ///     Exception: If disconnection fails.
+    #[gen_stub(override_return_type(type_repr = "None"))]
     fn disconnect<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let client = self.clone();
 
@@ -436,6 +423,7 @@ impl PyRpcClient {
     ///
     /// Raises:
     ///     Exception: If starting fails.
+    #[gen_stub(override_return_type(type_repr = "None"))]
     fn start<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         self.start_notification_task(py)
             .map_err(|err| PyException::new_err(err.to_string()))?;
@@ -451,6 +439,7 @@ impl PyRpcClient {
     }
 
     /// Stop background RPC services (automatically stopped when invoking RpcClient.disconnect).
+    #[gen_stub(override_return_type(type_repr = "None"))]
     fn stop<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let slf = self.clone();
         let inner = self.0.clone();
@@ -490,7 +479,7 @@ impl PyRpcClient {
         &self,
         py: Python,
         event: PyNotificationEvent,
-        callback: Py<PyAny>,
+        #[gen_stub(override_type(type_repr = "typing.Callable[..., None]"))] callback: Py<PyAny>,
         args: &Bound<'_, PyTuple>,
         kwargs: Option<&Bound<'_, PyDict>>,
     ) -> PyResult<()> {
@@ -523,10 +512,12 @@ impl PyRpcClient {
     ///
     /// Raises:
     ///     Exception: If the event type is invalid.
+    #[gen_stub(override_return_type(type_repr = "None"))]
     #[pyo3(signature = (event, callback=None))]
     fn remove_event_listener(
         &self,
         event: PyNotificationEvent,
+        #[gen_stub(override_type(type_repr = "None | typing.Callable[..., None]"))]
         callback: Option<Py<PyAny>>,
     ) -> PyResult<()> {
         let event: NotificationEvent = event.into();
@@ -746,6 +737,7 @@ impl PyRpcClient {
     ///
     /// Raises:
     ///     Exception: If not connected or subscription fails.
+    #[gen_stub(override_return_type(type_repr = "None"))]
     fn subscribe_utxos_changed<'py>(
         &self,
         py: Python<'py>,
@@ -776,6 +768,7 @@ impl PyRpcClient {
     ///
     /// Raises:
     ///     Exception: If not connected or unsubscription fails.
+    #[gen_stub(override_return_type(type_repr = "None"))]
     fn unsubscribe_utxos_changed<'py>(
         &self,
         py: Python<'py>,
@@ -808,6 +801,7 @@ impl PyRpcClient {
     ///
     /// Raises:
     ///     Exception: If not connected or subscription fails.
+    #[gen_stub(override_return_type(type_repr = "None"))]
     fn subscribe_virtual_chain_changed<'py>(
         &self,
         py: Python<'py>,
@@ -839,6 +833,7 @@ impl PyRpcClient {
     ///
     /// Raises:
     ///     Exception: If not connected or unsubscription fails.
+    #[gen_stub(override_return_type(type_repr = "None"))]
     fn unsubscribe_virtual_chain_changed<'py>(
         &self,
         py: Python<'py>,
@@ -878,6 +873,7 @@ macro_rules! build_wrpc_python_subscriptions {
             #[pymethods]
             impl PyRpcClient {
                 $(
+                    #[gen_stub(override_return_type(type_repr="None"))]
                     fn [<subscribe_ $scope:snake>]<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                         if let Some(listener_id) = self.listener_id() {
                             let client = self.0.client.clone();
@@ -891,6 +887,7 @@ macro_rules! build_wrpc_python_subscriptions {
                         }
                     }
 
+                    #[gen_stub(override_return_type(type_repr="None"))]
                     fn [<unsubscribe_ $scope:snake>]<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
                         if let Some(listener_id) = self.listener_id() {
                             let client = self.0.client.clone();

@@ -31,10 +31,13 @@ impl PyScriptPublicKey {
         Ok(Self(inner))
     }
 
+    /// The version number.
+    #[getter]
+    pub fn get_version(&self) -> u16 {
+        self.0.version()
+    }
+
     /// The script bytes as a hex string.
-    ///
-    /// Returns:
-    ///     str: The script data encoded as hexadecimal.
     #[getter]
     pub fn get_script(&self) -> String {
         self.0.script_as_hex()

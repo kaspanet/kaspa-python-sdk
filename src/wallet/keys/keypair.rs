@@ -52,27 +52,18 @@ impl PyKeypair {
     }
 
     /// The x-only public key as hex.
-    ///
-    /// Returns:
-    ///     str: The x-only public key.
     #[getter]
     pub fn get_xonly_public_key(&self) -> String {
         self.xonly_public_key.to_string()
     }
 
     /// The full public key as hex.
-    ///
-    /// Returns:
-    ///     str: The public key.
     #[getter]
     pub fn get_public_key(&self) -> String {
         PublicKey::from(&self.public_key).to_string()
     }
 
     /// The private key as hex.
-    ///
-    /// Returns:
-    ///     str: The private key.
     #[getter]
     pub fn get_private_key(&self) -> String {
         PrivateKey::from(&self.secret_key).to_hex()

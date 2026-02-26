@@ -66,9 +66,6 @@ impl PyMnemonic {
     }
 
     /// The entropy bytes as a hex string.
-    ///
-    /// Returns:
-    ///     str: The raw entropy in hexadecimal.
     #[getter]
     pub fn get_entropy(&self) -> String {
         self.0.get_entropy()
@@ -115,10 +112,7 @@ impl PyMnemonic {
         Ok(Self(inner))
     }
 
-    /// The mnemonic phrase as a string.
-    ///
-    /// Returns:
-    ///     str: The space-separated word phrase.
+    /// The mnemonic phrase as a space-separated word string.
     #[getter]
     pub fn get_phrase(&self) -> String {
         self.0.phrase().to_string()

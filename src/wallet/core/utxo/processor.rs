@@ -296,6 +296,7 @@ impl PyUtxoProcessor {
     }
 
     /// Start UTXO processing (async).
+    #[gen_stub(override_return_type(type_repr = "None"))]
     fn start<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let processor = self.processor.clone();
         let slf = self.clone();
@@ -312,6 +313,7 @@ impl PyUtxoProcessor {
     }
 
     /// Stop UTXO processing (async).
+    #[gen_stub(override_return_type(type_repr = "None"))]
     fn stop<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let processor = self.processor.clone();
         let slf = self.clone();

@@ -1,7 +1,6 @@
 use super::outpoint::PyTransactionOutpoint;
 use crate::{
-    address::PyAddress,
-    consensus::{convert::TryToPyDict, core::script_public_key::PyScriptPublicKey},
+    address::PyAddress, consensus::core::script_public_key::PyScriptPublicKey, traits::TryToPyDict,
     types::PyBinary,
 };
 use kaspa_consensus_client::{UtxoEntry, UtxoEntryReference};
@@ -26,55 +25,37 @@ pub struct PyUtxoEntry(UtxoEntry);
 #[gen_stub_pymethods]
 #[pymethods]
 impl PyUtxoEntry {
-    /// The address associated with this UTXO.
-    ///
-    /// Returns:
-    ///     Address | None: The address, or None if not available.
+    /// The address associated with this UTXO, or None if not available.
     #[getter]
     pub fn get_address(&self) -> Option<PyAddress> {
         self.0.address.clone().map(PyAddress::from)
     }
 
     /// The outpoint identifying this UTXO.
-    ///
-    /// Returns:
-    ///     TransactionOutpoint: The transaction outpoint reference.
     #[getter]
     pub fn get_outpoint(&self) -> PyTransactionOutpoint {
         self.0.outpoint.clone().into()
     }
 
     /// The amount in sompi (1 KAS = 100,000,000 sompi).
-    ///
-    /// Returns:
-    ///     int: The UTXO value in sompi.
     #[getter]
     pub fn get_amount(&self) -> u64 {
         self.0.amount
     }
 
     /// The locking script for this UTXO.
-    ///
-    /// Returns:
-    ///     ScriptPublicKey: The script public key.
     #[getter]
     pub fn get_script_public_key(&self) -> PyScriptPublicKey {
         self.0.script_public_key.clone().into()
     }
 
     /// The DAA score of the block containing this UTXO.
-    ///
-    /// Returns:
-    ///     int: The block DAA score.
     #[getter]
     pub fn get_block_daa_score(&self) -> u64 {
         self.0.block_daa_score
     }
 
     /// Whether this UTXO is from a coinbase transaction.
-    ///
-    /// Returns:
-    ///     bool: True if this is a coinbase UTXO.
     #[getter]
     pub fn get_is_coinbase(&self) -> bool {
         self.0.is_coinbase
@@ -210,9 +191,6 @@ pub struct PyUtxoEntries(Arc<Vec<UtxoEntryReference>>);
 #[pymethods]
 impl PyUtxoEntries {
     /// The list of UTXO entry references.
-    ///
-    /// Returns:
-    ///     list[UtxoEntryReference]: List of UTXO references.
     #[getter]
     pub fn get_items(&self) -> Vec<PyUtxoEntryReference> {
         self.0
@@ -288,63 +266,42 @@ pub struct PyUtxoEntryReference(UtxoEntryReference);
 #[pymethods]
 impl PyUtxoEntryReference {
     /// The underlying UTXO entry.
-    ///
-    /// Returns:
-    ///     UtxoEntry: The UTXO entry data.
     #[getter]
     pub fn get_entry(&self) -> PyUtxoEntry {
         self.0.as_ref().clone().into()
     }
 
     /// The outpoint identifying this UTXO.
-    ///
-    /// Returns:
-    ///     TransactionOutpoint: The transaction outpoint reference.
     #[getter]
     pub fn get_outpoint(&self) -> PyTransactionOutpoint {
         self.0.utxo.outpoint.clone().into()
     }
 
-    /// The address associated with this UTXO.
-    ///
-    /// Returns:
-    ///     Address | None: The address, or None if not available.
+    /// The address associated with this UTXO, or None if not available.
     #[getter]
     pub fn get_address(&self) -> Option<PyAddress> {
         self.0.utxo.address.clone().map(PyAddress::from)
     }
 
     /// The amount in sompi (1 KAS = 100,000,000 sompi).
-    ///
-    /// Returns:
-    ///     int: The UTXO value in sompi.
     #[getter]
     pub fn get_amount(&self) -> u64 {
         self.0.utxo.amount
     }
 
     /// Whether this UTXO is from a coinbase transaction.
-    ///
-    /// Returns:
-    ///     bool: True if this is a coinbase UTXO.
     #[getter]
     pub fn get_is_coinbase(&self) -> bool {
         self.0.utxo.is_coinbase
     }
 
     /// The DAA score of the block containing this UTXO.
-    ///
-    /// Returns:
-    ///     int: The block DAA score.
     #[getter]
     pub fn get_block_daa_score(&self) -> u64 {
         self.0.utxo.block_daa_score
     }
 
     /// The locking script for this UTXO.
-    ///
-    /// Returns:
-    ///     ScriptPublicKey: The script public key.
     #[getter]
     pub fn get_script_public_key(&self) -> PyScriptPublicKey {
         self.0.utxo.script_public_key.clone().into()

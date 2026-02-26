@@ -82,7 +82,9 @@ impl PyNetworkId {
     /// Raises:
     ///     Exception: If the network_id format is invalid.
     #[new]
-    pub fn new(network_id: Bound<PyAny>) -> PyResult<Self> {
+    pub fn new(
+        #[gen_stub(override_type(type_repr = "str | NetworkType"))] network_id: Bound<PyAny>,
+    ) -> PyResult<Self> {
         if let Ok(network_id) = network_id.extract::<String>() {
             PyNetworkId::from_str(&network_id)
         } else if let Ok(network_type) = network_id.extract::<PyNetworkType>() {
@@ -113,9 +115,6 @@ impl PyNetworkId {
     }
 
     /// The base network type (Mainnet, Testnet, Devnet, Simnet).
-    ///
-    /// Returns:
-    ///     NetworkType: The network type.
     #[getter]
     pub fn get_network_type(&self) -> PyNetworkType {
         self.0.network_type.into()
@@ -129,19 +128,13 @@ impl PyNetworkId {
         self.0.is_mainnet()
     }
 
-    /// The optional numeric suffix (e.g., 10 for testnet-10).
-    ///
-    /// Returns:
-    ///     int | None: The suffix, or None if not set.
+    /// The optional numeric suffix (e.g., 10 for testnet-10), or None if not set.
     #[getter]
     pub fn get_suffix(&self) -> Option<u32> {
         self.0.suffix()
     }
 
     /// The default P2P port for this network.
-    ///
-    /// Returns:
-    ///     int: The default P2P port number.
     #[getter]
     pub fn get_default_p2p_port(&self) -> u16 {
         self.0.default_p2p_port()

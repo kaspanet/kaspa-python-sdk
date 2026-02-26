@@ -42,7 +42,7 @@ async def main():
         tx_id = await pending_tx.submit(client)
         print(tx_id)
 
-    print(generator.summary().transactions)
+    print(generator.summary().to_dict())
 
 if __name__ == "__main__":
     asyncio.run(main())

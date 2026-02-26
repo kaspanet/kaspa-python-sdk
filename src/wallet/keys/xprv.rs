@@ -100,7 +100,10 @@ impl PyXPrv {
     ///
     /// Raises:
     ///     Exception: If derivation fails.
-    pub fn derive_path(&self, path: &Bound<PyAny>) -> PyResult<PyXPrv> {
+    pub fn derive_path(
+        &self,
+        #[gen_stub(override_type(type_repr = "str | DerivationPath"))] path: &Bound<PyAny>,
+    ) -> PyResult<PyXPrv> {
         let path = if let Ok(path_str) = path.extract::<String>() {
             Ok(PyDerivationPath::new(path_str.as_str())?)
         } else if let Ok(path_obj) = path.extract::<PyDerivationPath>() {
@@ -182,9 +185,6 @@ impl PyXPrv {
     }
 
     /// The serialized extended private key string.
-    ///
-    /// Returns:
-    ///     str: The xprv string.
     #[getter]
     pub fn get_xprv(&self) -> PyResult<String> {
         let str = self
@@ -199,9 +199,6 @@ impl PyXPrv {
     }
 
     /// The private key as a hex string.
-    ///
-    /// Returns:
-    ///     str: The private key hex.
     #[getter]
     pub fn get_private_key(&self) -> String {
         use kaspa_bip32::PrivateKey;
@@ -209,36 +206,24 @@ impl PyXPrv {
     }
 
     /// The derivation depth (0 for master key).
-    ///
-    /// Returns:
-    ///     int: The depth.
     #[getter]
     pub fn get_depth(&self) -> u8 {
         self.0.attrs().depth
     }
 
     /// The parent key's fingerprint as hex.
-    ///
-    /// Returns:
-    ///     str: The parent fingerprint.
     #[getter]
     pub fn get_parent_fingerprint(&self) -> String {
         self.0.attrs().parent_fingerprint.to_vec().to_hex()
     }
 
     /// The child number used to derive this key.
-    ///
-    /// Returns:
-    ///     int: The child number.
     #[getter]
     pub fn get_child_number(&self) -> u32 {
         self.0.attrs().child_number.into()
     }
 
     /// The chain code as hex.
-    ///
-    /// Returns:
-    ///     str: The chain code.
     #[getter]
     #[pyo3(name = "chain_code")]
     pub fn get_chain_code(&self) -> String {

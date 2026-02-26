@@ -1,6 +1,6 @@
-// use crate::imports::*;
+use crate::traits::TryToPyDict;
 use kaspa_wallet_core::tx::generator as core;
-use pyo3::prelude::*;
+use pyo3::{prelude::*, types::PyDict};
 use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 /// A class containing a summary produced by transaction Generator.
@@ -19,57 +19,65 @@ pub struct PyGeneratorSummary(core::GeneratorSummary);
 #[pymethods]
 impl PyGeneratorSummary {
     /// The network type used for generation.
-    ///
-    /// Returns:
-    ///     str: The network type string.
     #[getter]
     pub fn get_network_type(&self) -> String {
         self.0.network_type().to_string()
     }
 
+    /// The network id used for generation.
+    #[getter]
+    pub fn get_network_id(&self) -> String {
+        self.0.network_id().to_string()
+    }
+
     /// The total number of UTXOs consumed.
-    ///
-    /// Returns:
-    ///     int: The UTXO count.
     #[getter]
     pub fn get_utxos(&self) -> usize {
         self.0.aggregated_utxos()
     }
 
+    /// The total mass of the generated transactions.
+    #[getter]
+    pub fn get_mass(&self) -> u64 {
+        self.0.aggregate_mass()
+    }
+
     /// The total fees across all generated transactions in sompi.
-    ///
-    /// Returns:
-    ///     int: The aggregate fee amount.
     #[getter]
     pub fn get_fees(&self) -> u64 {
         self.0.aggregate_fees()
     }
 
     /// The number of transactions generated.
-    ///
-    /// Returns:
-    ///     int: The transaction count.
     #[getter]
     pub fn get_transactions(&self) -> usize {
         self.0.number_of_generated_transactions()
     }
 
-    /// The final transaction amount in sompi.
-    ///
-    /// Returns:
-    ///     int | None: The final amount, or None if not applicable.
+    /// The number of generated stages.
+    #[getter]
+    pub fn get_stages(&self) -> usize {
+        self.0.number_of_generated_stages()
+    }
+
+    /// The final transaction amount in sompi, or None if not applicable.
     #[getter]
     pub fn get_final_amount(&self) -> Option<u64> {
         self.0.final_transaction_amount()
     }
 
-    /// The ID of the final transaction.
-    ///
-    /// Returns:
-    ///     str | None: The transaction ID, or None if not yet generated.
+    /// The ID of the final transaction, or None if not yet generated.
     #[getter]
     pub fn get_final_transaction_id(&self) -> Option<String> {
         self.0.final_transaction_id().map(|id| id.to_string())
+    }
+
+    /// Get a dictionary representation of the GeneratorSummary.
+    ///
+    /// Returns:
+    ///     dict: the GeneratorSummary in dictionary form.
+    fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+        self.0.try_to_pydict(py)
     }
 
     // Cannot be derived via pyclass(eq)
@@ -84,5 +92,12 @@ impl PyGeneratorSummary {
 impl From<core::GeneratorSummary> for PyGeneratorSummary {
     fn from(inner: core::GeneratorSummary) -> Self {
         Self(inner)
+    }
+}
+
+impl TryToPyDict for core::GeneratorSummary {
+    fn try_to_pydict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, pyo3::types::PyDict>> {
+        let dict = serde_pyobject::to_pyobject(py, self)?;
+        Ok(dict.cast_into::<PyDict>()?)
     }
 }

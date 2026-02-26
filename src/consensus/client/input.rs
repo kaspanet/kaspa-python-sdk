@@ -1,6 +1,6 @@
 use crate::{
     consensus::client::{outpoint::PyTransactionOutpoint, utxo::PyUtxoEntryReference},
-    consensus::convert::TryToPyDict,
+    traits::TryToPyDict,
     types::PyBinary,
 };
 use kaspa_consensus_client::{TransactionInput, UtxoEntryReference};
@@ -54,9 +54,6 @@ impl PyTransactionInput {
     }
 
     /// The outpoint referencing the UTXO being spent.
-    ///
-    /// Returns:
-    ///     TransactionOutpoint: The previous output reference.
     #[getter]
     pub fn get_previous_outpoint(&self) -> PyTransactionOutpoint {
         self.0.inner().previous_outpoint.clone().into()
@@ -72,10 +69,7 @@ impl PyTransactionInput {
         Ok(())
     }
 
-    /// The unlocking script (signature) that proves ownership of the UTXO.
-    ///
-    /// Returns:
-    ///     str | None: The signature script as a hex string, or None if not set.
+    /// The unlocking script (signature) as a hex string, or None if not set.
     #[getter]
     pub fn get_signature_script_as_hex(&self) -> Option<String> {
         self.0
@@ -96,9 +90,6 @@ impl PyTransactionInput {
     }
 
     /// The sequence number used for relative time locks.
-    ///
-    /// Returns:
-    ///     int: The sequence number.
     #[getter]
     pub fn get_sequence(&self) -> u64 {
         self.0.inner().sequence
@@ -114,9 +105,6 @@ impl PyTransactionInput {
     }
 
     /// The number of signature operations in this input.
-    ///
-    /// Returns:
-    ///     int: The signature operation count.
     #[getter]
     pub fn get_sig_op_count(&self) -> u8 {
         self.0.inner().sig_op_count
@@ -131,10 +119,7 @@ impl PyTransactionInput {
         self.0.inner().sig_op_count = value;
     }
 
-    /// The UTXO entry reference for transaction signing.
-    ///
-    /// Returns:
-    ///     UtxoEntryReference | None: The UTXO reference, or None if not set.
+    /// The UTXO entry reference for transaction signing, or None if not set.
     #[getter]
     pub fn get_utxo(&self) -> Option<PyUtxoEntryReference> {
         self.0.inner().utxo.clone().map(PyUtxoEntryReference::from)
