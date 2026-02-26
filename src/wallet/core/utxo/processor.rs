@@ -1,3 +1,4 @@
+use crate::callback::PyCallback;
 use crate::consensus::core::network::PyNetworkId;
 use crate::rpc::wrpc::client::PyRpcClient;
 use ahash::AHashMap;
@@ -11,7 +12,7 @@ use kaspa_wallet_core::utxo::{
 use pyo3::{
     exceptions::PyException,
     prelude::*,
-    types::{PyDict, PyModule, PyTuple},
+    types::{PyDict, PyTuple},
 };
 use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
 use std::{
@@ -202,57 +203,6 @@ impl PyUtxoProcessor {
     }
 }
 
-#[derive(Clone)]
-#[allow(dead_code)]
-struct PyCallback {
-    callback: Arc<Py<PyAny>>,
-    args: Option<Arc<Py<PyTuple>>>,
-    kwargs: Option<Arc<Py<PyDict>>>,
-}
-
-#[allow(dead_code)]
-impl PyCallback {
-    fn add_event_to_args(&self, py: Python, event: Bound<PyDict>) -> PyResult<Py<PyTuple>> {
-        match &self.args {
-            Some(existing_args) => {
-                let tuple_ref = existing_args.bind(py);
-                let mut new_args: Vec<Py<PyAny>> =
-                    tuple_ref.iter().map(|arg| arg.unbind()).collect();
-                new_args.push(event.into());
-                Ok(Py::from(PyTuple::new(py, new_args)?))
-            }
-            None => Ok(Py::from(PyTuple::new(py, [event])?)),
-        }
-    }
-
-    fn execute(&self, py: Python, event: Bound<PyDict>) -> PyResult<Py<PyAny>> {
-        let args = self.add_event_to_args(py, event)?;
-        let kwargs = self.kwargs.as_ref().map(|kw| kw.bind(py));
-
-        self.callback
-            .call(py, args.bind(py), kwargs)
-            .map_err(|err| {
-                let traceback = PyModule::import(py, "traceback")
-                    .and_then(|traceback| {
-                        traceback.call_method(
-                            "format_exception",
-                            (err.get_type(py), err.value(py), err.traceback(py)),
-                            None,
-                        )
-                    })
-                    .map(|formatted| {
-                        let trace_lines: Vec<String> = formatted
-                            .extract()
-                            .unwrap_or_else(|_| vec!["<Failed to retrieve traceback>".to_string()]);
-                        trace_lines.join("")
-                    })
-                    .unwrap_or_else(|_| "<Failed to retrieve traceback>".to_string());
-
-                PyException::new_err(traceback.to_string())
-            })
-    }
-}
-
 #[gen_stub_pymethods]
 #[pymethods]
 impl PyUtxoProcessor {
@@ -398,11 +348,7 @@ impl PyUtxoProcessor {
             None => PyDict::new(py).into(),
         };
 
-        let py_callback = PyCallback {
-            callback: Arc::new(callback),
-            args: Some(Arc::new(args)),
-            kwargs: Some(Arc::new(kwargs)),
-        };
+        let py_callback = PyCallback::new(callback, args, kwargs);
 
         let mut callbacks = self.callbacks.lock().unwrap();
         for target in targets {
@@ -433,7 +379,7 @@ impl PyUtxoProcessor {
         if callback.is_none() && event_or_callback.is_callable() {
             let callback = event_or_callback.extract::<Py<PyAny>>()?;
             for handlers in callbacks.values_mut() {
-                handlers.retain(|entry| entry.callback.as_ref().as_ptr() != callback.as_ptr());
+                handlers.retain(|entry| !entry.callback_ptr_eq(&callback));
             }
             return Ok(());
         }
@@ -444,8 +390,7 @@ impl PyUtxoProcessor {
             Some(callback) => {
                 for target in targets {
                     if let Some(handlers) = callbacks.get_mut(&target) {
-                        handlers
-                            .retain(|entry| entry.callback.as_ref().as_ptr() != callback.as_ptr());
+                        handlers.retain(|entry| !entry.callback_ptr_eq(&callback));
                     }
                 }
             }

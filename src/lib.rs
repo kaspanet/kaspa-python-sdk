@@ -1,4 +1,5 @@
 mod address;
+mod callback;
 mod consensus;
 mod crypto;
 mod macros;
