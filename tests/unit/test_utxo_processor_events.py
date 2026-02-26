@@ -80,6 +80,28 @@ def test_add_event_listener_invalid_target_raises():
         processor.add_event_listener("not-a-real-event", cb)
 
 
+def test_add_event_listener_empty_target_raises():
+    client = RpcClient(resolver=Resolver(), network_id="testnet-10")
+    processor = UtxoProcessor(client, NetworkId("testnet-10"))
+
+    def cb(event):
+        _ = event
+
+    with pytest.raises(Exception):
+        processor.add_event_listener("", cb)
+
+
+def test_remove_event_listener_empty_target_raises():
+    client = RpcClient(resolver=Resolver(), network_id="testnet-10")
+    processor = UtxoProcessor(client, NetworkId("testnet-10"))
+
+    def cb(event):
+        _ = event
+
+    with pytest.raises(Exception):
+        processor.remove_event_listener("", cb)
+
+
 def test_add_event_listener_star_target_smoke():
     client = RpcClient(resolver=Resolver(), network_id="testnet-10")
     processor = UtxoProcessor(client, NetworkId("testnet-10"))

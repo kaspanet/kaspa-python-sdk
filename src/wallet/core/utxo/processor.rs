@@ -482,8 +482,10 @@ impl PyUtxoProcessor {
 }
 
 fn parse_event_targets(value: Bound<'_, PyAny>) -> PyResult<Vec<EventKind>> {
-    if let Ok(event) = parse_event_target_item(&value) {
-        return Ok(vec![event]);
+    // Strings are iterable in Python. Ensure string-like targets are validated
+    // as a single target first, so invalid values like "" do not silently no-op.
+    if value.extract::<String>().is_ok() || value.cast::<PyUtxoProcessorEvent>().is_ok() {
+        return parse_event_target_item(&value).map(|event| vec![event]);
     }
 
     let iter = value.try_iter().map_err(|_| {
