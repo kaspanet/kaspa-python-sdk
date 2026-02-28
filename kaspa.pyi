@@ -2585,6 +2585,49 @@ class UtxoProcessor:
         r"""
         Set the user transaction maturity period DAA for a network.
         """
+    @typing.overload
+    def add_event_listener(self, callback: typing.Callable[..., typing.Any], *args: typing.Any, **kwargs: typing.Any) -> None: ...
+    @typing.overload
+    def add_event_listener(self, event_or_callback: builtins.str | UtxoProcessorEvent | typing.Sequence[builtins.str | UtxoProcessorEvent], callback: typing.Callable[..., typing.Any], *args: typing.Any, **kwargs: typing.Any) -> None: ...
+    def add_event_listener(self, event_or_callback: typing.Any, callback: typing.Optional[typing.Any] = None, *args: typing.Any, **kwargs: typing.Any) -> None:
+        r"""
+        Register a callback for UtxoProcessor events.
+        
+        Args:
+            event_or_callback: Event target as string (kebab-case), `UtxoProcessorEvent` variant, a list of those, "*" / "all", or a callback (listen to all events).
+            callback: Function to call when event occurs (required when event_or_callback is an event target).
+            *args: Additional arguments to pass to callback.
+            **kwargs: Additional keyword arguments to pass to callback.
+        
+        Returns:
+            None
+        
+        Notes:
+            Callback will be invoked as: callback(*args, event, **kwargs)
+            Where event is a dict like: {"type": str, "data": ...}
+        """
+    @typing.overload
+    def remove_event_listener(self, event_or_callback: typing.Callable[..., typing.Any]) -> None: ...
+    @typing.overload
+    def remove_event_listener(self, event_or_callback: builtins.str | UtxoProcessorEvent | typing.Sequence[builtins.str | UtxoProcessorEvent], callback: typing.Optional[typing.Callable[..., typing.Any]] = None) -> None: ...
+    def remove_event_listener(self, event_or_callback: typing.Any, callback: typing.Optional[typing.Any] = None) -> None:
+        r"""
+        Remove an event listener.
+        
+        Args:
+            event_or_callback: Event target as string (kebab-case), `UtxoProcessorEvent` variant, a list of those, "*" / "all", or a callback (remove from all events).
+            callback: Specific callback to remove, or None to remove all callbacks for the event target(s).
+        
+        Returns:
+            None
+        """
+    def remove_all_event_listeners(self) -> None:
+        r"""
+        Remove all registered event listeners.
+        
+        Returns:
+            None
+        """
 
 @typing.final
 class XOnlyPublicKey:
@@ -3232,6 +3275,29 @@ class SighashType(enum.Enum):
     AllAnyOneCanPay = ...
     NoneAnyOneCanPay = ...
     SingleAnyOneCanPay = ...
+
+@typing.final
+class UtxoProcessorEvent(enum.Enum):
+    r"""
+    Event types for `UtxoProcessor` listeners.
+    """
+    All = ...
+    Connect = ...
+    Disconnect = ...
+    UtxoIndexNotEnabled = ...
+    SyncState = ...
+    ServerStatus = ...
+    UtxoProcStart = ...
+    UtxoProcStop = ...
+    UtxoProcError = ...
+    DaaScoreChange = ...
+    Pending = ...
+    Reorg = ...
+    Stasis = ...
+    Maturity = ...
+    Discovery = ...
+    Balance = ...
+    Error = ...
 
 def address_from_script_public_key(script_public_key: ScriptPublicKey, network: str | NetworkType) -> Address:
     r"""

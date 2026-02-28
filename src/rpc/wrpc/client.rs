@@ -1,4 +1,5 @@
 use crate::address::PyAddress;
+use crate::callback::PyCallback;
 use crate::consensus::core::network::{PyNetworkId, PyNetworkType};
 use crate::rpc::encoding::PyEncoding;
 use crate::rpc::model::*;
@@ -24,7 +25,7 @@ use paste::paste;
 use pyo3::{
     exceptions::PyException,
     prelude::*,
-    types::{PyDict, PyModule, PyTuple},
+    types::{PyDict, PyTuple},
 };
 use pyo3_stub_gen::derive::*;
 use serde::{Deserialize, Serialize};
@@ -161,62 +162,6 @@ impl From<PyNotificationEvent> for NotificationEvent {
             PyNotificationEvent::Connect => NotificationEvent::RpcCtl(Ctl::Connect),
             PyNotificationEvent::Disconnect => NotificationEvent::RpcCtl(Ctl::Disconnect),
         }
-    }
-}
-
-#[derive(Clone)]
-struct PyCallback {
-    callback: Arc<Py<PyAny>>,
-    args: Option<Arc<Py<PyTuple>>>,
-    kwargs: Option<Arc<Py<PyDict>>>,
-}
-
-impl PyCallback {
-    fn add_event_to_args(&self, py: Python, event: Bound<PyDict>) -> PyResult<Py<PyTuple>> {
-        match &self.args {
-            Some(existing_args) => {
-                let tuple_ref = existing_args.bind(py);
-
-                let mut new_args: Vec<Py<PyAny>> =
-                    tuple_ref.iter().map(|arg| arg.unbind()).collect();
-                new_args.push(event.into());
-
-                Ok(Py::from(PyTuple::new(py, new_args)?))
-            }
-            None => Ok(Py::from(PyTuple::new(py, [event])?)),
-        }
-    }
-
-    fn execute(&self, py: Python, event: Bound<PyDict>) -> PyResult<Py<PyAny>> {
-        let args = self.add_event_to_args(py, event)?;
-        let kwargs = self.kwargs.as_ref().map(|kw| kw.bind(py));
-
-        let result = self
-            .callback
-            .call(py, args.bind(py), kwargs)
-            .map_err(|err| {
-                // let fn_name: String = self.callback.getattr(py, "__name__").unwrap().extract(py).unwrap();
-
-                let traceback = PyModule::import(py, "traceback")
-                    .and_then(|traceback| {
-                        traceback.call_method(
-                            "format_exception",
-                            (err.get_type(py), err.value(py), err.traceback(py)),
-                            None,
-                        )
-                    })
-                    .map(|formatted| {
-                        let trace_lines: Vec<String> = formatted
-                            .extract()
-                            .unwrap_or_else(|_| vec!["<Failed to retrieve traceback>".to_string()]);
-                        trace_lines.join("")
-                    })
-                    .unwrap_or_else(|_| "<Failed to retrieve traceback>".to_string());
-
-                PyException::new_err(traceback.to_string())
-            })?;
-
-        Ok(result)
     }
 }
 
@@ -547,11 +492,7 @@ impl PyRpcClient {
             None => PyDict::new(py).into(),
         };
 
-        let py_callback = PyCallback {
-            callback: Arc::new(callback),
-            args: Some(Arc::new(args)),
-            kwargs: Some(Arc::new(kwargs)),
-        };
+        let py_callback = PyCallback::new(callback, args, kwargs);
 
         self.0
             .callbacks
@@ -590,7 +531,7 @@ impl PyRpcClient {
             (NotificationEvent::All, Some(callback)) => {
                 // Remove given callback from "all" events
                 for callbacks in callbacks.values_mut() {
-                    callbacks.retain(|entry| entry.callback.as_ref().as_ptr() != callback.as_ptr());
+                    callbacks.retain(|entry| !entry.callback_ptr_eq(&callback));
                 }
             }
             (_, None) => {
@@ -600,7 +541,7 @@ impl PyRpcClient {
             (_, Some(callback)) => {
                 // Remove given callback from given event
                 if let Some(callbacks) = callbacks.get_mut(&event) {
-                    callbacks.retain(|entry| entry.callback.as_ref().as_ptr() != callback.as_ptr());
+                    callbacks.retain(|entry| !entry.callback_ptr_eq(&callback));
                 }
             }
         }

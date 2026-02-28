@@ -16,6 +16,8 @@
 - `UtxoProcessor` and `UtxoContext` bindings for UTXO tracking and mature range access.
 - `UtxoProcessor` maturity setters (`set_coinbase_transaction_maturity_daa`, `set_user_transaction_maturity_daa`).
 - `UtxoContext.pending()` for pending UTXO access (implemented via processor pending map; exact snapshot parity would require rusty-kaspa exposure).
+- `UtxoProcessor` event listeners (`add_event_listener`, `remove_event_listener`, `remove_all_event_listeners`).
+- Enum `PyUtxoProcessorEvent` exposed to Python as `UtxoProcessorEvent`.
 - Submodule `exceptions` where custom exceptions will be located. Currently empty given no custom exceptions exist (yet).
 - Added `version` getter for `ScriptPublicKey`.
 
@@ -34,6 +36,7 @@
 - Fix ScriptBuilder `add_op`/`add_ops` functions. `add_op` incorrectly allowed mulitple ops to be passed. `add_ops` incorrectly allowed a single op to be passed.
 
 ### Fixed
+- `kaspa.pyi`: add overloads for `UtxoProcessor.add_event_listener` / `remove_event_listener` (typing only).
 
 ### Breaking Changes
 - Python 3.9 is no longer supported. Minimum supported version is now 3.10.
