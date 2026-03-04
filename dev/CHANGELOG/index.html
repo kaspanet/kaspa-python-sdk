@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../assets/kaspa.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.4">
     
     
       
@@ -7262,7 +7262,18 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="[Unreleased]">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#110-2026-03-04" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [1.1.0] - 2026-03-04
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[1.1.0] - 2026-03-04">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -7433,7 +7444,18 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="[Unreleased]">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#110-2026-03-04" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [1.1.0] - 2026-03-04
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[1.1.0] - 2026-03-04">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -7594,7 +7616,7 @@
   <h1>Changelog</h1>
 
 <h2 id="unreleased">[Unreleased]<a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
-<p><em>Target: 1.1.0</em></p>
+<h2 id="110-2026-03-04">[1.1.0] - 2026-03-04<a class="headerlink" href="#110-2026-03-04" title="Permanent link">&para;</a></h2>
 <h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Enum <code>PyAddressVersion</code> exposed to Python as <code>AddressVersion</code></li>
@@ -7607,17 +7629,15 @@
 <li><code>GetVirtualChainFromBlockV2</code> RPC method.</li>
 <li><code>to_dict()</code> method for <code>Transaction</code>, <code>TransactionInput</code>, <code>TransactionOutput</code>, <code>TransactionOutpoint</code>, <code>UtxoEntry</code>, <code>UtxoEntries</code>, and <code>UtxoEntryReference</code>.</li>
 <li><code>from_dict()</code> method for <code>Transaction</code>, <code>TransactionInput</code>, <code>TransactionOutput</code>, <code>TransactionOutpoint</code>, and <code>UtxoEntry</code>.</li>
-<li><code>UtxoProcessor</code> and <code>UtxoContext</code> bindings for UTXO tracking and mature range access.</li>
-<li><code>UtxoProcessor</code> maturity setters (<code>set_coinbase_transaction_maturity_daa</code>, <code>set_user_transaction_maturity_daa</code>).</li>
-<li><code>UtxoContext.pending()</code> for pending UTXO access (implemented via processor pending map; exact snapshot parity would require rusty-kaspa exposure).</li>
-<li><code>UtxoProcessor</code> event listeners (<code>add_event_listener</code>, <code>remove_event_listener</code>, <code>remove_all_event_listeners</code>).</li>
+<li>Classes <code>UtxoProcessor</code> and <code>UtxoContext</code> bindings for UTXO tracking and mature range access.</li>
 <li>Enum <code>PyUtxoProcessorEvent</code> exposed to Python as <code>UtxoProcessorEvent</code>.</li>
 <li>Submodule <code>exceptions</code> where custom exceptions will be located. Currently empty given no custom exceptions exist (yet).</li>
-<li>Added <code>version</code> getter for <code>ScriptPublicKey</code>.</li>
+<li><code>version</code> getter for <code>ScriptPublicKey</code>.</li>
+<li>Added to <code>GeneratorSummary</code>: <code>to_dict()</code> method, properties <code>network_id</code>, <code>mass</code>, and <code>stages</code>.</li>
 </ul>
 <h3 id="changed">Changed<a class="headerlink" href="#changed" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Bumped rusty-kaspa dependency version to commit a311302.</li>
+<li>Bumped rusty-kaspa dependency version to commit e97070f.</li>
 <li>Moved Kaspa Python SDK out of Rusty-Kaspa (as a workspace member crate) to its own dedicated repository. The internals of this project have changed significantly as a result. However, all APIs exposed to Python remain unchanged. </li>
 <li>All Python-exposed structs and enums are prefixed with <code>Py</code> (e.g. <code>PyAddress</code>) internally. The corresponding Python class name has not changed (prefix is dropped in Python).</li>
 <li>All Python-exposed functions are prefixed with <code>py_</code> (e.g. <code>py_sign_message</code>) internally. The corresponding Python function name has not changed (prefix is dropped in Python).</li>
