@@ -1,0 +1,25 @@
+/* Style navigation section headers to stand out more */
+.md-nav--primary .md-nav__item--section > .md-nav__link {
+  font-weight: 700;
+  color: var(--md-primary-fg-color);
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+  margin-top: 1em;
+  opacity: 0.8;
+}
+
+/* Add a subtle top border to separate sections */
+.md-nav--primary .md-nav__item--section {
+  border-top: 1px solid var(--md-default-fg-color--lightest);
+  padding-top: 0.6em;
+  margin-top: 0.6em;
+}
+
+/* Remove border from the first section */
+.md-nav--primary .md-nav__item--section:first-child {
+  border-top: none;
+  margin-top: 0;
+  padding-top: 0;
+}
+
