@@ -1,6 +1,6 @@
 ## [Unreleased]
 
-*Target: 1.1.0*
+## [1.1.0] - 2026-03-04
 
 ### Added
 - Enum `PyAddressVersion` exposed to Python as `AddressVersion`
@@ -13,16 +13,14 @@
 - `GetVirtualChainFromBlockV2` RPC method.
 - `to_dict()` method for `Transaction`, `TransactionInput`, `TransactionOutput`, `TransactionOutpoint`, `UtxoEntry`, `UtxoEntries`, and `UtxoEntryReference`.
 - `from_dict()` method for `Transaction`, `TransactionInput`, `TransactionOutput`, `TransactionOutpoint`, and `UtxoEntry`.
-- `UtxoProcessor` and `UtxoContext` bindings for UTXO tracking and mature range access.
-- `UtxoProcessor` maturity setters (`set_coinbase_transaction_maturity_daa`, `set_user_transaction_maturity_daa`).
-- `UtxoContext.pending()` for pending UTXO access (implemented via processor pending map; exact snapshot parity would require rusty-kaspa exposure).
-- `UtxoProcessor` event listeners (`add_event_listener`, `remove_event_listener`, `remove_all_event_listeners`).
+- Classes `UtxoProcessor` and `UtxoContext` bindings for UTXO tracking and mature range access.
 - Enum `PyUtxoProcessorEvent` exposed to Python as `UtxoProcessorEvent`.
 - Submodule `exceptions` where custom exceptions will be located. Currently empty given no custom exceptions exist (yet).
-- Added `version` getter for `ScriptPublicKey`.
+- `version` getter for `ScriptPublicKey`.
+- Added to `GeneratorSummary`: `to_dict()` method, properties `network_id`, `mass`, and `stages`.
 
 ### Changed
-- Bumped rusty-kaspa dependency version to commit a311302.
+- Bumped rusty-kaspa dependency version to commit e97070f.
 - Moved Kaspa Python SDK out of Rusty-Kaspa (as a workspace member crate) to its own dedicated repository. The internals of this project have changed significantly as a result. However, all APIs exposed to Python remain unchanged. 
 - All Python-exposed structs and enums are prefixed with `Py` (e.g. `PyAddress`) internally. The corresponding Python class name has not changed (prefix is dropped in Python).
 - All Python-exposed functions are prefixed with `py_` (e.g. `py_sign_message`) internally. The corresponding Python function name has not changed (prefix is dropped in Python).
