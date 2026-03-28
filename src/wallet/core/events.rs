@@ -5,7 +5,7 @@ use std::str::FromStr;
 
 crate::wrap_unit_enum_for_py!(
     /// Kaspa wallet event types
-    PyEventKind, "EventKind", EventKind, {
+    PyWalletEventType, "WalletEventType", EventKind, {
     All,
     Connect,
     Disconnect,
@@ -41,44 +41,44 @@ crate::wrap_unit_enum_for_py!(
     Error,
 });
 
-impl FromStr for PyEventKind {
+impl FromStr for PyWalletEventType {
     type Err = PyErr;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "all" => Ok(PyEventKind::All),
-            "connect" => Ok(PyEventKind::Connect),
-            "disconnect" => Ok(PyEventKind::Disconnect),
-            "utxoindexnotenabled" => Ok(PyEventKind::UtxoIndexNotEnabled),
-            "syncstate" => Ok(PyEventKind::SyncState),
-            "walletlist" => Ok(PyEventKind::WalletList),
-            "walletstart" => Ok(PyEventKind::WalletStart),
-            "wallethint" => Ok(PyEventKind::WalletHint),
-            "walletopen" => Ok(PyEventKind::WalletOpen),
-            "walletcreate" => Ok(PyEventKind::WalletCreate),
-            "walletreload" => Ok(PyEventKind::WalletReload),
-            "walleterror" => Ok(PyEventKind::WalletError),
-            "walletclose" => Ok(PyEventKind::WalletClose),
-            "prvkeydatacreate" => Ok(PyEventKind::PrvKeyDataCreate),
-            "accountactivation" => Ok(PyEventKind::AccountActivation),
-            "accountdeactivation" => Ok(PyEventKind::AccountDeactivation),
-            "accountselection" => Ok(PyEventKind::AccountSelection),
-            "accountcreate" => Ok(PyEventKind::AccountCreate),
-            "accountupdate" => Ok(PyEventKind::AccountUpdate),
-            "serverstatus" => Ok(PyEventKind::ServerStatus),
-            "utxoprocstart" => Ok(PyEventKind::UtxoProcStart),
-            "utxoprocstop" => Ok(PyEventKind::UtxoProcStop),
-            "utxoprocerror" => Ok(PyEventKind::UtxoProcError),
-            "daascorechange" => Ok(PyEventKind::DaaScoreChange),
-            "pending" => Ok(PyEventKind::Pending),
-            "reorg" => Ok(PyEventKind::Reorg),
-            "stasis" => Ok(PyEventKind::Stasis),
-            "maturity" => Ok(PyEventKind::Maturity),
-            "discovery" => Ok(PyEventKind::Discovery),
-            "balance" => Ok(PyEventKind::Balance),
-            "metrics" => Ok(PyEventKind::Metrics),
-            "feerate" => Ok(PyEventKind::FeeRate),
-            "error" => Ok(PyEventKind::Error),
+            "all" => Ok(PyWalletEventType::All),
+            "connect" => Ok(PyWalletEventType::Connect),
+            "disconnect" => Ok(PyWalletEventType::Disconnect),
+            "utxo-index-not-enabled" => Ok(PyWalletEventType::UtxoIndexNotEnabled),
+            "sync-state" => Ok(PyWalletEventType::SyncState),
+            "wallet-list" => Ok(PyWalletEventType::WalletList),
+            "wallet-start" => Ok(PyWalletEventType::WalletStart),
+            "wallet-hint" => Ok(PyWalletEventType::WalletHint),
+            "wallet-open" => Ok(PyWalletEventType::WalletOpen),
+            "wallet-create" => Ok(PyWalletEventType::WalletCreate),
+            "wallet-reload" => Ok(PyWalletEventType::WalletReload),
+            "wallet-error" => Ok(PyWalletEventType::WalletError),
+            "wallet-close" => Ok(PyWalletEventType::WalletClose),
+            "prv-key-data-create" => Ok(PyWalletEventType::PrvKeyDataCreate),
+            "account-activation" => Ok(PyWalletEventType::AccountActivation),
+            "account-deactivation" => Ok(PyWalletEventType::AccountDeactivation),
+            "account-selection" => Ok(PyWalletEventType::AccountSelection),
+            "account-create" => Ok(PyWalletEventType::AccountCreate),
+            "account-update" => Ok(PyWalletEventType::AccountUpdate),
+            "server-status" => Ok(PyWalletEventType::ServerStatus),
+            "utxo-proc-start" => Ok(PyWalletEventType::UtxoProcStart),
+            "utxo-proc-stop" => Ok(PyWalletEventType::UtxoProcStop),
+            "utxo-proc-error" => Ok(PyWalletEventType::UtxoProcError),
+            "daa-score-change" => Ok(PyWalletEventType::DaaScoreChange),
+            "pending" => Ok(PyWalletEventType::Pending),
+            "reorg" => Ok(PyWalletEventType::Reorg),
+            "stasis" => Ok(PyWalletEventType::Stasis),
+            "maturity" => Ok(PyWalletEventType::Maturity),
+            "discovery" => Ok(PyWalletEventType::Discovery),
+            "balance" => Ok(PyWalletEventType::Balance),
+            "metrics" => Ok(PyWalletEventType::Metrics),
+            "feerate" => Ok(PyWalletEventType::FeeRate),
+            "error" => Ok(PyWalletEventType::Error),
             _ => Err(PyException::new_err(
                 "Unsupported string value for EventKind",
             )),
@@ -86,13 +86,13 @@ impl FromStr for PyEventKind {
     }
 }
 
-impl<'py> FromPyObject<'_, 'py> for PyEventKind {
+impl<'py> FromPyObject<'_, 'py> for PyWalletEventType {
     type Error = PyErr;
 
     fn extract(obj: Borrowed<'_, 'py, PyAny>) -> Result<Self, PyErr> {
         if let Ok(s) = obj.extract::<String>() {
-            PyEventKind::from_str(&s).map_err(|err| PyException::new_err(err.to_string()))
-        } else if let Ok(t) = obj.cast::<PyEventKind>() {
+            PyWalletEventType::from_str(&s).map_err(|err| PyException::new_err(err.to_string()))
+        } else if let Ok(t) = obj.cast::<PyWalletEventType>() {
             Ok(t.borrow().clone())
         } else {
             Err(PyException::new_err("Expected type `str` or `EventKind`"))

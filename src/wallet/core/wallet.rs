@@ -5,7 +5,7 @@ use crate::{
         encoding::PyEncoding,
         wrpc::{client::PyRpcClient, resolver::PyResolver},
     },
-    wallet::core::{events::PyEventKind, storage::interface::PyWalletDescriptor},
+    wallet::core::{events::PyWalletEventType, storage::interface::PyWalletDescriptor},
 };
 use ahash::AHashMap;
 use futures::{FutureExt, select};
@@ -196,7 +196,7 @@ impl PyWallet {
     fn add_event_listener(
         &self,
         py: Python,
-        event: PyEventKind,
+        event: PyWalletEventType,
         #[gen_stub(override_type(type_repr = "typing.Callable[..., None"))] callback: Py<PyAny>,
         args: &Bound<'_, PyTuple>,
         kwargs: Option<&Bound<'_, PyDict>>,
@@ -227,7 +227,7 @@ impl PyWallet {
     #[pyo3(signature = (event, callback=None))]
     fn remove_event_listener(
         &self,
-        event: PyEventKind,
+        event: PyWalletEventType,
         #[gen_stub(override_type(type_repr = "None | typing.Callable[..., None]"))]
         callback: Option<Py<PyAny>>,
     ) -> PyResult<()> {
