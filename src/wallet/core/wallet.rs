@@ -5,7 +5,7 @@ use crate::{
         encoding::PyEncoding,
         wrpc::{client::PyRpcClient, resolver::PyResolver},
     },
-    wallet::core::storage::interface::PyWalletDescriptor,
+    wallet::core::{events::PyEventKind, storage::interface::PyWalletDescriptor},
 };
 use ahash::AHashMap;
 use futures::{FutureExt, select};
@@ -16,7 +16,11 @@ use kaspa_wallet_core::{
     rpc::{DynRpcApi, Rpc},
     wallet as native,
 };
-use pyo3::{exceptions::PyException, prelude::*, types::PyDict};
+use pyo3::{
+    exceptions::PyException,
+    prelude::*,
+    types::{PyDict, PyTuple},
+};
 use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
 use std::sync::{
     Arc, Mutex,
@@ -164,11 +168,104 @@ impl PyWallet {
         })
     }
 
-    // connect
-    // disconnect
-    // add_event_listener
-    // remove_event_listener
-    // set_network_id
+    // TODO override return type
+    pub fn connect<'py>(
+        &self,
+        py: Python<'py>,
+        block_async_connect: Option<bool>,
+        strategy: Option<String>,
+        url: Option<String>,
+        timeout_duration: Option<u64>,
+        retry_interval: Option<u64>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        self.inner.rpc.connect(
+            py,
+            block_async_connect,
+            strategy,
+            url,
+            timeout_duration,
+            retry_interval,
+        )
+    }
+
+    pub fn disconnect<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        self.inner.rpc.disconnect(py)
+    }
+
+    #[pyo3(signature = (event, callback, *args, **kwargs))]
+    fn add_event_listener(
+        &self,
+        py: Python,
+        event: PyEventKind,
+        #[gen_stub(override_type(type_repr = "typing.Callable[..., None"))] callback: Py<PyAny>,
+        args: &Bound<'_, PyTuple>,
+        kwargs: Option<&Bound<'_, PyDict>>,
+    ) -> PyResult<()> {
+        let event: EventKind = event.into();
+
+        let args = args.into_pyobject(py)?.extract::<Py<PyTuple>>()?;
+
+        let kwargs = match kwargs {
+            Some(kw) => kw.into_pyobject(py)?.extract::<Py<PyDict>>()?,
+            None => PyDict::new(py).into(),
+        };
+
+        let py_callback = PyCallback::new(callback, args, kwargs);
+
+        self.inner
+            .callbacks
+            .lock()
+            .unwrap()
+            .entry(event)
+            .or_default()
+            .push(py_callback);
+
+        Ok(())
+    }
+
+    #[gen_stub(override_return_type(type_repr = "None"))]
+    #[pyo3(signature = (event, callback=None))]
+    fn remove_event_listener(
+        &self,
+        event: PyEventKind,
+        #[gen_stub(override_type(type_repr = "None | typing.Callable[..., None]"))]
+        callback: Option<Py<PyAny>>,
+    ) -> PyResult<()> {
+        let event: EventKind = event.into();
+        let mut callbacks = self.inner.callbacks.lock().unwrap();
+
+        match (&event, callback) {
+            (EventKind::All, None) => {
+                // Remove all callbacks from "all" events
+                callbacks.clear();
+            }
+            (EventKind::All, Some(callback)) => {
+                // Remove given callback from "all" events
+                for callbacks in callbacks.values_mut() {
+                    callbacks.retain(|entry| !entry.callback_ptr_eq(&callback));
+                }
+            }
+            (_, None) => {
+                // Remove all callbacks from given event
+                callbacks.remove(&event);
+            }
+            (_, Some(callback)) => {
+                // Remove given callback from given event
+                if let Some(callbacks) = callbacks.get_mut(&event) {
+                    callbacks.retain(|entry| !entry.callback_ptr_eq(&callback));
+                }
+            }
+        }
+        Ok(())
+    }
+
+    pub fn set_network_id(&self, network_id: PyNetworkId) -> PyResult<()> {
+        self.inner
+            .wallet
+            .set_network_id(&(network_id.into()))
+            .map_err(|err| PyException::new_err(err.to_string()))?;
+        Ok(())
+    }
 }
 
 impl PyWallet {

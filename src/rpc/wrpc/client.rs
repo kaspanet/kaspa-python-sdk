@@ -401,7 +401,7 @@ impl PyRpcClient {
     /// Raises:
     ///     Exception: If disconnection fails.
     #[gen_stub(override_return_type(type_repr = "None"))]
-    fn disconnect<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+    pub fn disconnect<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let client = self.clone();
 
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
