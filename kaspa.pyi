@@ -208,6 +208,14 @@ class CovenantBinding:
     r"""
     Binds a transaction output to the covenant and input authorizing its creation.
     """
+    @property
+    def authorizing_input(self) -> builtins.int: ...
+    @authorizing_input.setter
+    def authorizing_input(self, value: builtins.int) -> None: ...
+    @property
+    def covenant_id(self) -> Hash: ...
+    @covenant_id.setter
+    def covenant_id(self, value: Hash) -> None: ...
     def __new__(cls, authorizing_input: builtins.int, covenant_id: Hash) -> CovenantBinding: ...
 
 @typing.final
@@ -398,6 +406,14 @@ class GeneratorSummary:
             dict: the GeneratorSummary in dictionary form.
         """
     def __eq__(self, other: GeneratorSummary) -> builtins.bool: ...
+
+@typing.final
+class GenesisCovenantGroup:
+    @property
+    def authorizing_input(self) -> builtins.int: ...
+    @authorizing_input.setter
+    def authorizing_input(self, value: builtins.int) -> None: ...
+    def __new__(cls, authorizing_input: builtins.int, outputs: typing.Sequence[builtins.int]) -> GenesisCovenantGroup: ...
 
 @typing.final
 class Hash:
@@ -2004,6 +2020,7 @@ class Transaction:
         Returns:
             list[Address]: List of unique addresses referenced by inputs.
         """
+    def populate_genesis_covenants(self, groups: typing.Sequence[GenesisCovenantGroup]) -> None: ...
     def to_dict(self) -> dict:
         r"""
         Get a dictionary representation of the Transaction.
@@ -2343,21 +2360,6 @@ class UtxoContext:
 @typing.final
 class UtxoEntries:
     r"""
-    UTXO entries collection for flexible input handling.
-    
-    This type is not intended to be instantiated directly from Python.
-    It serves as a helper type that allows Rust functions to accept a list
-    of UTXO entries in multiple convenient forms.
-    
-    Accepts:
-        list[UtxoEntryReference]: A list of UtxoEntryReference objects.
-        list[dict]: A list of dicts with UtxoEntryReference-compatible keys.
-    """
-    ...
-
-@typing.final
-class UtxoEntries:
-    r"""
     A collection of UTXO entry references.
     
     Provides methods for managing and querying multiple UTXOs.
@@ -2395,6 +2397,21 @@ class UtxoEntries:
             dict: the UtxoEntries in dictionary form.
         """
     def __eq__(self, other: UtxoEntries) -> builtins.bool: ...
+
+@typing.final
+class UtxoEntries:
+    r"""
+    UTXO entries collection for flexible input handling.
+    
+    This type is not intended to be instantiated directly from Python.
+    It serves as a helper type that allows Rust functions to accept a list
+    of UTXO entries in multiple convenient forms.
+    
+    Accepts:
+        list[UtxoEntryReference]: A list of UtxoEntryReference objects.
+        list[dict]: A list of dicts with UtxoEntryReference-compatible keys.
+    """
+    ...
 
 @typing.final
 class UtxoEntry:
@@ -3179,7 +3196,7 @@ class Opcodes(enum.Enum):
     OpInputCovenantId = ...
     OpCovInputCount = ...
     OpCovInputIdx = ...
-    OpCovOutCount = ...
+    OpCovOutputCount = ...
     OpCovOutputIdx = ...
     OpChainblockSeqCommit = ...
     OpUnknown213 = ...
