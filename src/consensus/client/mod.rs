@@ -1,3 +1,4 @@
+pub mod covenant;
 pub mod input;
 pub mod outpoint;
 pub mod output;

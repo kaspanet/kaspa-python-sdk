@@ -7,9 +7,8 @@ use pyo3::{
 use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 use crate::{
-    consensus::core::{script_public_key::PyScriptPublicKey, tx::PyCovenantBinding},
-    traits::TryToPyDict,
-    types::PyBinary,
+    consensus::client::covenant::PyCovenantBinding,
+    consensus::core::script_public_key::PyScriptPublicKey, traits::TryToPyDict, types::PyBinary,
 };
 
 /// A transaction output defining a payment destination.

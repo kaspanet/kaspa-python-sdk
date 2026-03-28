@@ -16,18 +16,18 @@ ahash = "0.8.12"
 bincode = "1.3.3"
 faster-hex = "0.9.0"
 futures = "0.3.31"
-kaspa-addresses = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "5e2fd7b" }
-kaspa-bip32 = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "5e2fd7b" }
-kaspa-consensus-client = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "5e2fd7b" }
-kaspa-consensus-core = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "5e2fd7b" }
-kaspa-hashes = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "5e2fd7b" }
-kaspa-notify = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "5e2fd7b" }
-kaspa-rpc-core = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "5e2fd7b" }
-kaspa-txscript = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "5e2fd7b", features = ["wasm32-sdk"]}
-kaspa-utils = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "5e2fd7b" }
-kaspa-wallet-core = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "5e2fd7b" }
-kaspa-wallet-keys = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "5e2fd7b" }
-kaspa-wrpc-client = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "5e2fd7b" }
+kaspa-addresses = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "9b185f8" }
+kaspa-bip32 = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "9b185f8" }
+kaspa-consensus-client = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "9b185f8" }
+kaspa-consensus-core = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "9b185f8" }
+kaspa-hashes = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "9b185f8" }
+kaspa-notify = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "9b185f8" }
+kaspa-rpc-core = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "9b185f8" }
+kaspa-txscript = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "9b185f8", features = ["wasm32-sdk"]}
+kaspa-utils = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "9b185f8" }
+kaspa-wallet-core = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "9b185f8" }
+kaspa-wallet-keys = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "9b185f8" }
+kaspa-wrpc-client = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "9b185f8" }
 paste = "1.0"
 pyo3 = { version = "0.27.1", features = ['multiple-pymethods'] }
 pyo3-async-runtimes = { version = "0.27.0", features = ['tokio-runtime'] }
@@ -43,7 +43,7 @@ secp256k1 = { version = "0.29.0", features = [
 serde = { version = "1.0.228", features = ["derive"] }
 serde-pyobject = "0.8.0"
 serde_json = "1.0.149"
-thiserror = "2.0.17"
+thiserror = "2.0.18"
 workflow-core = "0.18.0"
 workflow-log = "0.18.0"
 workflow-rpc = "0.18.0"

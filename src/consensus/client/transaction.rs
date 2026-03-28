@@ -1,11 +1,15 @@
 use crate::address::PyAddress;
+use crate::consensus::client::covenant::PyGenesisCovenantGroup;
 use crate::consensus::client::input::PyTransactionInput;
 use crate::consensus::client::output::PyTransactionOutput;
 use crate::consensus::core::network::PyNetworkType;
 use crate::crypto::hashes::PyHash;
 use crate::traits::TryToPyDict;
 use crate::types::PyBinary;
-use kaspa_consensus_client::{Transaction, TransactionInput, TransactionOutput};
+use kaspa_consensus_client::{
+    GenesisCovenantGroup as ClientGenesisCovenantGroup, Transaction, TransactionInput,
+    TransactionOutput,
+};
 use kaspa_consensus_core::network::NetworkType;
 use kaspa_consensus_core::subnets;
 use kaspa_consensus_core::subnets::SubnetworkId;
@@ -283,6 +287,20 @@ impl PyTransaction {
     #[setter]
     pub fn set_mass(&mut self, value: u64) {
         self.0.inner().mass = value;
+    }
+
+    pub fn populate_genesis_covenants(&self, groups: Vec<PyGenesisCovenantGroup>) -> PyResult<()> {
+        let groups = groups
+            .into_iter()
+            .map(|g| {
+                let client_group: ClientGenesisCovenantGroup = g.into();
+                cctx::GenesisCovenantGroup::from(client_group)
+            })
+            .collect::<Vec<_>>();
+        self.0
+            .populate_genesis_covenants(groups.as_slice())
+            .map_err(|e| PyException::new_err(format!("{}", e)))?;
+        Ok(())
     }
 
     /// Get a dictionary representation of the Transaction.
