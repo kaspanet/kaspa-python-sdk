@@ -263,7 +263,7 @@ impl PyRpcClient {
     ///     Exception: If client creation fails.
     #[new]
     #[pyo3(signature = (resolver=None, url=None, encoding=None, network_id=None))]
-    fn ctor(
+    pub fn ctor(
         resolver: Option<PyResolver>,
         url: Option<String>,
         #[gen_stub(override_type(type_repr = "str | Encoding | None = Encoding.Borsh"))]

@@ -1,7 +1,10 @@
 pub mod account;
 pub mod derivation;
+pub mod events;
 pub mod imports;
 pub mod message;
+pub mod storage;
 pub mod tx;
 pub mod utils;
 pub mod utxo;
+pub mod wallet;

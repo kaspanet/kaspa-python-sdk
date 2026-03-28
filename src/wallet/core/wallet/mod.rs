@@ -1,0 +1,243 @@
+use crate::{
+    callback::PyCallback,
+    consensus::core::network::PyNetworkId,
+    rpc::{
+        encoding::PyEncoding,
+        wrpc::{client::PyRpcClient, resolver::PyResolver},
+    },
+    wallet::core::storage::interface::PyWalletDescriptor,
+};
+use ahash::AHashMap;
+use futures::{FutureExt, select};
+use kaspa_wallet_core::{
+    error::Error,
+    events::{EventKind, Events},
+    result::Result,
+    rpc::{DynRpcApi, Rpc},
+    wallet as native,
+};
+use pyo3::{exceptions::PyException, prelude::*, types::PyDict};
+use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
+use std::sync::{
+    Arc, Mutex,
+    atomic::{AtomicBool, Ordering},
+};
+use workflow_core::prelude::{DuplexChannel, Multiplexer};
+
+struct Inner {
+    wallet: Arc<native::Wallet>,
+    rpc: PyRpcClient,
+    callbacks: Arc<Mutex<AHashMap<EventKind, Vec<PyCallback>>>>,
+    task_running: AtomicBool,
+    task_ctl: DuplexChannel,
+}
+
+impl Inner {
+    fn callbacks(&self, event: EventKind) -> Option<Vec<PyCallback>> {
+        let notification_callbacks = self.callbacks.lock().unwrap();
+        let all = notification_callbacks.get(&EventKind::All).cloned();
+        let target = notification_callbacks.get(&event).cloned();
+        match (all, target) {
+            (Some(mut vec_all), Some(vec_target)) => {
+                vec_all.extend(vec_target);
+                Some(vec_all)
+            }
+            (Some(vec_all), None) => Some(vec_all),
+            (None, Some(vec_target)) => Some(vec_target),
+            (None, None) => None,
+        }
+    }
+}
+
+#[gen_stub_pyclass]
+#[pyclass(name = "Wallet")]
+#[derive(Clone)]
+pub struct PyWallet {
+    inner: Arc<Inner>,
+}
+
+#[gen_stub_pymethods]
+#[pymethods]
+impl PyWallet {
+    #[new]
+    pub fn new(
+        // resident: bool, TODO
+        network_id: PyNetworkId,
+        encoding: PyEncoding,
+        url: String,
+        resolver: PyResolver,
+    ) -> PyResult<Self> {
+        let store =
+            native::Wallet::local_store().map_err(|err| PyException::new_err(err.to_string()))?;
+
+        let rpc = PyRpcClient::ctor(
+            Some(resolver),
+            Some(url),
+            Some(encoding),
+            Some(network_id.clone()),
+        )?;
+        let rpc_api: Arc<DynRpcApi> = rpc.client().rpc_api().clone();
+        let rpc_ctl = rpc.client().rpc_ctl().clone();
+        let rpc_binding = Rpc::new(rpc_api, rpc_ctl);
+
+        let wallet = Arc::new(
+            native::Wallet::try_with_rpc(Some(rpc_binding), store, Some(network_id.into()))
+                .map_err(|err| PyException::new_err(err.to_string()))?,
+        );
+
+        Ok(Self {
+            inner: Arc::new(Inner {
+                wallet,
+                rpc,
+                callbacks: Arc::new(Mutex::new(AHashMap::new())),
+                task_running: AtomicBool::new(false),
+                task_ctl: DuplexChannel::oneshot(),
+            }),
+        })
+    }
+
+    #[getter]
+    pub fn get_rpc(&self) -> PyRpcClient {
+        self.inner.rpc.clone()
+    }
+
+    #[getter]
+    pub fn get_is_open(&self) -> bool {
+        self.wallet().is_open()
+    }
+
+    #[getter]
+    pub fn get_is_synced(&self) -> bool {
+        self.wallet().is_synced()
+    }
+
+    #[getter]
+    pub fn get_descriptor(&self) -> Option<PyWalletDescriptor> {
+        self.wallet().descriptor().map(PyWalletDescriptor::from)
+    }
+
+    // TODO override return type to bool
+    pub fn exists<'py>(
+        &self,
+        py: Python<'py>,
+        name: Option<String>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let slf = self.clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let exists = slf
+                .wallet()
+                .exists(name.as_deref())
+                .await
+                .map_err(|err| PyException::new_err(err.to_string()))?;
+            Ok(exists)
+        })
+    }
+
+    // TODO override return type to none
+    pub fn start<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        self.start_notification_task(py, self.wallet().multiplexer())
+            .map_err(|err| PyException::new_err(err.to_string()))?;
+
+        let slf = self.clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            slf.wallet()
+                .start()
+                .await
+                .map_err(|err| PyException::new_err(err.to_string()))?;
+            Ok(())
+        })
+    }
+
+    // TODO override return type to none
+    pub fn stop<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        let slf = self.clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            slf.stop_notification_task()
+                .await
+                .map_err(|err| PyException::new_err(err.to_string()))?;
+
+            slf.wallet()
+                .stop()
+                .await
+                .map_err(|err| PyException::new_err(err.to_string()))?;
+            Ok(())
+        })
+    }
+
+    // connect
+    // disconnect
+    // add_event_listener
+    // remove_event_listener
+    // set_network_id
+}
+
+impl PyWallet {
+    pub fn wallet(&self) -> &Arc<native::Wallet> {
+        &self.inner.wallet
+    }
+
+    pub fn start_notification_task(
+        &self,
+        py: Python,
+        multiplexer: &Multiplexer<Box<Events>>,
+    ) -> Result<()> {
+        let inner = self.inner.clone();
+
+        if inner.task_running.load(Ordering::SeqCst) {
+            panic!("ReflectorClient task is already running");
+        } else {
+            inner.task_running.store(true, Ordering::SeqCst);
+        }
+
+        let ctl_receiver = inner.task_ctl.request.receiver.clone();
+        let ctl_sender = inner.task_ctl.response.sender.clone();
+
+        let channel = multiplexer.channel();
+
+        let _ = pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            loop {
+                select! {
+                    _ = ctl_receiver.recv().fuse() => {
+                        break;
+                    },
+                    msg = channel.receiver.recv().fuse() => {
+                        if let Ok(notification) = &msg {
+                            let event_type = EventKind::from(notification.as_ref());
+                            let callbacks = inner.callbacks(event_type);
+                            if let Some(handlers) = callbacks {
+                                for handler in handlers.into_iter() {
+                                    Python::attach(|py| {
+                                        let event = PyDict::new(py);
+                                        event.set_item("type", event_type.to_string()).unwrap();
+                                        event.set_item("data", serde_pyobject::to_pyobject(py, notification.as_ref()).unwrap()).unwrap();
+
+                                        handler.execute(py, event).unwrap_or_else(|err| panic!("{}", err));
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            channel.close();
+            ctl_sender.send(()).await.ok();
+            Ok(())
+        });
+
+        Ok(())
+    }
+
+    pub async fn stop_notification_task(&self) -> Result<()> {
+        let inner = &self.inner;
+        if inner.task_running.load(Ordering::SeqCst) {
+            inner.task_running.store(false, Ordering::SeqCst);
+            inner
+                .task_ctl
+                .signal(())
+                .await
+                .map_err(|err| Error::custom(err.to_string()))?;
+        }
+        Ok(())
+    }
+}
