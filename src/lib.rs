@@ -19,7 +19,9 @@ fn kaspa(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Init logging bridge
     pyo3_log::init();
 
-    // Register classes and functions to module
+    // -------------------------------------------------------
+    // kaspa module registrations
+    // -------------------------------------------------------
 
     m.add_class::<address::PyAddress>()?;
     m.add_class::<address::PyAddressVersion>()?;
@@ -167,9 +169,23 @@ fn kaspa(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<wallet::keys::xprv::PyXPrv>()?;
     m.add_class::<wallet::keys::xpub::PyXPub>()?;
 
-    // Add exceptions submodule
+    // -------------------------------------------------------
+    // exceptions (`kaspad.exceptions`) submodule
+    // -------------------------------------------------------
+
+    // Create exceptions submodule
     let exceptions = PyModule::new(py, "exceptions")?;
     m.add_submodule(&exceptions)?;
+
+    // Registrations to exceptions submodule
+    exceptions.add_class::<wallet::core::error::PyWalletError>()?;
+    exceptions.add_class::<wallet::core::error::PyWalletCustomError>()?;
+
+    // Register in sys.modules 
+    // Required for `from kaspa.exceptions import ...` to work
+    py.import("sys")?
+        .getattr("modules")?
+        .set_item("kaspa.exceptions", &exceptions)?;
 
     Ok(())
 }
