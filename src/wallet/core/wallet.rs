@@ -19,6 +19,7 @@ use kaspa_wallet_core::{
     rpc::{DynRpcApi, Rpc},
     wallet as native,
 };
+use kaspa_wrpc_client::prelude::NetworkId;
 use pyo3::{
     prelude::*,
     types::{PyDict, PyTuple},
@@ -66,27 +67,28 @@ pub struct PyWallet {
 #[pymethods]
 impl PyWallet {
     #[new]
+    #[pyo3(signature = (network_id=None, encoding=None, url=None, resolver=None))]
     pub fn new(
         // resident: bool, TODO
-        network_id: PyNetworkId,
-        encoding: PyEncoding,
-        url: String,
-        resolver: PyResolver,
+        network_id: Option<PyNetworkId>,
+        encoding: Option<PyEncoding>,
+        url: Option<String>,
+        resolver: Option<PyResolver>,
     ) -> PyResult<Self> {
         let store = native::Wallet::local_store().into_py_result()?;
 
         let rpc = PyRpcClient::ctor(
-            Some(resolver),
-            Some(url),
-            Some(encoding),
-            Some(network_id.clone()),
+            resolver,
+            url,
+            encoding,
+            network_id.clone(),
         )?;
         let rpc_api: Arc<DynRpcApi> = rpc.client().rpc_api().clone();
         let rpc_ctl = rpc.client().rpc_ctl().clone();
         let rpc_binding = Rpc::new(rpc_api, rpc_ctl);
 
         let wallet = Arc::new(
-            native::Wallet::try_with_rpc(Some(rpc_binding), store, Some(network_id.into()))
+            native::Wallet::try_with_rpc(Some(rpc_binding), store, network_id.map(NetworkId::from))
                 .into_py_result()?,
         );
 
