@@ -187,7 +187,7 @@ impl PyWallet {
         &self,
         py: Python,
         event: PyWalletEventType,
-        #[gen_stub(override_type(type_repr = "typing.Callable[..., None"))] callback: Py<PyAny>,
+        #[gen_stub(override_type(type_repr = "typing.Callable[..., None]"))] callback: Py<PyAny>,
         args: &Bound<'_, PyTuple>,
         kwargs: Option<&Bound<'_, PyDict>>,
     ) -> PyResult<()> {
