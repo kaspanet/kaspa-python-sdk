@@ -27,4 +27,5 @@ Docs are versioned (base URL requires version path like `/latest/` or `/dev/`).
 
 ## Optional
 
-- [kaspa.pyi](https://github.com/kaspanet/kaspa-python-sdk/blob/main/kaspa.pyi): Type stub file with detailed API signatures
+- [kaspa/__init__.pyi](https://github.com/kaspanet/kaspa-python-sdk/blob/main/kaspa/__init__.pyi): Type stub file with detailed API signatures
+- [kaspa/exceptions/__init__.pyi](https://github.com/kaspanet/kaspa-python-sdk/blob/main/kaspa/exceptions/__init__.pyi): Exception submodule type stubs

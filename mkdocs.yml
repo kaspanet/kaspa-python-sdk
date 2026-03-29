@@ -94,7 +94,7 @@ extra_javascript:
   - javascripts/external-links.js
 
 watch:
-  - kaspa.pyi
+  - kaspa/
 
 extra:
   version:

@@ -4,6 +4,7 @@
 import builtins
 import enum
 import typing
+from . import exceptions
 
 @typing.final
 class AccountDescriptor:
@@ -1353,20 +1354,6 @@ class PublicKeyGenerator:
         """
 
 @typing.final
-class PyWalletCustomError(builtins.Exception):
-    r"""
-    Custom wallet error
-    """
-    ...
-
-@typing.final
-class PyWalletError(builtins.Exception):
-    r"""
-    General catch-all wallet error
-    """
-    ...
-
-@typing.final
 class Resolver:
     r"""
     A resolver for discovering Kaspa RPC node endpoints.
@@ -2674,7 +2661,7 @@ class Wallet:
     def stop(self) -> typing.Any: ...
     def connect(self, block_async_connect: typing.Optional[builtins.bool], strategy: typing.Optional[builtins.str], url: typing.Optional[builtins.str], timeout_duration: typing.Optional[builtins.int], retry_interval: typing.Optional[builtins.int]) -> typing.Any: ...
     def disconnect(self) -> typing.Any: ...
-    def add_event_listener(self, event: WalletEventType, callback: typing.Callable[..., None, *args: typing.Any, **kwargs: typing.Any) -> None: ...
+    def add_event_listener(self, event: WalletEventType, callback: typing.Callable[..., None], *args: typing.Any, **kwargs: typing.Any) -> None: ...
     def remove_event_listener(self, event: WalletEventType, callback: None | typing.Callable[..., None] = None) -> None: ...
     def set_network_id(self, network_id: NetworkId) -> None: ...
     def wallet_enumerate(self) -> typing.Any: ...
@@ -3757,7 +3744,7 @@ def verify_message(message: builtins.str, signature: builtins.str, public_key: P
 """
 TypedDict definitions for Kaspa RPC request/response messages & contained types.
 
-This file is maunally maintained and appended to kaspa.pyi file via stub gen process.
+This file is manually maintained and appended to kaspa/__init__.pyi via stub gen process.
 
 Long term, attempts should be made to auto generate.
 """
