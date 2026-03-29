@@ -77,12 +77,7 @@ impl PyWallet {
     ) -> PyResult<Self> {
         let store = native::Wallet::local_store().into_py_result()?;
 
-        let rpc = PyRpcClient::ctor(
-            resolver,
-            url,
-            encoding,
-            network_id.clone(),
-        )?;
+        let rpc = PyRpcClient::ctor(resolver, url, encoding, network_id.clone())?;
         let rpc_api: Arc<DynRpcApi> = rpc.client().rpc_api().clone();
         let rpc_ctl = rpc.client().rpc_ctl().clone();
         let rpc_binding = Rpc::new(rpc_api, rpc_ctl);
