@@ -5,14 +5,14 @@ import builtins
 import typing
 
 @typing.final
-class PyWalletCustomError(builtins.Exception):
+class WalletCustomError(builtins.Exception):
     r"""
     Custom wallet error
     """
     ...
 
 @typing.final
-class PyWalletError(builtins.Exception):
+class WalletError(builtins.Exception):
     r"""
     General catch-all wallet error
     """

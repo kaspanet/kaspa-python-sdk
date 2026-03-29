@@ -13,13 +13,16 @@ fn main() -> Result<()> {
 
     stub.generate()?;
 
-    post_process_stub_file("kaspa/__init__.pyi");
+    post_process_stub_file("python/kaspa/__init__.pyi");
 
     // Relocate exceptions stub into a package directory so kaspa.exceptions
-    // is a proper subpackage: kaspa/exceptions.pyi -> kaspa/exceptions/__init__.pyi
-    fs::create_dir_all("kaspa/exceptions").unwrap();
-    post_process_exceptions_stub_file("kaspa/exceptions.pyi", "kaspa/exceptions/__init__.pyi");
-    fs::remove_file("kaspa/exceptions.pyi").unwrap();
+    // is a proper subpackage: python/kaspa/exceptions.pyi -> python/kaspa/exceptions/__init__.pyi
+    fs::create_dir_all("python/kaspa/exceptions").unwrap();
+    post_process_exceptions_stub_file(
+        "python/kaspa/exceptions.pyi",
+        "python/kaspa/exceptions/__init__.pyi",
+    );
+    fs::remove_file("python/kaspa/exceptions.pyi").unwrap();
 
     Ok(())
 }

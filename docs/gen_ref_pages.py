@@ -6,8 +6,8 @@ import re
 import mkdocs_gen_files
 
 # Objects to document from the kaspa module
-stub_file = Path("kaspa/__init__.pyi")
-exceptions_stub_file = Path("kaspa/exceptions/__init__.pyi")
+stub_file = Path("python/kaspa/__init__.pyi")
+exceptions_stub_file = Path("python/kaspa/exceptions/__init__.pyi")
 
 nav = mkdocs_gen_files.Nav()
 

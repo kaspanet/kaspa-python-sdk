@@ -3744,7 +3744,7 @@ def verify_message(message: builtins.str, signature: builtins.str, public_key: P
 """
 TypedDict definitions for Kaspa RPC request/response messages & contained types.
 
-This file is manually maintained and appended to kaspa/__init__.pyi via stub gen process.
+This file is manually maintained and appended to python/kaspa/__init__.pyi via stub gen process.
 
 Long term, attempts should be made to auto generate.
 """

@@ -14,7 +14,8 @@ kaspa-python-sdk/
 ├── docs/                 # Documentation source (MkDocs)
 ├── examples/             # Example Python scripts
 ├── kaspa_rpc.pyi         # Manually maintained RPC stubs
-├── kaspa/                # Auto-generated type stubs
+├── python/kaspa/         # Python source & auto-generated type stubs
+│   ├── __init__.py       # Package entry point (re-exports native module)
 │   ├── __init__.pyi      # Main module stubs
 │   └── exceptions/
 │       └── __init__.pyi  # Exception submodule stubs
