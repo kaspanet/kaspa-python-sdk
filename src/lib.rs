@@ -181,7 +181,7 @@ fn kaspa(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     exceptions.add_class::<wallet::core::error::PyWalletError>()?;
     exceptions.add_class::<wallet::core::error::PyWalletCustomError>()?;
 
-    // Register in sys.modules 
+    // Register in sys.modules
     // Required for `from kaspa.exceptions import ...` to work
     py.import("sys")?
         .getattr("modules")?
