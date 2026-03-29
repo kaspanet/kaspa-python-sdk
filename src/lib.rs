@@ -2,6 +2,7 @@ mod address;
 mod callback;
 mod consensus;
 mod crypto;
+mod error;
 mod macros;
 mod rpc;
 mod traits;
@@ -17,10 +18,6 @@ define_stub_info_gatherer!(stub_info);
 fn kaspa(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Init logging bridge
     pyo3_log::init();
-
-    // Add exceptions submodule
-    let exceptions = PyModule::new(py, "exceptions")?;
-    m.add_submodule(&exceptions)?;
 
     // Register classes and functions to module
 
@@ -169,6 +166,10 @@ fn kaspa(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<wallet::keys::publickey::PyXOnlyPublicKey>()?;
     m.add_class::<wallet::keys::xprv::PyXPrv>()?;
     m.add_class::<wallet::keys::xpub::PyXPub>()?;
+
+    // Add exceptions submodule
+    let exceptions = PyModule::new(py, "exceptions")?;
+    m.add_submodule(&exceptions)?;
 
     Ok(())
 }

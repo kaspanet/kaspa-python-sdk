@@ -25,3 +25,15 @@ impl From<WalletDescriptor> for PyWalletDescriptor {
         PyWalletDescriptor(value)
     }
 }
+
+impl From<&WalletDescriptor> for PyWalletDescriptor {
+    fn from(value: &WalletDescriptor) -> Self {
+        PyWalletDescriptor(value.clone())
+    }
+}
+
+impl From<PyWalletDescriptor> for WalletDescriptor {
+    fn from(value: PyWalletDescriptor) -> Self {
+        value.0
+    }
+}

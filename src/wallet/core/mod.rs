@@ -1,5 +1,6 @@
 pub mod account;
 pub mod derivation;
+pub mod error;
 pub mod events;
 pub mod imports;
 pub mod message;

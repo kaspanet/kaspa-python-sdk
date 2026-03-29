@@ -1,6 +1,8 @@
+use super::error::Error;
 use crate::{
     callback::PyCallback,
     consensus::core::network::PyNetworkId,
+    error::IntoPyResult,
     rpc::{
         encoding::PyEncoding,
         wrpc::{client::PyRpcClient, resolver::PyResolver},
@@ -10,14 +12,14 @@ use crate::{
 use ahash::AHashMap;
 use futures::{FutureExt, select};
 use kaspa_wallet_core::{
-    error::Error,
+    api::WalletApi,
+    error::Error as NativeError,
     events::{EventKind, Events},
     result::Result,
     rpc::{DynRpcApi, Rpc},
     wallet as native,
 };
 use pyo3::{
-    exceptions::PyException,
     prelude::*,
     types::{PyDict, PyTuple},
 };
@@ -71,8 +73,7 @@ impl PyWallet {
         url: String,
         resolver: PyResolver,
     ) -> PyResult<Self> {
-        let store =
-            native::Wallet::local_store().map_err(|err| PyException::new_err(err.to_string()))?;
+        let store = native::Wallet::local_store().into_py_result()?;
 
         let rpc = PyRpcClient::ctor(
             Some(resolver),
@@ -86,7 +87,7 @@ impl PyWallet {
 
         let wallet = Arc::new(
             native::Wallet::try_with_rpc(Some(rpc_binding), store, Some(network_id.into()))
-                .map_err(|err| PyException::new_err(err.to_string()))?,
+                .into_py_result()?,
         );
 
         Ok(Self {
@@ -132,7 +133,7 @@ impl PyWallet {
                 .wallet()
                 .exists(name.as_deref())
                 .await
-                .map_err(|err| PyException::new_err(err.to_string()))?;
+                .into_py_result()?;
             Ok(exists)
         })
     }
@@ -140,14 +141,11 @@ impl PyWallet {
     // TODO override return type to none
     pub fn start<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         self.start_notification_task(py, self.wallet().multiplexer())
-            .map_err(|err| PyException::new_err(err.to_string()))?;
+            .into_py_result()?;
 
         let slf = self.clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            slf.wallet()
-                .start()
-                .await
-                .map_err(|err| PyException::new_err(err.to_string()))?;
+            slf.wallet().start().await.into_py_result()?;
             Ok(())
         })
     }
@@ -156,14 +154,9 @@ impl PyWallet {
     pub fn stop<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let slf = self.clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            slf.stop_notification_task()
-                .await
-                .map_err(|err| PyException::new_err(err.to_string()))?;
+            slf.stop_notification_task().await.into_py_result()?;
 
-            slf.wallet()
-                .stop()
-                .await
-                .map_err(|err| PyException::new_err(err.to_string()))?;
+            slf.wallet().stop().await.into_py_result()?;
             Ok(())
         })
     }
@@ -259,11 +252,8 @@ impl PyWallet {
         Ok(())
     }
 
-    pub fn set_network_id(&self, network_id: PyNetworkId) -> PyResult<()> {
-        self.inner
-            .wallet
-            .set_network_id(&(network_id.into()))
-            .map_err(|err| PyException::new_err(err.to_string()))?;
+    pub fn set_network_id(&self, network_id: PyNetworkId) -> Result<(), Error> {
+        self.inner.wallet.set_network_id(&(network_id.into()))?;
         Ok(())
     }
 }
@@ -333,8 +323,27 @@ impl PyWallet {
                 .task_ctl
                 .signal(())
                 .await
-                .map_err(|err| Error::custom(err.to_string()))?;
+                .map_err(|err| NativeError::custom(err.to_string()))?;
         }
         Ok(())
+    }
+}
+
+#[gen_stub_pymethods]
+#[pymethods]
+impl PyWallet {
+    // TODO override return type to Vec<PyWalletDescriptor> or corresponding exception
+    pub fn wallet_enumerate<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, pyo3::PyAny>> {
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let d: Vec<PyWalletDescriptor> = wallet
+                .wallet_enumerate()
+                .await
+                .into_py_result()?
+                .iter()
+                .map(PyWalletDescriptor::from)
+                .collect();
+            Ok(d)
+        })
     }
 }
