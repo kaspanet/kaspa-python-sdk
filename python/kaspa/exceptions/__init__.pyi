@@ -18,3 +18,10 @@ class WalletError(builtins.Exception):
     """
     ...
 
+@typing.final
+class WalletNoWalletInStorageError(builtins.Exception):
+    r"""
+    Wallet not found in storage location error
+    """
+    ...
+

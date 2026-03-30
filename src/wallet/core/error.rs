@@ -14,12 +14,18 @@ crate::create_py_exception!(
     PyWalletCustomError, "WalletCustomError"
 );
 
+crate::create_py_exception!(
+    /// Wallet not found in storage location error
+    PyWalletNoWalletInStorageError, "WalletNoWalletInStorageError"
+);
+
 pub struct Error(NativeError);
 
 impl From<Error> for PyErr {
     fn from(err: Error) -> Self {
         match err.0 {
             NativeError::Custom(msg) => PyWalletCustomError::new_err(msg),
+            NativeError::NoWalletInStorage(msg) => PyWalletNoWalletInStorageError::new_err(msg),
             other => PyWalletError::new_err(other.to_string()),
         }
     }

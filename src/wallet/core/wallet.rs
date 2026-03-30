@@ -15,9 +15,11 @@ use kaspa_wallet_core::{
     api::WalletApi,
     error::Error as NativeError,
     events::{EventKind, Events},
+    prelude::EncryptionKind,
     result::Result,
     rpc::{DynRpcApi, Rpc},
-    wallet as native,
+    storage::Hint,
+    wallet::{self as native, WalletCreateArgs},
 };
 use kaspa_wrpc_client::prelude::NetworkId;
 use pyo3::{
@@ -333,14 +335,63 @@ impl PyWallet {
     pub fn wallet_enumerate<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, pyo3::PyAny>> {
         let wallet = self.wallet().clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            let d: Vec<PyWalletDescriptor> = wallet
+            let descriptors: Vec<PyWalletDescriptor> = wallet
                 .wallet_enumerate()
                 .await
                 .into_py_result()?
                 .iter()
                 .map(PyWalletDescriptor::from)
                 .collect();
-            Ok(d)
+            Ok(descriptors)
+        })
+    }
+
+    pub fn wallet_create<'py>(
+        &self,
+        py: Python<'py>,
+        wallet_secret: String,
+        filename: Option<String>,
+        overwrite_wallet_storage: Option<bool>,
+        title: Option<String>,
+        user_hint: Option<String>,
+    ) -> PyResult<Bound<'py, pyo3::PyAny>> {
+        let args = WalletCreateArgs::new(
+            title,
+            filename,
+            EncryptionKind::default(),
+            user_hint.map(Hint::from),
+            overwrite_wallet_storage.unwrap_or(false),
+        );
+
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let resp = wallet
+                .wallet_create(wallet_secret.into(), args)
+                .await
+                .into_py_result()?;
+
+            Python::attach(|py| Ok(serde_pyobject::to_pyobject(py, &resp)?.unbind()))
+        })
+    }
+
+    // TODO return type Vec<AccountDescriptor>
+    pub fn wallet_open<'py>(
+        &self,
+        py: Python<'py>,
+        wallet_secret: String,
+        filename: Option<String>,
+        account_descriptors: bool,
+    ) -> PyResult<Bound<'py, pyo3::PyAny>> {
+        // let args = WalletOpenArgs { account_descriptors, legacy_accounts: false };
+
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let resp = wallet
+                .wallet_open(wallet_secret.into(), filename, account_descriptors, false)
+                .await
+                .into_py_result()?;
+
+            Python::attach(|py| Ok(serde_pyobject::to_pyobject(py, &resp)?.unbind()))
         })
     }
 }

@@ -18,6 +18,16 @@ impl PyWalletDescriptor {
     fn get_filename(&self) -> String {
         self.0.filename.clone()
     }
+
+    fn __repr__(&self) -> String {
+        match &self.0.title {
+            Some(title) => format!(
+                "WalletDescriptor(title='{}', filename='{}')",
+                title, self.0.filename
+            ),
+            None => format!("WalletDescriptor(filename='{}')", self.0.filename),
+        }
+    }
 }
 
 impl From<WalletDescriptor> for PyWalletDescriptor {
