@@ -7,12 +7,13 @@ use crate::{
         encoding::PyEncoding,
         wrpc::{client::PyRpcClient, resolver::PyResolver},
     },
+    types::PyBinary,
     wallet::core::{events::PyWalletEventType, storage::interface::PyWalletDescriptor},
 };
 use ahash::AHashMap;
 use futures::{FutureExt, select};
 use kaspa_wallet_core::{
-    api::WalletApi,
+    api::{WalletApi, WalletExportRequest, WalletImportRequest},
     error::Error as NativeError,
     events::{EventKind, Events},
     prelude::EncryptionKind,
@@ -390,6 +391,106 @@ impl PyWallet {
                 .wallet_open(wallet_secret.into(), filename, account_descriptors, false)
                 .await
                 .into_py_result()?;
+
+            Python::attach(|py| Ok(serde_pyobject::to_pyobject(py, &resp)?.unbind()))
+        })
+    }
+
+    // TODO return type
+    pub fn wallet_close<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, pyo3::PyAny>> {
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            wallet.wallet_close().await.into_py_result()?;
+
+            Ok(())
+        })
+    }
+
+    // TODO return type
+    pub fn wallet_reload<'py>(
+        &self,
+        py: Python<'py>,
+        reactivate: bool,
+    ) -> PyResult<Bound<'py, pyo3::PyAny>> {
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            wallet.wallet_reload(reactivate).await.into_py_result()?;
+
+            Ok(())
+        })
+    }
+
+    // TODO return type
+    pub fn wallet_rename<'py>(
+        &self,
+        py: Python<'py>,
+        wallet_secret: String,
+        title: Option<String>,
+        filename: Option<String>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            wallet
+                .wallet_rename(title.as_deref(), filename.as_deref(), wallet_secret.into())
+                .await
+                .into_py_result()?;
+            Ok(())
+        })
+    }
+
+    // TODO return type
+    pub fn wallet_change_secret<'py>(
+        &self,
+        py: Python<'py>,
+        old_wallet_secret: String,
+        new_wallet_secret: String,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            wallet
+                .wallet_change_secret(old_wallet_secret.into(), new_wallet_secret.into())
+                .await
+                .into_py_result()?;
+            Ok(())
+        })
+    }
+
+    // TODO return type
+    pub fn wallet_export<'py>(
+        &self,
+        py: Python<'py>,
+        wallet_secret: String,
+        include_transactions: bool,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let req = WalletExportRequest {
+            wallet_secret: wallet_secret.into(),
+            include_transactions,
+        };
+
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let resp = wallet.wallet_export_call(req).await.into_py_result()?;
+
+            Ok(resp.wallet_data)
+        })
+    }
+
+    // TODO return type
+    // TODO wallet_data is hex. Should this accept PyBinary?
+    pub fn wallet_import<'py>(
+        &self,
+        py: Python<'py>,
+        wallet_secret: String,
+        wallet_data: PyBinary,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let req = WalletImportRequest {
+            wallet_secret: wallet_secret.into(),
+            wallet_data: wallet_data.into(),
+        };
+
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let resp = wallet.wallet_import_call(req).await.into_py_result()?;
 
             Python::attach(|py| Ok(serde_pyobject::to_pyobject(py, &resp)?.unbind()))
         })
