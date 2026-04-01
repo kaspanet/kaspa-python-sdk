@@ -1,7 +1,54 @@
+use std::str::FromStr;
+
 use kaspa_utils::hex::ToHex;
-use kaspa_wallet_core::storage::PrvKeyDataInfo;
-use pyo3::prelude::*;
-use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
+use kaspa_wallet_core::storage::{PrvKeyDataInfo, keydata::PrvKeyDataVariantKind};
+use pyo3::{exceptions::PyException, prelude::*};
+use pyo3_stub_gen::derive::*;
+
+crate::wrap_unit_enum_for_py!(
+    /// Private Key Data Variant Kind
+    PyPrvKeyDataVariantKind, "PrvKeyDataVariantKind", PrvKeyDataVariantKind, {
+        Mnemonic,
+        Bip39Seed,
+        ExtendedPrivateKey,
+        SecretKey
+    }
+);
+
+impl FromStr for PyPrvKeyDataVariantKind {
+    type Err = PyErr;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let v = match s.to_lowercase().as_str() {
+            "mnemonic" => PyPrvKeyDataVariantKind::Mnemonic,
+            "bip39seed" => PyPrvKeyDataVariantKind::Bip39Seed,
+            "extendedprivatekey" => PyPrvKeyDataVariantKind::ExtendedPrivateKey,
+            "secretkey" => PyPrvKeyDataVariantKind::SecretKey,
+            _ => Err(PyException::new_err(
+                "Unsupported string value for `PrvKeyDataVariantKind`",
+            ))?,
+        };
+
+        Ok(v)
+    }
+}
+
+impl<'py> FromPyObject<'_, 'py> for PyPrvKeyDataVariantKind {
+    type Error = PyErr;
+
+    fn extract(obj: Borrowed<'_, 'py, PyAny>) -> Result<Self, Self::Error> {
+        if let Ok(s) = obj.extract::<String>() {
+            PyPrvKeyDataVariantKind::from_str(&s)
+                .map_err(|err| PyException::new_err(err.to_string()))
+        } else if let Ok(t) = obj.cast::<PyPrvKeyDataVariantKind>() {
+            Ok(t.borrow().clone())
+        } else {
+            Err(PyException::new_err(
+                "Expected type `str` or `PrvKeyDataVariantKind`",
+            ))
+        }
+    }
+}
 
 #[gen_stub_pyclass]
 #[pyclass(name = "PrvKeyDataInfo")]

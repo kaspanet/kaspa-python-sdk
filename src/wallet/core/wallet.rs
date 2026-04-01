@@ -11,12 +11,15 @@ use crate::{
     wallet::core::{
         account::descriptor::PyAccountDescriptor,
         events::PyWalletEventType,
-        storage::{interface::PyWalletDescriptor, keydata::PyPrvKeyDataInfo},
+        storage::{
+            interface::PyWalletDescriptor,
+            keydata::{PyPrvKeyDataInfo, PyPrvKeyDataVariantKind},
+        },
     },
 };
 use ahash::AHashMap;
 use futures::{FutureExt, select};
-use kaspa_utils::hex::FromHex;
+use kaspa_utils::hex::ToHex;
 use kaspa_wallet_core::{
     api::{WalletApi, WalletExportRequest, WalletImportRequest},
     error::Error as NativeError,
@@ -24,10 +27,8 @@ use kaspa_wallet_core::{
     prelude::EncryptionKind,
     result::Result,
     rpc::{DynRpcApi, Rpc},
-    storage::{Hint, PrvKeyDataId},
-    wallet::{
-        self as native, AccountCreateArgs, AccountCreateArgsBip32, PrvKeyDataArgs, WalletCreateArgs,
-    },
+    storage::Hint,
+    wallet::{self as native, PrvKeyDataCreateArgs, WalletCreateArgs},
 };
 use kaspa_wallet_keys::secret::Secret;
 use kaspa_wrpc_client::prelude::NetworkId;
@@ -522,6 +523,32 @@ impl PyWallet {
                 .collect::<Vec<PyPrvKeyDataInfo>>();
 
             Ok(resp)
+        })
+    }
+
+    pub fn prv_key_data_create<'py>(
+        &self,
+        py: Python<'py>,
+        wallet_secret: String,
+        name: Option<String>,
+        payment_secret: Option<String>,
+        secret: String,
+        kind: PyPrvKeyDataVariantKind,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let args = PrvKeyDataCreateArgs::new(
+            name,
+            payment_secret.map(Secret::from),
+            secret.into(),
+            kind.into(),
+        );
+
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let resp = wallet
+                .prv_key_data_create(wallet_secret.into(), args)
+                .await
+                .into_py_result()?;
+            Ok(resp.to_hex())
         })
     }
 
