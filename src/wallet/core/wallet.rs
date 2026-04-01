@@ -8,10 +8,15 @@ use crate::{
         wrpc::{client::PyRpcClient, resolver::PyResolver},
     },
     types::PyBinary,
-    wallet::core::{events::PyWalletEventType, storage::interface::PyWalletDescriptor},
+    wallet::core::{
+        account::descriptor::PyAccountDescriptor,
+        events::PyWalletEventType,
+        storage::{interface::PyWalletDescriptor, keydata::PyPrvKeyDataInfo},
+    },
 };
 use ahash::AHashMap;
 use futures::{FutureExt, select};
+use kaspa_utils::hex::FromHex;
 use kaspa_wallet_core::{
     api::{WalletApi, WalletExportRequest, WalletImportRequest},
     error::Error as NativeError,
@@ -19,9 +24,12 @@ use kaspa_wallet_core::{
     prelude::EncryptionKind,
     result::Result,
     rpc::{DynRpcApi, Rpc},
-    storage::Hint,
-    wallet::{self as native, WalletCreateArgs},
+    storage::{Hint, PrvKeyDataId},
+    wallet::{
+        self as native, AccountCreateArgs, AccountCreateArgsBip32, PrvKeyDataArgs, WalletCreateArgs,
+    },
 };
+use kaspa_wallet_keys::secret::Secret;
 use kaspa_wrpc_client::prelude::NetworkId;
 use pyo3::{
     prelude::*,
@@ -329,6 +337,7 @@ impl PyWallet {
     }
 }
 
+// Wallet API wallet_ functions
 #[gen_stub_pymethods]
 #[pymethods]
 impl PyWallet {
@@ -495,4 +504,78 @@ impl PyWallet {
             Python::attach(|py| Ok(serde_pyobject::to_pyobject(py, &resp)?.unbind()))
         })
     }
+}
+
+// Wallet API prv_key_data_ functions
+#[gen_stub_pymethods]
+#[pymethods]
+impl PyWallet {
+    pub fn prv_key_data_enumerate<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let resp = wallet
+                .prv_key_data_enumerate()
+                .await
+                .into_py_result()?
+                .into_iter()
+                .map(|v| PyPrvKeyDataInfo::from(v.as_ref()))
+                .collect::<Vec<PyPrvKeyDataInfo>>();
+
+            Ok(resp)
+        })
+    }
+
+    // prv_key_data_create
+    // prv_key_data_remove
+    // prv_key_data_get
+}
+
+// Wallet API account_ functions
+#[gen_stub_pymethods]
+#[pymethods]
+impl PyWallet {
+    pub fn accounts_enumerate<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let accounts = wallet
+                .accounts_enumerate()
+                .await
+                .into_py_result()?
+                .into_iter()
+                .map(PyAccountDescriptor::from)
+                .collect::<Vec<PyAccountDescriptor>>();
+            Ok(accounts)
+        })
+    }
+
+    // TODO
+    // pub fn accounts_create_bip32<'py>(
+    //     &self,
+    //     py: Python<'py>,
+    //     wallet_secret: String,
+    //     account_name: Option<String>,
+    //     account_index: Option<u64>,
+    //     prv_key_data_id: String,
+    //     payment_secret: Option<String>,
+    // ) -> PyResult<Bound<'py, PyAny>> {
+    //     let args = AccountCreateArgs::Bip32 {
+    //         prv_key_data_args: PrvKeyDataArgs {
+    //             prv_key_data_id: PrvKeyDataId::from_hex(&prv_key_data_id).unwrap(),
+    //             payment_secret: payment_secret.map(Secret::from),
+    //         },
+    //         account_args: AccountCreateArgsBip32 {
+    //             account_name,
+    //             account_index,
+    //         },
+    //     };
+
+    //     let wallet = self.wallet().clone();
+    //     pyo3_async_runtimes::tokio::future_into_py(py, async move {
+    //         let resp = wallet
+    //             .accounts_create(wallet_secret.into(), args)
+    //             .await
+    //             .into_py_result()?;
+    //         Ok(PyAccountDescriptor::from(resp))
+    //     })
+    // }
 }

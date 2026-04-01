@@ -158,6 +158,7 @@ fn kaspa(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     )?)?;
     m.add_class::<wallet::core::events::PyWalletEventType>()?;
     m.add_class::<wallet::core::storage::interface::PyWalletDescriptor>()?;
+    m.add_class::<wallet::core::storage::keydata::PyPrvKeyDataInfo>()?;
     m.add_class::<wallet::core::wallet::PyWallet>()?;
 
     m.add_class::<wallet::keys::derivation::PyDerivationPath>()?;
