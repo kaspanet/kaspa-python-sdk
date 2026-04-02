@@ -28,7 +28,10 @@ use kaspa_wallet_core::{
     result::Result,
     rpc::{DynRpcApi, Rpc},
     storage::{Hint, PrvKeyDataId, PrvKeyDataInfo},
-    wallet::{self as native, AccountCreateArgs, AccountCreateArgsBip32, PrvKeyDataArgs, PrvKeyDataCreateArgs, WalletCreateArgs},
+    wallet::{
+        self as native, AccountCreateArgs, AccountCreateArgsBip32, PrvKeyDataArgs,
+        PrvKeyDataCreateArgs, WalletCreateArgs,
+    },
 };
 use kaspa_wallet_keys::secret::Secret;
 use kaspa_wrpc_client::prelude::NetworkId;
