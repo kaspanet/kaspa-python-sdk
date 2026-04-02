@@ -57,11 +57,17 @@ async def main():
         prv_key_data_id=prv_key_ids[0].id
     ))
 
-    # print("--- accounts_create_bip32")
-    # print(await wallet.accounts)
+    print("--- accounts_create_bip32")
+    print(await wallet.accounts_create_bip32(
+        wallet_secret=WALLET_SECRET,
+        account_name=None,
+        account_index=None,
+        prv_key_data_id=prv_key_ids[0].id,
+        payment_secret=None
+    ))
 
-    # print("--- accounts_enumerate()")
-    # print(await wallet.accounts_enumerate())
+    print("--- accounts_enumerate()")
+    print(await wallet.accounts_enumerate())
 
 
 if __name__ == "__main__":

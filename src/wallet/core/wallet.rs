@@ -28,7 +28,7 @@ use kaspa_wallet_core::{
     result::Result,
     rpc::{DynRpcApi, Rpc},
     storage::{Hint, PrvKeyDataId, PrvKeyDataInfo},
-    wallet::{self as native, PrvKeyDataCreateArgs, WalletCreateArgs},
+    wallet::{self as native, AccountCreateArgs, AccountCreateArgsBip32, PrvKeyDataArgs, PrvKeyDataCreateArgs, WalletCreateArgs},
 };
 use kaspa_wallet_keys::secret::Secret;
 use kaspa_wrpc_client::prelude::NetworkId;
@@ -615,34 +615,33 @@ impl PyWallet {
         })
     }
 
-    // TODO
-    // pub fn accounts_create_bip32<'py>(
-    //     &self,
-    //     py: Python<'py>,
-    //     wallet_secret: String,
-    //     account_name: Option<String>,
-    //     account_index: Option<u64>,
-    //     prv_key_data_id: String,
-    //     payment_secret: Option<String>,
-    // ) -> PyResult<Bound<'py, PyAny>> {
-    //     let args = AccountCreateArgs::Bip32 {
-    //         prv_key_data_args: PrvKeyDataArgs {
-    //             prv_key_data_id: PrvKeyDataId::from_hex(&prv_key_data_id).unwrap(),
-    //             payment_secret: payment_secret.map(Secret::from),
-    //         },
-    //         account_args: AccountCreateArgsBip32 {
-    //             account_name,
-    //             account_index,
-    //         },
-    //     };
+    pub fn accounts_create_bip32<'py>(
+        &self,
+        py: Python<'py>,
+        wallet_secret: String,
+        account_name: Option<String>,
+        account_index: Option<u64>,
+        prv_key_data_id: String,
+        payment_secret: Option<String>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let args = AccountCreateArgs::Bip32 {
+            prv_key_data_args: PrvKeyDataArgs {
+                prv_key_data_id: PrvKeyDataId::from_hex(&prv_key_data_id).unwrap(),
+                payment_secret: payment_secret.map(Secret::from),
+            },
+            account_args: AccountCreateArgsBip32 {
+                account_name,
+                account_index,
+            },
+        };
 
-    //     let wallet = self.wallet().clone();
-    //     pyo3_async_runtimes::tokio::future_into_py(py, async move {
-    //         let resp = wallet
-    //             .accounts_create(wallet_secret.into(), args)
-    //             .await
-    //             .into_py_result()?;
-    //         Ok(PyAccountDescriptor::from(resp))
-    //     })
-    // }
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let resp = wallet
+                .accounts_create(wallet_secret.into(), args)
+                .await
+                .into_py_result()?;
+            Ok(PyAccountDescriptor::from(resp))
+        })
+    }
 }

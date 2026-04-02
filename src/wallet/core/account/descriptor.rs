@@ -41,6 +41,19 @@ impl PyAccountDescriptor {
     pub fn get_change_address(&self) -> Option<String> {
         self.0.change_address.as_ref().map(|a| a.to_string())
     }
+
+    fn __repr__(&self) -> String {
+        let name = match &self.0.account_name {
+            Some(name) => format!("'{}'", name),
+            None => "None".to_string(),
+        };
+        format!(
+            "AccountDescriptor(kind={}, account_id='{}', account_name={})",
+            self.0.kind,
+            self.0.account_id.to_hex(),
+            name
+        )
+    }
 }
 
 impl From<AccountDescriptor> for PyAccountDescriptor {
