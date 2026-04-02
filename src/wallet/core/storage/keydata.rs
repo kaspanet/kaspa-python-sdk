@@ -71,10 +71,28 @@ impl PyPrvKeyDataInfo {
     pub fn get_is_encrypted(&self) -> bool {
         self.0.is_encrypted
     }
+
+    fn __repr__(&self) -> String {
+        format!(
+            "PrvKeyDataInfo(id='{}', name={}, is_encrypted={})",
+            self.0.id.to_hex(),
+            match &self.0.name {
+                Some(name) => format!("'{}'", name),
+                None => "None".to_string(),
+            },
+            self.0.is_encrypted
+        )
+    }
 }
 
 impl From<&PrvKeyDataInfo> for PyPrvKeyDataInfo {
     fn from(value: &PrvKeyDataInfo) -> Self {
         Self(value.clone())
+    }
+}
+
+impl From<PrvKeyDataInfo> for PyPrvKeyDataInfo {
+    fn from(value: PrvKeyDataInfo) -> Self {
+        Self(value)
     }
 }

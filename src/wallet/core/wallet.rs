@@ -19,20 +19,21 @@ use crate::{
 };
 use ahash::AHashMap;
 use futures::{FutureExt, select};
-use kaspa_utils::hex::ToHex;
+use kaspa_utils::hex::{FromHex, ToHex};
 use kaspa_wallet_core::{
-    api::{WalletApi, WalletExportRequest, WalletImportRequest},
+    api::{PrvKeyDataRemoveRequest, WalletApi, WalletExportRequest, WalletImportRequest},
     error::Error as NativeError,
     events::{EventKind, Events},
     prelude::EncryptionKind,
     result::Result,
     rpc::{DynRpcApi, Rpc},
-    storage::Hint,
+    storage::{Hint, PrvKeyDataId, PrvKeyDataInfo},
     wallet::{self as native, PrvKeyDataCreateArgs, WalletCreateArgs},
 };
 use kaspa_wallet_keys::secret::Secret;
 use kaspa_wrpc_client::prelude::NetworkId;
 use pyo3::{
+    exceptions::PyException,
     prelude::*,
     types::{PyDict, PyTuple},
 };
@@ -552,9 +553,48 @@ impl PyWallet {
         })
     }
 
-    // prv_key_data_create
-    // prv_key_data_remove
-    // prv_key_data_get
+    pub fn prv_key_data_remove<'py>(
+        &self,
+        py: Python<'py>,
+        wallet_secret: String,
+        prv_key_data_id: String,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let request = PrvKeyDataRemoveRequest {
+            wallet_secret: wallet_secret.into(),
+            prv_key_data_id: PrvKeyDataId::from_hex(&prv_key_data_id)
+                .map_err(|err| PyException::new_err(err.to_string()))?,
+        };
+
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            wallet
+                .prv_key_data_remove_call(request)
+                .await
+                .into_py_result()?;
+
+            Ok(())
+        })
+    }
+
+    pub fn prv_key_data_get<'py>(
+        &self,
+        py: Python<'py>,
+        wallet_secret: String,
+        prv_key_data_id: String,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let prv_key_data_id = PrvKeyDataId::from_hex(&prv_key_data_id)
+            .map_err(|err| PyException::new_err(err.to_string()))?;
+
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let resp = wallet
+                .prv_key_data_get(prv_key_data_id, wallet_secret.into())
+                .await
+                .into_py_result()?;
+
+            Ok(PyPrvKeyDataInfo::from(PrvKeyDataInfo::from(&resp)))
+        })
+    }
 }
 
 // Wallet API account_ functions
