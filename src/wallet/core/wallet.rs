@@ -21,10 +21,13 @@ use ahash::AHashMap;
 use futures::{FutureExt, select};
 use kaspa_utils::hex::{FromHex, ToHex};
 use kaspa_wallet_core::{
-    api::{PrvKeyDataRemoveRequest, WalletApi, WalletExportRequest, WalletImportRequest},
+    api::{
+        AccountsDiscoveryKind, AccountsDiscoveryRequest, PrvKeyDataRemoveRequest, WalletApi,
+        WalletExportRequest, WalletImportRequest,
+    },
     error::Error as NativeError,
     events::{EventKind, Events},
-    prelude::EncryptionKind,
+    prelude::{AccountId, EncryptionKind},
     result::Result,
     rpc::{DynRpcApi, Rpc},
     storage::{Hint, PrvKeyDataId, PrvKeyDataInfo},
@@ -40,12 +43,52 @@ use pyo3::{
     prelude::*,
     types::{PyDict, PyTuple},
 };
-use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
+use pyo3_stub_gen::derive::*;
+use std::str::FromStr;
 use std::sync::{
     Arc, Mutex,
     atomic::{AtomicBool, Ordering},
 };
 use workflow_core::prelude::{DuplexChannel, Multiplexer};
+
+crate::wrap_unit_enum_for_py!(
+    /// Account Discovery Kind
+    PyAccountsDiscoveryKind, "AccountsDiscoveryKind", AccountsDiscoveryKind, {
+        Bip44
+    }
+);
+
+impl FromStr for PyAccountsDiscoveryKind {
+    type Err = PyErr;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let v = match s.to_lowercase().as_str() {
+            "bip44" => PyAccountsDiscoveryKind::Bip44,
+            _ => Err(PyException::new_err(
+                "Unsupported string value for `AccountsDiscoveryKind`",
+            ))?,
+        };
+
+        Ok(v)
+    }
+}
+
+impl<'py> FromPyObject<'_, 'py> for PyAccountsDiscoveryKind {
+    type Error = PyErr;
+
+    fn extract(obj: Borrowed<'_, 'py, PyAny>) -> Result<Self, Self::Error> {
+        if let Ok(s) = obj.extract::<String>() {
+            PyAccountsDiscoveryKind::from_str(&s)
+                .map_err(|err| PyException::new_err(err.to_string()))
+        } else if let Ok(t) = obj.cast::<PyAccountsDiscoveryKind>() {
+            Ok(t.borrow().clone())
+        } else {
+            Err(PyException::new_err(
+                "Expected type `str` or `AccountsDiscoveryKind`",
+            ))
+        }
+    }
+}
 
 struct Inner {
     wallet: Arc<native::Wallet>,
@@ -629,7 +672,8 @@ impl PyWallet {
     ) -> PyResult<Bound<'py, PyAny>> {
         let args = AccountCreateArgs::Bip32 {
             prv_key_data_args: PrvKeyDataArgs {
-                prv_key_data_id: PrvKeyDataId::from_hex(&prv_key_data_id).unwrap(),
+                prv_key_data_id: PrvKeyDataId::from_hex(&prv_key_data_id)
+                    .map_err(|err| PyException::new_err(err.to_string()))?,
                 payment_secret: payment_secret.map(Secret::from),
             },
             account_args: AccountCreateArgsBip32 {
@@ -645,6 +689,80 @@ impl PyWallet {
                 .await
                 .into_py_result()?;
             Ok(PyAccountDescriptor::from(resp))
+        })
+    }
+
+    pub fn accounts_create_keypair<'py>(
+        &self,
+        py: Python<'py>,
+        wallet_secret: String,
+        account_name: Option<String>,
+        prv_key_data_id: String,
+        ecdsa: bool,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let args = AccountCreateArgs::Keypair {
+            prv_key_data_id: PrvKeyDataId::from_hex(&prv_key_data_id)
+                .map_err(|err| PyException::new_err(err.to_string()))?,
+            account_name,
+            ecdsa,
+        };
+
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let resp = wallet
+                .accounts_create(wallet_secret.into(), args)
+                .await
+                .into_py_result()?;
+            Ok(PyAccountDescriptor::from(resp))
+        })
+    }
+
+    pub fn accounts_rename<'py>(
+        &self,
+        py: Python<'py>,
+        wallet_secret: String,
+        account_id: String,
+        name: Option<String>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let account_id = AccountId::from_hex(&account_id)
+            .map_err(|err| PyException::new_err(err.to_string()))?;
+
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            wallet
+                .accounts_rename(account_id, name, wallet_secret.into())
+                .await
+                .into_py_result()?;
+
+            Ok(())
+        })
+    }
+
+    pub fn accounts_discovery<'py>(
+        &self,
+        py: Python<'py>,
+        discovery_kind: PyAccountsDiscoveryKind,
+        address_scan_extent: u32,
+        account_scan_extent: u32,
+        bip39_passphrase: Option<String>,
+        bip39_mnemonic: String,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let request = AccountsDiscoveryRequest {
+            discovery_kind: discovery_kind.into(),
+            address_scan_extent,
+            account_scan_extent,
+            bip39_passphrase: bip39_passphrase.map(Secret::from),
+            bip39_mnemonic: bip39_mnemonic.into(),
+        };
+
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let resp = wallet
+                .accounts_discovery_call(request)
+                .await
+                .into_py_result()?;
+
+            Ok(resp.last_account_index_found)
         })
     }
 }
