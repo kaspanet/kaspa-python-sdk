@@ -1,5 +1,6 @@
 use super::error::Error;
 use crate::{
+    address::PyAddress,
     callback::PyCallback,
     consensus::core::network::PyNetworkId,
     error::IntoPyResult,
@@ -9,7 +10,7 @@ use crate::{
     },
     types::PyBinary,
     wallet::core::{
-        account::descriptor::PyAccountDescriptor,
+        account::{descriptor::PyAccountDescriptor, kind::PyAccountKind},
         events::PyWalletEventType,
         storage::{
             interface::PyWalletDescriptor,
@@ -22,8 +23,8 @@ use futures::{FutureExt, select};
 use kaspa_utils::hex::{FromHex, ToHex};
 use kaspa_wallet_core::{
     api::{
-        AccountsDiscoveryKind, AccountsDiscoveryRequest, PrvKeyDataRemoveRequest, WalletApi,
-        WalletExportRequest, WalletImportRequest,
+        AccountsDiscoveryKind, AccountsDiscoveryRequest, AccountsGetRequest, NewAddressKind,
+        PrvKeyDataRemoveRequest, WalletApi, WalletExportRequest, WalletImportRequest,
     },
     error::Error as NativeError,
     events::{EventKind, Events},
@@ -85,6 +86,46 @@ impl<'py> FromPyObject<'_, 'py> for PyAccountsDiscoveryKind {
         } else {
             Err(PyException::new_err(
                 "Expected type `str` or `AccountsDiscoveryKind`",
+            ))
+        }
+    }
+}
+
+crate::wrap_unit_enum_for_py!(
+    /// Account Discovery Kind
+    PyNewAddressKind, "NewAddressKind", NewAddressKind, {
+        Change,
+        Receive
+    }
+);
+
+impl FromStr for PyNewAddressKind {
+    type Err = PyErr;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let v = match s.to_lowercase().as_str() {
+            "change" => PyNewAddressKind::Change,
+            "receive" => PyNewAddressKind::Receive,
+            _ => Err(PyException::new_err(
+                "Unsupported string value for `NewAddressKind`",
+            ))?,
+        };
+
+        Ok(v)
+    }
+}
+
+impl<'py> FromPyObject<'_, 'py> for PyNewAddressKind {
+    type Error = PyErr;
+
+    fn extract(obj: Borrowed<'_, 'py, PyAny>) -> Result<Self, Self::Error> {
+        if let Ok(s) = obj.extract::<String>() {
+            PyNewAddressKind::from_str(&s).map_err(|err| PyException::new_err(err.to_string()))
+        } else if let Ok(t) = obj.cast::<PyNewAddressKind>() {
+            Ok(t.borrow().clone())
+        } else {
+            Err(PyException::new_err(
+                "Expected type `str` or `NewAddressKind`",
             ))
         }
     }
@@ -763,6 +804,121 @@ impl PyWallet {
                 .into_py_result()?;
 
             Ok(resp.last_account_index_found)
+        })
+    }
+
+    pub fn accounts_ensure_default<'py>(
+        &self,
+        py: Python<'py>,
+        wallet_secret: String,
+        payment_secret: Option<String>,
+        account_kind: PyAccountKind,
+        mnemonic_phrase: Option<String>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let resp = wallet
+                .accounts_ensure_default(
+                    wallet_secret.into(),
+                    payment_secret.map(Secret::from),
+                    account_kind.into(),
+                    mnemonic_phrase.map(Secret::from),
+                )
+                .await
+                .into_py_result()?;
+
+            Ok(PyAccountDescriptor::from(resp))
+        })
+    }
+
+    pub fn accounts_activate<'py>(
+        &self,
+        py: Python<'py>,
+        account_ids: Option<Vec<String>>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let account_ids = account_ids
+            .map(|ids| {
+                ids.iter()
+                    .map(|id| {
+                        AccountId::from_hex(id).map_err(|err| PyException::new_err(err.to_string()))
+                    })
+                    .collect::<PyResult<Vec<AccountId>>>()
+            })
+            .transpose()?;
+
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            wallet
+                .accounts_activate(account_ids)
+                .await
+                .into_py_result()?;
+
+            Ok(())
+        })
+    }
+
+    pub fn accounts_deactivate<'py>(
+        &self,
+        py: Python<'py>,
+        account_ids: Option<Vec<String>>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let account_ids = account_ids
+            .map(|ids| {
+                ids.iter()
+                    .map(|id| {
+                        AccountId::from_hex(id).map_err(|err| PyException::new_err(err.to_string()))
+                    })
+                    .collect::<PyResult<Vec<AccountId>>>()
+            })
+            .transpose()?;
+
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            wallet
+                .accounts_deactivate(account_ids)
+                .await
+                .into_py_result()?;
+
+            Ok(())
+        })
+    }
+
+    pub fn accounts_get<'py>(
+        &self,
+        py: Python<'py>,
+        account_id: String,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let request = AccountsGetRequest {
+            account_id: AccountId::from_hex(&account_id)
+                .map_err(|err| PyException::new_err(err.to_string()))?,
+        };
+
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            wallet.accounts_get_call(request).await.into_py_result()?;
+
+            Ok(())
+        })
+    }
+
+    pub fn accounts_create_new_address<'py>(
+        &self,
+        py: Python<'py>,
+        account_id: String,
+        address_kind: PyNewAddressKind,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let resp = wallet
+                .accounts_create_new_address(
+                    AccountId::from_hex(&account_id)
+                        .map_err(|err| PyException::new_err(err.to_string()))?,
+                    address_kind.into(),
+                )
+                .await
+                .into_py_result()?;
+
+            Ok(PyAddress::from(resp.address))
         })
     }
 }
