@@ -1,4 +1,5 @@
 pub mod account;
+pub mod api;
 pub mod derivation;
 pub mod error;
 pub mod events;
