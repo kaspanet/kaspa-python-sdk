@@ -22,11 +22,12 @@ use crate::{
 };
 use ahash::AHashMap;
 use futures::{FutureExt, select};
+use kaspa_addresses::Address;
 use kaspa_utils::hex::{FromHex, ToHex};
 use kaspa_wallet_core::{
     api::{
-        AccountsDiscoveryRequest, AccountsGetRequest, AccountsSendRequest, PrvKeyDataRemoveRequest,
-        WalletApi, WalletExportRequest, WalletImportRequest,
+        AccountsDiscoveryRequest, AccountsGetRequest, AccountsGetUtxosRequest, AccountsSendRequest,
+        PrvKeyDataRemoveRequest, WalletApi, WalletExportRequest, WalletImportRequest,
     },
     error::Error as NativeError,
     events::{EventKind, Events},
@@ -882,6 +883,31 @@ impl PyWallet {
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
             let resp = wallet.accounts_send(request).await.into_py_result()?;
             Ok(PyGeneratorSummary::from(resp))
+        })
+    }
+
+    pub fn accounts_get_utxos<'py>(
+        &self,
+        py: Python<'py>,
+        account_id: String,
+        addresses: Option<Vec<PyAddress>>,
+        min_amount_sompi: Option<u64>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let request = AccountsGetUtxosRequest {
+            account_id: AccountId::from_hex(&account_id)
+                .map_err(|err| PyException::new_err(err.to_string()))?,
+            addresses: addresses.map(|addrs| addrs.into_iter().map(Address::from).collect()),
+            min_amount_sompi,
+        };
+
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let resp = wallet
+                .accounts_get_utxos_call(request)
+                .await
+                .into_py_result()?;
+
+            Python::attach(|py| Ok(serde_pyobject::to_pyobject(py, &resp.utxos)?.unbind()))
         })
     }
 }

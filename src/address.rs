@@ -55,7 +55,7 @@ impl<'py> FromPyObject<'_, 'py> for PyAddressVersion {
 /// address string combined with a network type prefix. The `bech32` string encoding is
 /// comprised of a public key, the public key version and the resulting checksum.
 #[gen_stub_pyclass]
-#[pyclass(name = "Address", eq)]
+#[pyclass(name = "Address", skip_from_py_object, eq)]
 #[derive(Clone, Debug, PartialEq)]
 pub struct PyAddress(pub Address);
 
@@ -172,5 +172,21 @@ impl TryFrom<String> for PyAddress {
         let inner =
             Address::try_from(value).map_err(|err| PyException::new_err(err.to_string()))?;
         Ok(PyAddress(inner))
+    }
+}
+
+impl<'py> FromPyObject<'_, 'py> for PyAddress {
+    type Error = PyErr;
+
+    fn extract(obj: Borrowed<'_, '_, PyAny>) -> Result<Self, Self::Error> {
+        if let Ok(address) = obj.extract::<PyAddress>() {
+            Ok(address)
+        } else if let Ok(address) = obj.extract::<String>() {
+            PyAddress::try_from(address)
+        } else {
+            Err(PyException::new_err(
+                "address must be an `Address` instance or `str`",
+            ))
+        }
     }
 }
