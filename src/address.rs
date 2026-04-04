@@ -179,10 +179,10 @@ impl<'py> FromPyObject<'_, 'py> for PyAddress {
     type Error = PyErr;
 
     fn extract(obj: Borrowed<'_, '_, PyAny>) -> Result<Self, Self::Error> {
-        if let Ok(address) = obj.extract::<PyAddress>() {
-            Ok(address)
+        if let Ok(address) = obj.cast::<PyAddress>() {
+            Ok(address.borrow().clone())
         } else if let Ok(address) = obj.extract::<String>() {
-            PyAddress::try_from(address)
+            Ok(PyAddress::try_from(address)?)
         } else {
             Err(PyException::new_err(
                 "address must be an `Address` instance or `str`",

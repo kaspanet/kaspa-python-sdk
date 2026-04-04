@@ -45,7 +45,8 @@ impl<'py> FromPyObject<'_, 'py> for PyFeeSource {
 }
 
 #[gen_stub_pyclass]
-#[pyclass(name = "Fees")]
+#[pyclass(name = "Fees", skip_from_py_object)]
+#[derive(Clone)]
 pub struct PyFees {
     pub amount: u64,
     pub source: Option<PyFeeSource>,
@@ -64,8 +65,8 @@ impl<'py> FromPyObject<'_, 'py> for PyFees {
     type Error = PyErr;
 
     fn extract(obj: Borrowed<'_, 'py, PyAny>) -> Result<Self, Self::Error> {
-        if let Ok(fees) = obj.extract::<PyFees>() {
-            Ok(fees)
+        if let Ok(fees) = obj.cast::<PyFees>() {
+            Ok(fees.borrow().clone())
         } else if let Ok(dict) = obj.cast::<PyDict>() {
             let amount: u64 = dict
                 .get_item("amount")?
