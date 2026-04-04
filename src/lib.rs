@@ -110,6 +110,8 @@ fn kaspa(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<wallet::core::utxo::processor::PyUtxoProcessorEvent>()?;
     m.add_class::<wallet::core::utxo::processor::PyUtxoProcessor>()?;
 
+    m.add_class::<wallet::core::tx::fees::PyFees>()?;
+    m.add_class::<wallet::core::tx::fees::PyFeeSource>()?;
     m.add_function(wrap_pyfunction!(
         wallet::core::tx::mass::py_maximum_standard_transaction_mass,
         m

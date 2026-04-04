@@ -282,6 +282,10 @@ class DerivationPath:
         """
 
 @typing.final
+class Fees:
+    def __new__(cls, amount: builtins.int, source: typing.Optional[FeeSource]) -> Fees: ...
+
+@typing.final
 class Generator:
     r"""
     Transaction generator for building and signing transactions.
@@ -2698,6 +2702,7 @@ class Wallet:
     def accounts_deactivate(self, account_ids: typing.Optional[typing.Sequence[builtins.str]]) -> typing.Any: ...
     def accounts_get(self, account_id: builtins.str) -> typing.Any: ...
     def accounts_create_new_address(self, account_id: builtins.str, address_kind: NewAddressKind) -> typing.Any: ...
+    def accounts_send(self, wallet_secret: builtins.str, payment_secret: typing.Optional[builtins.str], account_id: builtins.str, fee_rate: typing.Optional[builtins.float], priority_fee_sompi: Fees, payload: typing.Optional[Binary], destination: typing.Optional[typing.Sequence[PaymentOutput]]) -> typing.Any: ...
 
 @typing.final
 class WalletDescriptor:
@@ -3056,6 +3061,14 @@ class Encoding(enum.Enum):
     """
     Borsh = ...
     SerdeJson = ...
+
+@typing.final
+class FeeSource(enum.Enum):
+    r"""
+    Fee source
+    """
+    SenderPays = ...
+    ReceiverPays = ...
 
 @typing.final
 class Language(enum.Enum):
