@@ -1,4 +1,3 @@
-
 use kaspa_wallet_core::tx::Fees;
 use kaspa_wallet_core::wasm::FeeSource;
 use pyo3::exceptions::{PyException, PyKeyError};
@@ -40,9 +39,7 @@ impl<'py> FromPyObject<'_, 'py> for PyFeeSource {
         } else if let Ok(t) = obj.cast::<PyFeeSource>() {
             Ok(t.borrow().clone())
         } else {
-            Err(PyException::new_err(
-                "Expected type `str` or `FeeSource`",
-            ))
+            Err(PyException::new_err("Expected type `str` or `FeeSource`"))
         }
     }
 }
@@ -83,7 +80,7 @@ impl<'py> FromPyObject<'_, 'py> for PyFees {
             Ok(PyFees { amount, source })
         } else {
             Err(PyException::new_err(
-                "Expected type `dict` or `Fees` instance"
+                "Expected type `dict` or `Fees` instance",
             ))
         }
     }
@@ -93,15 +90,9 @@ impl TryFrom<&Bound<'_, PyDict>> for PyFees {
     type Error = PyErr;
 
     fn try_from(value: &Bound<PyDict>) -> PyResult<Self> {
-        let amount: u64 = value
-            .as_any()
-            .get_item("amount")?
-            .extract()?;
+        let amount: u64 = value.as_any().get_item("amount")?.extract()?;
 
-        let source: Option<PyFeeSource> = value
-            .as_any()
-            .get_item("source")?
-            .extract()?;
+        let source: Option<PyFeeSource> = value.as_any().get_item("source")?.extract()?;
 
         Ok(PyFees { amount, source })
     }
@@ -112,7 +103,7 @@ impl From<PyFees> for Fees {
         match value.source {
             Some(PyFeeSource::SenderPays) => Fees::SenderPays(value.amount),
             Some(PyFeeSource::ReceiverPays) => Fees::ReceiverPays(value.amount),
-            None => Fees::None
+            None => Fees::None,
         }
     }
 }

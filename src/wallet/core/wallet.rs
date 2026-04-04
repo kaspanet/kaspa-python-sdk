@@ -16,7 +16,8 @@ use crate::{
         storage::{
             interface::PyWalletDescriptor,
             keydata::{PyPrvKeyDataInfo, PyPrvKeyDataVariantKind},
-        }, tx::{fees::PyFees, generator::PyGeneratorSummary, payment::PyPaymentOutput},
+        },
+        tx::{fees::PyFees, generator::PyGeneratorSummary, payment::PyPaymentOutput},
     },
 };
 use ahash::AHashMap;
@@ -24,11 +25,20 @@ use futures::{FutureExt, select};
 use kaspa_utils::hex::{FromHex, ToHex};
 use kaspa_wallet_core::{
     api::{
-        AccountsDiscoveryRequest, AccountsGetRequest, AccountsSendRequest, PrvKeyDataRemoveRequest, WalletApi, WalletExportRequest, WalletImportRequest
-    }, error::Error as NativeError, events::{EventKind, Events}, prelude::{AccountId, EncryptionKind}, result::Result, rpc::{DynRpcApi, Rpc}, storage::{Hint, PrvKeyDataId, PrvKeyDataInfo}, tx::{PaymentDestination, PaymentOutput, PaymentOutputs}, wallet::{
+        AccountsDiscoveryRequest, AccountsGetRequest, AccountsSendRequest, PrvKeyDataRemoveRequest,
+        WalletApi, WalletExportRequest, WalletImportRequest,
+    },
+    error::Error as NativeError,
+    events::{EventKind, Events},
+    prelude::{AccountId, EncryptionKind},
+    result::Result,
+    rpc::{DynRpcApi, Rpc},
+    storage::{Hint, PrvKeyDataId, PrvKeyDataInfo},
+    tx::{PaymentDestination, PaymentOutput, PaymentOutputs},
+    wallet::{
         self as native, AccountCreateArgs, AccountCreateArgsBip32, PrvKeyDataArgs,
         PrvKeyDataCreateArgs, WalletCreateArgs,
-    }
+    },
 };
 use kaspa_wallet_keys::secret::Secret;
 use kaspa_wrpc_client::prelude::NetworkId;
@@ -848,20 +858,24 @@ impl PyWallet {
     ) -> PyResult<Bound<'py, PyAny>> {
         let destination = match destination {
             Some(outputs) => {
-                let outputs = outputs.into_iter().map(PaymentOutput::from).collect::<Vec<PaymentOutput>>();
+                let outputs = outputs
+                    .into_iter()
+                    .map(PaymentOutput::from)
+                    .collect::<Vec<PaymentOutput>>();
                 PaymentDestination::PaymentOutputs(PaymentOutputs { outputs })
             }
-            None => PaymentDestination::Change
+            None => PaymentDestination::Change,
         };
 
         let request = AccountsSendRequest {
             wallet_secret: wallet_secret.into(),
             payment_secret: payment_secret.map(Secret::from),
-            account_id: AccountId::from_hex(&account_id).map_err(|err| PyException::new_err(err.to_string()))?,
+            account_id: AccountId::from_hex(&account_id)
+                .map_err(|err| PyException::new_err(err.to_string()))?,
             destination,
             fee_rate,
             priority_fee_sompi: priority_fee_sompi.into(),
-            payload: payload.map(|p| p.data)
+            payload: payload.map(|p| p.data),
         };
 
         let wallet = self.wallet().clone();
