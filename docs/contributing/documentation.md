@@ -9,7 +9,7 @@ The documentation site is built with [MkDocs](https://www.mkdocs.org/) using the
 | Plugin | Purpose |
 |--------|---------|
 | `mkdocs-gen-files` | Runs `docs/gen_ref_pages.py` to generate API reference pages |
-| `mkdocstrings` | Renders docstrings from `kaspa.pyi` into HTML |
+| `mkdocstrings` | Renders docstrings from `python/kaspa/` stub files into HTML |
 | `mike` | Handles documentation versioning |
 
 ## Stub Generation Pipeline
@@ -32,13 +32,13 @@ The generator (`src/bin/stub_gen.rs`) performs:
 1. `pyo3-stub-gen` extracts types and signatures from Rust source
 2. Post-processing fixes enum names (`Py` prefix removal), RPC method signatures
 3. Appends RPC TypedDicts from `kaspa_rpc.pyi` (manually maintained)
-4. Outputs `kaspa.pyi` in project root
+4. Outputs `python/kaspa/__init__.pyi` and `python/kaspa/exceptions/__init__.pyi`
 
 ### API Reference Generation
 
 At docs build time (`mkdocs build` or `mkdocs serve`):
 
-1. `docs/gen_ref_pages.py` parses `kaspa.pyi` for classes, functions, and enums
+1. `docs/gen_ref_pages.py` parses `python/kaspa/__init__.pyi` and `python/kaspa/exceptions/__init__.pyi` for classes, functions, enums, and exceptions
 2. Groups objects by type (Class, Enum, Function, TypedDict)
 3. Generates `reference/*.md` pages (one per class/function)
 4. `mkdocstrings` renders final HTML from the docstrings

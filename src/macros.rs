@@ -74,7 +74,7 @@ macro_rules! create_py_exception {
         $(#[$meta])*
         #[allow(dead_code)]
         #[gen_stub_pyclass]
-        #[pyclass(name = $py_name, extends = PyException)]
+        #[pyclass(name = $py_name, extends = PyException, module = "kaspa.exceptions")]
         pub struct $name {
             message: String,
         }

@@ -263,7 +263,7 @@ impl PyRpcClient {
     ///     Exception: If client creation fails.
     #[new]
     #[pyo3(signature = (resolver=None, url=None, encoding=None, network_id=None))]
-    fn ctor(
+    pub fn ctor(
         resolver: Option<PyResolver>,
         url: Option<String>,
         #[gen_stub(override_type(type_repr = "str | Encoding | None = Encoding.Borsh"))]
@@ -401,7 +401,7 @@ impl PyRpcClient {
     /// Raises:
     ///     Exception: If disconnection fails.
     #[gen_stub(override_return_type(type_repr = "None"))]
-    fn disconnect<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+    pub fn disconnect<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let client = self.clone();
 
         pyo3_async_runtimes::tokio::future_into_py(py, async move {

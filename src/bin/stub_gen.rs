@@ -4,9 +4,25 @@ use pyo3_stub_gen::Result;
 
 fn main() -> Result<()> {
     let stub = kaspa::stub_info()?;
+
+    // Clean up old flat stub file if migrating from previous layout
+    let old_stub = std::path::Path::new("kaspa.pyi");
+    if old_stub.exists() && !old_stub.is_dir() {
+        fs::remove_file(old_stub).ok();
+    }
+
     stub.generate()?;
 
-    post_process_stub_file("kaspa.pyi");
+    post_process_stub_file("python/kaspa/__init__.pyi");
+
+    // Relocate exceptions stub into a package directory so kaspa.exceptions
+    // is a proper subpackage: python/kaspa/exceptions.pyi -> python/kaspa/exceptions/__init__.pyi
+    fs::create_dir_all("python/kaspa/exceptions").unwrap();
+    post_process_exceptions_stub_file(
+        "python/kaspa/exceptions.pyi",
+        "python/kaspa/exceptions/__init__.pyi",
+    );
+    fs::remove_file("python/kaspa/exceptions.pyi").unwrap();
 
     Ok(())
 }
@@ -22,6 +38,12 @@ fn post_process_stub_file(path: &str) {
     let content = append_rpc_types(content);
 
     fs::write(path, content).unwrap();
+}
+
+fn post_process_exceptions_stub_file(input_path: &str, output_path: &str) {
+    let content = fs::read_to_string(input_path).unwrap();
+    let content = strip_py_prefix_from_exceptions(content);
+    fs::write(output_path, content).unwrap();
 }
 
 /// Appends the contents of kaspa_rpc.pyi to the stub file.
@@ -70,6 +92,35 @@ fn strip_py_prefix_from_enums(content: String) -> String {
 
     let mut result = content;
     for py_name in &enum_names {
+        if let Some(stripped) = py_name.strip_prefix("Py") {
+            result = result.replace(py_name, stripped);
+        }
+    }
+
+    result
+}
+
+/// Removes the "Py" prefix from exception class names in the exceptions stub file.
+/// e.g., `class PyWalletError(builtins.Exception)` becomes `class WalletError(builtins.Exception)`
+fn strip_py_prefix_from_exceptions(content: String) -> String {
+    let mut exception_names: Vec<String> = Vec::new();
+
+    for line in content.lines() {
+        if let Some(start) = line.find("class Py")
+            && line.contains("(builtins.Exception)")
+        {
+            let after_class = &line[start + 6..];
+            if let Some(paren_pos) = after_class.find('(') {
+                let class_name = &after_class[..paren_pos];
+                if class_name.starts_with("Py") {
+                    exception_names.push(class_name.to_string());
+                }
+            }
+        }
+    }
+
+    let mut result = content;
+    for py_name in &exception_names {
         if let Some(stripped) = py_name.strip_prefix("Py") {
             result = result.replace(py_name, stripped);
         }
