@@ -150,7 +150,8 @@ impl PyWallet {
         self.wallet().descriptor().map(PyWalletDescriptor::from)
     }
 
-    // TODO override return type to bool
+    #[gen_stub(override_return_type(type_repr = "bool"))]
+    #[pyo3(signature = (name=None))]
     pub fn exists<'py>(
         &self,
         py: Python<'py>,
@@ -167,7 +168,7 @@ impl PyWallet {
         })
     }
 
-    // TODO override return type to none
+    #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn start<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         self.start_notification_task(py, self.wallet().multiplexer())
             .into_py_result()?;
@@ -179,7 +180,7 @@ impl PyWallet {
         })
     }
 
-    // TODO override return type to none
+    #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn stop<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let slf = self.clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
@@ -190,7 +191,7 @@ impl PyWallet {
         })
     }
 
-    // TODO override return type
+    #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn connect<'py>(
         &self,
         py: Python<'py>,
@@ -210,6 +211,7 @@ impl PyWallet {
         )
     }
 
+    #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn disconnect<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         self.inner.rpc.disconnect(py)
     }
@@ -362,7 +364,7 @@ impl PyWallet {
 #[gen_stub_pymethods]
 #[pymethods]
 impl PyWallet {
-    // TODO override return type to Vec<PyWalletDescriptor> or corresponding exception
+    #[gen_stub(override_return_type(type_repr = "list[WalletDescriptor]"))]
     pub fn wallet_enumerate<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, pyo3::PyAny>> {
         let wallet = self.wallet().clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
@@ -377,6 +379,8 @@ impl PyWallet {
         })
     }
 
+    #[gen_stub(override_return_type(type_repr = "dict"))]
+    #[pyo3(signature = (wallet_secret, filename=None, overwrite_wallet_storage=None, title=None, user_hint=None))]
     pub fn wallet_create<'py>(
         &self,
         py: Python<'py>,
@@ -405,13 +409,14 @@ impl PyWallet {
         })
     }
 
-    // TODO return type Vec<AccountDescriptor>
+    #[gen_stub(override_return_type(type_repr = "dict"))]
+    #[pyo3(signature = (wallet_secret, account_descriptors, filename=None))]
     pub fn wallet_open<'py>(
         &self,
         py: Python<'py>,
         wallet_secret: String,
-        filename: Option<String>,
         account_descriptors: bool,
+        filename: Option<String>,
     ) -> PyResult<Bound<'py, pyo3::PyAny>> {
         // let args = WalletOpenArgs { account_descriptors, legacy_accounts: false };
 
@@ -426,7 +431,7 @@ impl PyWallet {
         })
     }
 
-    // TODO return type
+    #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn wallet_close<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, pyo3::PyAny>> {
         let wallet = self.wallet().clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
@@ -436,7 +441,7 @@ impl PyWallet {
         })
     }
 
-    // TODO return type
+    #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn wallet_reload<'py>(
         &self,
         py: Python<'py>,
@@ -450,7 +455,8 @@ impl PyWallet {
         })
     }
 
-    // TODO return type
+    #[gen_stub(override_return_type(type_repr = "None"))]
+    #[pyo3(signature = (wallet_secret, title=None, filename=None))]
     pub fn wallet_rename<'py>(
         &self,
         py: Python<'py>,
@@ -468,7 +474,7 @@ impl PyWallet {
         })
     }
 
-    // TODO return type
+    #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn wallet_change_secret<'py>(
         &self,
         py: Python<'py>,
@@ -485,7 +491,7 @@ impl PyWallet {
         })
     }
 
-    // TODO return type
+    #[gen_stub(override_return_type(type_repr = "bytes"))]
     pub fn wallet_export<'py>(
         &self,
         py: Python<'py>,
@@ -505,8 +511,7 @@ impl PyWallet {
         })
     }
 
-    // TODO return type
-    // TODO wallet_data is hex. Should this accept PyBinary?
+    #[gen_stub(override_return_type(type_repr = "dict"))]
     pub fn wallet_import<'py>(
         &self,
         py: Python<'py>,
@@ -531,6 +536,7 @@ impl PyWallet {
 #[gen_stub_pymethods]
 #[pymethods]
 impl PyWallet {
+    #[gen_stub(override_return_type(type_repr = "list[PrvKeyDataInfo]"))]
     pub fn prv_key_data_enumerate<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let wallet = self.wallet().clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
@@ -546,14 +552,16 @@ impl PyWallet {
         })
     }
 
+    #[gen_stub(override_return_type(type_repr = "str"))]
+    #[pyo3(signature = (wallet_secret, secret, kind, payment_secret=None, name=None))]
     pub fn prv_key_data_create<'py>(
         &self,
         py: Python<'py>,
         wallet_secret: String,
-        name: Option<String>,
-        payment_secret: Option<String>,
         secret: String,
         kind: PyPrvKeyDataVariantKind,
+        payment_secret: Option<String>,
+        name: Option<String>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let args = PrvKeyDataCreateArgs::new(
             name,
@@ -572,6 +580,7 @@ impl PyWallet {
         })
     }
 
+    #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn prv_key_data_remove<'py>(
         &self,
         py: Python<'py>,
@@ -595,6 +604,7 @@ impl PyWallet {
         })
     }
 
+    #[gen_stub(override_return_type(type_repr = "PrvKeyDataInfo"))]
     pub fn prv_key_data_get<'py>(
         &self,
         py: Python<'py>,
@@ -620,6 +630,7 @@ impl PyWallet {
 #[gen_stub_pymethods]
 #[pymethods]
 impl PyWallet {
+    #[gen_stub(override_return_type(type_repr = "list[AccountDescriptor]"))]
     pub fn accounts_enumerate<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let wallet = self.wallet().clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
@@ -634,14 +645,16 @@ impl PyWallet {
         })
     }
 
+    #[gen_stub(override_return_type(type_repr = "AccountDescriptor"))]
+    #[pyo3(signature = (wallet_secret, prv_key_data_id, payment_secret=None, account_name=None, account_index=None))]
     pub fn accounts_create_bip32<'py>(
         &self,
         py: Python<'py>,
         wallet_secret: String,
-        account_name: Option<String>,
-        account_index: Option<u64>,
         prv_key_data_id: String,
         payment_secret: Option<String>,
+        account_name: Option<String>,
+        account_index: Option<u64>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let args = AccountCreateArgs::Bip32 {
             prv_key_data_args: PrvKeyDataArgs {
@@ -665,13 +678,15 @@ impl PyWallet {
         })
     }
 
+    #[gen_stub(override_return_type(type_repr = "AccountDescriptor"))]
+    #[pyo3(signature = (wallet_secret, prv_key_data_id, ecdsa, account_name=None))]
     pub fn accounts_create_keypair<'py>(
         &self,
         py: Python<'py>,
         wallet_secret: String,
-        account_name: Option<String>,
         prv_key_data_id: String,
         ecdsa: bool,
+        account_name: Option<String>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let args = AccountCreateArgs::Keypair {
             prv_key_data_id: PrvKeyDataId::from_hex(&prv_key_data_id)
@@ -690,14 +705,16 @@ impl PyWallet {
         })
     }
 
+    #[gen_stub(override_return_type(type_repr = "AccountDescriptor"))]
+    #[pyo3(signature = (wallet_secret, prv_key_data_id, payment_secret=None, account_name=None, account_index=None))]
     pub fn accounts_import_bip32<'py>(
         &self,
         py: Python<'py>,
         wallet_secret: String,
-        account_name: Option<String>,
-        account_index: Option<u64>,
         prv_key_data_id: String,
         payment_secret: Option<String>,
+        account_name: Option<String>,
+        account_index: Option<u64>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let account_create_args = AccountCreateArgs::Bip32 {
             prv_key_data_args: PrvKeyDataArgs {
@@ -726,13 +743,15 @@ impl PyWallet {
         })
     }
 
+    #[gen_stub(override_return_type(type_repr = "AccountDescriptor"))]
+    #[pyo3(signature = (wallet_secret, prv_key_data_id, ecdsa, account_name=None))]
     pub fn accounts_import_keypair<'py>(
         &self,
         py: Python<'py>,
         wallet_secret: String,
-        account_name: Option<String>,
         prv_key_data_id: String,
         ecdsa: bool,
+        account_name: Option<String>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let account_create_args = AccountCreateArgs::Keypair {
             prv_key_data_id: PrvKeyDataId::from_hex(&prv_key_data_id)
@@ -756,6 +775,8 @@ impl PyWallet {
         })
     }
 
+    #[gen_stub(override_return_type(type_repr = "None"))]
+    #[pyo3(signature = (wallet_secret, account_id, name=None))]
     pub fn accounts_rename<'py>(
         &self,
         py: Python<'py>,
@@ -777,14 +798,16 @@ impl PyWallet {
         })
     }
 
+    #[gen_stub(override_return_type(type_repr = "int"))]
+    #[pyo3(signature = (discovery_kind, address_scan_extent, account_scan_extent, bip39_mnemonic, bip39_passphrase=None))]
     pub fn accounts_discovery<'py>(
         &self,
         py: Python<'py>,
         discovery_kind: PyAccountsDiscoveryKind,
         address_scan_extent: u32,
         account_scan_extent: u32,
-        bip39_passphrase: Option<String>,
         bip39_mnemonic: String,
+        bip39_passphrase: Option<String>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let request = AccountsDiscoveryRequest {
             discovery_kind: discovery_kind.into(),
@@ -805,12 +828,14 @@ impl PyWallet {
         })
     }
 
+    #[gen_stub(override_return_type(type_repr = "AccountDescriptor"))]
+    #[pyo3(signature = (wallet_secret, account_kind, payment_secret=None, mnemonic_phrase=None))]
     pub fn accounts_ensure_default<'py>(
         &self,
         py: Python<'py>,
         wallet_secret: String,
-        payment_secret: Option<String>,
         account_kind: PyAccountKind,
+        payment_secret: Option<String>,
         mnemonic_phrase: Option<String>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let wallet = self.wallet().clone();
@@ -829,6 +854,8 @@ impl PyWallet {
         })
     }
 
+    #[gen_stub(override_return_type(type_repr = "None"))]
+    #[pyo3(signature = (account_ids=None))]
     pub fn accounts_activate<'py>(
         &self,
         py: Python<'py>,
@@ -855,6 +882,8 @@ impl PyWallet {
         })
     }
 
+    #[gen_stub(override_return_type(type_repr = "None"))]
+    #[pyo3(signature = (account_ids=None))]
     pub fn accounts_deactivate<'py>(
         &self,
         py: Python<'py>,
@@ -881,6 +910,7 @@ impl PyWallet {
         })
     }
 
+    #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn accounts_get<'py>(
         &self,
         py: Python<'py>,
@@ -899,6 +929,7 @@ impl PyWallet {
         })
     }
 
+    #[gen_stub(override_return_type(type_repr = "Address"))]
     pub fn accounts_create_new_address<'py>(
         &self,
         py: Python<'py>,
@@ -920,12 +951,14 @@ impl PyWallet {
         })
     }
 
+    #[gen_stub(override_return_type(type_repr = "GeneratorSummary"))]
+    #[pyo3(signature = (account_id, priority_fee_sompi, fee_rate=None, payload=None, destination=None))]
     pub fn accounts_estimate<'py>(
         &self,
         py: Python<'py>,
         account_id: String,
-        fee_rate: Option<f64>,
         priority_fee_sompi: PyFees,
+        fee_rate: Option<f64>,
         payload: Option<PyBinary>,
         destination: Option<Vec<PyPaymentOutput>>,
     ) -> PyResult<Bound<'py, PyAny>> {
@@ -959,14 +992,16 @@ impl PyWallet {
         })
     }
 
+    #[gen_stub(override_return_type(type_repr = "GeneratorSummary"))]
+    #[pyo3(signature = (wallet_secret, account_id, priority_fee_sompi, payment_secret=None, fee_rate=None, payload=None, destination=None))]
     pub fn accounts_send<'py>(
         &self,
         py: Python<'py>,
         wallet_secret: String,
-        payment_secret: Option<String>,
         account_id: String,
-        fee_rate: Option<f64>,
         priority_fee_sompi: PyFees,
+        payment_secret: Option<String>,
+        fee_rate: Option<f64>,
         payload: Option<PyBinary>,
         destination: Option<Vec<PyPaymentOutput>>,
     ) -> PyResult<Bound<'py, PyAny>> {
@@ -999,6 +1034,8 @@ impl PyWallet {
         })
     }
 
+    #[gen_stub(override_return_type(type_repr = "dict"))]
+    #[pyo3(signature = (account_id, addresses=None, min_amount_sompi=None))]
     pub fn accounts_get_utxos<'py>(
         &self,
         py: Python<'py>,
@@ -1024,14 +1061,16 @@ impl PyWallet {
         })
     }
 
+    #[gen_stub(override_return_type(type_repr = "dict"))]
+    #[pyo3(signature = (wallet_secret, source_account_id, destination_account_id, transfer_amount_sompi, payment_secret=None, fee_rate=None, priority_fee_sompi=None))]
     pub fn accounts_transfer<'py>(
         &self,
         py: Python<'py>,
         wallet_secret: String,
         source_account_id: String,
         destination_account_id: String,
-        payment_secret: Option<String>,
         transfer_amount_sompi: u64,
+        payment_secret: Option<String>,
         fee_rate: Option<f64>,
         priority_fee_sompi: Option<PyFees>,
     ) -> PyResult<Bound<'py, PyAny>> {
@@ -1067,18 +1106,20 @@ impl PyWallet {
         })
     }
 
+    #[gen_stub(override_return_type(type_repr = "list[str]"))]
+    #[pyo3(signature = (wallet_secret, account_id, address_type, address_index, script_sig, commit_amount_sompi, reveal_fee_sompi, payment_secret=None, fee_rate=None, payload=None))]
     pub fn accounts_commit_reveal<'py>(
         &self,
         py: Python<'py>,
+        wallet_secret: String,
         account_id: String,
         address_type: PyCommitRevealAddressKind,
         address_index: u32,
         script_sig: PyBinary,
-        wallet_secret: String,
         commit_amount_sompi: u64,
+        reveal_fee_sompi: u64,
         payment_secret: Option<String>,
         fee_rate: Option<f64>,
-        reveal_fee_sompi: u64,
         payload: Option<PyBinary>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let request = AccountsCommitRevealRequest {
@@ -1108,15 +1149,17 @@ impl PyWallet {
         })
     }
 
+    #[gen_stub(override_return_type(type_repr = "list[str]"))]
+    #[pyo3(signature = (wallet_secret, account_id, script_sig, reveal_fee_sompi, payment_secret=None, fee_rate=None, payload=None, start_destination=None, end_destination=None))]
     pub fn accounts_commit_reveal_manual<'py>(
         &self,
         py: Python<'py>,
+        wallet_secret: String,
         account_id: String,
         script_sig: PyBinary,
-        wallet_secret: String,
+        reveal_fee_sompi: u64,
         payment_secret: Option<String>,
         fee_rate: Option<f64>,
-        reveal_fee_sompi: u64,
         payload: Option<PyBinary>,
         start_destination: Option<Vec<PyPaymentOutput>>,
         end_destination: Option<Vec<PyPaymentOutput>>,
@@ -1174,6 +1217,7 @@ impl PyWallet {
 #[gen_stub_pymethods]
 #[pymethods]
 impl PyWallet {
+    #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn batch<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let wallet = self.wallet().clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
@@ -1182,6 +1226,7 @@ impl PyWallet {
         })
     }
 
+    #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn flush<'py>(
         &self,
         py: Python<'py>,
@@ -1198,6 +1243,8 @@ impl PyWallet {
         })
     }
 
+    #[gen_stub(override_return_type(type_repr = "None"))]
+    #[pyo3(signature = (name, data=None))]
     pub fn retain_context<'py>(
         &self,
         py: Python<'py>,
@@ -1216,6 +1263,8 @@ impl PyWallet {
         })
     }
 
+    #[gen_stub(override_return_type(type_repr = "dict"))]
+    #[pyo3(signature = (name=None))]
     pub fn get_status<'py>(
         &self,
         py: Python<'py>,
@@ -1231,6 +1280,7 @@ impl PyWallet {
         })
     }
 
+    #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn address_book_enumerate<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let wallet = self.wallet().clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
@@ -1247,6 +1297,8 @@ impl PyWallet {
 #[gen_stub_pymethods]
 #[pymethods]
 impl PyWallet {
+    #[gen_stub(override_return_type(type_repr = "dict"))]
+    #[pyo3(signature = (account_id, network_id, start, end, filter=None))]
     pub fn transactions_data_get<'py>(
         &self,
         py: Python<'py>,
@@ -1281,6 +1333,8 @@ impl PyWallet {
         })
     }
 
+    #[gen_stub(override_return_type(type_repr = "None"))]
+    #[pyo3(signature = (account_id, network_id, transaction_id, note=None))]
     pub fn transactions_replace_note<'py>(
         &self,
         py: Python<'py>,
@@ -1308,6 +1362,8 @@ impl PyWallet {
         })
     }
 
+    #[gen_stub(override_return_type(type_repr = "None"))]
+    #[pyo3(signature = (account_id, network_id, transaction_id, metadata=None))]
     pub fn transactions_replace_metadata<'py>(
         &self,
         py: Python<'py>,
@@ -1340,6 +1396,7 @@ impl PyWallet {
 #[gen_stub_pymethods]
 #[pymethods]
 impl PyWallet {
+    #[gen_stub(override_return_type(type_repr = "dict"))]
     pub fn fee_rate_estimate<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let wallet = self.wallet().clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
@@ -1352,6 +1409,7 @@ impl PyWallet {
         })
     }
 
+    #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn fee_rate_poller_enable<'py>(
         &self,
         py: Python<'py>,
@@ -1369,6 +1427,7 @@ impl PyWallet {
         })
     }
 
+    #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn fee_rate_poller_disable<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let wallet = self.wallet().clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
