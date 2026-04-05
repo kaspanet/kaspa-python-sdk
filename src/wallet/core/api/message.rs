@@ -1,4 +1,4 @@
-use kaspa_wallet_core::api::{AccountsDiscoveryKind, NewAddressKind};
+use kaspa_wallet_core::api::{AccountsDiscoveryKind, CommitRevealAddressKind, NewAddressKind};
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
@@ -78,6 +78,47 @@ impl<'py> FromPyObject<'_, 'py> for PyNewAddressKind {
         } else {
             Err(PyException::new_err(
                 "Expected type `str` or `NewAddressKind`",
+            ))
+        }
+    }
+}
+
+crate::wrap_unit_enum_for_py!(
+    /// Commit Reveal Address Kind
+    PyCommitRevealAddressKind, "CommitRevealAddressKind", CommitRevealAddressKind, {
+        Receive,
+        Change
+    }
+);
+
+impl FromStr for PyCommitRevealAddressKind {
+    type Err = PyErr;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let v = match s.to_lowercase().as_str() {
+            "receive" => PyCommitRevealAddressKind::Receive,
+            "change" => PyCommitRevealAddressKind::Change,
+            _ => Err(PyException::new_err(
+                "Unsupported string value for `CommitRevealAddressKind`",
+            ))?,
+        };
+
+        Ok(v)
+    }
+}
+
+impl<'py> FromPyObject<'_, 'py> for PyCommitRevealAddressKind {
+    type Error = PyErr;
+
+    fn extract(obj: Borrowed<'_, 'py, PyAny>) -> Result<Self, Self::Error> {
+        if let Ok(s) = obj.extract::<String>() {
+            PyCommitRevealAddressKind::from_str(&s)
+                .map_err(|err| PyException::new_err(err.to_string()))
+        } else if let Ok(t) = obj.cast::<PyCommitRevealAddressKind>() {
+            Ok(t.borrow().clone())
+        } else {
+            Err(PyException::new_err(
+                "Expected type `str` or `CommitRevealAddressKind`",
             ))
         }
     }

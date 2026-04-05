@@ -11,11 +11,12 @@ use crate::{
     types::PyBinary,
     wallet::core::{
         account::{descriptor::PyAccountDescriptor, kind::PyAccountKind},
-        api::message::{PyAccountsDiscoveryKind, PyNewAddressKind},
+        api::message::{PyAccountsDiscoveryKind, PyCommitRevealAddressKind, PyNewAddressKind},
         events::PyWalletEventType,
         storage::{
             interface::PyWalletDescriptor,
             keydata::{PyPrvKeyDataInfo, PyPrvKeyDataVariantKind},
+            transaction::PyTransactionKind,
         },
         tx::{fees::PyFees, generator::PyGeneratorSummary, payment::PyPaymentOutput},
     },
@@ -23,20 +24,25 @@ use crate::{
 use ahash::AHashMap;
 use futures::{FutureExt, select};
 use kaspa_addresses::Address;
+use kaspa_hashes::Hash;
 use kaspa_utils::hex::{FromHex, ToHex};
 use kaspa_wallet_core::{
     api::{
-        AccountsDiscoveryRequest, AccountsEstimateRequest, AccountsGetRequest,
-        AccountsGetUtxosRequest, AccountsImportRequest, AccountsSendRequest,
-        AccountsTransferRequest, PrvKeyDataRemoveRequest, WalletApi, WalletExportRequest,
-        WalletImportRequest,
+        AccountsCommitRevealManualRequest, AccountsCommitRevealRequest, AccountsDiscoveryRequest,
+        AccountsEstimateRequest, AccountsGetRequest, AccountsGetUtxosRequest,
+        AccountsImportRequest, AccountsSendRequest, AccountsTransferRequest,
+        AddressBookEnumerateRequest, BatchRequest, FeeRateEstimateRequest,
+        FeeRatePollerDisableRequest, FeeRatePollerEnableRequest, FlushRequest, GetStatusRequest,
+        PrvKeyDataRemoveRequest, RetainContextRequest, TransactionsDataGetRequest,
+        TransactionsReplaceMetadataRequest, TransactionsReplaceNoteRequest, WalletApi,
+        WalletExportRequest, WalletImportRequest,
     },
     error::Error as NativeError,
     events::{EventKind, Events},
     prelude::{AccountId, EncryptionKind},
     result::Result,
     rpc::{DynRpcApi, Rpc},
-    storage::{Hint, PrvKeyDataId, PrvKeyDataInfo},
+    storage::{Hint, PrvKeyDataId, PrvKeyDataInfo, TransactionKind},
     tx::{PaymentDestination, PaymentOutput, PaymentOutputs},
     wallet::{
         self as native, AccountCreateArgs, AccountCreateArgsBip32, PrvKeyDataArgs,
@@ -1058,6 +1064,319 @@ impl PyWallet {
                 // Ok(dict)
                 Ok(serde_pyobject::to_pyobject(py, &resp)?.unbind())
             })
+        })
+    }
+
+    pub fn accounts_commit_reveal<'py>(
+        &self,
+        py: Python<'py>,
+        account_id: String,
+        address_type: PyCommitRevealAddressKind,
+        address_index: u32,
+        script_sig: PyBinary,
+        wallet_secret: String,
+        commit_amount_sompi: u64,
+        payment_secret: Option<String>,
+        fee_rate: Option<f64>,
+        reveal_fee_sompi: u64,
+        payload: Option<PyBinary>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let request = AccountsCommitRevealRequest {
+            account_id: AccountId::from_hex(&account_id)
+                .map_err(|err| PyException::new_err(err.to_string()))?,
+            address_type: address_type.into(),
+            address_index,
+            script_sig: script_sig.data,
+            wallet_secret: wallet_secret.into(),
+            commit_amount_sompi,
+            payment_secret: payment_secret.map(Secret::from),
+            fee_rate,
+            reveal_fee_sompi,
+            payload: payload.map(|p| p.data),
+        };
+
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let resp = wallet
+                .accounts_commit_reveal_call(request)
+                .await
+                .into_py_result()?;
+
+            Python::attach(
+                |py| Ok(serde_pyobject::to_pyobject(py, &resp.transaction_ids)?.unbind()),
+            )
+        })
+    }
+
+    pub fn accounts_commit_reveal_manual<'py>(
+        &self,
+        py: Python<'py>,
+        account_id: String,
+        script_sig: PyBinary,
+        wallet_secret: String,
+        payment_secret: Option<String>,
+        fee_rate: Option<f64>,
+        reveal_fee_sompi: u64,
+        payload: Option<PyBinary>,
+        start_destination: Option<Vec<PyPaymentOutput>>,
+        end_destination: Option<Vec<PyPaymentOutput>>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let start_destination = match start_destination {
+            Some(outputs) => {
+                let outputs = outputs
+                    .into_iter()
+                    .map(PaymentOutput::from)
+                    .collect::<Vec<PaymentOutput>>();
+                PaymentDestination::PaymentOutputs(PaymentOutputs { outputs })
+            }
+            None => PaymentDestination::Change,
+        };
+
+        let end_destination = match end_destination {
+            Some(outputs) => {
+                let outputs = outputs
+                    .into_iter()
+                    .map(PaymentOutput::from)
+                    .collect::<Vec<PaymentOutput>>();
+                PaymentDestination::PaymentOutputs(PaymentOutputs { outputs })
+            }
+            None => PaymentDestination::Change,
+        };
+
+        let request = AccountsCommitRevealManualRequest {
+            account_id: AccountId::from_hex(&account_id)
+                .map_err(|err| PyException::new_err(err.to_string()))?,
+            script_sig: script_sig.data,
+            start_destination,
+            end_destination,
+            wallet_secret: wallet_secret.into(),
+            payment_secret: payment_secret.map(Secret::from),
+            fee_rate,
+            reveal_fee_sompi,
+            payload: payload.map(|p| p.data),
+        };
+
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let resp = wallet
+                .accounts_commit_reveal_manual_call(request)
+                .await
+                .into_py_result()?;
+
+            Python::attach(
+                |py| Ok(serde_pyobject::to_pyobject(py, &resp.transaction_ids)?.unbind()),
+            )
+        })
+    }
+}
+
+// Wallet API batch, flush, retain_context, get_status functions
+#[gen_stub_pymethods]
+#[pymethods]
+impl PyWallet {
+    pub fn batch<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            wallet.batch_call(BatchRequest {}).await.into_py_result()?;
+            Ok(())
+        })
+    }
+
+    pub fn flush<'py>(
+        &self,
+        py: Python<'py>,
+        wallet_secret: String,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let request = FlushRequest {
+            wallet_secret: wallet_secret.into(),
+        };
+
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            wallet.flush_call(request).await.into_py_result()?;
+            Ok(())
+        })
+    }
+
+    pub fn retain_context<'py>(
+        &self,
+        py: Python<'py>,
+        name: String,
+        data: Option<PyBinary>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let request = RetainContextRequest {
+            name,
+            data: data.map(|d| d.data),
+        };
+
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            wallet.retain_context_call(request).await.into_py_result()?;
+            Ok(())
+        })
+    }
+
+    pub fn get_status<'py>(
+        &self,
+        py: Python<'py>,
+        name: Option<String>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let request = GetStatusRequest { name };
+
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let resp = wallet.get_status_call(request).await.into_py_result()?;
+
+            Python::attach(|py| Ok(serde_pyobject::to_pyobject(py, &resp)?.unbind()))
+        })
+    }
+
+    pub fn address_book_enumerate<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            wallet
+                .address_book_enumerate_call(AddressBookEnumerateRequest {})
+                .await
+                .into_py_result()?;
+            Ok(())
+        })
+    }
+}
+
+// Wallet API transactions_ functions
+#[gen_stub_pymethods]
+#[pymethods]
+impl PyWallet {
+    pub fn transactions_data_get<'py>(
+        &self,
+        py: Python<'py>,
+        account_id: String,
+        network_id: PyNetworkId,
+        start: u64,
+        end: u64,
+        filter: Option<Vec<PyTransactionKind>>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let request = TransactionsDataGetRequest {
+            account_id: AccountId::from_hex(&account_id)
+                .map_err(|err| PyException::new_err(err.to_string()))?,
+            network_id: network_id.into(),
+            filter: filter.map(|kinds| {
+                kinds
+                    .into_iter()
+                    .map(TransactionKind::from)
+                    .collect::<Vec<TransactionKind>>()
+            }),
+            start,
+            end,
+        };
+
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let resp = wallet
+                .transactions_data_get_call(request)
+                .await
+                .into_py_result()?;
+
+            Python::attach(|py| Ok(serde_pyobject::to_pyobject(py, &resp)?.unbind()))
+        })
+    }
+
+    pub fn transactions_replace_note<'py>(
+        &self,
+        py: Python<'py>,
+        account_id: String,
+        network_id: PyNetworkId,
+        transaction_id: String,
+        note: Option<String>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let request = TransactionsReplaceNoteRequest {
+            account_id: AccountId::from_hex(&account_id)
+                .map_err(|err| PyException::new_err(err.to_string()))?,
+            network_id: network_id.into(),
+            transaction_id: Hash::from_hex(&transaction_id)
+                .map_err(|err| PyException::new_err(err.to_string()))?,
+            note,
+        };
+
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            wallet
+                .transactions_replace_note_call(request)
+                .await
+                .into_py_result()?;
+            Ok(())
+        })
+    }
+
+    pub fn transactions_replace_metadata<'py>(
+        &self,
+        py: Python<'py>,
+        account_id: String,
+        network_id: PyNetworkId,
+        transaction_id: String,
+        metadata: Option<String>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let request = TransactionsReplaceMetadataRequest {
+            account_id: AccountId::from_hex(&account_id)
+                .map_err(|err| PyException::new_err(err.to_string()))?,
+            network_id: network_id.into(),
+            transaction_id: Hash::from_hex(&transaction_id)
+                .map_err(|err| PyException::new_err(err.to_string()))?,
+            metadata,
+        };
+
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            wallet
+                .transactions_replace_metadata_call(request)
+                .await
+                .into_py_result()?;
+            Ok(())
+        })
+    }
+}
+
+// Wallet API fee_rate_ functions
+#[gen_stub_pymethods]
+#[pymethods]
+impl PyWallet {
+    pub fn fee_rate_estimate<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let resp = wallet
+                .fee_rate_estimate_call(FeeRateEstimateRequest {})
+                .await
+                .into_py_result()?;
+
+            Python::attach(|py| Ok(serde_pyobject::to_pyobject(py, &resp)?.unbind()))
+        })
+    }
+
+    pub fn fee_rate_poller_enable<'py>(
+        &self,
+        py: Python<'py>,
+        interval_seconds: u64,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let request = FeeRatePollerEnableRequest { interval_seconds };
+
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            wallet
+                .fee_rate_poller_enable_call(request)
+                .await
+                .into_py_result()?;
+            Ok(())
+        })
+    }
+
+    pub fn fee_rate_poller_disable<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            wallet
+                .fee_rate_poller_disable_call(FeeRatePollerDisableRequest {})
+                .await
+                .into_py_result()?;
+            Ok(())
         })
     }
 }
