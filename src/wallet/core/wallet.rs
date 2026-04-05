@@ -26,8 +26,10 @@ use kaspa_addresses::Address;
 use kaspa_utils::hex::{FromHex, ToHex};
 use kaspa_wallet_core::{
     api::{
-        AccountsDiscoveryRequest, AccountsGetRequest, AccountsGetUtxosRequest, AccountsSendRequest,
-        PrvKeyDataRemoveRequest, WalletApi, WalletExportRequest, WalletImportRequest,
+        AccountsDiscoveryRequest, AccountsEstimateRequest, AccountsGetRequest,
+        AccountsGetUtxosRequest, AccountsImportRequest, AccountsSendRequest,
+        AccountsTransferRequest, PrvKeyDataRemoveRequest, WalletApi, WalletExportRequest,
+        WalletImportRequest,
     },
     error::Error as NativeError,
     events::{EventKind, Events},
@@ -682,6 +684,72 @@ impl PyWallet {
         })
     }
 
+    pub fn accounts_import_bip32<'py>(
+        &self,
+        py: Python<'py>,
+        wallet_secret: String,
+        account_name: Option<String>,
+        account_index: Option<u64>,
+        prv_key_data_id: String,
+        payment_secret: Option<String>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let account_create_args = AccountCreateArgs::Bip32 {
+            prv_key_data_args: PrvKeyDataArgs {
+                prv_key_data_id: PrvKeyDataId::from_hex(&prv_key_data_id)
+                    .map_err(|err| PyException::new_err(err.to_string()))?,
+                payment_secret: payment_secret.map(Secret::from),
+            },
+            account_args: AccountCreateArgsBip32 {
+                account_name,
+                account_index,
+            },
+        };
+
+        let request = AccountsImportRequest {
+            wallet_secret: wallet_secret.into(),
+            account_create_args,
+        };
+
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let resp = wallet
+                .accounts_import_call(request)
+                .await
+                .into_py_result()?;
+            Ok(PyAccountDescriptor::from(resp.account_descriptor))
+        })
+    }
+
+    pub fn accounts_import_keypair<'py>(
+        &self,
+        py: Python<'py>,
+        wallet_secret: String,
+        account_name: Option<String>,
+        prv_key_data_id: String,
+        ecdsa: bool,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let account_create_args = AccountCreateArgs::Keypair {
+            prv_key_data_id: PrvKeyDataId::from_hex(&prv_key_data_id)
+                .map_err(|err| PyException::new_err(err.to_string()))?,
+            account_name,
+            ecdsa,
+        };
+
+        let request = AccountsImportRequest {
+            wallet_secret: wallet_secret.into(),
+            account_create_args,
+        };
+
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let resp = wallet
+                .accounts_import_call(request)
+                .await
+                .into_py_result()?;
+            Ok(PyAccountDescriptor::from(resp.account_descriptor))
+        })
+    }
+
     pub fn accounts_rename<'py>(
         &self,
         py: Python<'py>,
@@ -846,6 +914,45 @@ impl PyWallet {
         })
     }
 
+    pub fn accounts_estimate<'py>(
+        &self,
+        py: Python<'py>,
+        account_id: String,
+        fee_rate: Option<f64>,
+        priority_fee_sompi: PyFees,
+        payload: Option<PyBinary>,
+        destination: Option<Vec<PyPaymentOutput>>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let destination = match destination {
+            Some(outputs) => {
+                let outputs = outputs
+                    .into_iter()
+                    .map(PaymentOutput::from)
+                    .collect::<Vec<PaymentOutput>>();
+                PaymentDestination::PaymentOutputs(PaymentOutputs { outputs })
+            }
+            None => PaymentDestination::Change,
+        };
+
+        let request = AccountsEstimateRequest {
+            account_id: AccountId::from_hex(&account_id)
+                .map_err(|err| PyException::new_err(err.to_string()))?,
+            destination,
+            fee_rate,
+            priority_fee_sompi: priority_fee_sompi.into(),
+            payload: payload.map(|p| p.data),
+        };
+
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let resp = wallet
+                .accounts_estimate_call(request)
+                .await
+                .into_py_result()?;
+            Ok(PyGeneratorSummary::from(resp.generator_summary))
+        })
+    }
+
     pub fn accounts_send<'py>(
         &self,
         py: Python<'py>,
@@ -908,6 +1015,49 @@ impl PyWallet {
                 .into_py_result()?;
 
             Python::attach(|py| Ok(serde_pyobject::to_pyobject(py, &resp.utxos)?.unbind()))
+        })
+    }
+
+    pub fn accounts_transfer<'py>(
+        &self,
+        py: Python<'py>,
+        wallet_secret: String,
+        source_account_id: String,
+        destination_account_id: String,
+        payment_secret: Option<String>,
+        transfer_amount_sompi: u64,
+        fee_rate: Option<f64>,
+        priority_fee_sompi: Option<PyFees>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let request = AccountsTransferRequest {
+            source_account_id: AccountId::from_hex(&source_account_id)
+                .map_err(|err| PyException::new_err(err.to_string()))?,
+            destination_account_id: AccountId::from_hex(&destination_account_id)
+                .map_err(|err| PyException::new_err(err.to_string()))?,
+            wallet_secret: wallet_secret.into(),
+            payment_secret: payment_secret.map(Secret::from),
+            transfer_amount_sompi,
+            fee_rate,
+            priority_fee_sompi: priority_fee_sompi.map(PyFees::into),
+        };
+
+        let wallet = self.wallet().clone();
+        pyo3_async_runtimes::tokio::future_into_py(py, async move {
+            let resp = wallet
+                .accounts_transfer_call(request)
+                .await
+                .into_py_result()?;
+
+            Python::attach(|py| {
+                // let dict = PyDict::new(py);
+                // dict.set_item(
+                //     "generator_summary",
+                //     PyGeneratorSummary::from(resp.generator_summary),
+                // );
+                // dict.set_item("transaction_ids", resp.transaction_ids);
+                // Ok(dict)
+                Ok(serde_pyobject::to_pyobject(py, &resp)?.unbind())
+            })
         })
     }
 }
