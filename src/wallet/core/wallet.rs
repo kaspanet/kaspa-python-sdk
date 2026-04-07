@@ -102,8 +102,10 @@ impl PyWallet {
     #[pyo3(signature = (network_id=None, encoding=None, url=None, resolver=None))]
     pub fn new(
         // resident: bool, TODO
-        network_id: Option<PyNetworkId>,
-        encoding: Option<PyEncoding>,
+        #[gen_stub(override_type(type_repr = "None | NetworkId | str"))] network_id: Option<
+            PyNetworkId,
+        >,
+        #[gen_stub(override_type(type_repr = "None | Encoding | str"))] encoding: Option<PyEncoding>,
         url: Option<String>,
         resolver: Option<PyResolver>,
     ) -> PyResult<Self> {
@@ -220,7 +222,7 @@ impl PyWallet {
     fn add_event_listener(
         &self,
         py: Python,
-        event: PyWalletEventType,
+        #[gen_stub(override_type(type_repr = "WalletEventType | str"))] event: PyWalletEventType,
         #[gen_stub(override_type(type_repr = "typing.Callable[..., None]"))] callback: Py<PyAny>,
         args: &Bound<'_, PyTuple>,
         kwargs: Option<&Bound<'_, PyDict>>,
@@ -251,7 +253,7 @@ impl PyWallet {
     #[pyo3(signature = (event, callback=None))]
     fn remove_event_listener(
         &self,
-        event: PyWalletEventType,
+        #[gen_stub(override_type(type_repr = "WalletEventType | str"))] event: PyWalletEventType,
         #[gen_stub(override_type(type_repr = "None | typing.Callable[..., None]"))]
         callback: Option<Py<PyAny>>,
     ) -> PyResult<()> {
@@ -283,7 +285,10 @@ impl PyWallet {
         Ok(())
     }
 
-    pub fn set_network_id(&self, network_id: PyNetworkId) -> Result<(), Error> {
+    pub fn set_network_id(
+        &self,
+        #[gen_stub(override_type(type_repr = "NetworkId | str"))] network_id: PyNetworkId,
+    ) -> Result<(), Error> {
         self.inner.wallet.set_network_id(&(network_id.into()))?;
         Ok(())
     }
@@ -516,7 +521,7 @@ impl PyWallet {
         &self,
         py: Python<'py>,
         wallet_secret: String,
-        wallet_data: PyBinary,
+        #[gen_stub(override_type(type_repr = "str | bytes | list[int]"))] wallet_data: PyBinary,
     ) -> PyResult<Bound<'py, PyAny>> {
         let req = WalletImportRequest {
             wallet_secret: wallet_secret.into(),
@@ -559,6 +564,7 @@ impl PyWallet {
         py: Python<'py>,
         wallet_secret: String,
         secret: String,
+        #[gen_stub(override_type(type_repr = "PrvKeyDataVariantKind | str"))]
         kind: PyPrvKeyDataVariantKind,
         payment_secret: Option<String>,
         name: Option<String>,
@@ -803,6 +809,7 @@ impl PyWallet {
     pub fn accounts_discovery<'py>(
         &self,
         py: Python<'py>,
+        #[gen_stub(override_type(type_repr = "AccountsDiscoveryKind | str"))]
         discovery_kind: PyAccountsDiscoveryKind,
         address_scan_extent: u32,
         account_scan_extent: u32,
@@ -934,6 +941,7 @@ impl PyWallet {
         &self,
         py: Python<'py>,
         account_id: String,
+        #[gen_stub(override_type(type_repr = "NewAddressKind | str"))]
         address_kind: PyNewAddressKind,
     ) -> PyResult<Bound<'py, PyAny>> {
         let wallet = self.wallet().clone();
@@ -957,9 +965,11 @@ impl PyWallet {
         &self,
         py: Python<'py>,
         account_id: String,
-        priority_fee_sompi: PyFees,
+        #[gen_stub(override_type(type_repr = "Fees | dict"))] priority_fee_sompi: PyFees,
         fee_rate: Option<f64>,
-        payload: Option<PyBinary>,
+        #[gen_stub(override_type(type_repr = "None | str | bytes | list[int]"))] payload: Option<
+            PyBinary,
+        >,
         destination: Option<Vec<PyPaymentOutput>>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let destination = match destination {
@@ -999,10 +1009,12 @@ impl PyWallet {
         py: Python<'py>,
         wallet_secret: String,
         account_id: String,
-        priority_fee_sompi: PyFees,
+        #[gen_stub(override_type(type_repr = "Fees | dict"))] priority_fee_sompi: PyFees,
         payment_secret: Option<String>,
         fee_rate: Option<f64>,
-        payload: Option<PyBinary>,
+        #[gen_stub(override_type(type_repr = "None | str | bytes | list[int]"))] payload: Option<
+            PyBinary,
+        >,
         destination: Option<Vec<PyPaymentOutput>>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let destination = match destination {
@@ -1040,6 +1052,7 @@ impl PyWallet {
         &self,
         py: Python<'py>,
         account_id: String,
+        #[gen_stub(override_type(type_repr = "None | typing.Sequence[Address | str]"))]
         addresses: Option<Vec<PyAddress>>,
         min_amount_sompi: Option<u64>,
     ) -> PyResult<Bound<'py, PyAny>> {
@@ -1072,7 +1085,9 @@ impl PyWallet {
         transfer_amount_sompi: u64,
         payment_secret: Option<String>,
         fee_rate: Option<f64>,
-        priority_fee_sompi: Option<PyFees>,
+        #[gen_stub(override_type(type_repr = "None | Fees | dict"))] priority_fee_sompi: Option<
+            PyFees,
+        >,
     ) -> PyResult<Bound<'py, PyAny>> {
         let request = AccountsTransferRequest {
             source_account_id: AccountId::from_hex(&source_account_id)
@@ -1113,14 +1128,17 @@ impl PyWallet {
         py: Python<'py>,
         wallet_secret: String,
         account_id: String,
+        #[gen_stub(override_type(type_repr = "CommitRevealAddressKind | str"))]
         address_type: PyCommitRevealAddressKind,
         address_index: u32,
-        script_sig: PyBinary,
+        #[gen_stub(override_type(type_repr = "str | bytes | list[int]"))] script_sig: PyBinary,
         commit_amount_sompi: u64,
         reveal_fee_sompi: u64,
         payment_secret: Option<String>,
         fee_rate: Option<f64>,
-        payload: Option<PyBinary>,
+        #[gen_stub(override_type(type_repr = "None | str | bytes | list[int]"))] payload: Option<
+            PyBinary,
+        >,
     ) -> PyResult<Bound<'py, PyAny>> {
         let request = AccountsCommitRevealRequest {
             account_id: AccountId::from_hex(&account_id)
@@ -1156,11 +1174,13 @@ impl PyWallet {
         py: Python<'py>,
         wallet_secret: String,
         account_id: String,
-        script_sig: PyBinary,
+        #[gen_stub(override_type(type_repr = "str | bytes | list[int]"))] script_sig: PyBinary,
         reveal_fee_sompi: u64,
         payment_secret: Option<String>,
         fee_rate: Option<f64>,
-        payload: Option<PyBinary>,
+        #[gen_stub(override_type(type_repr = "None | str | bytes | list[int]"))] payload: Option<
+            PyBinary,
+        >,
         start_destination: Option<Vec<PyPaymentOutput>>,
         end_destination: Option<Vec<PyPaymentOutput>>,
     ) -> PyResult<Bound<'py, PyAny>> {
@@ -1249,7 +1269,9 @@ impl PyWallet {
         &self,
         py: Python<'py>,
         name: String,
-        data: Option<PyBinary>,
+        #[gen_stub(override_type(type_repr = "None | str | bytes | list[int]"))] data: Option<
+            PyBinary,
+        >,
     ) -> PyResult<Bound<'py, PyAny>> {
         let request = RetainContextRequest {
             name,
@@ -1303,9 +1325,10 @@ impl PyWallet {
         &self,
         py: Python<'py>,
         account_id: String,
-        network_id: PyNetworkId,
+        #[gen_stub(override_type(type_repr = "NetworkId | str"))] network_id: PyNetworkId,
         start: u64,
         end: u64,
+        #[gen_stub(override_type(type_repr = "None | typing.Sequence[TransactionKind | str]"))]
         filter: Option<Vec<PyTransactionKind>>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let request = TransactionsDataGetRequest {
@@ -1339,7 +1362,7 @@ impl PyWallet {
         &self,
         py: Python<'py>,
         account_id: String,
-        network_id: PyNetworkId,
+        #[gen_stub(override_type(type_repr = "NetworkId | str"))] network_id: PyNetworkId,
         transaction_id: String,
         note: Option<String>,
     ) -> PyResult<Bound<'py, PyAny>> {
@@ -1368,7 +1391,7 @@ impl PyWallet {
         &self,
         py: Python<'py>,
         account_id: String,
-        network_id: PyNetworkId,
+        #[gen_stub(override_type(type_repr = "NetworkId | str"))] network_id: PyNetworkId,
         transaction_id: String,
         metadata: Option<String>,
     ) -> PyResult<Bound<'py, PyAny>> {
