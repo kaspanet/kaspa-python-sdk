@@ -27,16 +27,7 @@ use kaspa_addresses::Address;
 use kaspa_hashes::Hash;
 use kaspa_utils::hex::{FromHex, ToHex};
 use kaspa_wallet_core::{
-    api::{
-        AccountsCommitRevealManualRequest, AccountsCommitRevealRequest, AccountsDiscoveryRequest,
-        AccountsEstimateRequest, AccountsGetRequest, AccountsGetUtxosRequest,
-        AccountsImportRequest, AccountsSendRequest, AccountsTransferRequest,
-        AddressBookEnumerateRequest, BatchRequest, FeeRateEstimateRequest,
-        FeeRatePollerDisableRequest, FeeRatePollerEnableRequest, FlushRequest, GetStatusRequest,
-        PrvKeyDataRemoveRequest, RetainContextRequest, TransactionsDataGetRequest,
-        TransactionsReplaceMetadataRequest, TransactionsReplaceNoteRequest, WalletApi,
-        WalletExportRequest, WalletImportRequest,
-    },
+    api::*,
     error::Error as NativeError,
     events::{EventKind, Events},
     prelude::{AccountId, EncryptionKind},
@@ -105,7 +96,9 @@ impl PyWallet {
         #[gen_stub(override_type(type_repr = "None | NetworkId | str"))] network_id: Option<
             PyNetworkId,
         >,
-        #[gen_stub(override_type(type_repr = "None | Encoding | str"))] encoding: Option<PyEncoding>,
+        #[gen_stub(override_type(type_repr = "None | Encoding | str"))] encoding: Option<
+            PyEncoding,
+        >,
         url: Option<String>,
         resolver: Option<PyResolver>,
     ) -> PyResult<Self> {
@@ -373,10 +366,12 @@ impl PyWallet {
     pub fn wallet_enumerate<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, pyo3::PyAny>> {
         let wallet = self.wallet().clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            let descriptors: Vec<PyWalletDescriptor> = wallet
-                .wallet_enumerate()
+            let resp = wallet
+                .wallet_enumerate_call(WalletEnumerateRequest {})
                 .await
-                .into_py_result()?
+                .into_py_result()?;
+            let descriptors: Vec<PyWalletDescriptor> = resp
+                .wallet_descriptors
                 .iter()
                 .map(PyWalletDescriptor::from)
                 .collect();
@@ -395,20 +390,20 @@ impl PyWallet {
         title: Option<String>,
         user_hint: Option<String>,
     ) -> PyResult<Bound<'py, pyo3::PyAny>> {
-        let args = WalletCreateArgs::new(
-            title,
-            filename,
-            EncryptionKind::default(),
-            user_hint.map(Hint::from),
-            overwrite_wallet_storage.unwrap_or(false),
-        );
+        let request = WalletCreateRequest {
+            wallet_secret: wallet_secret.into(),
+            wallet_args: WalletCreateArgs::new(
+                title,
+                filename,
+                EncryptionKind::default(),
+                user_hint.map(Hint::from),
+                overwrite_wallet_storage.unwrap_or(false),
+            ),
+        };
 
         let wallet = self.wallet().clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            let resp = wallet
-                .wallet_create(wallet_secret.into(), args)
-                .await
-                .into_py_result()?;
+            let resp = wallet.wallet_create_call(request).await.into_py_result()?;
 
             Python::attach(|py| Ok(serde_pyobject::to_pyobject(py, &resp)?.unbind()))
         })
@@ -423,14 +418,16 @@ impl PyWallet {
         account_descriptors: bool,
         filename: Option<String>,
     ) -> PyResult<Bound<'py, pyo3::PyAny>> {
-        // let args = WalletOpenArgs { account_descriptors, legacy_accounts: false };
+        let request = WalletOpenRequest {
+            wallet_secret: wallet_secret.into(),
+            filename,
+            account_descriptors,
+            legacy_accounts: None,
+        };
 
         let wallet = self.wallet().clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            let resp = wallet
-                .wallet_open(wallet_secret.into(), filename, account_descriptors, false)
-                .await
-                .into_py_result()?;
+            let resp = wallet.wallet_open_call(request).await.into_py_result()?;
 
             Python::attach(|py| Ok(serde_pyobject::to_pyobject(py, &resp)?.unbind()))
         })
@@ -440,7 +437,10 @@ impl PyWallet {
     pub fn wallet_close<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, pyo3::PyAny>> {
         let wallet = self.wallet().clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            wallet.wallet_close().await.into_py_result()?;
+            wallet
+                .wallet_close_call(WalletCloseRequest {})
+                .await
+                .into_py_result()?;
 
             Ok(())
         })
@@ -454,7 +454,10 @@ impl PyWallet {
     ) -> PyResult<Bound<'py, pyo3::PyAny>> {
         let wallet = self.wallet().clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            wallet.wallet_reload(reactivate).await.into_py_result()?;
+            wallet
+                .wallet_reload_call(WalletReloadRequest { reactivate })
+                .await
+                .into_py_result()?;
 
             Ok(())
         })
@@ -469,12 +472,15 @@ impl PyWallet {
         title: Option<String>,
         filename: Option<String>,
     ) -> PyResult<Bound<'py, PyAny>> {
+        let request = WalletRenameRequest {
+            title,
+            filename,
+            wallet_secret: wallet_secret.into(),
+        };
+
         let wallet = self.wallet().clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            wallet
-                .wallet_rename(title.as_deref(), filename.as_deref(), wallet_secret.into())
-                .await
-                .into_py_result()?;
+            wallet.wallet_rename_call(request).await.into_py_result()?;
             Ok(())
         })
     }
@@ -486,10 +492,15 @@ impl PyWallet {
         old_wallet_secret: String,
         new_wallet_secret: String,
     ) -> PyResult<Bound<'py, PyAny>> {
+        let request = WalletChangeSecretRequest {
+            old_wallet_secret: old_wallet_secret.into(),
+            new_wallet_secret: new_wallet_secret.into(),
+        };
+
         let wallet = self.wallet().clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
             wallet
-                .wallet_change_secret(old_wallet_secret.into(), new_wallet_secret.into())
+                .wallet_change_secret_call(request)
                 .await
                 .into_py_result()?;
             Ok(())
@@ -546,9 +557,10 @@ impl PyWallet {
         let wallet = self.wallet().clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
             let resp = wallet
-                .prv_key_data_enumerate()
+                .prv_key_data_enumerate_call(PrvKeyDataEnumerateRequest {})
                 .await
                 .into_py_result()?
+                .prv_key_data_list
                 .into_iter()
                 .map(|v| PyPrvKeyDataInfo::from(v.as_ref()))
                 .collect::<Vec<PyPrvKeyDataInfo>>();
@@ -569,20 +581,23 @@ impl PyWallet {
         payment_secret: Option<String>,
         name: Option<String>,
     ) -> PyResult<Bound<'py, PyAny>> {
-        let args = PrvKeyDataCreateArgs::new(
-            name,
-            payment_secret.map(Secret::from),
-            secret.into(),
-            kind.into(),
-        );
+        let request = PrvKeyDataCreateRequest {
+            wallet_secret: wallet_secret.into(),
+            prv_key_data_args: PrvKeyDataCreateArgs::new(
+                name,
+                payment_secret.map(Secret::from),
+                secret.into(),
+                kind.into(),
+            ),
+        };
 
         let wallet = self.wallet().clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
             let resp = wallet
-                .prv_key_data_create(wallet_secret.into(), args)
+                .prv_key_data_create_call(request)
                 .await
                 .into_py_result()?;
-            Ok(resp.to_hex())
+            Ok(resp.prv_key_data_id.to_hex())
         })
     }
 
@@ -617,17 +632,23 @@ impl PyWallet {
         wallet_secret: String,
         prv_key_data_id: String,
     ) -> PyResult<Bound<'py, PyAny>> {
-        let prv_key_data_id = PrvKeyDataId::from_hex(&prv_key_data_id)
-            .map_err(|err| PyException::new_err(err.to_string()))?;
+        let request = PrvKeyDataGetRequest {
+            prv_key_data_id: PrvKeyDataId::from_hex(&prv_key_data_id)
+                .map_err(|err| PyException::new_err(err.to_string()))?,
+            wallet_secret: wallet_secret.into(),
+        };
 
         let wallet = self.wallet().clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
             let resp = wallet
-                .prv_key_data_get(prv_key_data_id, wallet_secret.into())
+                .prv_key_data_get_call(request)
                 .await
                 .into_py_result()?;
 
-            Ok(PyPrvKeyDataInfo::from(PrvKeyDataInfo::from(&resp)))
+            let prv_key_data = resp
+                .prv_key_data
+                .ok_or_else(|| PyException::new_err("private key not found"))?;
+            Ok(PyPrvKeyDataInfo::from(PrvKeyDataInfo::from(&prv_key_data)))
         })
     }
 }
@@ -641,9 +662,10 @@ impl PyWallet {
         let wallet = self.wallet().clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
             let accounts = wallet
-                .accounts_enumerate()
+                .accounts_enumerate_call(AccountsEnumerateRequest {})
                 .await
                 .into_py_result()?
+                .account_descriptors
                 .into_iter()
                 .map(PyAccountDescriptor::from)
                 .collect::<Vec<PyAccountDescriptor>>();
@@ -662,25 +684,28 @@ impl PyWallet {
         account_name: Option<String>,
         account_index: Option<u64>,
     ) -> PyResult<Bound<'py, PyAny>> {
-        let args = AccountCreateArgs::Bip32 {
-            prv_key_data_args: PrvKeyDataArgs {
-                prv_key_data_id: PrvKeyDataId::from_hex(&prv_key_data_id)
-                    .map_err(|err| PyException::new_err(err.to_string()))?,
-                payment_secret: payment_secret.map(Secret::from),
-            },
-            account_args: AccountCreateArgsBip32 {
-                account_name,
-                account_index,
+        let request = AccountsCreateRequest {
+            wallet_secret: wallet_secret.into(),
+            account_create_args: AccountCreateArgs::Bip32 {
+                prv_key_data_args: PrvKeyDataArgs {
+                    prv_key_data_id: PrvKeyDataId::from_hex(&prv_key_data_id)
+                        .map_err(|err| PyException::new_err(err.to_string()))?,
+                    payment_secret: payment_secret.map(Secret::from),
+                },
+                account_args: AccountCreateArgsBip32 {
+                    account_name,
+                    account_index,
+                },
             },
         };
 
         let wallet = self.wallet().clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
             let resp = wallet
-                .accounts_create(wallet_secret.into(), args)
+                .accounts_create_call(request)
                 .await
                 .into_py_result()?;
-            Ok(PyAccountDescriptor::from(resp))
+            Ok(PyAccountDescriptor::from(resp.account_descriptor))
         })
     }
 
@@ -694,20 +719,23 @@ impl PyWallet {
         ecdsa: bool,
         account_name: Option<String>,
     ) -> PyResult<Bound<'py, PyAny>> {
-        let args = AccountCreateArgs::Keypair {
-            prv_key_data_id: PrvKeyDataId::from_hex(&prv_key_data_id)
-                .map_err(|err| PyException::new_err(err.to_string()))?,
-            account_name,
-            ecdsa,
+        let request = AccountsCreateRequest {
+            wallet_secret: wallet_secret.into(),
+            account_create_args: AccountCreateArgs::Keypair {
+                prv_key_data_id: PrvKeyDataId::from_hex(&prv_key_data_id)
+                    .map_err(|err| PyException::new_err(err.to_string()))?,
+                account_name,
+                ecdsa,
+            },
         };
 
         let wallet = self.wallet().clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
             let resp = wallet
-                .accounts_create(wallet_secret.into(), args)
+                .accounts_create_call(request)
                 .await
                 .into_py_result()?;
-            Ok(PyAccountDescriptor::from(resp))
+            Ok(PyAccountDescriptor::from(resp.account_descriptor))
         })
     }
 
@@ -790,13 +818,17 @@ impl PyWallet {
         account_id: String,
         name: Option<String>,
     ) -> PyResult<Bound<'py, PyAny>> {
-        let account_id = AccountId::from_hex(&account_id)
-            .map_err(|err| PyException::new_err(err.to_string()))?;
+        let request = AccountsRenameRequest {
+            account_id: AccountId::from_hex(&account_id)
+                .map_err(|err| PyException::new_err(err.to_string()))?,
+            name,
+            wallet_secret: wallet_secret.into(),
+        };
 
         let wallet = self.wallet().clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
             wallet
-                .accounts_rename(account_id, name, wallet_secret.into())
+                .accounts_rename_call(request)
                 .await
                 .into_py_result()?;
 
@@ -845,19 +877,21 @@ impl PyWallet {
         payment_secret: Option<String>,
         mnemonic_phrase: Option<String>,
     ) -> PyResult<Bound<'py, PyAny>> {
+        let request = AccountsEnsureDefaultRequest {
+            wallet_secret: wallet_secret.into(),
+            payment_secret: payment_secret.map(Secret::from),
+            account_kind: account_kind.into(),
+            mnemonic_phrase: mnemonic_phrase.map(Secret::from),
+        };
+
         let wallet = self.wallet().clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
             let resp = wallet
-                .accounts_ensure_default(
-                    wallet_secret.into(),
-                    payment_secret.map(Secret::from),
-                    account_kind.into(),
-                    mnemonic_phrase.map(Secret::from),
-                )
+                .accounts_ensure_default_call(request)
                 .await
                 .into_py_result()?;
 
-            Ok(PyAccountDescriptor::from(resp))
+            Ok(PyAccountDescriptor::from(resp.account_descriptor))
         })
     }
 
@@ -878,10 +912,12 @@ impl PyWallet {
             })
             .transpose()?;
 
+        let request = AccountsActivateRequest { account_ids };
+
         let wallet = self.wallet().clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
             wallet
-                .accounts_activate(account_ids)
+                .accounts_activate_call(request)
                 .await
                 .into_py_result()?;
 
@@ -906,10 +942,12 @@ impl PyWallet {
             })
             .transpose()?;
 
+        let request = AccountsDeactivateRequest { account_ids };
+
         let wallet = self.wallet().clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
             wallet
-                .accounts_deactivate(account_ids)
+                .accounts_deactivate_call(request)
                 .await
                 .into_py_result()?;
 
@@ -944,14 +982,16 @@ impl PyWallet {
         #[gen_stub(override_type(type_repr = "NewAddressKind | str"))]
         address_kind: PyNewAddressKind,
     ) -> PyResult<Bound<'py, PyAny>> {
+        let request = AccountsCreateNewAddressRequest {
+            account_id: AccountId::from_hex(&account_id)
+                .map_err(|err| PyException::new_err(err.to_string()))?,
+            kind: address_kind.into(),
+        };
+
         let wallet = self.wallet().clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
             let resp = wallet
-                .accounts_create_new_address(
-                    AccountId::from_hex(&account_id)
-                        .map_err(|err| PyException::new_err(err.to_string()))?,
-                    address_kind.into(),
-                )
+                .accounts_create_new_address_call(request)
                 .await
                 .into_py_result()?;
 
@@ -1041,8 +1081,8 @@ impl PyWallet {
 
         let wallet = self.wallet().clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            let resp = wallet.accounts_send(request).await.into_py_result()?;
-            Ok(PyGeneratorSummary::from(resp))
+            let resp = wallet.accounts_send_call(request).await.into_py_result()?;
+            Ok(PyGeneratorSummary::from(resp.generator_summary))
         })
     }
 

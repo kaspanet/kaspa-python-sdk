@@ -20,7 +20,7 @@ async def main():
     print(await wallet.wallet_enumerate())
 
     print("--- wallet_open() ")
-    print(await wallet.wallet_open(WALLET_SECRET, "tmp2", True))
+    print(await wallet.wallet_open(WALLET_SECRET, True, "tmp2"))
 
     print("--- wallet_reload() ")
     print(await wallet.wallet_reload(True))
