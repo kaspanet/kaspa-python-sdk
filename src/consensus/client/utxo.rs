@@ -92,6 +92,13 @@ impl PyUtxoEntry {
         Self::try_from(dict)
     }
 
+    /// Equality comparison.
+    ///
+    /// Args:
+    ///     other: Another UtxoEntry to compare against.
+    ///
+    /// Returns:
+    ///     bool: True if both UtxoEntries have identical fields.
     // Cannot be derived via pyclass(eq) as wrapped PyUtxoEntry type does not derive PartialEq/Eq
     fn __eq__(&self, other: &PyUtxoEntry) -> bool {
         match (bincode::serialize(&self.0), bincode::serialize(&other.0)) {
@@ -245,6 +252,13 @@ impl PyUtxoEntries {
         Ok(dict)
     }
 
+    /// Equality comparison.
+    ///
+    /// Args:
+    ///     other: Another UtxoEntries collection to compare against.
+    ///
+    /// Returns:
+    ///     bool: True if both collections contain identical entries in the same order.
     // Cannot be derived via pyclass(eq) as wrapped PyUtxoEntries type does not derive PartialEq/Eq
     fn __eq__(&self, other: &PyUtxoEntries) -> bool {
         match (bincode::serialize(&self.0), bincode::serialize(&other.0)) {

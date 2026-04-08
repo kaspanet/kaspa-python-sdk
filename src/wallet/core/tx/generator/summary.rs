@@ -80,6 +80,13 @@ impl PyGeneratorSummary {
         self.0.try_to_pydict(py)
     }
 
+    /// Equality comparison.
+    ///
+    /// Args:
+    ///     other: Another GeneratorSummary to compare against.
+    ///
+    /// Returns:
+    ///     bool: True if both summaries serialize to identical bytes.
     // Cannot be derived via pyclass(eq)
     fn __eq__(&self, other: &PyGeneratorSummary) -> bool {
         match (bincode::serialize(&self.0), bincode::serialize(&other.0)) {

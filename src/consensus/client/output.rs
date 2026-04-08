@@ -93,6 +93,13 @@ impl PyTransactionOutput {
         Self::try_from(dict)
     }
 
+    /// Equality comparison.
+    ///
+    /// Args:
+    ///     other: Another TransactionOutput to compare against.
+    ///
+    /// Returns:
+    ///     bool: True if both outputs have identical value and script.
     // Cannot be derived via pyclass(eq) as wrapped PyTransactionOutput type does not derive PartialEq/Eq
     fn __eq__(&self, other: &PyTransactionOutput) -> bool {
         match (bincode::serialize(&self.0), bincode::serialize(&other.0)) {

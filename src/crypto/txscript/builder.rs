@@ -255,6 +255,13 @@ impl PyScriptBuilder {
         Ok(generated_script.to_hex())
     }
 
+    /// Equality comparison.
+    ///
+    /// Args:
+    ///     other: Another ScriptBuilder to compare against.
+    ///
+    /// Returns:
+    ///     bool: True if both builders have produced identical scripts.
     // Cannot be derived via pyclass(eq)
     fn __eq__(&self, other: &PyScriptBuilder) -> bool {
         match (

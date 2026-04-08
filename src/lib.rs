@@ -14,6 +14,11 @@ use pyo3_stub_gen::define_stub_info_gatherer;
 
 define_stub_info_gatherer!(stub_info);
 
+/// The `kaspa` Python module.
+///
+/// Top-level entry point that registers all Rust-backed classes and functions
+/// with Python. Also creates the `kaspa.exceptions` submodule for wallet
+/// error types.
 #[pymodule]
 fn kaspa(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Init logging bridge

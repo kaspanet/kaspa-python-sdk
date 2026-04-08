@@ -44,6 +44,10 @@ impl<'py> FromPyObject<'_, 'py> for PyFeeSource {
     }
 }
 
+/// Transaction fees specification.
+///
+/// Pairs an absolute fee amount in sompi with an optional FeeSource indicating
+/// which party (sender or receiver) bears the cost.
 #[gen_stub_pyclass]
 #[pyclass(name = "Fees", skip_from_py_object)]
 #[derive(Clone)]
@@ -55,6 +59,15 @@ pub struct PyFees {
 #[gen_stub_pymethods]
 #[pymethods]
 impl PyFees {
+    /// Create a new Fees specification.
+    ///
+    /// Args:
+    ///     amount: The fee amount in sompi.
+    ///     source: Optional FeeSource indicating who pays the fee.
+    ///         If None, defaults to no explicit source.
+    ///
+    /// Returns:
+    ///     Fees: A new Fees instance.
     #[new]
     pub fn new(amount: u64, source: Option<PyFeeSource>) -> Self {
         Self { amount, source }

@@ -9,16 +9,22 @@ pub struct PyWalletDescriptor(WalletDescriptor);
 #[gen_stub_pymethods]
 #[pymethods]
 impl PyWalletDescriptor {
+    /// The user-assigned wallet title, or None if unset.
     #[getter]
     fn get_title(&self) -> Option<String> {
         self.0.title.clone()
     }
 
+    /// The on-disk filename of the wallet.
     #[getter]
     fn get_filename(&self) -> String {
         self.0.filename.clone()
     }
 
+    /// The string representation.
+    ///
+    /// Returns:
+    ///     str: The WalletDescriptor as a string.
     fn __repr__(&self) -> String {
         match &self.0.title {
             Some(title) => format!(

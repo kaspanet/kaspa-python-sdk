@@ -9,18 +9,42 @@ from . import exceptions
 @typing.final
 class AccountDescriptor:
     @property
-    def kind(self) -> AccountKind: ...
+    def kind(self) -> AccountKind:
+        r"""
+        The account kind (e.g. Bip32, Keypair, MultiSig).
+        """
     @property
-    def account_id(self) -> builtins.str: ...
+    def account_id(self) -> builtins.str:
+        r"""
+        The account id as a hex string.
+        """
     @property
-    def account_name(self) -> typing.Optional[builtins.str]: ...
+    def account_name(self) -> typing.Optional[builtins.str]:
+        r"""
+        The user-assigned account name, or None if unset.
+        """
     @property
-    def balance(self) -> typing.Optional[Balance]: ...
+    def balance(self) -> typing.Optional[Balance]:
+        r"""
+        The current balance of the account, or None if not yet known.
+        """
     @property
-    def receive_address(self) -> typing.Optional[builtins.str]: ...
+    def receive_address(self) -> typing.Optional[builtins.str]:
+        r"""
+        The current receive address as a string, or None if not available.
+        """
     @property
-    def change_address(self) -> typing.Optional[builtins.str]: ...
-    def __repr__(self) -> builtins.str: ...
+    def change_address(self) -> typing.Optional[builtins.str]:
+        r"""
+        The current change address as a string, or None if not available.
+        """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The string representation.
+        
+        Returns:
+            str: The AccountDescriptor as a string.
+        """
 
 @typing.final
 class AccountKind:
@@ -283,7 +307,24 @@ class DerivationPath:
 
 @typing.final
 class Fees:
-    def __new__(cls, amount: builtins.int, source: typing.Optional[FeeSource]) -> Fees: ...
+    r"""
+    Transaction fees specification.
+    
+    Pairs an absolute fee amount in sompi with an optional FeeSource indicating
+    which party (sender or receiver) bears the cost.
+    """
+    def __new__(cls, amount: builtins.int, source: typing.Optional[FeeSource]) -> Fees:
+        r"""
+        Create a new Fees specification.
+        
+        Args:
+            amount: The fee amount in sompi.
+            source: Optional FeeSource indicating who pays the fee.
+                If None, defaults to no explicit source.
+        
+        Returns:
+            Fees: A new Fees instance.
+        """
 
 @typing.final
 class Generator:
@@ -411,7 +452,16 @@ class GeneratorSummary:
         Returns:
             dict: the GeneratorSummary in dictionary form.
         """
-    def __eq__(self, other: GeneratorSummary) -> builtins.bool: ...
+    def __eq__(self, other: GeneratorSummary) -> builtins.bool:
+        r"""
+        Equality comparison.
+        
+        Args:
+            other: Another GeneratorSummary to compare against.
+        
+        Returns:
+            bool: True if both summaries serialize to identical bytes.
+        """
 
 @typing.final
 class Hash:
@@ -755,7 +805,16 @@ class PaymentOutput:
     Represents a single output in a transaction, specifying where funds
     should be sent and how much. Used with Generator and create_transactions.
     """
-    def __eq__(self, other: PaymentOutput) -> builtins.bool: ...
+    def __eq__(self, other: PaymentOutput) -> builtins.bool:
+        r"""
+        Equality comparison.
+        
+        Args:
+            other: Another PaymentOutput to compare against.
+        
+        Returns:
+            bool: True if both outputs have identical address and amount.
+        """
 
 @typing.final
 class PendingTransaction:
@@ -1019,12 +1078,27 @@ class PrivateKeyGenerator:
 @typing.final
 class PrvKeyDataInfo:
     @property
-    def id(self) -> builtins.str: ...
+    def id(self) -> builtins.str:
+        r"""
+        The private key data id as a hex string.
+        """
     @property
-    def name(self) -> typing.Optional[builtins.str]: ...
+    def name(self) -> typing.Optional[builtins.str]:
+        r"""
+        The user-assigned name of this private key data, or None if unset.
+        """
     @property
-    def is_encrypted(self) -> builtins.bool: ...
-    def __repr__(self) -> builtins.str: ...
+    def is_encrypted(self) -> builtins.bool:
+        r"""
+        Whether the private key data is encrypted at rest.
+        """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The string representation.
+        
+        Returns:
+            str: The PrvKeyDataInfo as a string.
+        """
 
 @typing.final
 class PublicKey:
@@ -1820,7 +1894,16 @@ class ScriptBuilder:
         Raises:
             Exception: If encoding fails.
         """
-    def __eq__(self, other: ScriptBuilder) -> builtins.bool: ...
+    def __eq__(self, other: ScriptBuilder) -> builtins.bool:
+        r"""
+        Equality comparison.
+        
+        Args:
+            other: Another ScriptBuilder to compare against.
+        
+        Returns:
+            bool: True if both builders have produced identical scripts.
+        """
 
 @typing.final
 class ScriptPublicKey:
@@ -1861,7 +1944,10 @@ class ScriptPublicKey:
         """
     def __bytes__(self) -> bytes:
         r"""
-        The byte representation
+        The byte representation.
+        
+        Returns:
+            bytes: The raw script bytes.
         """
 
 @typing.final
@@ -2230,7 +2316,16 @@ class TransactionOutpoint:
             KeyError: If required keys are missing.
             ValueError: If values are invalid.
         """
-    def __eq__(self, other: TransactionOutpoint) -> builtins.bool: ...
+    def __eq__(self, other: TransactionOutpoint) -> builtins.bool:
+        r"""
+        Equality comparison.
+        
+        Args:
+            other: Another TransactionOutpoint to compare against.
+        
+        Returns:
+            bool: True if both outpoints reference the same transaction id and index.
+        """
 
 @typing.final
 class TransactionOutput:
@@ -2302,7 +2397,16 @@ class TransactionOutput:
             KeyError: If required keys are missing.
             ValueError: If values are invalid.
         """
-    def __eq__(self, other: TransactionOutput) -> builtins.bool: ...
+    def __eq__(self, other: TransactionOutput) -> builtins.bool:
+        r"""
+        Equality comparison.
+        
+        Args:
+            other: Another TransactionOutput to compare against.
+        
+        Returns:
+            bool: True if both outputs have identical value and script.
+        """
 
 @typing.final
 class UtxoContext:
@@ -2401,7 +2505,16 @@ class UtxoEntries:
         Returns:
             dict: the UtxoEntries in dictionary form.
         """
-    def __eq__(self, other: UtxoEntries) -> builtins.bool: ...
+    def __eq__(self, other: UtxoEntries) -> builtins.bool:
+        r"""
+        Equality comparison.
+        
+        Args:
+            other: Another UtxoEntries collection to compare against.
+        
+        Returns:
+            bool: True if both collections contain identical entries in the same order.
+        """
 
 @typing.final
 class UtxoEntries:
@@ -2485,7 +2598,16 @@ class UtxoEntry:
             KeyError: If required keys are missing.
             ValueError: If values are invalid.
         """
-    def __eq__(self, other: UtxoEntry) -> builtins.bool: ...
+    def __eq__(self, other: UtxoEntry) -> builtins.bool:
+        r"""
+        Equality comparison.
+        
+        Args:
+            other: Another UtxoEntry to compare against.
+        
+        Returns:
+            bool: True if both UtxoEntries have identical fields.
+        """
 
 @typing.final
 class UtxoEntryReference:
@@ -2663,72 +2785,591 @@ class UtxoProcessor:
 @typing.final
 class Wallet:
     @property
-    def rpc(self) -> RpcClient: ...
+    def rpc(self) -> RpcClient:
+        r"""
+        The underlying wRPC client used by this wallet.
+        """
     @property
-    def is_open(self) -> builtins.bool: ...
+    def is_open(self) -> builtins.bool:
+        r"""
+        Whether a wallet file is currently open.
+        """
     @property
-    def is_synced(self) -> builtins.bool: ...
+    def is_synced(self) -> builtins.bool:
+        r"""
+        Whether the wallet's UTXO state is synced with the network.
+        """
     @property
-    def descriptor(self) -> typing.Optional[WalletDescriptor]: ...
-    def __new__(cls, network_id: None | NetworkId | str = None, encoding: None | Encoding | str = None, url: typing.Optional[builtins.str] = None, resolver: typing.Optional[Resolver] = None) -> Wallet: ...
-    def exists(self, name: typing.Optional[builtins.str] = None) -> bool: ...
-    def start(self) -> None: ...
-    def stop(self) -> None: ...
-    def connect(self, block_async_connect: typing.Optional[builtins.bool], strategy: typing.Optional[builtins.str], url: typing.Optional[builtins.str], timeout_duration: typing.Optional[builtins.int], retry_interval: typing.Optional[builtins.int]) -> None: ...
-    def disconnect(self) -> None: ...
-    def add_event_listener(self, event: WalletEventType | str, callback: typing.Callable[..., None], *args: typing.Any, **kwargs: typing.Any) -> None: ...
-    def remove_event_listener(self, event: WalletEventType | str, callback: None | typing.Callable[..., None] = None) -> None: ...
-    def set_network_id(self, network_id: NetworkId | str) -> None: ...
-    def wallet_enumerate(self) -> list[WalletDescriptor]: ...
-    def wallet_create(self, wallet_secret: builtins.str, filename: typing.Optional[builtins.str] = None, overwrite_wallet_storage: typing.Optional[builtins.bool] = None, title: typing.Optional[builtins.str] = None, user_hint: typing.Optional[builtins.str] = None) -> dict: ...
-    def wallet_open(self, wallet_secret: builtins.str, account_descriptors: builtins.bool, filename: typing.Optional[builtins.str] = None) -> dict: ...
-    def wallet_close(self) -> None: ...
-    def wallet_reload(self, reactivate: builtins.bool) -> None: ...
-    def wallet_rename(self, wallet_secret: builtins.str, title: typing.Optional[builtins.str] = None, filename: typing.Optional[builtins.str] = None) -> None: ...
-    def wallet_change_secret(self, old_wallet_secret: builtins.str, new_wallet_secret: builtins.str) -> None: ...
-    def wallet_export(self, wallet_secret: builtins.str, include_transactions: builtins.bool) -> bytes: ...
-    def wallet_import(self, wallet_secret: builtins.str, wallet_data: str | bytes | list[int]) -> dict: ...
-    def prv_key_data_enumerate(self) -> list[PrvKeyDataInfo]: ...
-    def prv_key_data_create(self, wallet_secret: builtins.str, secret: builtins.str, kind: PrvKeyDataVariantKind | str, payment_secret: typing.Optional[builtins.str] = None, name: typing.Optional[builtins.str] = None) -> str: ...
-    def prv_key_data_remove(self, wallet_secret: builtins.str, prv_key_data_id: builtins.str) -> None: ...
-    def prv_key_data_get(self, wallet_secret: builtins.str, prv_key_data_id: builtins.str) -> PrvKeyDataInfo: ...
-    def accounts_enumerate(self) -> list[AccountDescriptor]: ...
-    def accounts_create_bip32(self, wallet_secret: builtins.str, prv_key_data_id: builtins.str, payment_secret: typing.Optional[builtins.str] = None, account_name: typing.Optional[builtins.str] = None, account_index: typing.Optional[builtins.int] = None) -> AccountDescriptor: ...
-    def accounts_create_keypair(self, wallet_secret: builtins.str, prv_key_data_id: builtins.str, ecdsa: builtins.bool, account_name: typing.Optional[builtins.str] = None) -> AccountDescriptor: ...
-    def accounts_import_bip32(self, wallet_secret: builtins.str, prv_key_data_id: builtins.str, payment_secret: typing.Optional[builtins.str] = None, account_name: typing.Optional[builtins.str] = None, account_index: typing.Optional[builtins.int] = None) -> AccountDescriptor: ...
-    def accounts_import_keypair(self, wallet_secret: builtins.str, prv_key_data_id: builtins.str, ecdsa: builtins.bool, account_name: typing.Optional[builtins.str] = None) -> AccountDescriptor: ...
-    def accounts_rename(self, wallet_secret: builtins.str, account_id: builtins.str, name: typing.Optional[builtins.str] = None) -> None: ...
-    def accounts_discovery(self, discovery_kind: AccountsDiscoveryKind | str, address_scan_extent: builtins.int, account_scan_extent: builtins.int, bip39_mnemonic: builtins.str, bip39_passphrase: typing.Optional[builtins.str] = None) -> int: ...
-    def accounts_ensure_default(self, wallet_secret: builtins.str, account_kind: AccountKind, payment_secret: typing.Optional[builtins.str] = None, mnemonic_phrase: typing.Optional[builtins.str] = None) -> AccountDescriptor: ...
-    def accounts_activate(self, account_ids: typing.Optional[typing.Sequence[builtins.str]] = None) -> None: ...
-    def accounts_deactivate(self, account_ids: typing.Optional[typing.Sequence[builtins.str]] = None) -> None: ...
-    def accounts_get(self, account_id: builtins.str) -> None: ...
-    def accounts_create_new_address(self, account_id: builtins.str, address_kind: NewAddressKind | str) -> Address: ...
-    def accounts_estimate(self, account_id: builtins.str, priority_fee_sompi: Fees | dict, fee_rate: typing.Optional[builtins.float] = None, payload: None | str | bytes | list[int] = None, destination: typing.Optional[typing.Sequence[PaymentOutput]] = None) -> GeneratorSummary: ...
-    def accounts_send(self, wallet_secret: builtins.str, account_id: builtins.str, priority_fee_sompi: Fees | dict, payment_secret: typing.Optional[builtins.str] = None, fee_rate: typing.Optional[builtins.float] = None, payload: None | str | bytes | list[int] = None, destination: typing.Optional[typing.Sequence[PaymentOutput]] = None) -> GeneratorSummary: ...
-    def accounts_get_utxos(self, account_id: builtins.str, addresses: None | typing.Sequence[Address | str] = None, min_amount_sompi: typing.Optional[builtins.int] = None) -> dict: ...
-    def accounts_transfer(self, wallet_secret: builtins.str, source_account_id: builtins.str, destination_account_id: builtins.str, transfer_amount_sompi: builtins.int, payment_secret: typing.Optional[builtins.str] = None, fee_rate: typing.Optional[builtins.float] = None, priority_fee_sompi: None | Fees | dict = None) -> dict: ...
-    def accounts_commit_reveal(self, wallet_secret: builtins.str, account_id: builtins.str, address_type: CommitRevealAddressKind | str, address_index: builtins.int, script_sig: str | bytes | list[int], commit_amount_sompi: builtins.int, reveal_fee_sompi: builtins.int, payment_secret: typing.Optional[builtins.str] = None, fee_rate: typing.Optional[builtins.float] = None, payload: None | str | bytes | list[int] = None) -> list[str]: ...
-    def accounts_commit_reveal_manual(self, wallet_secret: builtins.str, account_id: builtins.str, script_sig: str | bytes | list[int], reveal_fee_sompi: builtins.int, payment_secret: typing.Optional[builtins.str] = None, fee_rate: typing.Optional[builtins.float] = None, payload: None | str | bytes | list[int] = None, start_destination: typing.Optional[typing.Sequence[PaymentOutput]] = None, end_destination: typing.Optional[typing.Sequence[PaymentOutput]] = None) -> list[str]: ...
-    def batch(self) -> None: ...
-    def flush(self, wallet_secret: builtins.str) -> None: ...
-    def retain_context(self, name: builtins.str, data: None | str | bytes | list[int] = None) -> None: ...
-    def get_status(self, name: typing.Optional[builtins.str] = None) -> dict: ...
-    def address_book_enumerate(self) -> None: ...
-    def transactions_data_get(self, account_id: builtins.str, network_id: NetworkId | str, start: builtins.int, end: builtins.int, filter: None | typing.Sequence[TransactionKind | str] = None) -> dict: ...
-    def transactions_replace_note(self, account_id: builtins.str, network_id: NetworkId | str, transaction_id: builtins.str, note: typing.Optional[builtins.str] = None) -> None: ...
-    def transactions_replace_metadata(self, account_id: builtins.str, network_id: NetworkId | str, transaction_id: builtins.str, metadata: typing.Optional[builtins.str] = None) -> None: ...
-    def fee_rate_estimate(self) -> dict: ...
-    def fee_rate_poller_enable(self, interval_seconds: builtins.int) -> None: ...
-    def fee_rate_poller_disable(self) -> None: ...
+    def descriptor(self) -> typing.Optional[WalletDescriptor]:
+        r"""
+        The descriptor of the currently open wallet, or None if no wallet is open.
+        """
+    def __new__(cls, network_id: None | NetworkId | str = None, encoding: None | Encoding | str = None, url: typing.Optional[builtins.str] = None, resolver: typing.Optional[Resolver] = None) -> Wallet:
+        r"""
+        Create a new Wallet instance.
+        
+        Constructs a wallet backed by the local file store and an internal
+        wRPC client. The wallet is created in a closed state — call
+        `wallet_open` (or `wallet_create`) to open or initialize a wallet file.
+        
+        Args:
+            network_id: The network to operate on. May be a NetworkId or string.
+            encoding: The wRPC encoding (Borsh or JSON). Defaults to Borsh.
+            url: Optional explicit wRPC server URL.
+            resolver: Optional Resolver to discover wRPC endpoints.
+        
+        Returns:
+            Wallet: A new Wallet instance.
+        
+        Raises:
+            Exception: If the underlying wallet store or RPC client cannot be initialized.
+        """
+    def exists(self, name: typing.Optional[builtins.str] = None) -> bool:
+        r"""
+        Check if a wallet file exists in the local store.
+        
+        Args:
+            name: Optional wallet filename to check. If None, checks the default wallet.
+        
+        Returns:
+            bool: True if the wallet file exists, False otherwise.
+        """
+    def start(self) -> None:
+        r"""
+        Start the wallet runtime and event notification task.
+        
+        Spawns the background task that dispatches wallet events to any
+        registered Python listeners. Must be called before opening a wallet.
+        """
+    def stop(self) -> None:
+        r"""
+        Stop the wallet runtime and event notification task.
+        
+        Tears down the background notification task and stops the wallet's
+        internal services. Should be called before disposing of the Wallet.
+        """
+    def connect(self, block_async_connect: typing.Optional[builtins.bool], strategy: typing.Optional[builtins.str], url: typing.Optional[builtins.str], timeout_duration: typing.Optional[builtins.int], retry_interval: typing.Optional[builtins.int]) -> None:
+        r"""
+        Connect the wallet's wRPC client to a Kaspa node.
+        
+        Args:
+            block_async_connect: If True, await connection completion before resolving.
+            strategy: Optional connection strategy ("retry" or "fallback").
+            url: Optional explicit wRPC server URL override.
+            timeout_duration: Optional connection timeout in milliseconds.
+            retry_interval: Optional retry interval in milliseconds.
+        """
+    def disconnect(self) -> None:
+        r"""
+        Disconnect the wallet's wRPC client from the Kaspa node.
+        """
+    def add_event_listener(self, event: WalletEventType | str, callback: typing.Callable[..., None], *args: typing.Any, **kwargs: typing.Any) -> None:
+        r"""
+        Register a Python callback for a wallet event.
+        
+        Args:
+            event: The WalletEventType (or string) to listen for. Use "all" to receive every event.
+            callback: A callable invoked with `(event, *args, **kwargs)` when the event fires.
+            *args: Positional arguments forwarded to the callback.
+            **kwargs: Keyword arguments forwarded to the callback.
+        """
+    def remove_event_listener(self, event: WalletEventType | str, callback: None | typing.Callable[..., None] = None) -> None:
+        r"""
+        Remove previously registered event listener(s).
+        
+        Args:
+            event: The WalletEventType (or string) to remove listeners from.
+                Use "all" to operate across every event kind.
+            callback: Optional specific callback to remove. If None, removes all
+                callbacks for the given event.
+        """
+    def set_network_id(self, network_id: NetworkId | str) -> None:
+        r"""
+        Set the network id used by the wallet runtime.
+        
+        Args:
+            network_id: The NetworkId (or string) to bind the wallet to.
+        
+        Raises:
+            Exception: If the wallet rejects the network change.
+        """
+    def wallet_enumerate(self) -> list[WalletDescriptor]:
+        r"""
+        Enumerate all wallet files in the local store.
+        
+        Returns:
+            list[WalletDescriptor]: Descriptors for each wallet file found.
+        """
+    def wallet_create(self, wallet_secret: builtins.str, filename: typing.Optional[builtins.str] = None, overwrite_wallet_storage: typing.Optional[builtins.bool] = None, title: typing.Optional[builtins.str] = None, user_hint: typing.Optional[builtins.str] = None) -> dict:
+        r"""
+        Create a new wallet file.
+        
+        Args:
+            wallet_secret: Password used to encrypt the wallet.
+            filename: Optional filename for the new wallet. Defaults to the standard wallet name.
+            overwrite_wallet_storage: If True, overwrite an existing wallet at the same path.
+            title: Optional human-readable wallet title.
+            user_hint: Optional password hint stored alongside the wallet.
+        
+        Returns:
+            dict: The wallet creation response, including descriptor and storage info.
+        """
+    def wallet_open(self, wallet_secret: builtins.str, account_descriptors: builtins.bool, filename: typing.Optional[builtins.str] = None) -> dict:
+        r"""
+        Open an existing wallet file.
+        
+        Args:
+            wallet_secret: Password used to decrypt the wallet.
+            account_descriptors: If True, include account descriptors in the response.
+            filename: Optional filename to open. Defaults to the standard wallet name.
+        
+        Returns:
+            dict: The wallet open response, optionally including account descriptors.
+        """
+    def wallet_close(self) -> None:
+        r"""
+        Close the currently open wallet file.
+        """
+    def wallet_reload(self, reactivate: builtins.bool) -> None:
+        r"""
+        Reload the wallet from disk.
+        
+        Args:
+            reactivate: If True, re-activate previously active accounts after reload.
+        """
+    def wallet_rename(self, wallet_secret: builtins.str, title: typing.Optional[builtins.str] = None, filename: typing.Optional[builtins.str] = None) -> None:
+        r"""
+        Rename the currently open wallet (title and/or on-disk filename).
+        
+        Args:
+            wallet_secret: Password for the open wallet.
+            title: New human-readable title, or None to leave unchanged.
+            filename: New on-disk filename, or None to leave unchanged.
+        """
+    def wallet_change_secret(self, old_wallet_secret: builtins.str, new_wallet_secret: builtins.str) -> None:
+        r"""
+        Change the password protecting the currently open wallet.
+        
+        Args:
+            old_wallet_secret: The current wallet password.
+            new_wallet_secret: The new password to set.
+        """
+    def wallet_export(self, wallet_secret: builtins.str, include_transactions: builtins.bool) -> bytes:
+        r"""
+        Export the wallet's encrypted data as raw bytes.
+        
+        Args:
+            wallet_secret: Password for the open wallet.
+            include_transactions: If True, include stored transaction history in the export.
+        
+        Returns:
+            bytes: The encrypted wallet payload, suitable for backup or transfer.
+        """
+    def wallet_import(self, wallet_secret: builtins.str, wallet_data: str | bytes | list[int]) -> dict:
+        r"""
+        Import a previously exported wallet payload.
+        
+        Args:
+            wallet_secret: Password used to decrypt the import payload.
+            wallet_data: The encrypted wallet bytes produced by `wallet_export`.
+        
+        Returns:
+            dict: The wallet import response, including the resulting descriptor.
+        """
+    def prv_key_data_enumerate(self) -> list[PrvKeyDataInfo]:
+        r"""
+        Enumerate all private key data entries stored in the open wallet.
+        
+        Returns:
+            list[PrvKeyDataInfo]: Metadata for every stored private key data entry.
+        """
+    def prv_key_data_create(self, wallet_secret: builtins.str, secret: builtins.str, kind: PrvKeyDataVariantKind | str, payment_secret: typing.Optional[builtins.str] = None, name: typing.Optional[builtins.str] = None) -> str:
+        r"""
+        Create and store a new private key data entry.
+        
+        Args:
+            wallet_secret: Password for the open wallet.
+            secret: The secret material (mnemonic phrase, hex seed, or extended key).
+            kind: The variant kind of `secret` (Mnemonic, Bip39Seed, ExtendedPrivateKey, or SecretKey).
+            payment_secret: Optional additional secret used to encrypt the entry.
+            name: Optional human-readable name for the entry.
+        
+        Returns:
+            str: The hex-encoded id of the newly created private key data entry.
+        """
+    def prv_key_data_remove(self, wallet_secret: builtins.str, prv_key_data_id: builtins.str) -> None:
+        r"""
+        Remove a private key data entry from the wallet.
+        
+        Args:
+            wallet_secret: Password for the open wallet.
+            prv_key_data_id: Hex-encoded id of the entry to remove.
+        """
+    def prv_key_data_get(self, wallet_secret: builtins.str, prv_key_data_id: builtins.str) -> PrvKeyDataInfo:
+        r"""
+        Fetch metadata for a single private key data entry.
+        
+        Args:
+            wallet_secret: Password for the open wallet.
+            prv_key_data_id: Hex-encoded id of the entry to fetch.
+        
+        Returns:
+            PrvKeyDataInfo: Metadata for the entry.
+        
+        Raises:
+            Exception: If no entry exists with the given id.
+        """
+    def accounts_enumerate(self) -> list[AccountDescriptor]:
+        r"""
+        Enumerate all accounts in the open wallet.
+        
+        Returns:
+            list[AccountDescriptor]: Descriptors for every account in the wallet.
+        """
+    def accounts_create_bip32(self, wallet_secret: builtins.str, prv_key_data_id: builtins.str, payment_secret: typing.Optional[builtins.str] = None, account_name: typing.Optional[builtins.str] = None, account_index: typing.Optional[builtins.int] = None) -> AccountDescriptor:
+        r"""
+        Create a new BIP32 (HD) account from existing private key data.
+        
+        Args:
+            wallet_secret: Password for the open wallet.
+            prv_key_data_id: Hex-encoded id of the private key data entry to derive from.
+            payment_secret: Optional payment secret if the private key data is encrypted with one.
+            account_name: Optional human-readable name for the account.
+            account_index: Optional explicit BIP32 account index. Defaults to the next available.
+        
+        Returns:
+            AccountDescriptor: Descriptor of the newly created account.
+        """
+    def accounts_create_keypair(self, wallet_secret: builtins.str, prv_key_data_id: builtins.str, ecdsa: builtins.bool, account_name: typing.Optional[builtins.str] = None) -> AccountDescriptor:
+        r"""
+        Create a new keypair (single-key) account from existing private key data.
+        
+        Args:
+            wallet_secret: Password for the open wallet.
+            prv_key_data_id: Hex-encoded id of the private key data entry to use.
+            ecdsa: If True, derive an ECDSA address; otherwise derive a Schnorr address.
+            account_name: Optional human-readable name for the account.
+        
+        Returns:
+            AccountDescriptor: Descriptor of the newly created account.
+        """
+    def accounts_import_bip32(self, wallet_secret: builtins.str, prv_key_data_id: builtins.str, payment_secret: typing.Optional[builtins.str] = None, account_name: typing.Optional[builtins.str] = None, account_index: typing.Optional[builtins.int] = None) -> AccountDescriptor:
+        r"""
+        Import a BIP32 (HD) account from existing private key data.
+        
+        Like `accounts_create_bip32`, but uses the import code path which performs
+        address discovery before adding the account.
+        
+        Args:
+            wallet_secret: Password for the open wallet.
+            prv_key_data_id: Hex-encoded id of the private key data entry to derive from.
+            payment_secret: Optional payment secret if the private key data is encrypted with one.
+            account_name: Optional human-readable name for the account.
+            account_index: Optional explicit BIP32 account index.
+        
+        Returns:
+            AccountDescriptor: Descriptor of the imported account.
+        """
+    def accounts_import_keypair(self, wallet_secret: builtins.str, prv_key_data_id: builtins.str, ecdsa: builtins.bool, account_name: typing.Optional[builtins.str] = None) -> AccountDescriptor:
+        r"""
+        Import a keypair (single-key) account from existing private key data.
+        
+        Args:
+            wallet_secret: Password for the open wallet.
+            prv_key_data_id: Hex-encoded id of the private key data entry to use.
+            ecdsa: If True, derive an ECDSA address; otherwise derive a Schnorr address.
+            account_name: Optional human-readable name for the account.
+        
+        Returns:
+            AccountDescriptor: Descriptor of the imported account.
+        """
+    def accounts_rename(self, wallet_secret: builtins.str, account_id: builtins.str, name: typing.Optional[builtins.str] = None) -> None:
+        r"""
+        Rename an account.
+        
+        Args:
+            wallet_secret: Password for the open wallet.
+            account_id: Hex-encoded id of the account to rename.
+            name: New account name, or None to clear the name.
+        """
+    def accounts_discovery(self, discovery_kind: AccountsDiscoveryKind | str, address_scan_extent: builtins.int, account_scan_extent: builtins.int, bip39_mnemonic: builtins.str, bip39_passphrase: typing.Optional[builtins.str] = None) -> int:
+        r"""
+        Scan a BIP39 mnemonic for previously used accounts and addresses.
+        
+        Performs a discovery sweep to determine the highest account index that
+        has been used on-chain. Useful when restoring a wallet from a mnemonic.
+        
+        Args:
+            discovery_kind: The discovery scheme (AccountsDiscoveryKind or string).
+            address_scan_extent: How many consecutive unused addresses to scan before stopping.
+            account_scan_extent: How many consecutive unused accounts to scan before stopping.
+            bip39_mnemonic: The BIP39 mnemonic phrase to scan.
+            bip39_passphrase: Optional BIP39 passphrase.
+        
+        Returns:
+            int: The last account index found to be in use.
+        """
+    def accounts_ensure_default(self, wallet_secret: builtins.str, account_kind: AccountKind, payment_secret: typing.Optional[builtins.str] = None, mnemonic_phrase: typing.Optional[builtins.str] = None) -> AccountDescriptor:
+        r"""
+        Ensure a default account of the given kind exists, creating one if needed.
+        
+        Args:
+            wallet_secret: Password for the open wallet.
+            account_kind: The AccountKind of the default account to ensure.
+            payment_secret: Optional payment secret used when generating new key data.
+            mnemonic_phrase: Optional mnemonic phrase to seed the account.
+        
+        Returns:
+            AccountDescriptor: Descriptor of the existing or newly created default account.
+        """
+    def accounts_activate(self, account_ids: typing.Optional[typing.Sequence[builtins.str]] = None) -> None:
+        r"""
+        Activate one or more accounts so they begin tracking UTXOs.
+        
+        Args:
+            account_ids: Optional list of hex-encoded account ids. If None, activates all accounts.
+        """
+    def accounts_deactivate(self, account_ids: typing.Optional[typing.Sequence[builtins.str]] = None) -> None:
+        r"""
+        Deactivate one or more accounts so they stop tracking UTXOs.
+        
+        Args:
+            account_ids: Optional list of hex-encoded account ids. If None, deactivates all accounts.
+        """
+    def accounts_get(self, account_id: builtins.str) -> None:
+        r"""
+        Verify that an account exists in the open wallet.
+        
+        Args:
+            account_id: Hex-encoded id of the account to look up.
+        """
+    def accounts_create_new_address(self, account_id: builtins.str, address_kind: NewAddressKind | str) -> Address:
+        r"""
+        Generate a new receive or change address for an account.
+        
+        Args:
+            account_id: Hex-encoded id of the account.
+            address_kind: The NewAddressKind (Receive or Change) to derive.
+        
+        Returns:
+            Address: The newly derived address.
+        """
+    def accounts_estimate(self, account_id: builtins.str, priority_fee_sompi: Fees | dict, fee_rate: typing.Optional[builtins.float] = None, payload: None | str | bytes | list[int] = None, destination: typing.Optional[typing.Sequence[PaymentOutput]] = None) -> GeneratorSummary:
+        r"""
+        Estimate the fees and structure of a prospective send without submitting.
+        
+        Runs the transaction generator against the account's UTXOs to produce
+        a summary of what a real send would look like.
+        
+        Args:
+            account_id: Hex-encoded id of the source account.
+            priority_fee_sompi: Priority fee specification (Fees object or dict).
+            fee_rate: Optional explicit fee rate (sompi per gram of mass).
+            payload: Optional binary payload to embed in the transaction.
+            destination: Optional list of PaymentOutputs. If None, sends to change.
+        
+        Returns:
+            GeneratorSummary: Summary of the estimated transaction(s).
+        """
+    def accounts_send(self, wallet_secret: builtins.str, account_id: builtins.str, priority_fee_sompi: Fees | dict, payment_secret: typing.Optional[builtins.str] = None, fee_rate: typing.Optional[builtins.float] = None, payload: None | str | bytes | list[int] = None, destination: typing.Optional[typing.Sequence[PaymentOutput]] = None) -> GeneratorSummary:
+        r"""
+        Send funds from an account, signing and submitting the resulting transactions.
+        
+        Args:
+            wallet_secret: Password for the open wallet.
+            account_id: Hex-encoded id of the source account.
+            priority_fee_sompi: Priority fee specification (Fees object or dict).
+            payment_secret: Optional payment secret if the source key data is encrypted with one.
+            fee_rate: Optional explicit fee rate (sompi per gram of mass).
+            payload: Optional binary payload to embed in the transaction.
+            destination: Optional list of PaymentOutputs. If None, sends to change.
+        
+        Returns:
+            GeneratorSummary: Summary of the submitted transaction(s).
+        """
+    def accounts_get_utxos(self, account_id: builtins.str, addresses: None | typing.Sequence[Address | str] = None, min_amount_sompi: typing.Optional[builtins.int] = None) -> dict:
+        r"""
+        List UTXOs available to an account, optionally filtered.
+        
+        Args:
+            account_id: Hex-encoded id of the account.
+            addresses: Optional list of Address objects to restrict results to.
+            min_amount_sompi: Optional minimum UTXO value to include, in sompi.
+        
+        Returns:
+            dict: A serialized list of UTXO entries belonging to the account.
+        """
+    def accounts_transfer(self, wallet_secret: builtins.str, source_account_id: builtins.str, destination_account_id: builtins.str, transfer_amount_sompi: builtins.int, payment_secret: typing.Optional[builtins.str] = None, fee_rate: typing.Optional[builtins.float] = None, priority_fee_sompi: None | Fees | dict = None) -> dict:
+        r"""
+        Transfer funds between two accounts in the same wallet.
+        
+        Args:
+            wallet_secret: Password for the open wallet.
+            source_account_id: Hex-encoded id of the sending account.
+            destination_account_id: Hex-encoded id of the receiving account.
+            transfer_amount_sompi: Amount to transfer in sompi.
+            payment_secret: Optional payment secret if the source key data is encrypted with one.
+            fee_rate: Optional explicit fee rate (sompi per gram of mass).
+            priority_fee_sompi: Optional priority fee specification.
+        
+        Returns:
+            dict: The transfer response, including generator summary and transaction ids.
+        """
+    def accounts_commit_reveal(self, wallet_secret: builtins.str, account_id: builtins.str, address_type: CommitRevealAddressKind | str, address_index: builtins.int, script_sig: str | bytes | list[int], commit_amount_sompi: builtins.int, reveal_fee_sompi: builtins.int, payment_secret: typing.Optional[builtins.str] = None, fee_rate: typing.Optional[builtins.float] = None, payload: None | str | bytes | list[int] = None) -> list[str]:
+        r"""
+        Execute a commit-reveal transaction pair against an account-derived address.
+        
+        Submits the commit transaction (locking funds to a P2SH script derived from
+        `script_sig`) followed by the reveal transaction (spending those funds back).
+        
+        Args:
+            wallet_secret: Password for the open wallet.
+            account_id: Hex-encoded id of the source account.
+            address_type: The CommitRevealAddressKind selecting which derivation chain to use.
+            address_index: Derivation index for the commit address.
+            script_sig: Raw script bytes used to construct the commit P2SH.
+            commit_amount_sompi: Amount to lock in the commit transaction.
+            reveal_fee_sompi: Fee paid by the reveal transaction.
+            payment_secret: Optional payment secret if the source key data is encrypted with one.
+            fee_rate: Optional explicit fee rate for the commit transaction.
+            payload: Optional binary payload to embed in the reveal transaction.
+        
+        Returns:
+            list[str]: Hex-encoded ids of the submitted commit and reveal transactions.
+        """
+    def accounts_commit_reveal_manual(self, wallet_secret: builtins.str, account_id: builtins.str, script_sig: str | bytes | list[int], reveal_fee_sompi: builtins.int, payment_secret: typing.Optional[builtins.str] = None, fee_rate: typing.Optional[builtins.float] = None, payload: None | str | bytes | list[int] = None, start_destination: typing.Optional[typing.Sequence[PaymentOutput]] = None, end_destination: typing.Optional[typing.Sequence[PaymentOutput]] = None) -> list[str]:
+        r"""
+        Execute a commit-reveal transaction pair with explicit start and end destinations.
+        
+        Lower-level variant of `accounts_commit_reveal` that lets the caller
+        specify both the commit (start) and reveal (end) destinations directly
+        instead of deriving an address from the account.
+        
+        Args:
+            wallet_secret: Password for the open wallet.
+            account_id: Hex-encoded id of the source account.
+            script_sig: Raw script bytes used to construct the commit P2SH.
+            reveal_fee_sompi: Fee paid by the reveal transaction.
+            payment_secret: Optional payment secret if the source key data is encrypted with one.
+            fee_rate: Optional explicit fee rate for the commit transaction.
+            payload: Optional binary payload to embed in the reveal transaction.
+            start_destination: Optional outputs for the commit transaction. Defaults to change.
+            end_destination: Optional outputs for the reveal transaction. Defaults to change.
+        
+        Returns:
+            list[str]: Hex-encoded ids of the submitted commit and reveal transactions.
+        """
+    def batch(self) -> None:
+        r"""
+        Begin a batched storage transaction.
+        
+        Subsequent wallet operations are coalesced into a single storage write
+        until `flush` is called.
+        """
+    def flush(self, wallet_secret: builtins.str) -> None:
+        r"""
+        Flush any pending batched changes to storage.
+        
+        Args:
+            wallet_secret: Password for the open wallet.
+        """
+    def retain_context(self, name: builtins.str, data: None | str | bytes | list[int] = None) -> None:
+        r"""
+        Persist arbitrary named context data alongside the wallet.
+        
+        Args:
+            name: A name identifying the context entry.
+            data: Optional binary payload to associate with `name`. If None, the entry is cleared.
+        """
+    def get_status(self, name: typing.Optional[builtins.str] = None) -> dict:
+        r"""
+        Fetch the wallet runtime status.
+        
+        Args:
+            name: Optional wallet name. If None, reports the status of the active wallet.
+        
+        Returns:
+            dict: Status information including connection state, sync state, and selected network.
+        """
+    def address_book_enumerate(self) -> None:
+        r"""
+        Enumerate entries in the wallet address book.
+        
+        Note: this is currently a no-op placeholder that returns nothing; the
+        underlying API is reserved for a future address book implementation.
+        """
+    def transactions_data_get(self, account_id: builtins.str, network_id: NetworkId | str, start: builtins.int, end: builtins.int, filter: None | typing.Sequence[TransactionKind | str] = None) -> dict:
+        r"""
+        Fetch a window of stored transaction history for an account.
+        
+        Args:
+            account_id: Hex-encoded id of the account.
+            network_id: The network the transactions belong to.
+            start: Start index (inclusive) into the transaction history.
+            end: End index (exclusive) into the transaction history.
+            filter: Optional list of TransactionKind values to filter by.
+        
+        Returns:
+            dict: The transaction data response, including the matching transactions.
+        """
+    def transactions_replace_note(self, account_id: builtins.str, network_id: NetworkId | str, transaction_id: builtins.str, note: typing.Optional[builtins.str] = None) -> None:
+        r"""
+        Replace the user-provided note attached to a stored transaction.
+        
+        Args:
+            account_id: Hex-encoded id of the account that owns the transaction.
+            network_id: The network the transaction belongs to.
+            transaction_id: Hex-encoded id of the transaction to update.
+            note: New note text, or None to clear the note.
+        """
+    def transactions_replace_metadata(self, account_id: builtins.str, network_id: NetworkId | str, transaction_id: builtins.str, metadata: typing.Optional[builtins.str] = None) -> None:
+        r"""
+        Replace the user-provided metadata attached to a stored transaction.
+        
+        Args:
+            account_id: Hex-encoded id of the account that owns the transaction.
+            network_id: The network the transaction belongs to.
+            transaction_id: Hex-encoded id of the transaction to update.
+            metadata: New metadata string, or None to clear it.
+        """
+    def fee_rate_estimate(self) -> dict:
+        r"""
+        Fetch the current fee rate estimate from the connected node.
+        
+        Returns:
+            dict: Fee rate estimates at low, normal, and priority levels.
+        """
+    def fee_rate_poller_enable(self, interval_seconds: builtins.int) -> None:
+        r"""
+        Enable a background poller that periodically refreshes fee rate estimates.
+        
+        Args:
+            interval_seconds: How often the poller should query the node, in seconds.
+        """
+    def fee_rate_poller_disable(self) -> None:
+        r"""
+        Disable the background fee rate poller, if running.
+        """
 
 @typing.final
 class WalletDescriptor:
     @property
-    def title(self) -> typing.Optional[builtins.str]: ...
+    def title(self) -> typing.Optional[builtins.str]:
+        r"""
+        The user-assigned wallet title, or None if unset.
+        """
     @property
-    def filename(self) -> builtins.str: ...
-    def __repr__(self) -> builtins.str: ...
+    def filename(self) -> builtins.str:
+        r"""
+        The on-disk filename of the wallet.
+        """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The string representation.
+        
+        Returns:
+            str: The WalletDescriptor as a string.
+        """
 
 @typing.final
 class XOnlyPublicKey:
@@ -3113,9 +3754,27 @@ class NetworkType(enum.Enum):
     Devnet = ...
     Simnet = ...
 
-    def default_rpc_port(self) -> builtins.int: ...
-    def default_borsh_rpc_port(self) -> builtins.int: ...
-    def default_json_rpc_port(self) -> builtins.int: ...
+    def default_rpc_port(self) -> builtins.int:
+        r"""
+        The default wRPC port for this network.
+        
+        Returns:
+            int: The default wRPC port number.
+        """
+    def default_borsh_rpc_port(self) -> builtins.int:
+        r"""
+        The default Borsh-encoded wRPC port for this network.
+        
+        Returns:
+            int: The default Borsh wRPC port number.
+        """
+    def default_json_rpc_port(self) -> builtins.int:
+        r"""
+        The default JSON-encoded wRPC port for this network.
+        
+        Returns:
+            int: The default JSON wRPC port number.
+        """
 
 @typing.final
 class NewAddressKind(enum.Enum):

@@ -57,21 +57,28 @@ pub struct PyPrvKeyDataInfo(PrvKeyDataInfo);
 #[gen_stub_pymethods]
 #[pymethods]
 impl PyPrvKeyDataInfo {
+    /// The private key data id as a hex string.
     #[getter]
     pub fn get_id(&self) -> String {
         self.0.id.to_hex()
     }
 
+    /// The user-assigned name of this private key data, or None if unset.
     #[getter]
     pub fn get_name(&self) -> Option<String> {
         self.0.name.clone()
     }
 
+    /// Whether the private key data is encrypted at rest.
     #[getter]
     pub fn get_is_encrypted(&self) -> bool {
         self.0.is_encrypted
     }
 
+    /// The string representation.
+    ///
+    /// Returns:
+    ///     str: The PrvKeyDataInfo as a string.
     fn __repr__(&self) -> String {
         format!(
             "PrvKeyDataInfo(id='{}', name={}, is_encrypted={})",

@@ -89,6 +89,23 @@ pub struct PyWallet {
 #[gen_stub_pymethods]
 #[pymethods]
 impl PyWallet {
+    /// Create a new Wallet instance.
+    ///
+    /// Constructs a wallet backed by the local file store and an internal
+    /// wRPC client. The wallet is created in a closed state — call
+    /// `wallet_open` (or `wallet_create`) to open or initialize a wallet file.
+    ///
+    /// Args:
+    ///     network_id: The network to operate on. May be a NetworkId or string.
+    ///     encoding: The wRPC encoding (Borsh or JSON). Defaults to Borsh.
+    ///     url: Optional explicit wRPC server URL.
+    ///     resolver: Optional Resolver to discover wRPC endpoints.
+    ///
+    /// Returns:
+    ///     Wallet: A new Wallet instance.
+    ///
+    /// Raises:
+    ///     Exception: If the underlying wallet store or RPC client cannot be initialized.
     #[new]
     #[pyo3(signature = (network_id=None, encoding=None, url=None, resolver=None))]
     pub fn new(
@@ -125,26 +142,37 @@ impl PyWallet {
         })
     }
 
+    /// The underlying wRPC client used by this wallet.
     #[getter]
     pub fn get_rpc(&self) -> PyRpcClient {
         self.inner.rpc.clone()
     }
 
+    /// Whether a wallet file is currently open.
     #[getter]
     pub fn get_is_open(&self) -> bool {
         self.wallet().is_open()
     }
 
+    /// Whether the wallet's UTXO state is synced with the network.
     #[getter]
     pub fn get_is_synced(&self) -> bool {
         self.wallet().is_synced()
     }
 
+    /// The descriptor of the currently open wallet, or None if no wallet is open.
     #[getter]
     pub fn get_descriptor(&self) -> Option<PyWalletDescriptor> {
         self.wallet().descriptor().map(PyWalletDescriptor::from)
     }
 
+    /// Check if a wallet file exists in the local store.
+    ///
+    /// Args:
+    ///     name: Optional wallet filename to check. If None, checks the default wallet.
+    ///
+    /// Returns:
+    ///     bool: True if the wallet file exists, False otherwise.
     #[gen_stub(override_return_type(type_repr = "bool"))]
     #[pyo3(signature = (name=None))]
     pub fn exists<'py>(
@@ -163,6 +191,10 @@ impl PyWallet {
         })
     }
 
+    /// Start the wallet runtime and event notification task.
+    ///
+    /// Spawns the background task that dispatches wallet events to any
+    /// registered Python listeners. Must be called before opening a wallet.
     #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn start<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         self.start_notification_task(py, self.wallet().multiplexer())
@@ -175,6 +207,10 @@ impl PyWallet {
         })
     }
 
+    /// Stop the wallet runtime and event notification task.
+    ///
+    /// Tears down the background notification task and stops the wallet's
+    /// internal services. Should be called before disposing of the Wallet.
     #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn stop<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let slf = self.clone();
@@ -186,6 +222,14 @@ impl PyWallet {
         })
     }
 
+    /// Connect the wallet's wRPC client to a Kaspa node.
+    ///
+    /// Args:
+    ///     block_async_connect: If True, await connection completion before resolving.
+    ///     strategy: Optional connection strategy ("retry" or "fallback").
+    ///     url: Optional explicit wRPC server URL override.
+    ///     timeout_duration: Optional connection timeout in milliseconds.
+    ///     retry_interval: Optional retry interval in milliseconds.
     #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn connect<'py>(
         &self,
@@ -206,11 +250,19 @@ impl PyWallet {
         )
     }
 
+    /// Disconnect the wallet's wRPC client from the Kaspa node.
     #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn disconnect<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         self.inner.rpc.disconnect(py)
     }
 
+    /// Register a Python callback for a wallet event.
+    ///
+    /// Args:
+    ///     event: The WalletEventType (or string) to listen for. Use "all" to receive every event.
+    ///     callback: A callable invoked with `(event, *args, **kwargs)` when the event fires.
+    ///     *args: Positional arguments forwarded to the callback.
+    ///     **kwargs: Keyword arguments forwarded to the callback.
     #[pyo3(signature = (event, callback, *args, **kwargs))]
     fn add_event_listener(
         &self,
@@ -242,6 +294,13 @@ impl PyWallet {
         Ok(())
     }
 
+    /// Remove previously registered event listener(s).
+    ///
+    /// Args:
+    ///     event: The WalletEventType (or string) to remove listeners from.
+    ///         Use "all" to operate across every event kind.
+    ///     callback: Optional specific callback to remove. If None, removes all
+    ///         callbacks for the given event.
     #[gen_stub(override_return_type(type_repr = "None"))]
     #[pyo3(signature = (event, callback=None))]
     fn remove_event_listener(
@@ -278,6 +337,13 @@ impl PyWallet {
         Ok(())
     }
 
+    /// Set the network id used by the wallet runtime.
+    ///
+    /// Args:
+    ///     network_id: The NetworkId (or string) to bind the wallet to.
+    ///
+    /// Raises:
+    ///     Exception: If the wallet rejects the network change.
     pub fn set_network_id(
         &self,
         #[gen_stub(override_type(type_repr = "NetworkId | str"))] network_id: PyNetworkId,
@@ -362,6 +428,10 @@ impl PyWallet {
 #[gen_stub_pymethods]
 #[pymethods]
 impl PyWallet {
+    /// Enumerate all wallet files in the local store.
+    ///
+    /// Returns:
+    ///     list[WalletDescriptor]: Descriptors for each wallet file found.
     #[gen_stub(override_return_type(type_repr = "list[WalletDescriptor]"))]
     pub fn wallet_enumerate<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, pyo3::PyAny>> {
         let wallet = self.wallet().clone();
@@ -379,6 +449,17 @@ impl PyWallet {
         })
     }
 
+    /// Create a new wallet file.
+    ///
+    /// Args:
+    ///     wallet_secret: Password used to encrypt the wallet.
+    ///     filename: Optional filename for the new wallet. Defaults to the standard wallet name.
+    ///     overwrite_wallet_storage: If True, overwrite an existing wallet at the same path.
+    ///     title: Optional human-readable wallet title.
+    ///     user_hint: Optional password hint stored alongside the wallet.
+    ///
+    /// Returns:
+    ///     dict: The wallet creation response, including descriptor and storage info.
     #[gen_stub(override_return_type(type_repr = "dict"))]
     #[pyo3(signature = (wallet_secret, filename=None, overwrite_wallet_storage=None, title=None, user_hint=None))]
     pub fn wallet_create<'py>(
@@ -409,6 +490,15 @@ impl PyWallet {
         })
     }
 
+    /// Open an existing wallet file.
+    ///
+    /// Args:
+    ///     wallet_secret: Password used to decrypt the wallet.
+    ///     account_descriptors: If True, include account descriptors in the response.
+    ///     filename: Optional filename to open. Defaults to the standard wallet name.
+    ///
+    /// Returns:
+    ///     dict: The wallet open response, optionally including account descriptors.
     #[gen_stub(override_return_type(type_repr = "dict"))]
     #[pyo3(signature = (wallet_secret, account_descriptors, filename=None))]
     pub fn wallet_open<'py>(
@@ -433,6 +523,7 @@ impl PyWallet {
         })
     }
 
+    /// Close the currently open wallet file.
     #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn wallet_close<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, pyo3::PyAny>> {
         let wallet = self.wallet().clone();
@@ -446,6 +537,10 @@ impl PyWallet {
         })
     }
 
+    /// Reload the wallet from disk.
+    ///
+    /// Args:
+    ///     reactivate: If True, re-activate previously active accounts after reload.
     #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn wallet_reload<'py>(
         &self,
@@ -463,6 +558,12 @@ impl PyWallet {
         })
     }
 
+    /// Rename the currently open wallet (title and/or on-disk filename).
+    ///
+    /// Args:
+    ///     wallet_secret: Password for the open wallet.
+    ///     title: New human-readable title, or None to leave unchanged.
+    ///     filename: New on-disk filename, or None to leave unchanged.
     #[gen_stub(override_return_type(type_repr = "None"))]
     #[pyo3(signature = (wallet_secret, title=None, filename=None))]
     pub fn wallet_rename<'py>(
@@ -485,6 +586,11 @@ impl PyWallet {
         })
     }
 
+    /// Change the password protecting the currently open wallet.
+    ///
+    /// Args:
+    ///     old_wallet_secret: The current wallet password.
+    ///     new_wallet_secret: The new password to set.
     #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn wallet_change_secret<'py>(
         &self,
@@ -507,6 +613,14 @@ impl PyWallet {
         })
     }
 
+    /// Export the wallet's encrypted data as raw bytes.
+    ///
+    /// Args:
+    ///     wallet_secret: Password for the open wallet.
+    ///     include_transactions: If True, include stored transaction history in the export.
+    ///
+    /// Returns:
+    ///     bytes: The encrypted wallet payload, suitable for backup or transfer.
     #[gen_stub(override_return_type(type_repr = "bytes"))]
     pub fn wallet_export<'py>(
         &self,
@@ -527,6 +641,14 @@ impl PyWallet {
         })
     }
 
+    /// Import a previously exported wallet payload.
+    ///
+    /// Args:
+    ///     wallet_secret: Password used to decrypt the import payload.
+    ///     wallet_data: The encrypted wallet bytes produced by `wallet_export`.
+    ///
+    /// Returns:
+    ///     dict: The wallet import response, including the resulting descriptor.
     #[gen_stub(override_return_type(type_repr = "dict"))]
     pub fn wallet_import<'py>(
         &self,
@@ -552,6 +674,10 @@ impl PyWallet {
 #[gen_stub_pymethods]
 #[pymethods]
 impl PyWallet {
+    /// Enumerate all private key data entries stored in the open wallet.
+    ///
+    /// Returns:
+    ///     list[PrvKeyDataInfo]: Metadata for every stored private key data entry.
     #[gen_stub(override_return_type(type_repr = "list[PrvKeyDataInfo]"))]
     pub fn prv_key_data_enumerate<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let wallet = self.wallet().clone();
@@ -569,6 +695,17 @@ impl PyWallet {
         })
     }
 
+    /// Create and store a new private key data entry.
+    ///
+    /// Args:
+    ///     wallet_secret: Password for the open wallet.
+    ///     secret: The secret material (mnemonic phrase, hex seed, or extended key).
+    ///     kind: The variant kind of `secret` (Mnemonic, Bip39Seed, ExtendedPrivateKey, or SecretKey).
+    ///     payment_secret: Optional additional secret used to encrypt the entry.
+    ///     name: Optional human-readable name for the entry.
+    ///
+    /// Returns:
+    ///     str: The hex-encoded id of the newly created private key data entry.
     #[gen_stub(override_return_type(type_repr = "str"))]
     #[pyo3(signature = (wallet_secret, secret, kind, payment_secret=None, name=None))]
     pub fn prv_key_data_create<'py>(
@@ -601,6 +738,11 @@ impl PyWallet {
         })
     }
 
+    /// Remove a private key data entry from the wallet.
+    ///
+    /// Args:
+    ///     wallet_secret: Password for the open wallet.
+    ///     prv_key_data_id: Hex-encoded id of the entry to remove.
     #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn prv_key_data_remove<'py>(
         &self,
@@ -625,6 +767,17 @@ impl PyWallet {
         })
     }
 
+    /// Fetch metadata for a single private key data entry.
+    ///
+    /// Args:
+    ///     wallet_secret: Password for the open wallet.
+    ///     prv_key_data_id: Hex-encoded id of the entry to fetch.
+    ///
+    /// Returns:
+    ///     PrvKeyDataInfo: Metadata for the entry.
+    ///
+    /// Raises:
+    ///     Exception: If no entry exists with the given id.
     #[gen_stub(override_return_type(type_repr = "PrvKeyDataInfo"))]
     pub fn prv_key_data_get<'py>(
         &self,
@@ -657,6 +810,10 @@ impl PyWallet {
 #[gen_stub_pymethods]
 #[pymethods]
 impl PyWallet {
+    /// Enumerate all accounts in the open wallet.
+    ///
+    /// Returns:
+    ///     list[AccountDescriptor]: Descriptors for every account in the wallet.
     #[gen_stub(override_return_type(type_repr = "list[AccountDescriptor]"))]
     pub fn accounts_enumerate<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let wallet = self.wallet().clone();
@@ -673,6 +830,17 @@ impl PyWallet {
         })
     }
 
+    /// Create a new BIP32 (HD) account from existing private key data.
+    ///
+    /// Args:
+    ///     wallet_secret: Password for the open wallet.
+    ///     prv_key_data_id: Hex-encoded id of the private key data entry to derive from.
+    ///     payment_secret: Optional payment secret if the private key data is encrypted with one.
+    ///     account_name: Optional human-readable name for the account.
+    ///     account_index: Optional explicit BIP32 account index. Defaults to the next available.
+    ///
+    /// Returns:
+    ///     AccountDescriptor: Descriptor of the newly created account.
     #[gen_stub(override_return_type(type_repr = "AccountDescriptor"))]
     #[pyo3(signature = (wallet_secret, prv_key_data_id, payment_secret=None, account_name=None, account_index=None))]
     pub fn accounts_create_bip32<'py>(
@@ -709,6 +877,16 @@ impl PyWallet {
         })
     }
 
+    /// Create a new keypair (single-key) account from existing private key data.
+    ///
+    /// Args:
+    ///     wallet_secret: Password for the open wallet.
+    ///     prv_key_data_id: Hex-encoded id of the private key data entry to use.
+    ///     ecdsa: If True, derive an ECDSA address; otherwise derive a Schnorr address.
+    ///     account_name: Optional human-readable name for the account.
+    ///
+    /// Returns:
+    ///     AccountDescriptor: Descriptor of the newly created account.
     #[gen_stub(override_return_type(type_repr = "AccountDescriptor"))]
     #[pyo3(signature = (wallet_secret, prv_key_data_id, ecdsa, account_name=None))]
     pub fn accounts_create_keypair<'py>(
@@ -739,6 +917,20 @@ impl PyWallet {
         })
     }
 
+    /// Import a BIP32 (HD) account from existing private key data.
+    ///
+    /// Like `accounts_create_bip32`, but uses the import code path which performs
+    /// address discovery before adding the account.
+    ///
+    /// Args:
+    ///     wallet_secret: Password for the open wallet.
+    ///     prv_key_data_id: Hex-encoded id of the private key data entry to derive from.
+    ///     payment_secret: Optional payment secret if the private key data is encrypted with one.
+    ///     account_name: Optional human-readable name for the account.
+    ///     account_index: Optional explicit BIP32 account index.
+    ///
+    /// Returns:
+    ///     AccountDescriptor: Descriptor of the imported account.
     #[gen_stub(override_return_type(type_repr = "AccountDescriptor"))]
     #[pyo3(signature = (wallet_secret, prv_key_data_id, payment_secret=None, account_name=None, account_index=None))]
     pub fn accounts_import_bip32<'py>(
@@ -777,6 +969,16 @@ impl PyWallet {
         })
     }
 
+    /// Import a keypair (single-key) account from existing private key data.
+    ///
+    /// Args:
+    ///     wallet_secret: Password for the open wallet.
+    ///     prv_key_data_id: Hex-encoded id of the private key data entry to use.
+    ///     ecdsa: If True, derive an ECDSA address; otherwise derive a Schnorr address.
+    ///     account_name: Optional human-readable name for the account.
+    ///
+    /// Returns:
+    ///     AccountDescriptor: Descriptor of the imported account.
     #[gen_stub(override_return_type(type_repr = "AccountDescriptor"))]
     #[pyo3(signature = (wallet_secret, prv_key_data_id, ecdsa, account_name=None))]
     pub fn accounts_import_keypair<'py>(
@@ -809,6 +1011,12 @@ impl PyWallet {
         })
     }
 
+    /// Rename an account.
+    ///
+    /// Args:
+    ///     wallet_secret: Password for the open wallet.
+    ///     account_id: Hex-encoded id of the account to rename.
+    ///     name: New account name, or None to clear the name.
     #[gen_stub(override_return_type(type_repr = "None"))]
     #[pyo3(signature = (wallet_secret, account_id, name=None))]
     pub fn accounts_rename<'py>(
@@ -836,6 +1044,20 @@ impl PyWallet {
         })
     }
 
+    /// Scan a BIP39 mnemonic for previously used accounts and addresses.
+    ///
+    /// Performs a discovery sweep to determine the highest account index that
+    /// has been used on-chain. Useful when restoring a wallet from a mnemonic.
+    ///
+    /// Args:
+    ///     discovery_kind: The discovery scheme (AccountsDiscoveryKind or string).
+    ///     address_scan_extent: How many consecutive unused addresses to scan before stopping.
+    ///     account_scan_extent: How many consecutive unused accounts to scan before stopping.
+    ///     bip39_mnemonic: The BIP39 mnemonic phrase to scan.
+    ///     bip39_passphrase: Optional BIP39 passphrase.
+    ///
+    /// Returns:
+    ///     int: The last account index found to be in use.
     #[gen_stub(override_return_type(type_repr = "int"))]
     #[pyo3(signature = (discovery_kind, address_scan_extent, account_scan_extent, bip39_mnemonic, bip39_passphrase=None))]
     pub fn accounts_discovery<'py>(
@@ -867,6 +1089,16 @@ impl PyWallet {
         })
     }
 
+    /// Ensure a default account of the given kind exists, creating one if needed.
+    ///
+    /// Args:
+    ///     wallet_secret: Password for the open wallet.
+    ///     account_kind: The AccountKind of the default account to ensure.
+    ///     payment_secret: Optional payment secret used when generating new key data.
+    ///     mnemonic_phrase: Optional mnemonic phrase to seed the account.
+    ///
+    /// Returns:
+    ///     AccountDescriptor: Descriptor of the existing or newly created default account.
     #[gen_stub(override_return_type(type_repr = "AccountDescriptor"))]
     #[pyo3(signature = (wallet_secret, account_kind, payment_secret=None, mnemonic_phrase=None))]
     pub fn accounts_ensure_default<'py>(
@@ -895,6 +1127,10 @@ impl PyWallet {
         })
     }
 
+    /// Activate one or more accounts so they begin tracking UTXOs.
+    ///
+    /// Args:
+    ///     account_ids: Optional list of hex-encoded account ids. If None, activates all accounts.
     #[gen_stub(override_return_type(type_repr = "None"))]
     #[pyo3(signature = (account_ids=None))]
     pub fn accounts_activate<'py>(
@@ -925,6 +1161,10 @@ impl PyWallet {
         })
     }
 
+    /// Deactivate one or more accounts so they stop tracking UTXOs.
+    ///
+    /// Args:
+    ///     account_ids: Optional list of hex-encoded account ids. If None, deactivates all accounts.
     #[gen_stub(override_return_type(type_repr = "None"))]
     #[pyo3(signature = (account_ids=None))]
     pub fn accounts_deactivate<'py>(
@@ -955,6 +1195,10 @@ impl PyWallet {
         })
     }
 
+    /// Verify that an account exists in the open wallet.
+    ///
+    /// Args:
+    ///     account_id: Hex-encoded id of the account to look up.
     #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn accounts_get<'py>(
         &self,
@@ -974,6 +1218,14 @@ impl PyWallet {
         })
     }
 
+    /// Generate a new receive or change address for an account.
+    ///
+    /// Args:
+    ///     account_id: Hex-encoded id of the account.
+    ///     address_kind: The NewAddressKind (Receive or Change) to derive.
+    ///
+    /// Returns:
+    ///     Address: The newly derived address.
     #[gen_stub(override_return_type(type_repr = "Address"))]
     pub fn accounts_create_new_address<'py>(
         &self,
@@ -999,6 +1251,20 @@ impl PyWallet {
         })
     }
 
+    /// Estimate the fees and structure of a prospective send without submitting.
+    ///
+    /// Runs the transaction generator against the account's UTXOs to produce
+    /// a summary of what a real send would look like.
+    ///
+    /// Args:
+    ///     account_id: Hex-encoded id of the source account.
+    ///     priority_fee_sompi: Priority fee specification (Fees object or dict).
+    ///     fee_rate: Optional explicit fee rate (sompi per gram of mass).
+    ///     payload: Optional binary payload to embed in the transaction.
+    ///     destination: Optional list of PaymentOutputs. If None, sends to change.
+    ///
+    /// Returns:
+    ///     GeneratorSummary: Summary of the estimated transaction(s).
     #[gen_stub(override_return_type(type_repr = "GeneratorSummary"))]
     #[pyo3(signature = (account_id, priority_fee_sompi, fee_rate=None, payload=None, destination=None))]
     pub fn accounts_estimate<'py>(
@@ -1042,6 +1308,19 @@ impl PyWallet {
         })
     }
 
+    /// Send funds from an account, signing and submitting the resulting transactions.
+    ///
+    /// Args:
+    ///     wallet_secret: Password for the open wallet.
+    ///     account_id: Hex-encoded id of the source account.
+    ///     priority_fee_sompi: Priority fee specification (Fees object or dict).
+    ///     payment_secret: Optional payment secret if the source key data is encrypted with one.
+    ///     fee_rate: Optional explicit fee rate (sompi per gram of mass).
+    ///     payload: Optional binary payload to embed in the transaction.
+    ///     destination: Optional list of PaymentOutputs. If None, sends to change.
+    ///
+    /// Returns:
+    ///     GeneratorSummary: Summary of the submitted transaction(s).
     #[gen_stub(override_return_type(type_repr = "GeneratorSummary"))]
     #[pyo3(signature = (wallet_secret, account_id, priority_fee_sompi, payment_secret=None, fee_rate=None, payload=None, destination=None))]
     pub fn accounts_send<'py>(
@@ -1086,6 +1365,15 @@ impl PyWallet {
         })
     }
 
+    /// List UTXOs available to an account, optionally filtered.
+    ///
+    /// Args:
+    ///     account_id: Hex-encoded id of the account.
+    ///     addresses: Optional list of Address objects to restrict results to.
+    ///     min_amount_sompi: Optional minimum UTXO value to include, in sompi.
+    ///
+    /// Returns:
+    ///     dict: A serialized list of UTXO entries belonging to the account.
     #[gen_stub(override_return_type(type_repr = "dict"))]
     #[pyo3(signature = (account_id, addresses=None, min_amount_sompi=None))]
     pub fn accounts_get_utxos<'py>(
@@ -1114,6 +1402,19 @@ impl PyWallet {
         })
     }
 
+    /// Transfer funds between two accounts in the same wallet.
+    ///
+    /// Args:
+    ///     wallet_secret: Password for the open wallet.
+    ///     source_account_id: Hex-encoded id of the sending account.
+    ///     destination_account_id: Hex-encoded id of the receiving account.
+    ///     transfer_amount_sompi: Amount to transfer in sompi.
+    ///     payment_secret: Optional payment secret if the source key data is encrypted with one.
+    ///     fee_rate: Optional explicit fee rate (sompi per gram of mass).
+    ///     priority_fee_sompi: Optional priority fee specification.
+    ///
+    /// Returns:
+    ///     dict: The transfer response, including generator summary and transaction ids.
     #[gen_stub(override_return_type(type_repr = "dict"))]
     #[pyo3(signature = (wallet_secret, source_account_id, destination_account_id, transfer_amount_sompi, payment_secret=None, fee_rate=None, priority_fee_sompi=None))]
     pub fn accounts_transfer<'py>(
@@ -1161,6 +1462,25 @@ impl PyWallet {
         })
     }
 
+    /// Execute a commit-reveal transaction pair against an account-derived address.
+    ///
+    /// Submits the commit transaction (locking funds to a P2SH script derived from
+    /// `script_sig`) followed by the reveal transaction (spending those funds back).
+    ///
+    /// Args:
+    ///     wallet_secret: Password for the open wallet.
+    ///     account_id: Hex-encoded id of the source account.
+    ///     address_type: The CommitRevealAddressKind selecting which derivation chain to use.
+    ///     address_index: Derivation index for the commit address.
+    ///     script_sig: Raw script bytes used to construct the commit P2SH.
+    ///     commit_amount_sompi: Amount to lock in the commit transaction.
+    ///     reveal_fee_sompi: Fee paid by the reveal transaction.
+    ///     payment_secret: Optional payment secret if the source key data is encrypted with one.
+    ///     fee_rate: Optional explicit fee rate for the commit transaction.
+    ///     payload: Optional binary payload to embed in the reveal transaction.
+    ///
+    /// Returns:
+    ///     list[str]: Hex-encoded ids of the submitted commit and reveal transactions.
     #[gen_stub(override_return_type(type_repr = "list[str]"))]
     #[pyo3(signature = (wallet_secret, account_id, address_type, address_index, script_sig, commit_amount_sompi, reveal_fee_sompi, payment_secret=None, fee_rate=None, payload=None))]
     pub fn accounts_commit_reveal<'py>(
@@ -1207,6 +1527,25 @@ impl PyWallet {
         })
     }
 
+    /// Execute a commit-reveal transaction pair with explicit start and end destinations.
+    ///
+    /// Lower-level variant of `accounts_commit_reveal` that lets the caller
+    /// specify both the commit (start) and reveal (end) destinations directly
+    /// instead of deriving an address from the account.
+    ///
+    /// Args:
+    ///     wallet_secret: Password for the open wallet.
+    ///     account_id: Hex-encoded id of the source account.
+    ///     script_sig: Raw script bytes used to construct the commit P2SH.
+    ///     reveal_fee_sompi: Fee paid by the reveal transaction.
+    ///     payment_secret: Optional payment secret if the source key data is encrypted with one.
+    ///     fee_rate: Optional explicit fee rate for the commit transaction.
+    ///     payload: Optional binary payload to embed in the reveal transaction.
+    ///     start_destination: Optional outputs for the commit transaction. Defaults to change.
+    ///     end_destination: Optional outputs for the reveal transaction. Defaults to change.
+    ///
+    /// Returns:
+    ///     list[str]: Hex-encoded ids of the submitted commit and reveal transactions.
     #[gen_stub(override_return_type(type_repr = "list[str]"))]
     #[pyo3(signature = (wallet_secret, account_id, script_sig, reveal_fee_sompi, payment_secret=None, fee_rate=None, payload=None, start_destination=None, end_destination=None))]
     pub fn accounts_commit_reveal_manual<'py>(
@@ -1277,6 +1616,10 @@ impl PyWallet {
 #[gen_stub_pymethods]
 #[pymethods]
 impl PyWallet {
+    /// Begin a batched storage transaction.
+    ///
+    /// Subsequent wallet operations are coalesced into a single storage write
+    /// until `flush` is called.
     #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn batch<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let wallet = self.wallet().clone();
@@ -1286,6 +1629,10 @@ impl PyWallet {
         })
     }
 
+    /// Flush any pending batched changes to storage.
+    ///
+    /// Args:
+    ///     wallet_secret: Password for the open wallet.
     #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn flush<'py>(
         &self,
@@ -1303,6 +1650,11 @@ impl PyWallet {
         })
     }
 
+    /// Persist arbitrary named context data alongside the wallet.
+    ///
+    /// Args:
+    ///     name: A name identifying the context entry.
+    ///     data: Optional binary payload to associate with `name`. If None, the entry is cleared.
     #[gen_stub(override_return_type(type_repr = "None"))]
     #[pyo3(signature = (name, data=None))]
     pub fn retain_context<'py>(
@@ -1325,6 +1677,13 @@ impl PyWallet {
         })
     }
 
+    /// Fetch the wallet runtime status.
+    ///
+    /// Args:
+    ///     name: Optional wallet name. If None, reports the status of the active wallet.
+    ///
+    /// Returns:
+    ///     dict: Status information including connection state, sync state, and selected network.
     #[gen_stub(override_return_type(type_repr = "dict"))]
     #[pyo3(signature = (name=None))]
     pub fn get_status<'py>(
@@ -1342,6 +1701,10 @@ impl PyWallet {
         })
     }
 
+    /// Enumerate entries in the wallet address book.
+    ///
+    /// Note: this is currently a no-op placeholder that returns nothing; the
+    /// underlying API is reserved for a future address book implementation.
     #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn address_book_enumerate<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let wallet = self.wallet().clone();
@@ -1359,6 +1722,17 @@ impl PyWallet {
 #[gen_stub_pymethods]
 #[pymethods]
 impl PyWallet {
+    /// Fetch a window of stored transaction history for an account.
+    ///
+    /// Args:
+    ///     account_id: Hex-encoded id of the account.
+    ///     network_id: The network the transactions belong to.
+    ///     start: Start index (inclusive) into the transaction history.
+    ///     end: End index (exclusive) into the transaction history.
+    ///     filter: Optional list of TransactionKind values to filter by.
+    ///
+    /// Returns:
+    ///     dict: The transaction data response, including the matching transactions.
     #[gen_stub(override_return_type(type_repr = "dict"))]
     #[pyo3(signature = (account_id, network_id, start, end, filter=None))]
     pub fn transactions_data_get<'py>(
@@ -1396,6 +1770,13 @@ impl PyWallet {
         })
     }
 
+    /// Replace the user-provided note attached to a stored transaction.
+    ///
+    /// Args:
+    ///     account_id: Hex-encoded id of the account that owns the transaction.
+    ///     network_id: The network the transaction belongs to.
+    ///     transaction_id: Hex-encoded id of the transaction to update.
+    ///     note: New note text, or None to clear the note.
     #[gen_stub(override_return_type(type_repr = "None"))]
     #[pyo3(signature = (account_id, network_id, transaction_id, note=None))]
     pub fn transactions_replace_note<'py>(
@@ -1425,6 +1806,13 @@ impl PyWallet {
         })
     }
 
+    /// Replace the user-provided metadata attached to a stored transaction.
+    ///
+    /// Args:
+    ///     account_id: Hex-encoded id of the account that owns the transaction.
+    ///     network_id: The network the transaction belongs to.
+    ///     transaction_id: Hex-encoded id of the transaction to update.
+    ///     metadata: New metadata string, or None to clear it.
     #[gen_stub(override_return_type(type_repr = "None"))]
     #[pyo3(signature = (account_id, network_id, transaction_id, metadata=None))]
     pub fn transactions_replace_metadata<'py>(
@@ -1459,6 +1847,10 @@ impl PyWallet {
 #[gen_stub_pymethods]
 #[pymethods]
 impl PyWallet {
+    /// Fetch the current fee rate estimate from the connected node.
+    ///
+    /// Returns:
+    ///     dict: Fee rate estimates at low, normal, and priority levels.
     #[gen_stub(override_return_type(type_repr = "dict"))]
     pub fn fee_rate_estimate<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let wallet = self.wallet().clone();
@@ -1472,6 +1864,10 @@ impl PyWallet {
         })
     }
 
+    /// Enable a background poller that periodically refreshes fee rate estimates.
+    ///
+    /// Args:
+    ///     interval_seconds: How often the poller should query the node, in seconds.
     #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn fee_rate_poller_enable<'py>(
         &self,
@@ -1490,6 +1886,7 @@ impl PyWallet {
         })
     }
 
+    /// Disable the background fee rate poller, if running.
     #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn fee_rate_poller_disable<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let wallet = self.wallet().clone();
