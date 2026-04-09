@@ -2809,7 +2809,7 @@ class Wallet:
         Create a new Wallet instance.
         
         Constructs a wallet backed by the local file store and an internal
-        wRPC client. The wallet is created in a closed state — call
+        wRPC client. The wallet is created in a closed state. Call
         `wallet_open` (or `wallet_create`) to open or initialize a wallet file.
         
         Args:
@@ -3129,15 +3129,12 @@ class Wallet:
         Args:
             account_ids: Optional list of hex-encoded account ids. If None, activates all accounts.
         """
-    def accounts_deactivate(self, account_ids: typing.Optional[typing.Sequence[builtins.str]] = None) -> None:
+    def accounts_get(self, account_id: builtins.str) -> None:
         r"""
         Deactivate one or more accounts so they stop tracking UTXOs.
         
         Args:
             account_ids: Optional list of hex-encoded account ids. If None, deactivates all accounts.
-        """
-    def accounts_get(self, account_id: builtins.str) -> None:
-        r"""
         Verify that an account exists in the open wallet.
         
         Args:

@@ -92,7 +92,7 @@ impl PyWallet {
     /// Create a new Wallet instance.
     ///
     /// Constructs a wallet backed by the local file store and an internal
-    /// wRPC client. The wallet is created in a closed state — call
+    /// wRPC client. The wallet is created in a closed state. Call
     /// `wallet_open` (or `wallet_create`) to open or initialize a wallet file.
     ///
     /// Args:
@@ -1161,39 +1161,43 @@ impl PyWallet {
         })
     }
 
+    // Removed due to upstream rusty-kaspa bug
+    // This fn hangs due to recursive lock in native accounts_deactivate_call fn
+    // Can bring back once that is fixed
+    #[allow(clippy::empty_line_after_outer_attr)]
     /// Deactivate one or more accounts so they stop tracking UTXOs.
     ///
     /// Args:
     ///     account_ids: Optional list of hex-encoded account ids. If None, deactivates all accounts.
-    #[gen_stub(override_return_type(type_repr = "None"))]
-    #[pyo3(signature = (account_ids=None))]
-    pub fn accounts_deactivate<'py>(
-        &self,
-        py: Python<'py>,
-        account_ids: Option<Vec<String>>,
-    ) -> PyResult<Bound<'py, PyAny>> {
-        let account_ids = account_ids
-            .map(|ids| {
-                ids.iter()
-                    .map(|id| {
-                        AccountId::from_hex(id).map_err(|err| PyException::new_err(err.to_string()))
-                    })
-                    .collect::<PyResult<Vec<AccountId>>>()
-            })
-            .transpose()?;
+    // #[gen_stub(override_return_type(type_repr = "None"))]
+    // #[pyo3(signature = (account_ids=None))]
+    // pub fn accounts_deactivate<'py>(
+    //     &self,
+    //     py: Python<'py>,
+    //     account_ids: Option<Vec<String>>,
+    // ) -> PyResult<Bound<'py, PyAny>> {
+    //     let account_ids = account_ids
+    //         .map(|ids| {
+    //             ids.iter()
+    //                 .map(|id| {
+    //                     AccountId::from_hex(id).map_err(|err| PyException::new_err(err.to_string()))
+    //                 })
+    //                 .collect::<PyResult<Vec<AccountId>>>()
+    //         })
+    //         .transpose()?;
 
-        let request = AccountsDeactivateRequest { account_ids };
+    //     let request = AccountsDeactivateRequest { account_ids };
 
-        let wallet = self.wallet().clone();
-        pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            wallet
-                .accounts_deactivate_call(request)
-                .await
-                .into_py_result()?;
+    //     let wallet = self.wallet().clone();
+    //     pyo3_async_runtimes::tokio::future_into_py(py, async move {
+    //         wallet
+    //             .accounts_deactivate_call(request)
+    //             .await
+    //             .into_py_result()?;
 
-            Ok(())
-        })
-    }
+    //         Ok(())
+    //     })
+    // }
 
     /// Verify that an account exists in the open wallet.
     ///
