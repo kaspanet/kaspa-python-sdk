@@ -231,6 +231,7 @@ impl PyWallet {
     ///     timeout_duration: Optional connection timeout in milliseconds.
     ///     retry_interval: Optional retry interval in milliseconds.
     #[gen_stub(override_return_type(type_repr = "None"))]
+    #[pyo3(signature = (block_async_connect = None, strategy = None, url = None, timeout_duration = None, retry_interval = None))]
     pub fn connect<'py>(
         &self,
         py: Python<'py>,

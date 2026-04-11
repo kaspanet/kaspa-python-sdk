@@ -2848,7 +2848,7 @@ class Wallet:
         Tears down the background notification task and stops the wallet's
         internal services. Should be called before disposing of the Wallet.
         """
-    def connect(self, block_async_connect: typing.Optional[builtins.bool], strategy: typing.Optional[builtins.str], url: typing.Optional[builtins.str], timeout_duration: typing.Optional[builtins.int], retry_interval: typing.Optional[builtins.int]) -> None:
+    def connect(self, block_async_connect: typing.Optional[builtins.bool] = None, strategy: typing.Optional[builtins.str] = None, url: typing.Optional[builtins.str] = None, timeout_duration: typing.Optional[builtins.int] = None, retry_interval: typing.Optional[builtins.int] = None) -> None:
         r"""
         Connect the wallet's wRPC client to a Kaspa node.
         

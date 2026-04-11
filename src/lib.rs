@@ -192,8 +192,7 @@ fn kaspa(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_submodule(&exceptions)?;
 
     // Registrations to exceptions submodule
-    exceptions.add_class::<wallet::core::error::PyWalletError>()?;
-    exceptions.add_class::<wallet::core::error::PyWalletCustomError>()?;
+    wallet::core::error::register_exceptions(&exceptions)?;
 
     // Register in sys.modules
     // Required for `from kaspa.exceptions import ...` to work

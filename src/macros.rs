@@ -90,8 +90,64 @@ macro_rules! create_py_exception {
 
         impl $name {
             pub fn new_err(message: impl Into<String>) -> PyErr {
-                PyErr::new::<Self, _>(message.into())
+                PyErr::new::<Self, String>(message.into())
             }
+        }
+    };
+}
+
+// Generates a Python exception class per native rusty-kaspa error variant,
+// the `From<Error> for PyErr` impl that maps each variant to its dedicated
+// Python exception, and a `register_exceptions` fn that adds every generated
+// class to a given `PyModule`. The `match` produced has no `_` arm, so:
+//
+//   * Coverage — adding a variant upstream causes `non-exhaustive patterns` build
+//     failure until it's listed here.
+//   * Bijection — duplicate entries cause `unreachable_patterns` (variant) or
+//     duplicate type definition (Rust ident).
+//
+// Each entry provides a full pattern, the Rust struct ident, and the Python
+// class name literal:
+//
+//   <Pattern> => <PyRustIdent>, "<PythonName>";
+//
+// e.g.
+//
+//   NativeError::Custom(_) => PyWalletCustomError, "WalletCustomError";
+//   NativeError::NotConnected  => PyWalletNotConnectedError, "WalletNotConnectedError";
+//   NativeError::InsufficientFunds { .. } => PyWalletInsufficientFundsError, "WalletInsufficientFundsError";
+//
+// The macro is payload-agnostic: it relies on the native enum's `Display` impl
+// (provided by `thiserror` `#[error(...)]` attributes) to format the message
+// string, so all variants — unit, tuple, or struct — share one uniform
+// per-entry shape.
+#[macro_export]
+macro_rules! py_error_map {
+    (
+        $(
+            $pat:pat_param => $py:ident, $py_lit:literal
+        );+ $(;)?
+    ) => {
+        $( $crate::create_py_exception!($py, $py_lit); )+
+
+        impl From<Error> for ::pyo3::PyErr {
+            #[deny(unreachable_patterns)]
+            fn from(err: Error) -> Self {
+                match err.0 {
+                    $(
+                        e @ $pat => $py::new_err(e.to_string())
+                    ),+
+                }
+            }
+        }
+
+        /// Registers every generated wallet exception class on `module`.
+        /// Emitted by `py_error_map!` so the list stays single-sourced.
+        pub fn register_exceptions(
+            module: &::pyo3::Bound<'_, ::pyo3::types::PyModule>,
+        ) -> ::pyo3::PyResult<()> {
+            $( module.add_class::<$py>()?; )+
+            Ok(())
         }
     };
 }

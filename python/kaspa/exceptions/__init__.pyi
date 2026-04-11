@@ -5,23 +5,474 @@ import builtins
 import typing
 
 @typing.final
-class WalletCustomError(builtins.Exception):
-    r"""
-    Custom wallet error
-    """
+class WalletAbortedError(builtins.Exception):
     ...
 
 @typing.final
-class WalletError(builtins.Exception):
-    r"""
-    General catch-all wallet error
-    """
+class WalletAccountAddressDerivationCapsError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletAccountAlreadyExistsError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletAccountFactoryNotFoundError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletAccountKindFeatureError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletAccountNotActiveError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletAccountNotFoundError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletAccountSelectionError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletAddressError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletAddressNotFoundError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletAlreadyExistsError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletArgon2Error(builtins.Exception):
+    ...
+
+@typing.final
+class WalletArgon2phError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletAssocPrvKeyDataIdsEmptyError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletAssocPrvKeyDataIdsError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletBIP32Error(builtins.Exception):
+    ...
+
+@typing.final
+class WalletBase64DecodeError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletBigIntError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletBip32WatchAccountError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletBip32WatchXpubRequiredError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletChacha20poly1305Error(builtins.Exception):
+    ...
+
+@typing.final
+class WalletCipherMessageTooShortError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletCommitRevealBundleMergeError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletCommitRevealEmptyPaymentOutputsError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletCommitRevealInvalidPaymentDestinationError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletCommitTransactionIdExtractionError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletCommitTransactionSigningError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletConsensusClientError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletConsensusWasmError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletCoreSignError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletCustomError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletDecodeError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletDecryptError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletDowncastError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletDuplicateUtxoEntryError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletFasterHexError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletFromUtf8Error(builtins.Exception):
+    ...
+
+@typing.final
+class WalletGeneratorChangeAddressNetworkTypeMismatchError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletGeneratorFeesInSweepTransactionError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletGeneratorIncludeFeesRequiresOneOutputError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletGeneratorNoFeesForFinalTransactionError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletGeneratorPaymentOutputNetworkTypeMismatchError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletGeneratorPaymentOutputZeroAmountError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletGeneratorTransactionIsTooHeavyError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletGeneratorTransactionOutputsAreTooHeavyError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletInsufficientFundsError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletInvalidAccountIdError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletInvalidAccountKindError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletInvalidArgumentError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletInvalidExtendedPublicKeyError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletInvalidFilenameError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletInvalidKeyDataIdError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletInvalidMnemonicPhraseError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletInvalidNetworkIdError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletInvalidNetworkSuffixError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletInvalidNetworkTypeError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletInvalidPrivateKeyLengthError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletInvalidPublicKeyLengthError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletInvalidRangeError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletInvalidTransactionKindError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletIoError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletJsValueError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletKaspaRpcClientResultError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletKaspaWorkflowRpcError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletKeyIdError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletKeysError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletLegacyAccountNotInitializedError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletListenerIdError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletMassCalculationError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletMetricsError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletMissingDaaScoreError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletMissingNetworkIdError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletMissingNetworkSuffixError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletMissingUtxoIndexError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletMultisigCreateError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletNameNotAllowedError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletNetworkIdError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletNetworkTypeConnectedError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletNetworkTypeError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletNoQualifiedRevealSignerFoundError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletNoRecordsFoundError(builtins.Exception):
     ...
 
 @typing.final
 class WalletNoWalletInStorageError(builtins.Exception):
-    r"""
-    Wallet not found in storage location error
-    """
+    ...
+
+@typing.final
+class WalletNotConnectedError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletNotImplementedError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletNotOpenError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletNotSyncedError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletNotWrpcClientError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletPSKTFinalizationError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletPSKTGenerationError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletParseFloatError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletParseIntError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletPendingTransactionFromPSKTError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletPoisonError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletPrivateKeyAlreadyExistsError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletPrivateKeyNotFoundError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletPsktError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletResidentAccountError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletResidentWalletError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletRevealRedeemScriptTemplateError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletRpcApiVersionError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletRpcError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletScriptBuilderError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletSecp256k1Error(builtins.Exception):
+    ...
+
+@typing.final
+class WalletSecretIsEmptyError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletSecretRequiredError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletSerdeJsonError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletSerdeWasmBindgenError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletStorageMassExceedsMaximumTransactionMassError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletToValueError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletTransactionFeesAreTooHighError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletTryFromEnumError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletTxScriptError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletUnexpectedExtraSuffixTokenError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletUtf8Error(builtins.Exception):
+    ...
+
+@typing.final
+class WalletVarError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletWorkflowStoreError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletWorkflowWasmError(builtins.Exception):
+    ...
+
+@typing.final
+class WalletXPrvSupportError(builtins.Exception):
     ...
 
