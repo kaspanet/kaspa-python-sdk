@@ -3131,10 +3131,6 @@ class Wallet:
         """
     def accounts_get(self, account_id: builtins.str) -> None:
         r"""
-        Deactivate one or more accounts so they stop tracking UTXOs.
-        
-        Args:
-            account_ids: Optional list of hex-encoded account ids. If None, deactivates all accounts.
         Verify that an account exists in the open wallet.
         
         Args:

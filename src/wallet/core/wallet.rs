@@ -1165,11 +1165,10 @@ impl PyWallet {
     // Removed due to upstream rusty-kaspa bug
     // This fn hangs due to recursive lock in native accounts_deactivate_call fn
     // Can bring back once that is fixed
-    #[allow(clippy::empty_line_after_outer_attr)]
-    /// Deactivate one or more accounts so they stop tracking UTXOs.
-    ///
-    /// Args:
-    ///     account_ids: Optional list of hex-encoded account ids. If None, deactivates all accounts.
+    // Deactivate one or more accounts so they stop tracking UTXOs.
+    //
+    // Args:
+    //     account_ids: Optional list of hex-encoded account ids. If None, deactivates all accounts.
     // #[gen_stub(override_return_type(type_repr = "None"))]
     // #[pyo3(signature = (account_ids=None))]
     // pub fn accounts_deactivate<'py>(
