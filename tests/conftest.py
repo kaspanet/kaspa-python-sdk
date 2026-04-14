@@ -17,6 +17,19 @@ from kaspa import (
 )
 
 
+def pytest_addoption(parser):
+    parser.addoption(
+        "--network-id",
+        default="mainnet",
+        help="Kaspa network ID (default: mainnet)",
+    )
+    parser.addoption(
+        "--rpc-url",
+        default=None,
+        help="Direct RPC server WebSocket URL (bypasses resolver)",
+    )
+
+
 # =============================================================================
 # Test Vectors - Deterministic values for reproducible tests
 # =============================================================================
@@ -36,7 +49,8 @@ TEST_MASTER_XPRV = (
     "kprv5y2qurMHCsXYrNfU3GCihuwG3vMqFji7PZXajMEqyBkNh9UZUJgoHYBLTKu1eM4MvUtomcXPQ3Sw9HZ5ebbM4byoUciHo1zrPJBQfqpLorQ"
 )
 
-TEST_MAINNET_ADDRESS = "kaspa:qr0lr4ml9fn3chekrqmjdkergxl93l4wrk3dankcgvjq776s9wn9jkdskewva"
+# Burn address
+TEST_MAINNET_ADDRESS = "kaspa:qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqkx9awp4e"
 
 
 # =============================================================================
@@ -96,14 +110,39 @@ def known_mainnet_address() -> Address:
 # Integration Test Fixtures (Network Required)
 # =============================================================================
 
+@pytest.fixture(scope="session")
+def network_id(request):
+    return request.config.getoption("--network-id")
+
+
+@pytest.fixture(scope="session")
+def rpc_url(request):
+    return request.config.getoption("--rpc-url")
+
+
 @pytest_asyncio.fixture(scope="session")
-async def testnet_rpc_client():
+async def rpc_client(network_id, rpc_url):
     """
-    Session-scoped async fixture for RPC client connected to testnet.
+    Session-scoped async fixture for RPC client.
 
     This fixture is used for integration tests that require network access.
+    Configure via pytest options: --network-id and --rpc-url.
     """
-    client = RpcClient(resolver=Resolver(), network_id="testnet-10")
+    if rpc_url:
+        client = RpcClient(url=rpc_url, network_id=network_id)
+    else:
+        client = RpcClient(resolver=Resolver(), network_id=network_id)
     await client.connect()
     yield client
     await client.disconnect()
+
+
+@pytest.fixture(scope="session")
+def test_address(network_id):
+    """Address for the currently targeted network.
+
+    Returns a testnet address for testnet-* network IDs, otherwise mainnet.
+    """
+    if network_id.startswith("testnet"):
+        return "kaspatest:qr0lr4ml9fn3chekrqmjdkergxl93l4wrk3dankcgvjq776s9wn9jhtkdksae"
+    return TEST_MAINNET_ADDRESS
