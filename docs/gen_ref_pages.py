@@ -6,7 +6,8 @@ import re
 import mkdocs_gen_files
 
 # Objects to document from the kaspa module
-stub_file = Path("kaspa.pyi")
+stub_file = Path("python/kaspa/__init__.pyi")
+exceptions_stub_file = Path("python/kaspa/exceptions/__init__.pyi")
 
 nav = mkdocs_gen_files.Nav()
 
@@ -15,6 +16,7 @@ CATEGORY_ORDER = [
     "Enums",
     "Functions",
     "TypedDicts",
+    "Exceptions",
 ]
 
 
@@ -91,6 +93,15 @@ if stub_file.exists():
     content = stub_file.read_text()
     objects = parse_stub_file(content)
 
+    # Parse exceptions submodule
+    if exceptions_stub_file.exists():
+        exc_content = exceptions_stub_file.read_text()
+        exc_objects = parse_stub_file(exc_content)
+        for name, info in exc_objects.items():
+            info["category"] = "Exceptions"
+            info["module"] = "kaspa.exceptions"
+            objects[name] = info
+
     # Group objects by category
     by_category: dict[str, list[str]] = {}
     for name, info in objects.items():
@@ -145,9 +156,11 @@ if stub_file.exists():
             doc_path = Path("reference", category, f"{name}.md")
             type_label = get_type_label(name)
 
+            module = objects[name].get("module", "kaspa")
+
             with mkdocs_gen_files.open(doc_path, "w") as f:
                 f.write(f'# `{name}` ({type_label})\n\n')
-                f.write(f"::: kaspa.{name}\n")
+                f.write(f"::: {module}.{name}\n")
                 f.write("    options:\n")
                 f.write("      show_root_heading: false\n")
                 f.write("      show_root_full_path: false\n")

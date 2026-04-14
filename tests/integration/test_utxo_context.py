@@ -8,18 +8,16 @@ import pytest
 
 from kaspa import NetworkId, UtxoContext, UtxoProcessor
 
-TEST_ADDRESS = "kaspatest:qr0lr4ml9fn3chekrqmjdkergxl93l4wrk3dankcgvjq776s9wn9jhtkdksae"
-
 
 class TestUtxoContext:
     """Tests for UtxoProcessor/UtxoContext with live RPC."""
 
-    async def test_track_addresses_and_ranges(self, testnet_rpc_client):
-        processor = UtxoProcessor(testnet_rpc_client, NetworkId("testnet-10"))
+    async def test_track_addresses_and_ranges(self, rpc_client, network_id, test_address):
+        processor = UtxoProcessor(rpc_client, NetworkId(network_id))
         await processor.start()
         try:
             context = UtxoContext(processor)
-            await context.track_addresses([TEST_ADDRESS])
+            await context.track_addresses([test_address])
 
             assert isinstance(context.mature_length, int)
 
@@ -37,8 +35,8 @@ class TestUtxoContext:
         finally:
             await processor.stop()
 
-    async def test_mature_range_invalid_range(self, testnet_rpc_client):
-        processor = UtxoProcessor(testnet_rpc_client, NetworkId("testnet-10"))
+    async def test_mature_range_invalid_range(self, rpc_client, network_id):
+        processor = UtxoProcessor(rpc_client, NetworkId(network_id))
         await processor.start()
         try:
             context = UtxoContext(processor)
@@ -47,8 +45,8 @@ class TestUtxoContext:
         finally:
             await processor.stop()
 
-    async def test_track_addresses_invalid_address(self, testnet_rpc_client):
-        processor = UtxoProcessor(testnet_rpc_client, NetworkId("testnet-10"))
+    async def test_track_addresses_invalid_address(self, rpc_client, network_id):
+        processor = UtxoProcessor(rpc_client, NetworkId(network_id))
         await processor.start()
         try:
             context = UtxoContext(processor)
@@ -57,8 +55,8 @@ class TestUtxoContext:
         finally:
             await processor.stop()
 
-    async def test_context_invalid_id(self, testnet_rpc_client):
-        processor = UtxoProcessor(testnet_rpc_client, NetworkId("testnet-10"))
+    async def test_context_invalid_id(self, rpc_client, network_id):
+        processor = UtxoProcessor(rpc_client, NetworkId(network_id))
         await processor.start()
         try:
             with pytest.raises(Exception):

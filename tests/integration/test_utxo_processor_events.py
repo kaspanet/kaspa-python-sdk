@@ -10,8 +10,8 @@ from kaspa import NetworkId, UtxoProcessor
 
 
 class TestUtxoProcessorEventListeners:
-    async def test_receive_utxo_proc_start_stop(self, testnet_rpc_client):
-        processor = UtxoProcessor(testnet_rpc_client, NetworkId("testnet-10"))
+    async def test_receive_utxo_proc_start_stop(self, rpc_client, network_id):
+        processor = UtxoProcessor(rpc_client, NetworkId(network_id))
 
         loop = asyncio.get_running_loop()
         got_start = asyncio.Event()
@@ -38,8 +38,8 @@ class TestUtxoProcessorEventListeners:
         assert "utxo-proc-start" in received_types
         assert "utxo-proc-stop" in received_types
 
-    async def test_receive_utxo_proc_start_target_filter(self, testnet_rpc_client):
-        processor = UtxoProcessor(testnet_rpc_client, NetworkId("testnet-10"))
+    async def test_receive_utxo_proc_start_target_filter(self, rpc_client, network_id):
+        processor = UtxoProcessor(rpc_client, NetworkId(network_id))
 
         loop = asyncio.get_running_loop()
         got_start = asyncio.Event()
@@ -61,8 +61,8 @@ class TestUtxoProcessorEventListeners:
         assert "utxo-proc-start" in received_types
         assert "utxo-proc-stop" not in received_types
 
-    async def test_callback_exception_does_not_break_dispatch(self, testnet_rpc_client):
-        processor = UtxoProcessor(testnet_rpc_client, NetworkId("testnet-10"))
+    async def test_callback_exception_does_not_break_dispatch(self, rpc_client, network_id):
+        processor = UtxoProcessor(rpc_client, NetworkId(network_id))
 
         loop = asyncio.get_running_loop()
         got_start = asyncio.Event()

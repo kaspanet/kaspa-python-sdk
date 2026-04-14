@@ -40,14 +40,26 @@ impl<'py> FromPyObject<'_, 'py> for PyNetworkType {
 #[gen_stub_pymethods]
 #[pymethods]
 impl PyNetworkType {
+    /// The default wRPC port for this network.
+    ///
+    /// Returns:
+    ///     int: The default wRPC port number.
     pub fn default_rpc_port(&self) -> u16 {
         NetworkType::from(self).default_rpc_port()
     }
 
+    /// The default Borsh-encoded wRPC port for this network.
+    ///
+    /// Returns:
+    ///     int: The default Borsh wRPC port number.
     pub fn default_borsh_rpc_port(&self) -> u16 {
         NetworkType::from(self).default_borsh_rpc_port()
     }
 
+    /// The default JSON-encoded wRPC port for this network.
+    ///
+    /// Returns:
+    ///     int: The default JSON wRPC port number.
     pub fn default_json_rpc_port(&self) -> u16 {
         NetworkType::from(self).default_json_rpc_port()
     }

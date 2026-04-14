@@ -31,31 +31,31 @@ SIMPLE_SUBSCRIPTIONS = [
 class TestEventListeners:
     """Tests for RPC event listener functionality."""
 
-    async def test_add_event_listener(self, testnet_rpc_client):
+    async def test_add_event_listener(self, rpc_client):
         """Test adding an event listener."""
         received_events = []
 
         def callback(event_data):
             received_events.append(event_data)
 
-        testnet_rpc_client.add_event_listener(
+        rpc_client.add_event_listener(
             "virtual-daa-score-changed", callback)
         # Listener should be added without error
         assert True
 
-    async def test_remove_event_listener(self, testnet_rpc_client):
+    async def test_remove_event_listener(self, rpc_client):
         """Test removing an event listener."""
         def callback(event_data):
             pass
 
-        testnet_rpc_client.add_event_listener(
+        rpc_client.add_event_listener(
             "virtual-daa-score-changed", callback)
-        testnet_rpc_client.remove_event_listener(
+        rpc_client.remove_event_listener(
             "virtual-daa-score-changed", callback)
         # Listener should be removed without error
         assert True
 
-    async def test_remove_all_event_listeners(self, testnet_rpc_client):
+    async def test_remove_all_event_listeners(self, rpc_client):
         """Test removing all event listeners."""
         def callback1(event_data):
             pass
@@ -63,10 +63,10 @@ class TestEventListeners:
         def callback2(event_data):
             pass
 
-        testnet_rpc_client.add_event_listener(
+        rpc_client.add_event_listener(
             "virtual-daa-score-changed", callback1)
-        testnet_rpc_client.add_event_listener("block-added", callback2)
-        testnet_rpc_client.remove_all_event_listeners()
+        rpc_client.add_event_listener("block-added", callback2)
+        rpc_client.remove_all_event_listeners()
         # All listeners should be removed without error
         assert True
 
@@ -75,17 +75,17 @@ class TestSimpleSubscriptions:
     """Tests for simple subscribe/unsubscribe operations that take no arguments."""
 
     @pytest.mark.parametrize("name,subscribe_method,unsubscribe_method", SIMPLE_SUBSCRIPTIONS)
-    async def test_subscribe(self, testnet_rpc_client, name, subscribe_method, unsubscribe_method):
+    async def test_subscribe(self, rpc_client, name, subscribe_method, unsubscribe_method):
         """Test subscribing to various events."""
-        await getattr(testnet_rpc_client, subscribe_method)()
+        await getattr(rpc_client, subscribe_method)()
         # Should subscribe without error
         assert True
 
     @pytest.mark.parametrize("name,subscribe_method,unsubscribe_method", SIMPLE_SUBSCRIPTIONS)
-    async def test_subscribe_and_unsubscribe(self, testnet_rpc_client, name, subscribe_method, unsubscribe_method):
+    async def test_subscribe_and_unsubscribe(self, rpc_client, name, subscribe_method, unsubscribe_method):
         """Test subscribing and then unsubscribing from various events."""
-        await getattr(testnet_rpc_client, subscribe_method)()
-        await getattr(testnet_rpc_client, unsubscribe_method)()
+        await getattr(rpc_client, subscribe_method)()
+        await getattr(rpc_client, unsubscribe_method)()
         # Should unsubscribe without error
         assert True
 
@@ -93,20 +93,20 @@ class TestSimpleSubscriptions:
 class TestVirtualChainSubscription:
     """Tests for virtual chain subscription (requires parameters)."""
 
-    async def test_subscribe_virtual_chain_changed(self, testnet_rpc_client):
+    async def test_subscribe_virtual_chain_changed(self, rpc_client):
         """Test subscribing to virtual chain changes."""
-        await testnet_rpc_client.subscribe_virtual_chain_changed(
+        await rpc_client.subscribe_virtual_chain_changed(
             include_accepted_transaction_ids=False
         )
         # Should subscribe without error
         assert True
 
-    async def test_unsubscribe_virtual_chain_changed(self, testnet_rpc_client):
+    async def test_unsubscribe_virtual_chain_changed(self, rpc_client):
         """Test unsubscribing from virtual chain changes."""
-        await testnet_rpc_client.subscribe_virtual_chain_changed(
+        await rpc_client.subscribe_virtual_chain_changed(
             include_accepted_transaction_ids=False
         )
-        await testnet_rpc_client.unsubscribe_virtual_chain_changed(
+        await rpc_client.unsubscribe_virtual_chain_changed(
             include_accepted_transaction_ids=False
         )
         # Should unsubscribe without error
@@ -116,22 +116,20 @@ class TestVirtualChainSubscription:
 class TestUtxoSubscription:
     """Tests for UTXO change subscription (requires address parameter)."""
 
-    async def test_subscribe_utxos_changed(self, testnet_rpc_client):
+    async def test_subscribe_utxos_changed(self, rpc_client, test_address):
         """Test subscribing to UTXO changes for specific addresses."""
-        test_address = Address(
-            "kaspatest:qr0lr4ml9fn3chekrqmjdkergxl93l4wrk3dankcgvjq776s9wn9jhtkdksae")
+        addr = Address(test_address)
 
-        await testnet_rpc_client.subscribe_utxos_changed([test_address])
+        await rpc_client.subscribe_utxos_changed([addr])
         # Should subscribe without error
         assert True
 
-    async def test_unsubscribe_utxos_changed(self, testnet_rpc_client):
+    async def test_unsubscribe_utxos_changed(self, rpc_client, test_address):
         """Test unsubscribing from UTXO changes."""
-        test_address = Address(
-            "kaspatest:qr0lr4ml9fn3chekrqmjdkergxl93l4wrk3dankcgvjq776s9wn9jhtkdksae")
+        addr = Address(test_address)
 
-        await testnet_rpc_client.subscribe_utxos_changed([test_address])
-        await testnet_rpc_client.unsubscribe_utxos_changed([test_address])
+        await rpc_client.subscribe_utxos_changed([addr])
+        await rpc_client.unsubscribe_utxos_changed([addr])
         # Should unsubscribe without error
         assert True
 
@@ -139,7 +137,7 @@ class TestUtxoSubscription:
 class TestEventReceiving:
     """Tests for actually receiving events (may take time)."""
 
-    async def test_receive_virtual_daa_score_event(self, testnet_rpc_client):
+    async def test_receive_virtual_daa_score_event(self, rpc_client):
         """Test receiving a virtual DAA score change event."""
         received_events = []
         event_received = asyncio.Event()
@@ -148,9 +146,9 @@ class TestEventReceiving:
             received_events.append(event_data)
             event_received.set()
 
-        testnet_rpc_client.add_event_listener(
+        rpc_client.add_event_listener(
             "virtual-daa-score-changed", callback)
-        await testnet_rpc_client.subscribe_virtual_daa_score_changed()
+        await rpc_client.subscribe_virtual_daa_score_changed()
 
         await asyncio.wait_for(event_received.wait(), timeout=30.0)
         assert len(received_events) > 0

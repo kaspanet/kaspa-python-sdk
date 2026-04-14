@@ -1,5 +1,29 @@
 ## [Unreleased]
 
+### Added
+- Class `Wallet` exposed to Python, providing the full rusty-kaspa wallet API: lifecycle (`start`, `stop`, `connect`, `disconnect`, `set_network_id`, `get_status`), wallet file operations (`wallet_enumerate`, `wallet_create`, `wallet_open`, `wallet_close`, `wallet_reload`, `wallet_rename`, `wallet_change_secret`, `wallet_export`, `wallet_import`), private key data (`prv_key_data_enumerate`, `prv_key_data_create`, `prv_key_data_remove`, `prv_key_data_get`), accounts (`accounts_enumerate`, `accounts_create_bip32`, `accounts_create_keypair`, `accounts_import_bip32`, `accounts_import_keypair`, `accounts_rename`, `accounts_discovery`, `accounts_ensure_default`, `accounts_activate`, `accounts_get`, `accounts_create_new_address`, `accounts_get_utxos`), spending (`accounts_estimate`, `accounts_send`, `accounts_transfer`, `accounts_commit_reveal`, `accounts_commit_reveal_manual`), transaction history (`transactions_data_get`, `transactions_replace_note`, `transactions_replace_metadata`), storage (`batch`, `flush`, `retain_context`, `address_book_enumerate`), fee rate (`fee_rate_estimate`, `fee_rate_poller_enable`, `fee_rate_poller_disable`), and event listeners (`add_event_listener`, `remove_event_listener`).
+- Classes `AccountDescriptor`, `WalletDescriptor`, `PrvKeyDataInfo`, `PaymentOutput`, and `Fees` exposed to Python.
+- Enum `PyWalletEventType` exposed to Python as `WalletEventType`.
+- Enum `PyAccountsDiscoveryKind` exposed to Python as `AccountsDiscoveryKind`.
+- Enum `PyNewAddressKind` exposed to Python as `NewAddressKind`.
+- Enum `PyCommitRevealAddressKind` exposed to Python as `CommitRevealAddressKind`.
+- Enum `PyPrvKeyDataVariantKind` exposed to Python as `PrvKeyDataVariantKind`.
+- Enum `PyTransactionKind` exposed to Python as `TransactionKind`.
+- Enum `PyFeeSource` exposed to Python as `FeeSource`.
+- Enum `PyAccountKind` exposed to Python as `AccountKind`.
+- Wallet-specific exception classes populated into the `kaspa.exceptions` submodule, covering the rusty-kaspa wallet error variants (e.g. `WalletInsufficientFundsError`, `WalletAccountNotFoundError`, `WalletNotSyncedError`, etc.).
+- Example `examples/wallet.py` demonstrating end-to-end wallet usage.
+- Pytest options `--network-id` and `--rpc-url` for targeting integration tests at a specific network / node.
+
+### Changed
+- `py_error_map!` macro extended to register wallet exception variants into the `kaspa.exceptions` submodule.
+- Integration tests now default to `mainnet` (overridable via `--network-id` / `--rpc-url`).
+- `build-dev` script builds with `--strip` for smaller artifacts.
+- `pyproject.toml`: set `python-source = "python"` and moved the package stub tree under `python/kaspa/` (`kaspa.pyi` → `python/kaspa/__init__.pyi`).
+
+### Fixed
+- `AccountDescriptor.__repr__` now correctly renders optional fields.
+
 ## [1.1.0] - 2026-03-04
 
 ### Added

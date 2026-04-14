@@ -20,6 +20,13 @@ pub struct PyPaymentOutput(PaymentOutput);
 #[gen_stub_pymethods]
 #[pymethods]
 impl PyPaymentOutput {
+    /// Equality comparison.
+    ///
+    /// Args:
+    ///     other: Another PaymentOutput to compare against.
+    ///
+    /// Returns:
+    ///     bool: True if both outputs have identical address and amount.
     // Cannot be derived via pyclass(eq)
     fn __eq__(&self, other: &PyPaymentOutput) -> bool {
         match (bincode::serialize(&self.0), bincode::serialize(&other.0)) {

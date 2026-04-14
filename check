@@ -3,7 +3,10 @@
 set -e
 
 # Rust lints
+echo "Running cargo fmt..."
 cargo fmt --all
+
+echo "Running cargo clippy..."
 cargo clippy -- -D warnings
 
 # Build development
