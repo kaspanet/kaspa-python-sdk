@@ -1,4 +1,6 @@
-use crate::wallet::core::{account::kind::PyAccountKind, utxo::balance::PyBalance};
+use crate::wallet::core::{
+    account::kind::PyAccountKind, deterministic::PyAccountId, utxo::balance::PyBalance,
+};
 use kaspa_utils::hex::ToHex;
 use kaspa_wallet_core::account::descriptor::AccountDescriptor;
 use pyo3::prelude::*;
@@ -18,10 +20,10 @@ impl PyAccountDescriptor {
         PyAccountKind::from(self.0.kind)
     }
 
-    /// The account id as a hex string.
+    /// The account id.
     #[getter]
-    pub fn get_account_id(&self) -> String {
-        self.0.account_id.to_hex()
+    pub fn get_account_id(&self) -> PyAccountId {
+        PyAccountId::from(self.0.account_id)
     }
 
     /// The user-assigned account name, or None if unset.

@@ -12,6 +12,7 @@ use crate::{
     wallet::core::{
         account::{descriptor::PyAccountDescriptor, kind::PyAccountKind},
         api::message::{PyAccountsDiscoveryKind, PyCommitRevealAddressKind, PyNewAddressKind},
+        deterministic::PyAccountId,
         events::PyWalletEventType,
         storage::{
             interface::PyWalletDescriptor,
@@ -1024,12 +1025,11 @@ impl PyWallet {
         &self,
         py: Python<'py>,
         wallet_secret: String,
-        account_id: String,
+        #[gen_stub(override_type(type_repr = "AccountId | str"))] account_id: PyAccountId,
         name: Option<String>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let request = AccountsRenameRequest {
-            account_id: AccountId::from_hex(&account_id)
-                .map_err(|err| PyException::new_err(err.to_string()))?,
+            account_id: account_id.into(),
             name,
             wallet_secret: wallet_secret.into(),
         };
@@ -1137,17 +1137,10 @@ impl PyWallet {
     pub fn accounts_activate<'py>(
         &self,
         py: Python<'py>,
-        account_ids: Option<Vec<String>>,
+        #[gen_stub(override_type(type_repr = "None | typing.Sequence[AccountId | str]"))]
+        account_ids: Option<Vec<PyAccountId>>,
     ) -> PyResult<Bound<'py, PyAny>> {
-        let account_ids = account_ids
-            .map(|ids| {
-                ids.iter()
-                    .map(|id| {
-                        AccountId::from_hex(id).map_err(|err| PyException::new_err(err.to_string()))
-                    })
-                    .collect::<PyResult<Vec<AccountId>>>()
-            })
-            .transpose()?;
+        let account_ids = account_ids.map(|ids| ids.into_iter().map(AccountId::from).collect());
 
         let request = AccountsActivateRequest { account_ids };
 
@@ -1207,11 +1200,10 @@ impl PyWallet {
     pub fn accounts_get<'py>(
         &self,
         py: Python<'py>,
-        account_id: String,
+        #[gen_stub(override_type(type_repr = "AccountId | str"))] account_id: PyAccountId,
     ) -> PyResult<Bound<'py, PyAny>> {
         let request = AccountsGetRequest {
-            account_id: AccountId::from_hex(&account_id)
-                .map_err(|err| PyException::new_err(err.to_string()))?,
+            account_id: account_id.into(),
         };
 
         let wallet = self.wallet().clone();
@@ -1234,13 +1226,12 @@ impl PyWallet {
     pub fn accounts_create_new_address<'py>(
         &self,
         py: Python<'py>,
-        account_id: String,
+        #[gen_stub(override_type(type_repr = "AccountId | str"))] account_id: PyAccountId,
         #[gen_stub(override_type(type_repr = "NewAddressKind | str"))]
         address_kind: PyNewAddressKind,
     ) -> PyResult<Bound<'py, PyAny>> {
         let request = AccountsCreateNewAddressRequest {
-            account_id: AccountId::from_hex(&account_id)
-                .map_err(|err| PyException::new_err(err.to_string()))?,
+            account_id: account_id.into(),
             kind: address_kind.into(),
         };
 
@@ -1274,7 +1265,7 @@ impl PyWallet {
     pub fn accounts_estimate<'py>(
         &self,
         py: Python<'py>,
-        account_id: String,
+        #[gen_stub(override_type(type_repr = "AccountId | str"))] account_id: PyAccountId,
         #[gen_stub(override_type(type_repr = "Fees | dict"))] priority_fee_sompi: PyFees,
         fee_rate: Option<f64>,
         #[gen_stub(override_type(type_repr = "None | str | bytes | list[int]"))] payload: Option<
@@ -1294,8 +1285,7 @@ impl PyWallet {
         };
 
         let request = AccountsEstimateRequest {
-            account_id: AccountId::from_hex(&account_id)
-                .map_err(|err| PyException::new_err(err.to_string()))?,
+            account_id: account_id.into(),
             destination,
             fee_rate,
             priority_fee_sompi: priority_fee_sompi.into(),
@@ -1331,7 +1321,7 @@ impl PyWallet {
         &self,
         py: Python<'py>,
         wallet_secret: String,
-        account_id: String,
+        #[gen_stub(override_type(type_repr = "AccountId | str"))] account_id: PyAccountId,
         #[gen_stub(override_type(type_repr = "Fees | dict"))] priority_fee_sompi: PyFees,
         payment_secret: Option<String>,
         fee_rate: Option<f64>,
@@ -1354,8 +1344,7 @@ impl PyWallet {
         let request = AccountsSendRequest {
             wallet_secret: wallet_secret.into(),
             payment_secret: payment_secret.map(Secret::from),
-            account_id: AccountId::from_hex(&account_id)
-                .map_err(|err| PyException::new_err(err.to_string()))?,
+            account_id: account_id.into(),
             destination,
             fee_rate,
             priority_fee_sompi: priority_fee_sompi.into(),
@@ -1383,14 +1372,13 @@ impl PyWallet {
     pub fn accounts_get_utxos<'py>(
         &self,
         py: Python<'py>,
-        account_id: String,
+        #[gen_stub(override_type(type_repr = "AccountId | str"))] account_id: PyAccountId,
         #[gen_stub(override_type(type_repr = "None | typing.Sequence[Address | str]"))]
         addresses: Option<Vec<PyAddress>>,
         min_amount_sompi: Option<u64>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let request = AccountsGetUtxosRequest {
-            account_id: AccountId::from_hex(&account_id)
-                .map_err(|err| PyException::new_err(err.to_string()))?,
+            account_id: account_id.into(),
             addresses: addresses.map(|addrs| addrs.into_iter().map(Address::from).collect()),
             min_amount_sompi,
         };
@@ -1425,8 +1413,9 @@ impl PyWallet {
         &self,
         py: Python<'py>,
         wallet_secret: String,
-        source_account_id: String,
-        destination_account_id: String,
+        #[gen_stub(override_type(type_repr = "AccountId | str"))] source_account_id: PyAccountId,
+        #[gen_stub(override_type(type_repr = "AccountId | str"))]
+        destination_account_id: PyAccountId,
         transfer_amount_sompi: u64,
         payment_secret: Option<String>,
         fee_rate: Option<f64>,
@@ -1435,10 +1424,8 @@ impl PyWallet {
         >,
     ) -> PyResult<Bound<'py, PyAny>> {
         let request = AccountsTransferRequest {
-            source_account_id: AccountId::from_hex(&source_account_id)
-                .map_err(|err| PyException::new_err(err.to_string()))?,
-            destination_account_id: AccountId::from_hex(&destination_account_id)
-                .map_err(|err| PyException::new_err(err.to_string()))?,
+            source_account_id: source_account_id.into(),
+            destination_account_id: destination_account_id.into(),
             wallet_secret: wallet_secret.into(),
             payment_secret: payment_secret.map(Secret::from),
             transfer_amount_sompi,
@@ -1491,7 +1478,7 @@ impl PyWallet {
         &self,
         py: Python<'py>,
         wallet_secret: String,
-        account_id: String,
+        #[gen_stub(override_type(type_repr = "AccountId | str"))] account_id: PyAccountId,
         #[gen_stub(override_type(type_repr = "CommitRevealAddressKind | str"))]
         address_type: PyCommitRevealAddressKind,
         address_index: u32,
@@ -1505,8 +1492,7 @@ impl PyWallet {
         >,
     ) -> PyResult<Bound<'py, PyAny>> {
         let request = AccountsCommitRevealRequest {
-            account_id: AccountId::from_hex(&account_id)
-                .map_err(|err| PyException::new_err(err.to_string()))?,
+            account_id: account_id.into(),
             address_type: address_type.into(),
             address_index,
             script_sig: script_sig.data,
@@ -1556,7 +1542,7 @@ impl PyWallet {
         &self,
         py: Python<'py>,
         wallet_secret: String,
-        account_id: String,
+        #[gen_stub(override_type(type_repr = "AccountId | str"))] account_id: PyAccountId,
         #[gen_stub(override_type(type_repr = "str | bytes | list[int]"))] script_sig: PyBinary,
         reveal_fee_sompi: u64,
         payment_secret: Option<String>,
@@ -1590,8 +1576,7 @@ impl PyWallet {
         };
 
         let request = AccountsCommitRevealManualRequest {
-            account_id: AccountId::from_hex(&account_id)
-                .map_err(|err| PyException::new_err(err.to_string()))?,
+            account_id: account_id.into(),
             script_sig: script_sig.data,
             start_destination,
             end_destination,
@@ -1742,7 +1727,7 @@ impl PyWallet {
     pub fn transactions_data_get<'py>(
         &self,
         py: Python<'py>,
-        account_id: String,
+        #[gen_stub(override_type(type_repr = "AccountId | str"))] account_id: PyAccountId,
         #[gen_stub(override_type(type_repr = "NetworkId | str"))] network_id: PyNetworkId,
         start: u64,
         end: u64,
@@ -1750,8 +1735,7 @@ impl PyWallet {
         filter: Option<Vec<PyTransactionKind>>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let request = TransactionsDataGetRequest {
-            account_id: AccountId::from_hex(&account_id)
-                .map_err(|err| PyException::new_err(err.to_string()))?,
+            account_id: account_id.into(),
             network_id: network_id.into(),
             filter: filter.map(|kinds| {
                 kinds
@@ -1786,14 +1770,13 @@ impl PyWallet {
     pub fn transactions_replace_note<'py>(
         &self,
         py: Python<'py>,
-        account_id: String,
+        #[gen_stub(override_type(type_repr = "AccountId | str"))] account_id: PyAccountId,
         #[gen_stub(override_type(type_repr = "NetworkId | str"))] network_id: PyNetworkId,
         transaction_id: String,
         note: Option<String>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let request = TransactionsReplaceNoteRequest {
-            account_id: AccountId::from_hex(&account_id)
-                .map_err(|err| PyException::new_err(err.to_string()))?,
+            account_id: account_id.into(),
             network_id: network_id.into(),
             transaction_id: Hash::from_hex(&transaction_id)
                 .map_err(|err| PyException::new_err(err.to_string()))?,
@@ -1822,14 +1805,13 @@ impl PyWallet {
     pub fn transactions_replace_metadata<'py>(
         &self,
         py: Python<'py>,
-        account_id: String,
+        #[gen_stub(override_type(type_repr = "AccountId | str"))] account_id: PyAccountId,
         #[gen_stub(override_type(type_repr = "NetworkId | str"))] network_id: PyNetworkId,
         transaction_id: String,
         metadata: Option<String>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let request = TransactionsReplaceMetadataRequest {
-            account_id: AccountId::from_hex(&account_id)
-                .map_err(|err| PyException::new_err(err.to_string()))?,
+            account_id: account_id.into(),
             network_id: network_id.into(),
             transaction_id: Hash::from_hex(&transaction_id)
                 .map_err(|err| PyException::new_err(err.to_string()))?,
