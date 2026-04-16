@@ -17009,7 +17009,7 @@ internal services. Should be called before disposing of the Wallet.</p>
 
 
 <a href="#kaspa.Wallet.wallet_export" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">wallet_export</span><span class="p">(</span><span class="n">wallet_secret</span><span class="p">:</span> <span class="n"><span title="builtins.str">str</span></span><span class="p">,</span> <span class="n">include_transactions</span><span class="p">:</span> <span class="n"><span title="builtins.bool">bool</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="bytes">bytes</span></span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">wallet_export</span><span class="p">(</span><span class="n">wallet_secret</span><span class="p">:</span> <span class="n"><span title="builtins.str">str</span></span><span class="p">,</span> <span class="n">include_transactions</span><span class="p">:</span> <span class="n"><span title="builtins.bool">bool</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="str">str</span></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -17071,16 +17071,16 @@ internal services. Should be called before disposing of the Wallet.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                <code>bytes</code>
+                <code>str</code>
             </td>
             <td class="doc-returns-details">
               <div class="doc-md-description">
-                <p>The encrypted wallet payload, suitable for backup or transfer.</p>
+                <p>The encrypted wallet payload as a hex-encoded string, suitable for backup or transfer.</p>
               </div>
                 <p>
                   <span class="doc-returns-annotation">
                     <b>TYPE:</b>
-                      <code><span title="bytes">bytes</span></code>
+                      <code><span title="str">str</span></code>
                   </span>
                 </p>
             </td>
