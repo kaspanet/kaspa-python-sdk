@@ -17,7 +17,6 @@
 - Pytest options `--network-id` and `--rpc-url` for targeting integration tests at a specific network / node.
 
 ### Changed
-- `AccountDescriptor.account_id` now returns an `AccountId` instance instead of a plain hex string. Use `str()` or `.to_hex()` to obtain the hex representation.
 - `py_error_map!` macro extended to register wallet exception variants into the `kaspa.exceptions` submodule.
 - Integration tests now default to `mainnet` (overridable via `--network-id` / `--rpc-url`).
 - `build-dev` script builds with `--strip` for smaller artifacts.
