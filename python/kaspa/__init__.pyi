@@ -2954,7 +2954,7 @@ class Wallet:
             old_wallet_secret: The current wallet password.
             new_wallet_secret: The new password to set.
         """
-    def wallet_export(self, wallet_secret: builtins.str, include_transactions: builtins.bool) -> bytes:
+    def wallet_export(self, wallet_secret: builtins.str, include_transactions: builtins.bool) -> str:
         r"""
         Export the wallet's encrypted data as raw bytes.
         
@@ -2963,7 +2963,7 @@ class Wallet:
             include_transactions: If True, include stored transaction history in the export.
         
         Returns:
-            bytes: The encrypted wallet payload, suitable for backup or transfer.
+            str: The encrypted wallet payload as a hex-encoded string, suitable for backup or transfer.
         """
     def wallet_import(self, wallet_secret: builtins.str, wallet_data: str | bytes | list[int]) -> dict:
         r"""

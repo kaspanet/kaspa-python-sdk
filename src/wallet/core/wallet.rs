@@ -621,8 +621,8 @@ impl PyWallet {
     ///     include_transactions: If True, include stored transaction history in the export.
     ///
     /// Returns:
-    ///     bytes: The encrypted wallet payload, suitable for backup or transfer.
-    #[gen_stub(override_return_type(type_repr = "bytes"))]
+    ///     str: The encrypted wallet payload as a hex-encoded string, suitable for backup or transfer.
+    #[gen_stub(override_return_type(type_repr = "str"))]
     pub fn wallet_export<'py>(
         &self,
         py: Python<'py>,
@@ -638,7 +638,7 @@ impl PyWallet {
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
             let resp = wallet.wallet_export_call(req).await.into_py_result()?;
 
-            Ok(resp.wallet_data)
+            Ok(faster_hex::hex_string(&resp.wallet_data))
         })
     }
 
