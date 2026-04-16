@@ -964,6 +964,8 @@
       
         
       
+        
+      
     
     
     
@@ -1027,6 +1029,34 @@
     
   
     AccountDescriptor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../AccountId/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AccountId
   
 
     
@@ -12876,7 +12906,7 @@ wRPC client. The wallet is created in a closed state. Call
 
 
 <a href="#kaspa.Wallet.accounts_activate" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">accounts_activate</span><span class="p">(</span><span class="n">account_ids</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="typing.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="builtins.str">str</span></span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">accounts_activate</span><span class="p">(</span><span class="n">account_ids</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="n"><span title="typing.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="kaspa.AccountId" href="../AccountId/#kaspa.AccountId">AccountId</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -12903,7 +12933,7 @@ wRPC client. The wallet is created in a closed state. Call
               <p>
                   <span class="doc-param-annotation">
                     <b>TYPE:</b>
-                      <code><span title="typing.Optional">Optional</span>[<span title="typing.Sequence">Sequence</span>[<span title="builtins.str">str</span>]]</code>
+                      <code>None | <span title="typing.Sequence">Sequence</span>[<a class="autorefs autorefs-internal" title="kaspa.AccountId" href="../AccountId/#kaspa.AccountId">AccountId</a> | <span title="str">str</span>]</code>
                   </span>
                   <span class="doc-param-default">
                     <b>DEFAULT:</b>
@@ -12928,7 +12958,7 @@ wRPC client. The wallet is created in a closed state. Call
 
 
 <a href="#kaspa.Wallet.accounts_commit_reveal" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">accounts_commit_reveal</span><span class="p">(</span><span class="n">wallet_secret</span><span class="p">:</span> <span class="n"><span title="builtins.str">str</span></span><span class="p">,</span> <span class="n">account_id</span><span class="p">:</span> <span class="n"><span title="builtins.str">str</span></span><span class="p">,</span> <span class="n">address_type</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.CommitRevealAddressKind" href="../../Enums/CommitRevealAddressKind/#kaspa.CommitRevealAddressKind">CommitRevealAddressKind</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">address_index</span><span class="p">:</span> <span class="n"><span title="builtins.int">int</span></span><span class="p">,</span> <span class="n">script_sig</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="n"><span title="bytes">bytes</span></span> <span class="o">|</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="int">int</span></span><span class="p">],</span> <span class="n">commit_amount_sompi</span><span class="p">:</span> <span class="n"><span title="builtins.int">int</span></span><span class="p">,</span> <span class="n">reveal_fee_sompi</span><span class="p">:</span> <span class="n"><span title="builtins.int">int</span></span><span class="p">,</span> <span class="n">payment_secret</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.str">str</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">fee_rate</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.float">float</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">payload</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="n"><span title="bytes">bytes</span></span> <span class="o">|</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="int">int</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">accounts_commit_reveal</span><span class="p">(</span><span class="n">wallet_secret</span><span class="p">:</span> <span class="n"><span title="builtins.str">str</span></span><span class="p">,</span> <span class="n">account_id</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.AccountId" href="../AccountId/#kaspa.AccountId">AccountId</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">address_type</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.CommitRevealAddressKind" href="../../Enums/CommitRevealAddressKind/#kaspa.CommitRevealAddressKind">CommitRevealAddressKind</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">address_index</span><span class="p">:</span> <span class="n"><span title="builtins.int">int</span></span><span class="p">,</span> <span class="n">script_sig</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="n"><span title="bytes">bytes</span></span> <span class="o">|</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="int">int</span></span><span class="p">],</span> <span class="n">commit_amount_sompi</span><span class="p">:</span> <span class="n"><span title="builtins.int">int</span></span><span class="p">,</span> <span class="n">reveal_fee_sompi</span><span class="p">:</span> <span class="n"><span title="builtins.int">int</span></span><span class="p">,</span> <span class="n">payment_secret</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.str">str</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">fee_rate</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.float">float</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">payload</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="n"><span title="bytes">bytes</span></span> <span class="o">|</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="int">int</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -12973,7 +13003,7 @@ wRPC client. The wallet is created in a closed state. Call
               <p>
                   <span class="doc-param-annotation">
                     <b>TYPE:</b>
-                      <code><span title="builtins.str">str</span></code>
+                      <code><a class="autorefs autorefs-internal" title="kaspa.AccountId" href="../AccountId/#kaspa.AccountId">AccountId</a> | <span title="str">str</span></code>
                   </span>
               </p>
             </td>
@@ -13158,7 +13188,7 @@ wRPC client. The wallet is created in a closed state. Call
 
 
 <a href="#kaspa.Wallet.accounts_commit_reveal_manual" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">accounts_commit_reveal_manual</span><span class="p">(</span><span class="n">wallet_secret</span><span class="p">:</span> <span class="n"><span title="builtins.str">str</span></span><span class="p">,</span> <span class="n">account_id</span><span class="p">:</span> <span class="n"><span title="builtins.str">str</span></span><span class="p">,</span> <span class="n">script_sig</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="n"><span title="bytes">bytes</span></span> <span class="o">|</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="int">int</span></span><span class="p">],</span> <span class="n">reveal_fee_sompi</span><span class="p">:</span> <span class="n"><span title="builtins.int">int</span></span><span class="p">,</span> <span class="n">payment_secret</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.str">str</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">fee_rate</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.float">float</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">payload</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="n"><span title="bytes">bytes</span></span> <span class="o">|</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="int">int</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">start_destination</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="typing.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="kaspa.PaymentOutput" href="../PaymentOutput/#kaspa.PaymentOutput">PaymentOutput</a></span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">end_destination</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="typing.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="kaspa.PaymentOutput" href="../PaymentOutput/#kaspa.PaymentOutput">PaymentOutput</a></span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">accounts_commit_reveal_manual</span><span class="p">(</span><span class="n">wallet_secret</span><span class="p">:</span> <span class="n"><span title="builtins.str">str</span></span><span class="p">,</span> <span class="n">account_id</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.AccountId" href="../AccountId/#kaspa.AccountId">AccountId</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">script_sig</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="n"><span title="bytes">bytes</span></span> <span class="o">|</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="int">int</span></span><span class="p">],</span> <span class="n">reveal_fee_sompi</span><span class="p">:</span> <span class="n"><span title="builtins.int">int</span></span><span class="p">,</span> <span class="n">payment_secret</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.str">str</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">fee_rate</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.float">float</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">payload</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="n"><span title="bytes">bytes</span></span> <span class="o">|</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="int">int</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">start_destination</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="typing.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="kaspa.PaymentOutput" href="../PaymentOutput/#kaspa.PaymentOutput">PaymentOutput</a></span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">end_destination</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="typing.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="kaspa.PaymentOutput" href="../PaymentOutput/#kaspa.PaymentOutput">PaymentOutput</a></span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -13204,7 +13234,7 @@ instead of deriving an address from the account.</p>
               <p>
                   <span class="doc-param-annotation">
                     <b>TYPE:</b>
-                      <code><span title="builtins.str">str</span></code>
+                      <code><a class="autorefs autorefs-internal" title="kaspa.AccountId" href="../AccountId/#kaspa.AccountId">AccountId</a> | <span title="str">str</span></code>
                   </span>
               </p>
             </td>
@@ -13661,7 +13691,7 @@ instead of deriving an address from the account.</p>
 
 
 <a href="#kaspa.Wallet.accounts_create_new_address" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">accounts_create_new_address</span><span class="p">(</span><span class="n">account_id</span><span class="p">:</span> <span class="n"><span title="builtins.str">str</span></span><span class="p">,</span> <span class="n">address_kind</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.NewAddressKind" href="../../Enums/NewAddressKind/#kaspa.NewAddressKind">NewAddressKind</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.Address" href="../Address/#kaspa.Address">Address</a></span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">accounts_create_new_address</span><span class="p">(</span><span class="n">account_id</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.AccountId" href="../AccountId/#kaspa.AccountId">AccountId</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">address_kind</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.NewAddressKind" href="../../Enums/NewAddressKind/#kaspa.NewAddressKind">NewAddressKind</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.Address" href="../Address/#kaspa.Address">Address</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -13688,7 +13718,7 @@ instead of deriving an address from the account.</p>
               <p>
                   <span class="doc-param-annotation">
                     <b>TYPE:</b>
-                      <code><span title="builtins.str">str</span></code>
+                      <code><a class="autorefs autorefs-internal" title="kaspa.AccountId" href="../AccountId/#kaspa.AccountId">AccountId</a> | <span title="str">str</span></code>
                   </span>
               </p>
             </td>
@@ -14075,7 +14105,7 @@ has been used on-chain. Useful when restoring a wallet from a mnemonic.</p>
 
 
 <a href="#kaspa.Wallet.accounts_estimate" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">accounts_estimate</span><span class="p">(</span><span class="n">account_id</span><span class="p">:</span> <span class="n"><span title="builtins.str">str</span></span><span class="p">,</span> <span class="n">priority_fee_sompi</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.Fees" href="../Fees/#kaspa.Fees">Fees</a></span> <span class="o">|</span> <span class="n"><span title="dict">dict</span></span><span class="p">,</span> <span class="n">fee_rate</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.float">float</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">payload</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="n"><span title="bytes">bytes</span></span> <span class="o">|</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="int">int</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">destination</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="typing.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="kaspa.PaymentOutput" href="../PaymentOutput/#kaspa.PaymentOutput">PaymentOutput</a></span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.GeneratorSummary" href="../GeneratorSummary/#kaspa.GeneratorSummary">GeneratorSummary</a></span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">accounts_estimate</span><span class="p">(</span><span class="n">account_id</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.AccountId" href="../AccountId/#kaspa.AccountId">AccountId</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">priority_fee_sompi</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.Fees" href="../Fees/#kaspa.Fees">Fees</a></span> <span class="o">|</span> <span class="n"><span title="dict">dict</span></span><span class="p">,</span> <span class="n">fee_rate</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.float">float</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">payload</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="n"><span title="bytes">bytes</span></span> <span class="o">|</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="int">int</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">destination</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="typing.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="kaspa.PaymentOutput" href="../PaymentOutput/#kaspa.PaymentOutput">PaymentOutput</a></span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.GeneratorSummary" href="../GeneratorSummary/#kaspa.GeneratorSummary">GeneratorSummary</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -14104,7 +14134,7 @@ a summary of what a real send would look like.</p>
               <p>
                   <span class="doc-param-annotation">
                     <b>TYPE:</b>
-                      <code><span title="builtins.str">str</span></code>
+                      <code><a class="autorefs autorefs-internal" title="kaspa.AccountId" href="../AccountId/#kaspa.AccountId">AccountId</a> | <span title="str">str</span></code>
                   </span>
               </p>
             </td>
@@ -14229,7 +14259,7 @@ a summary of what a real send would look like.</p>
 
 
 <a href="#kaspa.Wallet.accounts_get" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">accounts_get</span><span class="p">(</span><span class="n">account_id</span><span class="p">:</span> <span class="n"><span title="builtins.str">str</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">accounts_get</span><span class="p">(</span><span class="n">account_id</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.AccountId" href="../AccountId/#kaspa.AccountId">AccountId</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -14256,7 +14286,7 @@ a summary of what a real send would look like.</p>
               <p>
                   <span class="doc-param-annotation">
                     <b>TYPE:</b>
-                      <code><span title="builtins.str">str</span></code>
+                      <code><a class="autorefs autorefs-internal" title="kaspa.AccountId" href="../AccountId/#kaspa.AccountId">AccountId</a> | <span title="str">str</span></code>
                   </span>
               </p>
             </td>
@@ -14277,7 +14307,7 @@ a summary of what a real send would look like.</p>
 
 
 <a href="#kaspa.Wallet.accounts_get_utxos" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">accounts_get_utxos</span><span class="p">(</span><span class="n">account_id</span><span class="p">:</span> <span class="n"><span title="builtins.str">str</span></span><span class="p">,</span> <span class="n">addresses</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="n"><span title="typing.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="kaspa.Address" href="../Address/#kaspa.Address">Address</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">min_amount_sompi</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.int">int</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="dict">dict</span></span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">accounts_get_utxos</span><span class="p">(</span><span class="n">account_id</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.AccountId" href="../AccountId/#kaspa.AccountId">AccountId</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">addresses</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="n"><span title="typing.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="kaspa.Address" href="../Address/#kaspa.Address">Address</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">min_amount_sompi</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.int">int</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="dict">dict</span></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -14304,7 +14334,7 @@ a summary of what a real send would look like.</p>
               <p>
                   <span class="doc-param-annotation">
                     <b>TYPE:</b>
-                      <code><span title="builtins.str">str</span></code>
+                      <code><a class="autorefs autorefs-internal" title="kaspa.AccountId" href="../AccountId/#kaspa.AccountId">AccountId</a> | <span title="str">str</span></code>
                   </span>
               </p>
             </td>
@@ -14675,7 +14705,7 @@ address discovery before adding the account.</p>
 
 
 <a href="#kaspa.Wallet.accounts_rename" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">accounts_rename</span><span class="p">(</span><span class="n">wallet_secret</span><span class="p">:</span> <span class="n"><span title="builtins.str">str</span></span><span class="p">,</span> <span class="n">account_id</span><span class="p">:</span> <span class="n"><span title="builtins.str">str</span></span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.str">str</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">accounts_rename</span><span class="p">(</span><span class="n">wallet_secret</span><span class="p">:</span> <span class="n"><span title="builtins.str">str</span></span><span class="p">,</span> <span class="n">account_id</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.AccountId" href="../AccountId/#kaspa.AccountId">AccountId</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.str">str</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -14718,7 +14748,7 @@ address discovery before adding the account.</p>
               <p>
                   <span class="doc-param-annotation">
                     <b>TYPE:</b>
-                      <code><span title="builtins.str">str</span></code>
+                      <code><a class="autorefs autorefs-internal" title="kaspa.AccountId" href="../AccountId/#kaspa.AccountId">AccountId</a> | <span title="str">str</span></code>
                   </span>
               </p>
             </td>
@@ -14759,7 +14789,7 @@ address discovery before adding the account.</p>
 
 
 <a href="#kaspa.Wallet.accounts_send" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">accounts_send</span><span class="p">(</span><span class="n">wallet_secret</span><span class="p">:</span> <span class="n"><span title="builtins.str">str</span></span><span class="p">,</span> <span class="n">account_id</span><span class="p">:</span> <span class="n"><span title="builtins.str">str</span></span><span class="p">,</span> <span class="n">priority_fee_sompi</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.Fees" href="../Fees/#kaspa.Fees">Fees</a></span> <span class="o">|</span> <span class="n"><span title="dict">dict</span></span><span class="p">,</span> <span class="n">payment_secret</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.str">str</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">fee_rate</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.float">float</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">payload</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="n"><span title="bytes">bytes</span></span> <span class="o">|</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="int">int</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">destination</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="typing.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="kaspa.PaymentOutput" href="../PaymentOutput/#kaspa.PaymentOutput">PaymentOutput</a></span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.GeneratorSummary" href="../GeneratorSummary/#kaspa.GeneratorSummary">GeneratorSummary</a></span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">accounts_send</span><span class="p">(</span><span class="n">wallet_secret</span><span class="p">:</span> <span class="n"><span title="builtins.str">str</span></span><span class="p">,</span> <span class="n">account_id</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.AccountId" href="../AccountId/#kaspa.AccountId">AccountId</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">priority_fee_sompi</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.Fees" href="../Fees/#kaspa.Fees">Fees</a></span> <span class="o">|</span> <span class="n"><span title="dict">dict</span></span><span class="p">,</span> <span class="n">payment_secret</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.str">str</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">fee_rate</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.float">float</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">payload</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="n"><span title="bytes">bytes</span></span> <span class="o">|</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="int">int</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">destination</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="typing.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="kaspa.PaymentOutput" href="../PaymentOutput/#kaspa.PaymentOutput">PaymentOutput</a></span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.GeneratorSummary" href="../GeneratorSummary/#kaspa.GeneratorSummary">GeneratorSummary</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -14802,7 +14832,7 @@ address discovery before adding the account.</p>
               <p>
                   <span class="doc-param-annotation">
                     <b>TYPE:</b>
-                      <code><span title="builtins.str">str</span></code>
+                      <code><a class="autorefs autorefs-internal" title="kaspa.AccountId" href="../AccountId/#kaspa.AccountId">AccountId</a> | <span title="str">str</span></code>
                   </span>
               </p>
             </td>
@@ -14947,7 +14977,7 @@ address discovery before adding the account.</p>
 
 
 <a href="#kaspa.Wallet.accounts_transfer" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">accounts_transfer</span><span class="p">(</span><span class="n">wallet_secret</span><span class="p">:</span> <span class="n"><span title="builtins.str">str</span></span><span class="p">,</span> <span class="n">source_account_id</span><span class="p">:</span> <span class="n"><span title="builtins.str">str</span></span><span class="p">,</span> <span class="n">destination_account_id</span><span class="p">:</span> <span class="n"><span title="builtins.str">str</span></span><span class="p">,</span> <span class="n">transfer_amount_sompi</span><span class="p">:</span> <span class="n"><span title="builtins.int">int</span></span><span class="p">,</span> <span class="n">payment_secret</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.str">str</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">fee_rate</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.float">float</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">priority_fee_sompi</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.Fees" href="../Fees/#kaspa.Fees">Fees</a></span> <span class="o">|</span> <span class="n"><span title="dict">dict</span></span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="dict">dict</span></span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">accounts_transfer</span><span class="p">(</span><span class="n">wallet_secret</span><span class="p">:</span> <span class="n"><span title="builtins.str">str</span></span><span class="p">,</span> <span class="n">source_account_id</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.AccountId" href="../AccountId/#kaspa.AccountId">AccountId</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">destination_account_id</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.AccountId" href="../AccountId/#kaspa.AccountId">AccountId</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">transfer_amount_sompi</span><span class="p">:</span> <span class="n"><span title="builtins.int">int</span></span><span class="p">,</span> <span class="n">payment_secret</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.str">str</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">fee_rate</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.float">float</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">priority_fee_sompi</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.Fees" href="../Fees/#kaspa.Fees">Fees</a></span> <span class="o">|</span> <span class="n"><span title="dict">dict</span></span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="dict">dict</span></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -14990,7 +15020,7 @@ address discovery before adding the account.</p>
               <p>
                   <span class="doc-param-annotation">
                     <b>TYPE:</b>
-                      <code><span title="builtins.str">str</span></code>
+                      <code><a class="autorefs autorefs-internal" title="kaspa.AccountId" href="../AccountId/#kaspa.AccountId">AccountId</a> | <span title="str">str</span></code>
                   </span>
               </p>
             </td>
@@ -15006,7 +15036,7 @@ address discovery before adding the account.</p>
               <p>
                   <span class="doc-param-annotation">
                     <b>TYPE:</b>
-                      <code><span title="builtins.str">str</span></code>
+                      <code><a class="autorefs autorefs-internal" title="kaspa.AccountId" href="../AccountId/#kaspa.AccountId">AccountId</a> | <span title="str">str</span></code>
                   </span>
               </p>
             </td>
@@ -16381,7 +16411,7 @@ internal services. Should be called before disposing of the Wallet.</p>
 
 
 <a href="#kaspa.Wallet.transactions_data_get" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">transactions_data_get</span><span class="p">(</span><span class="n">account_id</span><span class="p">:</span> <span class="n"><span title="builtins.str">str</span></span><span class="p">,</span> <span class="n">network_id</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.NetworkId" href="../NetworkId/#kaspa.NetworkId">NetworkId</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="n"><span title="builtins.int">int</span></span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="n"><span title="builtins.int">int</span></span><span class="p">,</span> <span class="nb">filter</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="n"><span title="typing.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="kaspa.TransactionKind" href="../../Enums/TransactionKind/#kaspa.TransactionKind">TransactionKind</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="dict">dict</span></span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">transactions_data_get</span><span class="p">(</span><span class="n">account_id</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.AccountId" href="../AccountId/#kaspa.AccountId">AccountId</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">network_id</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.NetworkId" href="../NetworkId/#kaspa.NetworkId">NetworkId</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="n"><span title="builtins.int">int</span></span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="n"><span title="builtins.int">int</span></span><span class="p">,</span> <span class="nb">filter</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="n"><span title="typing.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="kaspa.TransactionKind" href="../../Enums/TransactionKind/#kaspa.TransactionKind">TransactionKind</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="dict">dict</span></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -16408,7 +16438,7 @@ internal services. Should be called before disposing of the Wallet.</p>
               <p>
                   <span class="doc-param-annotation">
                     <b>TYPE:</b>
-                      <code><span title="builtins.str">str</span></code>
+                      <code><a class="autorefs autorefs-internal" title="kaspa.AccountId" href="../AccountId/#kaspa.AccountId">AccountId</a> | <span title="str">str</span></code>
                   </span>
               </p>
             </td>
@@ -16525,7 +16555,7 @@ internal services. Should be called before disposing of the Wallet.</p>
 
 
 <a href="#kaspa.Wallet.transactions_replace_metadata" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">transactions_replace_metadata</span><span class="p">(</span><span class="n">account_id</span><span class="p">:</span> <span class="n"><span title="builtins.str">str</span></span><span class="p">,</span> <span class="n">network_id</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.NetworkId" href="../NetworkId/#kaspa.NetworkId">NetworkId</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">transaction_id</span><span class="p">:</span> <span class="n"><span title="builtins.str">str</span></span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.str">str</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">transactions_replace_metadata</span><span class="p">(</span><span class="n">account_id</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.AccountId" href="../AccountId/#kaspa.AccountId">AccountId</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">network_id</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.NetworkId" href="../NetworkId/#kaspa.NetworkId">NetworkId</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">transaction_id</span><span class="p">:</span> <span class="n"><span title="builtins.str">str</span></span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.str">str</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -16552,7 +16582,7 @@ internal services. Should be called before disposing of the Wallet.</p>
               <p>
                   <span class="doc-param-annotation">
                     <b>TYPE:</b>
-                      <code><span title="builtins.str">str</span></code>
+                      <code><a class="autorefs autorefs-internal" title="kaspa.AccountId" href="../AccountId/#kaspa.AccountId">AccountId</a> | <span title="str">str</span></code>
                   </span>
               </p>
             </td>
@@ -16625,7 +16655,7 @@ internal services. Should be called before disposing of the Wallet.</p>
 
 
 <a href="#kaspa.Wallet.transactions_replace_note" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">transactions_replace_note</span><span class="p">(</span><span class="n">account_id</span><span class="p">:</span> <span class="n"><span title="builtins.str">str</span></span><span class="p">,</span> <span class="n">network_id</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.NetworkId" href="../NetworkId/#kaspa.NetworkId">NetworkId</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">transaction_id</span><span class="p">:</span> <span class="n"><span title="builtins.str">str</span></span><span class="p">,</span> <span class="n">note</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.str">str</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">transactions_replace_note</span><span class="p">(</span><span class="n">account_id</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.AccountId" href="../AccountId/#kaspa.AccountId">AccountId</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">network_id</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.NetworkId" href="../NetworkId/#kaspa.NetworkId">NetworkId</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">transaction_id</span><span class="p">:</span> <span class="n"><span title="builtins.str">str</span></span><span class="p">,</span> <span class="n">note</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.str">str</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -16652,7 +16682,7 @@ internal services. Should be called before disposing of the Wallet.</p>
               <p>
                   <span class="doc-param-annotation">
                     <b>TYPE:</b>
-                      <code><span title="builtins.str">str</span></code>
+                      <code><a class="autorefs autorefs-internal" title="kaspa.AccountId" href="../AccountId/#kaspa.AccountId">AccountId</a> | <span title="str">str</span></code>
                   </span>
               </p>
             </td>
