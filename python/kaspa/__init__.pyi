@@ -14,9 +14,9 @@ class AccountDescriptor:
         The account kind (e.g. Bip32, Keypair, MultiSig).
         """
     @property
-    def account_id(self) -> builtins.str:
+    def account_id(self) -> AccountId:
         r"""
-        The account id as a hex string.
+        The account id.
         """
     @property
     def account_name(self) -> typing.Optional[builtins.str]:
@@ -44,6 +44,50 @@ class AccountDescriptor:
         
         Returns:
             str: The AccountDescriptor as a string.
+        """
+
+@typing.final
+class AccountId:
+    r"""
+    A Kaspa account identifier.
+    
+    Wraps a hex-encoded account id. Can be constructed from a hex string
+    or obtained from an AccountDescriptor.
+    """
+    def __eq__(self, other: builtins.object) -> builtins.bool: ...
+    def __new__(cls, id: builtins.str) -> AccountId:
+        r"""
+        Create a new AccountId from a hex string.
+        
+        Args:
+            id: Hex-encoded account id.
+        
+        Returns:
+            AccountId: A new AccountId instance.
+        
+        Raises:
+            Exception: If the hex string is invalid.
+        """
+    def __str__(self) -> builtins.str:
+        r"""
+        The hex string representation.
+        
+        Returns:
+            str: The account id as a hex string.
+        """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The account id as a repr string.
+        """
+    def to_hex(self) -> builtins.str:
+        r"""
+        Get the hex string representation.
+        
+        Returns:
+            str: The account id as a hex string.
         """
 
 @typing.final
@@ -3083,7 +3127,7 @@ class Wallet:
         Returns:
             AccountDescriptor: Descriptor of the imported account.
         """
-    def accounts_rename(self, wallet_secret: builtins.str, account_id: builtins.str, name: typing.Optional[builtins.str] = None) -> None:
+    def accounts_rename(self, wallet_secret: builtins.str, account_id: AccountId | str, name: typing.Optional[builtins.str] = None) -> None:
         r"""
         Rename an account.
         
@@ -3122,21 +3166,21 @@ class Wallet:
         Returns:
             AccountDescriptor: Descriptor of the existing or newly created default account.
         """
-    def accounts_activate(self, account_ids: typing.Optional[typing.Sequence[builtins.str]] = None) -> None:
+    def accounts_activate(self, account_ids: None | typing.Sequence[AccountId | str] = None) -> None:
         r"""
         Activate one or more accounts so they begin tracking UTXOs.
         
         Args:
             account_ids: Optional list of hex-encoded account ids. If None, activates all accounts.
         """
-    def accounts_get(self, account_id: builtins.str) -> None:
+    def accounts_get(self, account_id: AccountId | str) -> None:
         r"""
         Verify that an account exists in the open wallet.
         
         Args:
             account_id: Hex-encoded id of the account to look up.
         """
-    def accounts_create_new_address(self, account_id: builtins.str, address_kind: NewAddressKind | str) -> Address:
+    def accounts_create_new_address(self, account_id: AccountId | str, address_kind: NewAddressKind | str) -> Address:
         r"""
         Generate a new receive or change address for an account.
         
@@ -3147,7 +3191,7 @@ class Wallet:
         Returns:
             Address: The newly derived address.
         """
-    def accounts_estimate(self, account_id: builtins.str, priority_fee_sompi: Fees | dict, fee_rate: typing.Optional[builtins.float] = None, payload: None | str | bytes | list[int] = None, destination: typing.Optional[typing.Sequence[PaymentOutput]] = None) -> GeneratorSummary:
+    def accounts_estimate(self, account_id: AccountId | str, priority_fee_sompi: Fees | dict, fee_rate: typing.Optional[builtins.float] = None, payload: None | str | bytes | list[int] = None, destination: typing.Optional[typing.Sequence[PaymentOutput]] = None) -> GeneratorSummary:
         r"""
         Estimate the fees and structure of a prospective send without submitting.
         
@@ -3164,7 +3208,7 @@ class Wallet:
         Returns:
             GeneratorSummary: Summary of the estimated transaction(s).
         """
-    def accounts_send(self, wallet_secret: builtins.str, account_id: builtins.str, priority_fee_sompi: Fees | dict, payment_secret: typing.Optional[builtins.str] = None, fee_rate: typing.Optional[builtins.float] = None, payload: None | str | bytes | list[int] = None, destination: typing.Optional[typing.Sequence[PaymentOutput]] = None) -> GeneratorSummary:
+    def accounts_send(self, wallet_secret: builtins.str, account_id: AccountId | str, priority_fee_sompi: Fees | dict, payment_secret: typing.Optional[builtins.str] = None, fee_rate: typing.Optional[builtins.float] = None, payload: None | str | bytes | list[int] = None, destination: typing.Optional[typing.Sequence[PaymentOutput]] = None) -> GeneratorSummary:
         r"""
         Send funds from an account, signing and submitting the resulting transactions.
         
@@ -3180,7 +3224,7 @@ class Wallet:
         Returns:
             GeneratorSummary: Summary of the submitted transaction(s).
         """
-    def accounts_get_utxos(self, account_id: builtins.str, addresses: None | typing.Sequence[Address | str] = None, min_amount_sompi: typing.Optional[builtins.int] = None) -> dict:
+    def accounts_get_utxos(self, account_id: AccountId | str, addresses: None | typing.Sequence[Address | str] = None, min_amount_sompi: typing.Optional[builtins.int] = None) -> dict:
         r"""
         List UTXOs available to an account, optionally filtered.
         
@@ -3192,7 +3236,7 @@ class Wallet:
         Returns:
             dict: A serialized list of UTXO entries belonging to the account.
         """
-    def accounts_transfer(self, wallet_secret: builtins.str, source_account_id: builtins.str, destination_account_id: builtins.str, transfer_amount_sompi: builtins.int, payment_secret: typing.Optional[builtins.str] = None, fee_rate: typing.Optional[builtins.float] = None, priority_fee_sompi: None | Fees | dict = None) -> dict:
+    def accounts_transfer(self, wallet_secret: builtins.str, source_account_id: AccountId | str, destination_account_id: AccountId | str, transfer_amount_sompi: builtins.int, payment_secret: typing.Optional[builtins.str] = None, fee_rate: typing.Optional[builtins.float] = None, priority_fee_sompi: None | Fees | dict = None) -> dict:
         r"""
         Transfer funds between two accounts in the same wallet.
         
@@ -3208,7 +3252,7 @@ class Wallet:
         Returns:
             dict: The transfer response, including generator summary and transaction ids.
         """
-    def accounts_commit_reveal(self, wallet_secret: builtins.str, account_id: builtins.str, address_type: CommitRevealAddressKind | str, address_index: builtins.int, script_sig: str | bytes | list[int], commit_amount_sompi: builtins.int, reveal_fee_sompi: builtins.int, payment_secret: typing.Optional[builtins.str] = None, fee_rate: typing.Optional[builtins.float] = None, payload: None | str | bytes | list[int] = None) -> list[str]:
+    def accounts_commit_reveal(self, wallet_secret: builtins.str, account_id: AccountId | str, address_type: CommitRevealAddressKind | str, address_index: builtins.int, script_sig: str | bytes | list[int], commit_amount_sompi: builtins.int, reveal_fee_sompi: builtins.int, payment_secret: typing.Optional[builtins.str] = None, fee_rate: typing.Optional[builtins.float] = None, payload: None | str | bytes | list[int] = None) -> list[str]:
         r"""
         Execute a commit-reveal transaction pair against an account-derived address.
         
@@ -3230,7 +3274,7 @@ class Wallet:
         Returns:
             list[str]: Hex-encoded ids of the submitted commit and reveal transactions.
         """
-    def accounts_commit_reveal_manual(self, wallet_secret: builtins.str, account_id: builtins.str, script_sig: str | bytes | list[int], reveal_fee_sompi: builtins.int, payment_secret: typing.Optional[builtins.str] = None, fee_rate: typing.Optional[builtins.float] = None, payload: None | str | bytes | list[int] = None, start_destination: typing.Optional[typing.Sequence[PaymentOutput]] = None, end_destination: typing.Optional[typing.Sequence[PaymentOutput]] = None) -> list[str]:
+    def accounts_commit_reveal_manual(self, wallet_secret: builtins.str, account_id: AccountId | str, script_sig: str | bytes | list[int], reveal_fee_sompi: builtins.int, payment_secret: typing.Optional[builtins.str] = None, fee_rate: typing.Optional[builtins.float] = None, payload: None | str | bytes | list[int] = None, start_destination: typing.Optional[typing.Sequence[PaymentOutput]] = None, end_destination: typing.Optional[typing.Sequence[PaymentOutput]] = None) -> list[str]:
         r"""
         Execute a commit-reveal transaction pair with explicit start and end destinations.
         
@@ -3291,7 +3335,7 @@ class Wallet:
         Note: this is currently a no-op placeholder that returns nothing; the
         underlying API is reserved for a future address book implementation.
         """
-    def transactions_data_get(self, account_id: builtins.str, network_id: NetworkId | str, start: builtins.int, end: builtins.int, filter: None | typing.Sequence[TransactionKind | str] = None) -> dict:
+    def transactions_data_get(self, account_id: AccountId | str, network_id: NetworkId | str, start: builtins.int, end: builtins.int, filter: None | typing.Sequence[TransactionKind | str] = None) -> dict:
         r"""
         Fetch a window of stored transaction history for an account.
         
@@ -3305,7 +3349,7 @@ class Wallet:
         Returns:
             dict: The transaction data response, including the matching transactions.
         """
-    def transactions_replace_note(self, account_id: builtins.str, network_id: NetworkId | str, transaction_id: builtins.str, note: typing.Optional[builtins.str] = None) -> None:
+    def transactions_replace_note(self, account_id: AccountId | str, network_id: NetworkId | str, transaction_id: builtins.str, note: typing.Optional[builtins.str] = None) -> None:
         r"""
         Replace the user-provided note attached to a stored transaction.
         
@@ -3315,7 +3359,7 @@ class Wallet:
             transaction_id: Hex-encoded id of the transaction to update.
             note: New note text, or None to clear the note.
         """
-    def transactions_replace_metadata(self, account_id: builtins.str, network_id: NetworkId | str, transaction_id: builtins.str, metadata: typing.Optional[builtins.str] = None) -> None:
+    def transactions_replace_metadata(self, account_id: AccountId | str, network_id: NetworkId | str, transaction_id: builtins.str, metadata: typing.Optional[builtins.str] = None) -> None:
         r"""
         Replace the user-provided metadata attached to a stored transaction.
         
