@@ -957,6 +957,8 @@
       
         
       
+        
+      
     
     
     
@@ -1577,6 +1579,34 @@
     
   
     PrivateKeyGenerator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/Classes/PrvKeyDataId/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PrvKeyDataId
   
 
     
@@ -11693,6 +11723,7 @@
 <li>Class <code>Wallet</code> exposed to Python, providing the full rusty-kaspa wallet API: lifecycle (<code>start</code>, <code>stop</code>, <code>connect</code>, <code>disconnect</code>, <code>set_network_id</code>, <code>get_status</code>), wallet file operations (<code>wallet_enumerate</code>, <code>wallet_create</code>, <code>wallet_open</code>, <code>wallet_close</code>, <code>wallet_reload</code>, <code>wallet_rename</code>, <code>wallet_change_secret</code>, <code>wallet_export</code>, <code>wallet_import</code>), private key data (<code>prv_key_data_enumerate</code>, <code>prv_key_data_create</code>, <code>prv_key_data_remove</code>, <code>prv_key_data_get</code>), accounts (<code>accounts_enumerate</code>, <code>accounts_create_bip32</code>, <code>accounts_create_keypair</code>, <code>accounts_import_bip32</code>, <code>accounts_import_keypair</code>, <code>accounts_rename</code>, <code>accounts_discovery</code>, <code>accounts_ensure_default</code>, <code>accounts_activate</code>, <code>accounts_get</code>, <code>accounts_create_new_address</code>, <code>accounts_get_utxos</code>), spending (<code>accounts_estimate</code>, <code>accounts_send</code>, <code>accounts_transfer</code>, <code>accounts_commit_reveal</code>, <code>accounts_commit_reveal_manual</code>), transaction history (<code>transactions_data_get</code>, <code>transactions_replace_note</code>, <code>transactions_replace_metadata</code>), storage (<code>batch</code>, <code>flush</code>, <code>retain_context</code>, <code>address_book_enumerate</code>), fee rate (<code>fee_rate_estimate</code>, <code>fee_rate_poller_enable</code>, <code>fee_rate_poller_disable</code>), and event listeners (<code>add_event_listener</code>, <code>remove_event_listener</code>).</li>
 <li>Class <code>AccountDescriptor</code> exposed to Python. Contains account metadata including kind, ID, name, balance, and addresses.</li>
 <li>Class <code>AccountId</code> exposed to Python. Hex-encoded identifier for a wallet account.</li>
+<li>Class <code>PrvKeyDataId</code> exposed to Python. Hex-encoded identifier for a private key data entry. Constructible from a hex string and accepted interchangeably with <code>str</code> by <code>Wallet</code> methods.</li>
 <li>Class <code>WalletDescriptor</code> exposed to Python. Contains wallet metadata including title and filename.</li>
 <li>Class <code>PrvKeyDataInfo</code> exposed to Python. Holds private key data info including ID, name, and encryption status.</li>
 <li>Class <code>PaymentOutput</code> exposed to Python. Represents a transaction output with a destination address and amount.</li>
@@ -11715,6 +11746,7 @@
 <li>Integration tests now default to <code>mainnet</code> (overridable via <code>--network-id</code> / <code>--rpc-url</code>).</li>
 <li><code>build-dev</code> script builds with <code>--strip</code> for smaller artifacts.</li>
 <li><code>pyproject.toml</code>: set <code>python-source = "python"</code> and moved the package stub tree under <code>python/kaspa/</code> (<code>kaspa.pyi</code> → <code>python/kaspa/__init__.pyi</code>).</li>
+<li><code>Hash</code> accepts <code>str</code> in addition to <code>Hash</code> instances wherever it is used as an argument, and gained <code>to_hex()</code> and <code>__repr__</code> methods.</li>
 </ul>
 <h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
 <ul>
