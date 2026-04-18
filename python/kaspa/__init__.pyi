@@ -127,6 +127,13 @@ class AccountKind:
         Returns:
             str: The account kind as a string.
         """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The account kind as a repr string.
+        """
     def to_string(self) -> builtins.str:
         r"""
         Get the string representation.
