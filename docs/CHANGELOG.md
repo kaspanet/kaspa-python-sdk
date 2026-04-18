@@ -26,8 +26,6 @@
 - Integration tests now default to `mainnet` (overridable via `--network-id` / `--rpc-url`).
 - `build-dev` script builds with `--strip` for smaller artifacts.
 - `pyproject.toml`: set `python-source = "python"` and moved the package stub tree under `python/kaspa/` (`kaspa.pyi` → `python/kaspa/__init__.pyi`).
-- `Wallet` methods that take `prv_key_data_id` now accept `PrvKeyDataId | str` (previously `str` only). `Wallet.prv_key_data_create` returns `PrvKeyDataId` (previously a hex `str`) and `PrvKeyDataInfo.id` returns `PrvKeyDataId` (previously a hex `str`).
-- `Wallet.transactions_replace_note` and `Wallet.transactions_replace_metadata` now accept `transaction_id` as `Hash | str` (previously `str` only). `Wallet.accounts_commit_reveal` and `Wallet.accounts_commit_reveal_manual` return `list[Hash]` (previously `list[str]`).
 - `Hash` accepts `str` in addition to `Hash` instances wherever it is used as an argument, and gained `to_hex()` and `__repr__` methods.
 
 ### Fixed
