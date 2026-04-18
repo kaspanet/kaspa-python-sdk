@@ -4,6 +4,7 @@
 - Class `Wallet` exposed to Python, providing the full rusty-kaspa wallet API: lifecycle (`start`, `stop`, `connect`, `disconnect`, `set_network_id`, `get_status`), wallet file operations (`wallet_enumerate`, `wallet_create`, `wallet_open`, `wallet_close`, `wallet_reload`, `wallet_rename`, `wallet_change_secret`, `wallet_export`, `wallet_import`), private key data (`prv_key_data_enumerate`, `prv_key_data_create`, `prv_key_data_remove`, `prv_key_data_get`), accounts (`accounts_enumerate`, `accounts_create_bip32`, `accounts_create_keypair`, `accounts_import_bip32`, `accounts_import_keypair`, `accounts_rename`, `accounts_discovery`, `accounts_ensure_default`, `accounts_activate`, `accounts_get`, `accounts_create_new_address`, `accounts_get_utxos`), spending (`accounts_estimate`, `accounts_send`, `accounts_transfer`, `accounts_commit_reveal`, `accounts_commit_reveal_manual`), transaction history (`transactions_data_get`, `transactions_replace_note`, `transactions_replace_metadata`), storage (`batch`, `flush`, `retain_context`, `address_book_enumerate`), fee rate (`fee_rate_estimate`, `fee_rate_poller_enable`, `fee_rate_poller_disable`), and event listeners (`add_event_listener`, `remove_event_listener`).
 - Class `AccountDescriptor` exposed to Python. Contains account metadata including kind, ID, name, balance, and addresses.
 - Class `AccountId` exposed to Python. Hex-encoded identifier for a wallet account.
+- Class `PrvKeyDataId` exposed to Python. Hex-encoded identifier for a private key data entry. Constructible from a hex string and accepted interchangeably with `str` by `Wallet` methods.
 - Class `WalletDescriptor` exposed to Python. Contains wallet metadata including title and filename.
 - Class `PrvKeyDataInfo` exposed to Python. Holds private key data info including ID, name, and encryption status.
 - Class `PaymentOutput` exposed to Python. Represents a transaction output with a destination address and amount.
@@ -25,6 +26,9 @@
 - Integration tests now default to `mainnet` (overridable via `--network-id` / `--rpc-url`).
 - `build-dev` script builds with `--strip` for smaller artifacts.
 - `pyproject.toml`: set `python-source = "python"` and moved the package stub tree under `python/kaspa/` (`kaspa.pyi` → `python/kaspa/__init__.pyi`).
+- `Wallet` methods that take `prv_key_data_id` now accept `PrvKeyDataId | str` (previously `str` only). `Wallet.prv_key_data_create` returns `PrvKeyDataId` (previously a hex `str`) and `PrvKeyDataInfo.id` returns `PrvKeyDataId` (previously a hex `str`).
+- `Wallet.transactions_replace_note` and `Wallet.transactions_replace_metadata` now accept `transaction_id` as `Hash | str` (previously `str` only). `Wallet.accounts_commit_reveal` and `Wallet.accounts_commit_reveal_manual` return `list[Hash]` (previously `list[str]`).
+- `Hash` accepts `str` in addition to `Hash` instances wherever it is used as an argument, and gained `to_hex()` and `__repr__` methods.
 
 ### Fixed
 - `AccountDescriptor.__repr__` now correctly renders optional fields.
