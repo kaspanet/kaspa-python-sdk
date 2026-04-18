@@ -535,12 +535,26 @@ class Hash:
         Returns:
             str: A 64-character hex string.
         """
+    def to_hex(self) -> builtins.str:
+        r"""
+        Get the hex string representation.
+        
+        Returns:
+            str: A 64-character hex string.
+        """
     def __str__(self) -> builtins.str:
         r"""
         The string representation.
         
         Returns:
             str: The Hash as a hex string
+        """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The Hash as a repr string.
         """
     def __bytes__(self) -> bytes:
         r"""
@@ -1120,11 +1134,55 @@ class PrivateKeyGenerator:
         """
 
 @typing.final
+class PrvKeyDataId:
+    r"""
+    A private key data identifier.
+    
+    Wraps a hex-encoded private key data id. Can be constructed from a hex
+    string or obtained from a PrvKeyDataInfo.
+    """
+    def __eq__(self, other: builtins.object) -> builtins.bool: ...
+    def __new__(cls, id: builtins.str) -> PrvKeyDataId:
+        r"""
+        Create a new PrvKeyDataId from a hex string.
+        
+        Args:
+            id: Hex-encoded private key data id.
+        
+        Returns:
+            PrvKeyDataId: A new PrvKeyDataId instance.
+        
+        Raises:
+            Exception: If the hex string is invalid.
+        """
+    def __str__(self) -> builtins.str:
+        r"""
+        The hex string representation.
+        
+        Returns:
+            str: The private key data id as a hex string.
+        """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The private key data id as a repr string.
+        """
+    def to_hex(self) -> builtins.str:
+        r"""
+        Get the hex string representation.
+        
+        Returns:
+            str: The private key data id as a hex string.
+        """
+
+@typing.final
 class PrvKeyDataInfo:
     @property
-    def id(self) -> builtins.str:
+    def id(self) -> PrvKeyDataId:
         r"""
-        The private key data id as a hex string.
+        The private key data id.
         """
     @property
     def name(self) -> typing.Optional[builtins.str]:
@@ -3027,7 +3085,7 @@ class Wallet:
         Returns:
             list[PrvKeyDataInfo]: Metadata for every stored private key data entry.
         """
-    def prv_key_data_create(self, wallet_secret: builtins.str, secret: builtins.str, kind: PrvKeyDataVariantKind | str, payment_secret: typing.Optional[builtins.str] = None, name: typing.Optional[builtins.str] = None) -> str:
+    def prv_key_data_create(self, wallet_secret: builtins.str, secret: builtins.str, kind: PrvKeyDataVariantKind | str, payment_secret: typing.Optional[builtins.str] = None, name: typing.Optional[builtins.str] = None) -> PrvKeyDataId:
         r"""
         Create and store a new private key data entry.
         
@@ -3039,23 +3097,23 @@ class Wallet:
             name: Optional human-readable name for the entry.
         
         Returns:
-            str: The hex-encoded id of the newly created private key data entry.
+            PrvKeyDataId: The id of the newly created private key data entry.
         """
-    def prv_key_data_remove(self, wallet_secret: builtins.str, prv_key_data_id: builtins.str) -> None:
+    def prv_key_data_remove(self, wallet_secret: builtins.str, prv_key_data_id: PrvKeyDataId | str) -> None:
         r"""
         Remove a private key data entry from the wallet.
         
         Args:
             wallet_secret: Password for the open wallet.
-            prv_key_data_id: Hex-encoded id of the entry to remove.
+            prv_key_data_id: Id of the entry to remove.
         """
-    def prv_key_data_get(self, wallet_secret: builtins.str, prv_key_data_id: builtins.str) -> PrvKeyDataInfo:
+    def prv_key_data_get(self, wallet_secret: builtins.str, prv_key_data_id: PrvKeyDataId | str) -> PrvKeyDataInfo:
         r"""
         Fetch metadata for a single private key data entry.
         
         Args:
             wallet_secret: Password for the open wallet.
-            prv_key_data_id: Hex-encoded id of the entry to fetch.
+            prv_key_data_id: Id of the entry to fetch.
         
         Returns:
             PrvKeyDataInfo: Metadata for the entry.
@@ -3070,13 +3128,13 @@ class Wallet:
         Returns:
             list[AccountDescriptor]: Descriptors for every account in the wallet.
         """
-    def accounts_create_bip32(self, wallet_secret: builtins.str, prv_key_data_id: builtins.str, payment_secret: typing.Optional[builtins.str] = None, account_name: typing.Optional[builtins.str] = None, account_index: typing.Optional[builtins.int] = None) -> AccountDescriptor:
+    def accounts_create_bip32(self, wallet_secret: builtins.str, prv_key_data_id: PrvKeyDataId | str, payment_secret: typing.Optional[builtins.str] = None, account_name: typing.Optional[builtins.str] = None, account_index: typing.Optional[builtins.int] = None) -> AccountDescriptor:
         r"""
         Create a new BIP32 (HD) account from existing private key data.
         
         Args:
             wallet_secret: Password for the open wallet.
-            prv_key_data_id: Hex-encoded id of the private key data entry to derive from.
+            prv_key_data_id: Id of the private key data entry to derive from.
             payment_secret: Optional payment secret if the private key data is encrypted with one.
             account_name: Optional human-readable name for the account.
             account_index: Optional explicit BIP32 account index. Defaults to the next available.
@@ -3084,20 +3142,20 @@ class Wallet:
         Returns:
             AccountDescriptor: Descriptor of the newly created account.
         """
-    def accounts_create_keypair(self, wallet_secret: builtins.str, prv_key_data_id: builtins.str, ecdsa: builtins.bool, account_name: typing.Optional[builtins.str] = None) -> AccountDescriptor:
+    def accounts_create_keypair(self, wallet_secret: builtins.str, prv_key_data_id: PrvKeyDataId | str, ecdsa: builtins.bool, account_name: typing.Optional[builtins.str] = None) -> AccountDescriptor:
         r"""
         Create a new keypair (single-key) account from existing private key data.
         
         Args:
             wallet_secret: Password for the open wallet.
-            prv_key_data_id: Hex-encoded id of the private key data entry to use.
+            prv_key_data_id: Id of the private key data entry to use.
             ecdsa: If True, derive an ECDSA address; otherwise derive a Schnorr address.
             account_name: Optional human-readable name for the account.
         
         Returns:
             AccountDescriptor: Descriptor of the newly created account.
         """
-    def accounts_import_bip32(self, wallet_secret: builtins.str, prv_key_data_id: builtins.str, payment_secret: typing.Optional[builtins.str] = None, account_name: typing.Optional[builtins.str] = None, account_index: typing.Optional[builtins.int] = None) -> AccountDescriptor:
+    def accounts_import_bip32(self, wallet_secret: builtins.str, prv_key_data_id: PrvKeyDataId | str, payment_secret: typing.Optional[builtins.str] = None, account_name: typing.Optional[builtins.str] = None, account_index: typing.Optional[builtins.int] = None) -> AccountDescriptor:
         r"""
         Import a BIP32 (HD) account from existing private key data.
         
@@ -3106,7 +3164,7 @@ class Wallet:
         
         Args:
             wallet_secret: Password for the open wallet.
-            prv_key_data_id: Hex-encoded id of the private key data entry to derive from.
+            prv_key_data_id: Id of the private key data entry to derive from.
             payment_secret: Optional payment secret if the private key data is encrypted with one.
             account_name: Optional human-readable name for the account.
             account_index: Optional explicit BIP32 account index.
@@ -3114,13 +3172,13 @@ class Wallet:
         Returns:
             AccountDescriptor: Descriptor of the imported account.
         """
-    def accounts_import_keypair(self, wallet_secret: builtins.str, prv_key_data_id: builtins.str, ecdsa: builtins.bool, account_name: typing.Optional[builtins.str] = None) -> AccountDescriptor:
+    def accounts_import_keypair(self, wallet_secret: builtins.str, prv_key_data_id: PrvKeyDataId | str, ecdsa: builtins.bool, account_name: typing.Optional[builtins.str] = None) -> AccountDescriptor:
         r"""
         Import a keypair (single-key) account from existing private key data.
         
         Args:
             wallet_secret: Password for the open wallet.
-            prv_key_data_id: Hex-encoded id of the private key data entry to use.
+            prv_key_data_id: Id of the private key data entry to use.
             ecdsa: If True, derive an ECDSA address; otherwise derive a Schnorr address.
             account_name: Optional human-readable name for the account.
         
@@ -3252,7 +3310,7 @@ class Wallet:
         Returns:
             dict: The transfer response, including generator summary and transaction ids.
         """
-    def accounts_commit_reveal(self, wallet_secret: builtins.str, account_id: AccountId | str, address_type: CommitRevealAddressKind | str, address_index: builtins.int, script_sig: str | bytes | list[int], commit_amount_sompi: builtins.int, reveal_fee_sompi: builtins.int, payment_secret: typing.Optional[builtins.str] = None, fee_rate: typing.Optional[builtins.float] = None, payload: None | str | bytes | list[int] = None) -> list[str]:
+    def accounts_commit_reveal(self, wallet_secret: builtins.str, account_id: AccountId | str, address_type: CommitRevealAddressKind | str, address_index: builtins.int, script_sig: str | bytes | list[int], commit_amount_sompi: builtins.int, reveal_fee_sompi: builtins.int, payment_secret: typing.Optional[builtins.str] = None, fee_rate: typing.Optional[builtins.float] = None, payload: None | str | bytes | list[int] = None) -> list[Hash]:
         r"""
         Execute a commit-reveal transaction pair against an account-derived address.
         
@@ -3272,9 +3330,9 @@ class Wallet:
             payload: Optional binary payload to embed in the reveal transaction.
         
         Returns:
-            list[str]: Hex-encoded ids of the submitted commit and reveal transactions.
+            list[Hash]: Ids of the submitted commit and reveal transactions.
         """
-    def accounts_commit_reveal_manual(self, wallet_secret: builtins.str, account_id: AccountId | str, script_sig: str | bytes | list[int], reveal_fee_sompi: builtins.int, payment_secret: typing.Optional[builtins.str] = None, fee_rate: typing.Optional[builtins.float] = None, payload: None | str | bytes | list[int] = None, start_destination: typing.Optional[typing.Sequence[PaymentOutput]] = None, end_destination: typing.Optional[typing.Sequence[PaymentOutput]] = None) -> list[str]:
+    def accounts_commit_reveal_manual(self, wallet_secret: builtins.str, account_id: AccountId | str, script_sig: str | bytes | list[int], reveal_fee_sompi: builtins.int, payment_secret: typing.Optional[builtins.str] = None, fee_rate: typing.Optional[builtins.float] = None, payload: None | str | bytes | list[int] = None, start_destination: typing.Optional[typing.Sequence[PaymentOutput]] = None, end_destination: typing.Optional[typing.Sequence[PaymentOutput]] = None) -> list[Hash]:
         r"""
         Execute a commit-reveal transaction pair with explicit start and end destinations.
         
@@ -3294,7 +3352,7 @@ class Wallet:
             end_destination: Optional outputs for the reveal transaction. Defaults to change.
         
         Returns:
-            list[str]: Hex-encoded ids of the submitted commit and reveal transactions.
+            list[Hash]: Ids of the submitted commit and reveal transactions.
         """
     def batch(self) -> None:
         r"""
@@ -3349,24 +3407,24 @@ class Wallet:
         Returns:
             dict: The transaction data response, including the matching transactions.
         """
-    def transactions_replace_note(self, account_id: AccountId | str, network_id: NetworkId | str, transaction_id: builtins.str, note: typing.Optional[builtins.str] = None) -> None:
+    def transactions_replace_note(self, account_id: AccountId | str, network_id: NetworkId | str, transaction_id: Hash | str, note: typing.Optional[builtins.str] = None) -> None:
         r"""
         Replace the user-provided note attached to a stored transaction.
         
         Args:
-            account_id: Hex-encoded id of the account that owns the transaction.
+            account_id: Id of the account that owns the transaction.
             network_id: The network the transaction belongs to.
-            transaction_id: Hex-encoded id of the transaction to update.
+            transaction_id: Id of the transaction to update.
             note: New note text, or None to clear the note.
         """
-    def transactions_replace_metadata(self, account_id: AccountId | str, network_id: NetworkId | str, transaction_id: builtins.str, metadata: typing.Optional[builtins.str] = None) -> None:
+    def transactions_replace_metadata(self, account_id: AccountId | str, network_id: NetworkId | str, transaction_id: Hash | str, metadata: typing.Optional[builtins.str] = None) -> None:
         r"""
         Replace the user-provided metadata attached to a stored transaction.
         
         Args:
-            account_id: Hex-encoded id of the account that owns the transaction.
+            account_id: Id of the account that owns the transaction.
             network_id: The network the transaction belongs to.
-            transaction_id: Hex-encoded id of the transaction to update.
+            transaction_id: Id of the transaction to update.
             metadata: New metadata string, or None to clear it.
         """
     def fee_rate_estimate(self) -> dict:

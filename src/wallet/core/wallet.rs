@@ -3,6 +3,7 @@ use crate::{
     address::PyAddress,
     callback::PyCallback,
     consensus::core::network::PyNetworkId,
+    crypto::hashes::PyHash,
     error::IntoPyResult,
     rpc::{
         encoding::PyEncoding,
@@ -16,7 +17,7 @@ use crate::{
         events::PyWalletEventType,
         storage::{
             interface::PyWalletDescriptor,
-            keydata::{PyPrvKeyDataInfo, PyPrvKeyDataVariantKind},
+            keydata::{PyPrvKeyDataId, PyPrvKeyDataInfo, PyPrvKeyDataVariantKind},
             transaction::PyTransactionKind,
         },
         tx::{fees::PyFees, generator::PyGeneratorSummary, payment::PyPaymentOutput},
@@ -25,8 +26,6 @@ use crate::{
 use ahash::AHashMap;
 use futures::{FutureExt, select};
 use kaspa_addresses::Address;
-use kaspa_hashes::Hash;
-use kaspa_utils::hex::{FromHex, ToHex};
 use kaspa_wallet_core::{
     api::*,
     error::Error as NativeError,
@@ -34,7 +33,7 @@ use kaspa_wallet_core::{
     prelude::{AccountId, EncryptionKind},
     result::Result,
     rpc::{DynRpcApi, Rpc},
-    storage::{Hint, PrvKeyDataId, PrvKeyDataInfo, TransactionKind},
+    storage::{Hint, PrvKeyDataInfo, TransactionKind},
     tx::{PaymentDestination, PaymentOutput, PaymentOutputs},
     wallet::{
         self as native, AccountCreateArgs, AccountCreateArgsBip32, PrvKeyDataArgs,
@@ -707,8 +706,8 @@ impl PyWallet {
     ///     name: Optional human-readable name for the entry.
     ///
     /// Returns:
-    ///     str: The hex-encoded id of the newly created private key data entry.
-    #[gen_stub(override_return_type(type_repr = "str"))]
+    ///     PrvKeyDataId: The id of the newly created private key data entry.
+    #[gen_stub(override_return_type(type_repr = "PrvKeyDataId"))]
     #[pyo3(signature = (wallet_secret, secret, kind, payment_secret=None, name=None))]
     pub fn prv_key_data_create<'py>(
         &self,
@@ -736,7 +735,7 @@ impl PyWallet {
                 .prv_key_data_create_call(request)
                 .await
                 .into_py_result()?;
-            Ok(resp.prv_key_data_id.to_hex())
+            Ok(PyPrvKeyDataId::from(resp.prv_key_data_id))
         })
     }
 
@@ -744,18 +743,18 @@ impl PyWallet {
     ///
     /// Args:
     ///     wallet_secret: Password for the open wallet.
-    ///     prv_key_data_id: Hex-encoded id of the entry to remove.
+    ///     prv_key_data_id: Id of the entry to remove.
     #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn prv_key_data_remove<'py>(
         &self,
         py: Python<'py>,
         wallet_secret: String,
-        prv_key_data_id: String,
+        #[gen_stub(override_type(type_repr = "PrvKeyDataId | str"))]
+        prv_key_data_id: PyPrvKeyDataId,
     ) -> PyResult<Bound<'py, PyAny>> {
         let request = PrvKeyDataRemoveRequest {
             wallet_secret: wallet_secret.into(),
-            prv_key_data_id: PrvKeyDataId::from_hex(&prv_key_data_id)
-                .map_err(|err| PyException::new_err(err.to_string()))?,
+            prv_key_data_id: prv_key_data_id.into(),
         };
 
         let wallet = self.wallet().clone();
@@ -773,7 +772,7 @@ impl PyWallet {
     ///
     /// Args:
     ///     wallet_secret: Password for the open wallet.
-    ///     prv_key_data_id: Hex-encoded id of the entry to fetch.
+    ///     prv_key_data_id: Id of the entry to fetch.
     ///
     /// Returns:
     ///     PrvKeyDataInfo: Metadata for the entry.
@@ -785,11 +784,11 @@ impl PyWallet {
         &self,
         py: Python<'py>,
         wallet_secret: String,
-        prv_key_data_id: String,
+        #[gen_stub(override_type(type_repr = "PrvKeyDataId | str"))]
+        prv_key_data_id: PyPrvKeyDataId,
     ) -> PyResult<Bound<'py, PyAny>> {
         let request = PrvKeyDataGetRequest {
-            prv_key_data_id: PrvKeyDataId::from_hex(&prv_key_data_id)
-                .map_err(|err| PyException::new_err(err.to_string()))?,
+            prv_key_data_id: prv_key_data_id.into(),
             wallet_secret: wallet_secret.into(),
         };
 
@@ -836,7 +835,7 @@ impl PyWallet {
     ///
     /// Args:
     ///     wallet_secret: Password for the open wallet.
-    ///     prv_key_data_id: Hex-encoded id of the private key data entry to derive from.
+    ///     prv_key_data_id: Id of the private key data entry to derive from.
     ///     payment_secret: Optional payment secret if the private key data is encrypted with one.
     ///     account_name: Optional human-readable name for the account.
     ///     account_index: Optional explicit BIP32 account index. Defaults to the next available.
@@ -849,7 +848,8 @@ impl PyWallet {
         &self,
         py: Python<'py>,
         wallet_secret: String,
-        prv_key_data_id: String,
+        #[gen_stub(override_type(type_repr = "PrvKeyDataId | str"))]
+        prv_key_data_id: PyPrvKeyDataId,
         payment_secret: Option<String>,
         account_name: Option<String>,
         account_index: Option<u64>,
@@ -858,8 +858,7 @@ impl PyWallet {
             wallet_secret: wallet_secret.into(),
             account_create_args: AccountCreateArgs::Bip32 {
                 prv_key_data_args: PrvKeyDataArgs {
-                    prv_key_data_id: PrvKeyDataId::from_hex(&prv_key_data_id)
-                        .map_err(|err| PyException::new_err(err.to_string()))?,
+                    prv_key_data_id: prv_key_data_id.into(),
                     payment_secret: payment_secret.map(Secret::from),
                 },
                 account_args: AccountCreateArgsBip32 {
@@ -883,7 +882,7 @@ impl PyWallet {
     ///
     /// Args:
     ///     wallet_secret: Password for the open wallet.
-    ///     prv_key_data_id: Hex-encoded id of the private key data entry to use.
+    ///     prv_key_data_id: Id of the private key data entry to use.
     ///     ecdsa: If True, derive an ECDSA address; otherwise derive a Schnorr address.
     ///     account_name: Optional human-readable name for the account.
     ///
@@ -895,15 +894,15 @@ impl PyWallet {
         &self,
         py: Python<'py>,
         wallet_secret: String,
-        prv_key_data_id: String,
+        #[gen_stub(override_type(type_repr = "PrvKeyDataId | str"))]
+        prv_key_data_id: PyPrvKeyDataId,
         ecdsa: bool,
         account_name: Option<String>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let request = AccountsCreateRequest {
             wallet_secret: wallet_secret.into(),
             account_create_args: AccountCreateArgs::Keypair {
-                prv_key_data_id: PrvKeyDataId::from_hex(&prv_key_data_id)
-                    .map_err(|err| PyException::new_err(err.to_string()))?,
+                prv_key_data_id: prv_key_data_id.into(),
                 account_name,
                 ecdsa,
             },
@@ -926,7 +925,7 @@ impl PyWallet {
     ///
     /// Args:
     ///     wallet_secret: Password for the open wallet.
-    ///     prv_key_data_id: Hex-encoded id of the private key data entry to derive from.
+    ///     prv_key_data_id: Id of the private key data entry to derive from.
     ///     payment_secret: Optional payment secret if the private key data is encrypted with one.
     ///     account_name: Optional human-readable name for the account.
     ///     account_index: Optional explicit BIP32 account index.
@@ -939,15 +938,15 @@ impl PyWallet {
         &self,
         py: Python<'py>,
         wallet_secret: String,
-        prv_key_data_id: String,
+        #[gen_stub(override_type(type_repr = "PrvKeyDataId | str"))]
+        prv_key_data_id: PyPrvKeyDataId,
         payment_secret: Option<String>,
         account_name: Option<String>,
         account_index: Option<u64>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let account_create_args = AccountCreateArgs::Bip32 {
             prv_key_data_args: PrvKeyDataArgs {
-                prv_key_data_id: PrvKeyDataId::from_hex(&prv_key_data_id)
-                    .map_err(|err| PyException::new_err(err.to_string()))?,
+                prv_key_data_id: prv_key_data_id.into(),
                 payment_secret: payment_secret.map(Secret::from),
             },
             account_args: AccountCreateArgsBip32 {
@@ -975,7 +974,7 @@ impl PyWallet {
     ///
     /// Args:
     ///     wallet_secret: Password for the open wallet.
-    ///     prv_key_data_id: Hex-encoded id of the private key data entry to use.
+    ///     prv_key_data_id: Id of the private key data entry to use.
     ///     ecdsa: If True, derive an ECDSA address; otherwise derive a Schnorr address.
     ///     account_name: Optional human-readable name for the account.
     ///
@@ -987,13 +986,13 @@ impl PyWallet {
         &self,
         py: Python<'py>,
         wallet_secret: String,
-        prv_key_data_id: String,
+        #[gen_stub(override_type(type_repr = "PrvKeyDataId | str"))]
+        prv_key_data_id: PyPrvKeyDataId,
         ecdsa: bool,
         account_name: Option<String>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let account_create_args = AccountCreateArgs::Keypair {
-            prv_key_data_id: PrvKeyDataId::from_hex(&prv_key_data_id)
-                .map_err(|err| PyException::new_err(err.to_string()))?,
+            prv_key_data_id: prv_key_data_id.into(),
             account_name,
             ecdsa,
         };
@@ -1471,8 +1470,8 @@ impl PyWallet {
     ///     payload: Optional binary payload to embed in the reveal transaction.
     ///
     /// Returns:
-    ///     list[str]: Hex-encoded ids of the submitted commit and reveal transactions.
-    #[gen_stub(override_return_type(type_repr = "list[str]"))]
+    ///     list[Hash]: Ids of the submitted commit and reveal transactions.
+    #[gen_stub(override_return_type(type_repr = "list[Hash]"))]
     #[pyo3(signature = (wallet_secret, account_id, address_type, address_index, script_sig, commit_amount_sompi, reveal_fee_sompi, payment_secret=None, fee_rate=None, payload=None))]
     pub fn accounts_commit_reveal<'py>(
         &self,
@@ -1511,9 +1510,11 @@ impl PyWallet {
                 .await
                 .into_py_result()?;
 
-            Python::attach(
-                |py| Ok(serde_pyobject::to_pyobject(py, &resp.transaction_ids)?.unbind()),
-            )
+            Ok(resp
+                .transaction_ids
+                .into_iter()
+                .map(PyHash::from)
+                .collect::<Vec<PyHash>>())
         })
     }
 
@@ -1535,8 +1536,8 @@ impl PyWallet {
     ///     end_destination: Optional outputs for the reveal transaction. Defaults to change.
     ///
     /// Returns:
-    ///     list[str]: Hex-encoded ids of the submitted commit and reveal transactions.
-    #[gen_stub(override_return_type(type_repr = "list[str]"))]
+    ///     list[Hash]: Ids of the submitted commit and reveal transactions.
+    #[gen_stub(override_return_type(type_repr = "list[Hash]"))]
     #[pyo3(signature = (wallet_secret, account_id, script_sig, reveal_fee_sompi, payment_secret=None, fee_rate=None, payload=None, start_destination=None, end_destination=None))]
     pub fn accounts_commit_reveal_manual<'py>(
         &self,
@@ -1594,9 +1595,11 @@ impl PyWallet {
                 .await
                 .into_py_result()?;
 
-            Python::attach(
-                |py| Ok(serde_pyobject::to_pyobject(py, &resp.transaction_ids)?.unbind()),
-            )
+            Ok(resp
+                .transaction_ids
+                .into_iter()
+                .map(PyHash::from)
+                .collect::<Vec<PyHash>>())
         })
     }
 }
@@ -1761,9 +1764,9 @@ impl PyWallet {
     /// Replace the user-provided note attached to a stored transaction.
     ///
     /// Args:
-    ///     account_id: Hex-encoded id of the account that owns the transaction.
+    ///     account_id: Id of the account that owns the transaction.
     ///     network_id: The network the transaction belongs to.
-    ///     transaction_id: Hex-encoded id of the transaction to update.
+    ///     transaction_id: Id of the transaction to update.
     ///     note: New note text, or None to clear the note.
     #[gen_stub(override_return_type(type_repr = "None"))]
     #[pyo3(signature = (account_id, network_id, transaction_id, note=None))]
@@ -1772,14 +1775,13 @@ impl PyWallet {
         py: Python<'py>,
         #[gen_stub(override_type(type_repr = "AccountId | str"))] account_id: PyAccountId,
         #[gen_stub(override_type(type_repr = "NetworkId | str"))] network_id: PyNetworkId,
-        transaction_id: String,
+        #[gen_stub(override_type(type_repr = "Hash | str"))] transaction_id: PyHash,
         note: Option<String>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let request = TransactionsReplaceNoteRequest {
             account_id: account_id.into(),
             network_id: network_id.into(),
-            transaction_id: Hash::from_hex(&transaction_id)
-                .map_err(|err| PyException::new_err(err.to_string()))?,
+            transaction_id: transaction_id.into(),
             note,
         };
 
@@ -1796,9 +1798,9 @@ impl PyWallet {
     /// Replace the user-provided metadata attached to a stored transaction.
     ///
     /// Args:
-    ///     account_id: Hex-encoded id of the account that owns the transaction.
+    ///     account_id: Id of the account that owns the transaction.
     ///     network_id: The network the transaction belongs to.
-    ///     transaction_id: Hex-encoded id of the transaction to update.
+    ///     transaction_id: Id of the transaction to update.
     ///     metadata: New metadata string, or None to clear it.
     #[gen_stub(override_return_type(type_repr = "None"))]
     #[pyo3(signature = (account_id, network_id, transaction_id, metadata=None))]
@@ -1807,14 +1809,13 @@ impl PyWallet {
         py: Python<'py>,
         #[gen_stub(override_type(type_repr = "AccountId | str"))] account_id: PyAccountId,
         #[gen_stub(override_type(type_repr = "NetworkId | str"))] network_id: PyNetworkId,
-        transaction_id: String,
+        #[gen_stub(override_type(type_repr = "Hash | str"))] transaction_id: PyHash,
         metadata: Option<String>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let request = TransactionsReplaceMetadataRequest {
             account_id: account_id.into(),
             network_id: network_id.into(),
-            transaction_id: Hash::from_hex(&transaction_id)
-                .map_err(|err| PyException::new_err(err.to_string()))?,
+            transaction_id: transaction_id.into(),
             metadata,
         };
 
