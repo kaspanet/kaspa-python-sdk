@@ -49,6 +49,14 @@ impl PyAccountKind {
         self.py_to_string()
     }
 
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The account kind as a repr string.
+    pub fn __repr__(&self) -> String {
+        format!("AccountKind('{}')", self.0.as_str())
+    }
+
     /// Get the string representation.
     ///
     /// Returns:
