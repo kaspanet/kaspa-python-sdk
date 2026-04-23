@@ -1195,7 +1195,7 @@ impl PyWallet {
     ///
     /// Args:
     ///     account_id: Hex-encoded id of the account to look up.
-    #[gen_stub(override_return_type(type_repr = "None"))]
+    #[gen_stub(override_return_type(type_repr = "AccountDescriptor"))]
     pub fn accounts_get<'py>(
         &self,
         py: Python<'py>,
@@ -1207,9 +1207,9 @@ impl PyWallet {
 
         let wallet = self.wallet().clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            wallet.accounts_get_call(request).await.into_py_result()?;
+            let resp = wallet.accounts_get_call(request).await.into_py_result()?;
 
-            Ok(())
+            Ok(PyAccountDescriptor::from(resp.account_descriptor))
         })
     }
 

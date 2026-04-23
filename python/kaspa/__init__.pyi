@@ -3238,7 +3238,7 @@ class Wallet:
         Args:
             account_ids: Optional list of hex-encoded account ids. If None, activates all accounts.
         """
-    def accounts_get(self, account_id: AccountId | str) -> None:
+    def accounts_get(self, account_id: AccountId | str) -> AccountDescriptor:
         r"""
         Verify that an account exists in the open wallet.
         
