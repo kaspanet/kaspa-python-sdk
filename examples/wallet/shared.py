@@ -1,13 +1,15 @@
 """Shared demo variables and bootstrap helper for the wallet examples.
 
-All four wallet examples import the same mnemonic, secret, and network id
-from this module so they derive addresses from a single deterministic seed.
+All wallet examples import the same mnemonic, secret, and network id from
+this module so they derive addresses from a single deterministic seed.
 
 Each example uses its own `FILENAME` so the on-disk wallets stay
 independent.
 """
 
-from kaspa import PrvKeyDataVariantKind, Wallet
+from kaspa import AccountKind, PrvKeyDataVariantKind, Wallet
+
+BIP32_KIND = AccountKind("bip32")
 
 FIXED_MNEMONIC_PHRASE = (
     "abandon abandon abandon abandon abandon abandon abandon abandon "
@@ -21,14 +23,19 @@ NETWORK_ID = "testnet-10"
 async def open_or_create_wallet(wallet: Wallet, filename: str, *, title: str) -> str:
     """Open an existing demo wallet or create a fresh one.
 
-    On the first run this stores the shared demo mnemonic and derives a
-    BIP32 account at index 0. On subsequent runs it just reopens the
-    persisted wallet.
+    First run: creates the wallet, stores the shared demo mnemonic under
+    the name "demo-key", and creates a BIP32 account at index 0.
+    Subsequent runs: reopens the file and returns the same account via
+    `accounts_ensure_default`, which is idempotent.
     """
     if await wallet.exists(filename):
-        w = await wallet.wallet_open(WALLET_SECRET, True, filename)
-        print(f"Opened existing wallet file `{filename}`: {w}")
-        return (await wallet.accounts_enumerate())[0].account_id
+        opened = await wallet.wallet_open(WALLET_SECRET, True, filename)
+        print(f"Opened existing wallet file {filename!r}: {opened}\n")
+        descriptor = await wallet.accounts_ensure_default(
+            wallet_secret=WALLET_SECRET,
+            account_kind=BIP32_KIND,
+        )
+        return descriptor.account_id
 
     created = await wallet.wallet_create(
         wallet_secret=WALLET_SECRET,
@@ -46,7 +53,7 @@ async def open_or_create_wallet(wallet: Wallet, filename: str, *, title: str) ->
         payment_secret=None,
         name="demo-key",
     )
-    print(f"Created PrvKeyDataId: {prv_key_id}")
+    print(f"Created PrvKeyDataId: {prv_key_id}\n")
 
     descriptor = await wallet.accounts_create_bip32(
         wallet_secret=WALLET_SECRET,
@@ -55,6 +62,6 @@ async def open_or_create_wallet(wallet: Wallet, filename: str, *, title: str) ->
         account_name="demo-acct",
         account_index=0,
     )
-    print(f"Created BIP32 account: {descriptor}")
+    print(f"Created BIP32 account: {descriptor}\n")
 
     return descriptor.account_id
