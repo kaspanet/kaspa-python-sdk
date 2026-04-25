@@ -1,5 +1,4 @@
-"""Example showing export, import and reload, a wallet.
-"""
+"""Example showing wallet export, import, and reload."""
 
 import argparse
 import asyncio
@@ -11,10 +10,10 @@ from kaspa.exceptions import WalletAlreadyExistsError
 from shared import (
     FIXED_MNEMONIC_PHRASE,
     NETWORK_ID,
-    WALLET_SECRET
+    WALLET_SECRET,
 )
 
-TITLE = "wallet export import demo"
+TITLE = "example wallet export import"
 FILENAME = "-".join(TITLE.split(" "))
 
 
@@ -22,6 +21,11 @@ async def main(rpc_url: str | None):
     # ------------------------------------------------------------------
     # Construct and start wallet
     # ------------------------------------------------------------------
+    print()
+    print("-" * 100)
+    print("\tConstruct and start wallet")
+    print("-" * 100)
+
     if rpc_url:
         wallet = Wallet(network_id=NETWORK_ID, url=rpc_url)
     else:
@@ -33,33 +37,42 @@ async def main(rpc_url: str | None):
     # ------------------------------------------------------------------
     # Open existing wallet or create new
     # ------------------------------------------------------------------
+    print()
+    print("-" * 100)
+    print("\tOpen existing wallet or create new")
+    print("-" * 100)
+
     try:
+        # Create wallet
         created = await wallet.wallet_create(
             wallet_secret=WALLET_SECRET,
             filename=FILENAME,
             overwrite_wallet_storage=False,
             title=TITLE,
-            user_hint="example"
+            user_hint="example",
         )
         print(f"Created new wallet file {FILENAME}: {created}\n")
 
+        # Create first prv key data for wallet
         prv_key_id = await wallet.prv_key_data_create(
             wallet_secret=WALLET_SECRET,
             secret=FIXED_MNEMONIC_PHRASE,
             kind=PrvKeyDataVariantKind.Mnemonic,
             payment_secret=None,
-            name="demo-key"
+            name="demo-key",
         )
 
+        # Create first account
         account_descriptor = await wallet.accounts_create_bip32(
             wallet_secret=WALLET_SECRET,
             prv_key_data_id=prv_key_id,
             payment_secret=None,
             account_name="demo-acct",
-            account_index=0
+            account_index=0,
         )
         print(f"Created BIP32 account: {account_descriptor}\n")
     except WalletAlreadyExistsError:
+        # Open existing wallet
         print(f"Wallet with filename {FILENAME} already exists\n")
         opened = await wallet.wallet_open(WALLET_SECRET, True, FILENAME)
         print(f"Opened existing wallet {FILENAME}: {opened}\n")
@@ -67,6 +80,11 @@ async def main(rpc_url: str | None):
     # ------------------------------------------------------------------
     # Export -> close -> delete original -> import as new -> open
     # ------------------------------------------------------------------
+    print()
+    print("-" * 100)
+    print("\tExport, close, delete, import, reopen")
+    print("-" * 100)
+
     exported = await wallet.wallet_export(WALLET_SECRET, True)
     print(f"Wallet exported ({len(exported)} hex chars): {exported}\n")
 
@@ -96,6 +114,11 @@ async def main(rpc_url: str | None):
     # ------------------------------------------------------------------
     # Wind down
     # ------------------------------------------------------------------
+    print()
+    print("-" * 100)
+    print("\tWind down")
+    print("-" * 100)
+
     await wallet.wallet_close()
     print("Wallet closed\n")
 

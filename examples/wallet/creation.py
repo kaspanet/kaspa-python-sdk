@@ -13,39 +13,50 @@ from kaspa.exceptions import WalletAlreadyExistsError
 
 from shared import FIXED_MNEMONIC_PHRASE, NETWORK_ID, WALLET_SECRET
 
-FILENAME = "wallet-creation-demo"
-TITLE = "wallet creation demo"
+TITLE = "example wallet creation"
+FILENAME = "-".join(TITLE.split(" "))
 
 
 async def main(rpc_url: str | None):
     # ------------------------------------------------------------------
-    # Construct wallet
+    # Construct and start wallet
     # ------------------------------------------------------------------
+    print()
+    print("-" * 100)
+    print("\tConstruct and start wallet")
+    print("-" * 100)
+
     if rpc_url:
         wallet = Wallet(network_id=NETWORK_ID, url=rpc_url)
     else:
         wallet = Wallet(network_id=NETWORK_ID, resolver=Resolver())
 
-    print("Initialized Wallet instance properties:")
+    await wallet.start()
+    print("Wallet started\n")
+
+    print("Newly initialized wallet instance's properties:")
     print(f" - rpc: {wallet.rpc}")
     print(f" - is_open: {wallet.is_open}")
     print(f" - descriptor: {wallet.descriptor}")
+    print()
 
     # ------------------------------------------------------------------
-    # Start wallet runtime
+    # Open existing wallet or create new
     # ------------------------------------------------------------------
-    await wallet.start()
-    print("Wallet started")
+    print()
+    print("-" * 100)
+    print("\tOpen existing wallet or create new")
+    print("-" * 100)
 
+    # Enumerate wallets on disk
     wallets = await wallet.wallet_enumerate()
     print("Wallets on disk:")
     for w in wallets:
         print(f" - {w}")
+    print()
 
-    # ------------------------------------------------------------------
-    # Create wallet (catch and fall back to open if it already exists)
-    # ------------------------------------------------------------------
     try:
+        # Create wallet
         created = await wallet.wallet_create(
             wallet_secret=WALLET_SECRET,
             filename=FILENAME,
@@ -53,8 +64,9 @@ async def main(rpc_url: str | None):
             title=TITLE,
             user_hint="example",
         )
-        print(f"Created new wallet file {FILENAME!r}: {created}")
+        print(f"Created new wallet file {FILENAME}: {created}\n")
 
+        # Create mnemonic type prv key data for wallet
         prv_key_id = await wallet.prv_key_data_create(
             wallet_secret=WALLET_SECRET,
             secret=FIXED_MNEMONIC_PHRASE,
@@ -62,8 +74,9 @@ async def main(rpc_url: str | None):
             payment_secret=None,
             name="demo-key",
         )
-        print(f"Created PrvKeyDataId: {prv_key_id}")
+        print(f"Created PrvKeyDataId: {prv_key_id}\n")
 
+        # Create first account
         descriptor = await wallet.accounts_create_bip32(
             wallet_secret=WALLET_SECRET,
             prv_key_data_id=prv_key_id,
@@ -71,35 +84,50 @@ async def main(rpc_url: str | None):
             account_name="demo-acct",
             account_index=0,
         )
-        print(f"Created BIP32 account: {descriptor}")
+        print(f"Created BIP32 account: {descriptor}\n")
     except WalletAlreadyExistsError:
-        print(f"Wallet with filename `{FILENAME}` already exists")
+        # Open existing wallet
+        print(f"Wallet with filename {FILENAME} already exists\n")
         opened = await wallet.wallet_open(WALLET_SECRET, True, FILENAME)
-        print(f"Opened existing wallet {FILENAME}: {opened}")
+        print(f"Opened existing wallet {FILENAME}: {opened}\n")
 
-    print("Opened Wallet instance properties:")
+    print("Opened wallet instance's properties:")
+    print(f" - rpc: {wallet.rpc}")
     print(f" - is_open: {wallet.is_open}")
     print(f" - descriptor: {wallet.descriptor}")
+    print()
 
     # ------------------------------------------------------------------
-    # Close and reopen (just to show persistence)
+    # Close and reopen (to show persistence)
     # ------------------------------------------------------------------
+    print()
+    print("-" * 100)
+    print("\tClose and reopen (to show persistence)")
+    print("-" * 100)
+
     await wallet.wallet_close()
     print("Closed Wallet instance properties:")
+    print(f" - rpc: {wallet.rpc}")
     print(f" - is_open: {wallet.is_open}")
     print(f" - descriptor: {wallet.descriptor}")
+    print()
 
     reopened = await wallet.wallet_open(WALLET_SECRET, True, FILENAME)
-    print(f"Reopened wallet: {reopened}")
+    print(f"Reopened wallet: {reopened}\n")
+
+    # ------------------------------------------------------------------
+    # Wind down
+    # ------------------------------------------------------------------
+    print()
+    print("-" * 100)
+    print("\tWind down")
+    print("-" * 100)
 
     await wallet.wallet_close()
-    print("Wallet closed")
+    print("Wallet closed\n")
 
-    # ------------------------------------------------------------------
-    # Stop wallet runtime
-    # ------------------------------------------------------------------
     await wallet.stop()
-    print("Wallet stopped")
+    print("Wallet stopped\n")
 
 
 if __name__ == "__main__":
