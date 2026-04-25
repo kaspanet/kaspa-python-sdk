@@ -11,12 +11,8 @@ from kaspa import Mnemonic, PrvKeyDataId, PrvKeyDataVariantKind
 from tests.conftest import TEST_WALLET_SECRET
 
 
-# The SecretKey variant of PrvKeyDataVariantKind passes the `secret` String
-# straight to `Secret::from(secret)` (see `prv_key_data_create` in
-# `src/wallet/core/wallet.rs`), so upstream wallet-core reads its UTF-8
-# bytes directly as the secp256k1 key material — NOT as a hex string.
-# 32 repeated "a" chars = 32 bytes of 0x61, a valid secp256k1 scalar.
-TEST_SECRET_KEY_RAW = "a" * 32
+# 64-char hex string = 32 bytes, a valid secp256k1 scalar.
+TEST_SECRET_KEY_RAW = "a" * 64
 
 
 async def create_mnemonic_key(

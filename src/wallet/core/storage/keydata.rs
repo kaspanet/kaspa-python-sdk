@@ -111,6 +111,12 @@ impl From<PrvKeyDataId> for PyPrvKeyDataId {
     }
 }
 
+impl From<&PrvKeyDataId> for PyPrvKeyDataId {
+    fn from(value: &PrvKeyDataId) -> Self {
+        Self(*value)
+    }
+}
+
 impl From<PyPrvKeyDataId> for PrvKeyDataId {
     fn from(value: PyPrvKeyDataId) -> Self {
         value.0
