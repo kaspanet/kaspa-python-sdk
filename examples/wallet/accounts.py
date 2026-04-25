@@ -1,64 +1,55 @@
-"""Manage BIP32 and keypair accounts in one wallet file.
+"""Example showing both BIP32 and keypair account types in one wallet.
 
-A wallet file holds N accounts of any mix of variants, each backed by an
-entry in the wallet's `prv_key_data` store. This example exercises both
-account types in the same file:
+A wallet can hold N accounts any type, each backed by an
+entry in the wallet's `prv_key_data` store.
 
-* **BIP32 (HD-derived)** — the default. One mnemonic backs unlimited
-  accounts, each at a different `account_index` on Kaspa's BIP44 path
-  `m/44'/111111'/{account_index}'`. Receive addresses live under
-  `.../0/i`, change addresses under `.../1/i`. Each account derives its
-  addresses on demand by walking the HD tree. The address at a given
-  index is deterministic (same mnemonic → same bytes), but
-  `accounts_create_new_address` advances the account's stored index on
-  every call — so the printed addresses shift forward each run.
+This example shows creation of both account types in the same file:
 
-* **Keypair (non-HD)** — one pre-existing secp256k1 private key wrapped
-  as an account. One account, one address, no derivation path. Use when
-  importing a raw key from an external source (paper wallet, another
-  tool, etc.) into the wallet file.
+- BIP32 (HD-derived): One mnemonic backs unlimited accounts,
+each at a different `account_index` on Kaspa's BIP44 path
+m/44'/111111'/{account_index}'
 
-Both types coexist: the final `accounts_enumerate` prints them
-side-by-side in the same on-disk wallet.
+- Keypair (non-HD): One secp256k1 private key wrapped
+  as an account. One account, one address, no derivation path.
+
+Both types coexist ins ame wallet in this example
 """
 
 import argparse
 import asyncio
 
 from kaspa import (
-    AccountKind,
-    AccountsDiscoveryKind,
     NewAddressKind,
+    PrivateKey,
     PrvKeyDataVariantKind,
     Resolver,
     Wallet,
 )
-from kaspa.exceptions import WalletAccountAlreadyExistsError
+from kaspa.exceptions import WalletAlreadyExistsError
 
 from shared import (
     FIXED_MNEMONIC_PHRASE,
     NETWORK_ID,
     WALLET_SECRET,
-    open_or_create_wallet,
 )
 
-FILENAME = "wallet_accounts_demo"
-# 32 UTF-8 bytes used directly as a secp256k1 scalar (see wallet-core's
-# SecretKey variant handling in prv_key_data_create). In real use this
-# would be a key you generated or imported, not a literal placeholder.
-FIXED_SECRET_KEY_BYTES = "a" * 32
+TITLE = "example wallet accounts"
+FILENAME = "-".join(TITLE.split(" "))
 
-# Kaspa's SLIP-44 coin type. Combined with BIP44's purpose (44'), every
-# HD account lives at m/44'/111111'/{account_index}'.
-KASPA_COIN_TYPE = 111111
+PRIVATE_KEY = PrivateKey("389840d7696e89c38856a066175e8e92697f0cf182b854c883237a50acaf1f69")
 
 
 def bip32_account_path(account_index: int) -> str:
-    return f"m/44'/{KASPA_COIN_TYPE}'/{account_index}'"
+    return f"m/44'/111111'/{account_index}'"
 
 
-def bip32_address_path(account_index: int, change: bool, address_index: int) -> str:
-    chain = 1 if change else 0
+def bip32_address_path(account_index: int, address_type: str, address_index: int) -> str:
+    if address_type == "receive":
+        chain = 0
+    elif address_type == "change":
+        chain = 1
+    else:
+        raise ValueError(f"address_type must be 'receive' or 'change', got {address_type!r}")
     return f"{bip32_account_path(account_index)}/{chain}/{address_index}"
 
 
@@ -66,6 +57,11 @@ async def main(rpc_url: str | None):
     # ------------------------------------------------------------------
     # Construct and start
     # ------------------------------------------------------------------
+    print()
+    print("-" * 100)
+    print("\tInitialize & Create/Open Wallet")
+    print("-" * 100)
+
     if rpc_url:
         wallet = Wallet(network_id=NETWORK_ID, url=rpc_url)
     else:
@@ -74,123 +70,167 @@ async def main(rpc_url: str | None):
     await wallet.start()
     print("Wallet started\n")
 
-    account_id = await open_or_create_wallet(
-        wallet, FILENAME, title="accounts and addresses demo"
-    )
-    print(f"account_id = {account_id}\n")
+    # ------------------------------------------------------------------
+    # Open existing wallet or create new
+    # ------------------------------------------------------------------
+    try:
+        # Create wallet
+        created = await wallet.wallet_create(
+            wallet_secret=WALLET_SECRET,
+            filename=FILENAME,
+            overwrite_wallet_storage=False,
+            title=TITLE,
+            user_hint="example"
+        )
+        print(f"Created new wallet file {FILENAME}: {created}\n")
+    except WalletAlreadyExistsError:
+        # Open existing wallet
+        print(f"Wallet with filename {FILENAME} already exists\n")
+        opened = await wallet.wallet_open(WALLET_SECRET, True, FILENAME)
+        print(f"Opened existing wallet {FILENAME}: {opened}\n")
 
-    # ==================================================================
-    # BIP32 accounts (HD-derived from the wallet mnemonic)
-    # ==================================================================
-    print("Wallet accounts:")
-    for account in await wallet.accounts_enumerate():
+    # Enumerate and print all accounts
+    all_accounts = await wallet.accounts_enumerate()
+    print("Wallet's existing accounts:")
+    for account in all_accounts:
         print(f" - {account}")
     print()
 
-    account = await wallet.accounts_get(account_id)
-    print(f"Account details: {account}\n")
-    # Default account sits at BIP44 index 0 on Kaspa's coin type.
-    print(f"Derivation path (account 0): {bip32_account_path(0)}\n")
+    # ------------------------------------------------------------------
+    # BIP32 accounts (HD-derived from the wallet mnemonic)
+    # ------------------------------------------------------------------
+    print()
+    print("-" * 100)
+    print("\tBIP32 accounts (HD-derived from the wallet mnemonic)")
+    print("-" * 100)
 
-    await wallet.accounts_activate([account_id])
-    print(f"Activated account {account_id}\n")
-
-    # Derive new receive/change addresses from the default BIP32 account.
-    # Receive addresses live under `.../0/i`, change under `.../1/i`; `i`
-    # is the per-chain index the account advances on each call.
-    new_receive = await wallet.accounts_create_new_address(account_id, NewAddressKind.Receive)
-    print(f"New receive address: {new_receive} (under {bip32_account_path(0)}/0/i)\n")
-
-    new_change = await wallet.accounts_create_new_address(account_id, NewAddressKind.Change)
-    print(f"New change address: {new_change} (under {bip32_account_path(0)}/1/i)\n")
-
-    # Create a *second* BIP32 account at account_index=1, reusing the
-    # same prv_key_data_id as account 0 (same mnemonic). Different HD
-    # subtree → completely different addresses from account 0.
-    mnemonic_prv_id = next(
-        info.id for info in await wallet.prv_key_data_enumerate() if info.name == "demo-key"
-    )
-    try:
-        second_bip32 = await wallet.accounts_create_bip32(
+    # Try to find existing demo account at index 0 first. If it exists, we can
+    # pull the mnemonic prv key id from the account descriptor
+    account_0 = next((a for a in all_accounts if a.account_name == "demo-acct-0"), None)
+    if account_0 is None:
+        # New wallet - need to create the mnemonic prv key, then the account
+        mnemonic_prv_key_id = await wallet.prv_key_data_create(
             wallet_secret=WALLET_SECRET,
-            prv_key_data_id=mnemonic_prv_id,
+            secret=FIXED_MNEMONIC_PHRASE,
+            kind=PrvKeyDataVariantKind.Mnemonic,
+            payment_secret=None,
+            name="demo-mnemonic-key",
+        )
+        account_0 = await wallet.accounts_create_bip32(
+            wallet_secret=WALLET_SECRET,
+            prv_key_data_id=mnemonic_prv_key_id,
+            payment_secret=None,
+            account_name="demo-acct-0",
+            account_index=0,
+        )
+        print(f"Created BIP32 account (index=0): {account_0}\n")
+    else:
+        mnemonic_prv_key_id = account_0.prv_key_data_ids[0]
+        print(f"Using existing BIP32 account (index=0): {account_0}\n")
+
+    print(f"Account {account_0.account_index}")
+    print(f" - derivation path: {bip32_account_path(account_0.account_index)}")
+    print(f" - xpub_keys: {account_0.xpub_keys}")
+    print(f" - existing address counts: receive={account_0.receive_address_index}, change={account_0.change_address_index}\n")
+
+    # Derive new receive addresses for the BIP32 account_0
+    print(f"Account {account_0.account_index} - deriving RECEIVE addresses:")
+    recv_start = account_0.receive_address_index
+    for i in range(5):
+        addr_idx = recv_start + i
+        rec_addr = await wallet.accounts_create_new_address(account_0.account_id, NewAddressKind.Receive)
+        print(f" - path {bip32_address_path(account_0.account_index, 'receive', addr_idx)} - {rec_addr}")
+    print()
+
+    # Derive new change addresses for the BIP32 account_0
+    print(f"Account {account_0.account_index} - deriving CHANGE addresses:")
+    change_start = account_0.change_address_index
+    for i in range(5):
+        addr_idx = change_start + i
+        change_addr = await wallet.accounts_create_new_address(account_0.account_id, NewAddressKind.Change)
+        print(f" - path {bip32_address_path(account_0.account_index, 'change', addr_idx)} - {change_addr}")
+    print()
+
+    # Account at index 1 — same mnemonic, just a different account_index.
+    account_1 = next((a for a in all_accounts if a.account_name == "demo-acct-1"), None)
+    if account_1 is None:
+        account_1 = await wallet.accounts_create_bip32(
+            wallet_secret=WALLET_SECRET,
+            prv_key_data_id=mnemonic_prv_key_id,
             payment_secret=None,
             account_name="demo-acct-1",
             account_index=1,
         )
-        print(f"Created second BIP32 account (index=1): {second_bip32}\n")
-        acct1_id = second_bip32.account_id
-    except WalletAccountAlreadyExistsError:
-        print("Second BIP32 account (index=1) already exists\n")
-        # Find it by elimination — the BIP32 account that isn't our
-        # default. Robust to renames (unlike a name-based lookup).
-        bip32_kind = AccountKind("bip32")
-        acct1_id = next(
-            a.account_id
-            for a in await wallet.accounts_enumerate()
-            if a.kind == bip32_kind and a.account_id != account_id
-        )
-    print(f"Derivation path (account 1): {bip32_account_path(1)}\n")
+        print(f"Created BIP32 account (index=1): {account_1}\n")
+    else:
+        print(f"Using existing BIP32 account (index=1): {account_1}\n")
 
-    # Derive a receive address under account 1 to show the tree diverges
-    # from account 0 despite sharing the same mnemonic. Same caveat as
-    # above: the receive-chain index advances on every run.
-    acct1_receive = await wallet.accounts_create_new_address(acct1_id, NewAddressKind.Receive)
-    print(f"Account 1 receive address: {acct1_receive} (under {bip32_account_path(1)}/0/i)\n")
+    print(f"Account {account_1.account_index}")
+    print(f" - derivation path: {bip32_account_path(account_1.account_index)}")
+    print(f" - xpub_keys: {account_1.xpub_keys}")
+    print(f" - existing address counts: receive={account_1.receive_address_index}, change={account_1.change_address_index}\n")
 
-    # BIP44 discovery: given a mnemonic, derive accounts at
-    # m/44'/111111'/{i}' for i in [0, account_scan_extent) and ask the
-    # node whether any derived addresses have on-chain history. Returns
-    # the highest account index that had activity. RPC is required for
-    # the activity check, so we connect just for this call.
-    await wallet.connect(url=rpc_url, strategy="fallback", timeout_duration=5000)
-    print("RPC connected (for BIP44 discovery)\n")
-    discovered = await wallet.accounts_discovery(
-        discovery_kind=AccountsDiscoveryKind.Bip44,
-        address_scan_extent=10,
-        account_scan_extent=1,
-        bip39_mnemonic=FIXED_MNEMONIC_PHRASE,
-        bip39_passphrase=None,
-    )
-    print(f"BIP44 discovery result (last index with activity): {discovered}\n")
-    await wallet.disconnect()
-    print("RPC disconnected\n")
+    # Derive new receive addresses for the BIP32 account_1
+    print(f"Account {account_1.account_index} - deriving RECEIVE addresses:")
+    recv_start = account_1.receive_address_index
+    for i in range(5):
+        addr_idx = recv_start + i
+        rec_addr = await wallet.accounts_create_new_address(account_1.account_id, NewAddressKind.Receive)
+        print(f" - path {bip32_address_path(account_1.account_index, 'receive', addr_idx)} - {rec_addr}")
+    print()
 
-    # ==================================================================
-    # Section 2 — Keypair account (single pre-existing key, non-HD)
-    #
-    # One secp256k1 private key → one account → one address. No HD tree,
-    # no account_index. Use when importing a key from outside the wallet.
-    # ==================================================================
-    existing = next(
-        (info for info in await wallet.prv_key_data_enumerate() if info.name == "demo-secret-key"),
-        None,
-    )
-    if existing is None:
-        secret_key_prv_id = await wallet.prv_key_data_create(
+    # Derive new change addresses for the BIP32 account_1
+    print(f"Account {account_1.account_index} - deriving CHANGE addresses:")
+    change_start = account_1.change_address_index
+    for i in range(5):
+        addr_idx = change_start + i
+        change_addr = await wallet.accounts_create_new_address(account_1.account_id, NewAddressKind.Change)
+        print(f" - path {bip32_address_path(account_1.account_index, 'change', addr_idx)} - {change_addr}")
+    print()
+
+    # ------------------------------------------------------------------
+    # Keypair account (single key/account/address, non-HD)
+    # ------------------------------------------------------------------
+    print()
+    print("-" * 100)
+    print("\tKeypair account (single key/account/address, non-HD)")
+    print("-" * 100)
+
+    keypair_account = next((a for a in all_accounts if a.account_name == "keypair-acct"), None)
+    if keypair_account is None:
+        secret_key_prv_key_id = await wallet.prv_key_data_create(
             wallet_secret=WALLET_SECRET,
-            secret=FIXED_SECRET_KEY_BYTES,
+            secret=PRIVATE_KEY.to_string(),
             kind=PrvKeyDataVariantKind.SecretKey,
             payment_secret=None,
             name="demo-secret-key",
         )
-    else:
-        secret_key_prv_id = existing.id
-
-    try:
         keypair_account = await wallet.accounts_create_keypair(
             wallet_secret=WALLET_SECRET,
-            prv_key_data_id=secret_key_prv_id,
+            prv_key_data_id=secret_key_prv_key_id,
             ecdsa=False,
-            account_name="kp-acct",
+            account_name="keypair-acct",
         )
         print(f"Created keypair account: {keypair_account}\n")
-    except WalletAccountAlreadyExistsError:
-        print("Keypair account already exists\n")
+    else:
+        print(f"Using existing keypair account: {keypair_account}\n")
 
-    # ==================================================================
-    # Section 3 — Both types live side-by-side in the same wallet file
-    # ==================================================================
+    # Keypair accounts are not HD-derived: account_index/xpub_keys/derivation
+    # counts are all None. ecdsa is True/False depending on creation choice.
+    print(f" - account_index: {keypair_account.account_index}")
+    print(f" - xpub_keys: {keypair_account.xpub_keys}")
+    print(f" - ecdsa: {keypair_account.ecdsa}")
+    print(f" - receive_address_index: {keypair_account.receive_address_index}")
+    print(f" - change_address_index: {keypair_account.change_address_index}\n")
+
+    # ------------------------------------------------------------------
+    # Both types live side-by-side in the same wallet file
+    # ------------------------------------------------------------------
+    print()
+    print("-" * 100)
+    print("\tBoth BIP32 and Keypair types live side-by-side in the same wallet file")
+    print("-" * 100)
+
     print("Private key data entries:")
     for info in await wallet.prv_key_data_enumerate():
         print(f" - {info}")
@@ -199,11 +239,18 @@ async def main(rpc_url: str | None):
     print("Final account list (BIP32 and keypair side-by-side):")
     for account in await wallet.accounts_enumerate():
         print(f" - {account}")
+        print(f"     account_index={account.account_index} ecdsa={account.ecdsa} "
+              f"derivation=(receive={account.receive_address_index}, change={account.change_address_index})")
     print()
 
     # ------------------------------------------------------------------
     # Wind down
     # ------------------------------------------------------------------
+    print()
+    print("-" * 100)
+    print("\tWind down")
+    print("-" * 100)
+
     await wallet.wallet_close()
     print("Wallet closed\n")
 
