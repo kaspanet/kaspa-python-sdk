@@ -14,6 +14,7 @@ use crate::{
         account::{descriptor::PyAccountDescriptor, kind::PyAccountKind},
         api::message::{PyAccountsDiscoveryKind, PyCommitRevealAddressKind, PyNewAddressKind},
         deterministic::PyAccountId,
+        error::PyWalletFasterHexError,
         events::PyWalletEventType,
         storage::{
             interface::PyWalletDescriptor,
@@ -26,6 +27,7 @@ use crate::{
 use ahash::AHashMap;
 use futures::{FutureExt, select};
 use kaspa_addresses::Address;
+use kaspa_utils::hex::FromHex;
 use kaspa_wallet_core::{
     api::*,
     error::Error as NativeError,
@@ -700,7 +702,9 @@ impl PyWallet {
     ///
     /// Args:
     ///     wallet_secret: Password for the open wallet.
-    ///     secret: The secret material (mnemonic phrase, hex seed, or extended key).
+    ///     secret: The secret value. For Mnemonic, the BIP39 phrase. For
+    ///         Bip39Seed and ExtendedPrivateKey, the encoded string. For
+    ///         SecretKey, a 64-character hex-encoded secp256k1 key.
     ///     kind: The variant kind of `secret` (Mnemonic, Bip39Seed, ExtendedPrivateKey, or SecretKey).
     ///     payment_secret: Optional additional secret used to encrypt the entry.
     ///     name: Optional human-readable name for the entry.
@@ -719,12 +723,20 @@ impl PyWallet {
         payment_secret: Option<String>,
         name: Option<String>,
     ) -> PyResult<Bound<'py, PyAny>> {
+        let secret = match kind {
+            PyPrvKeyDataVariantKind::SecretKey => {
+                let bytes = Vec::from_hex(&secret)
+                    .map_err(|err| PyWalletFasterHexError::new_err(err.to_string()))?;
+                Secret::from(bytes)
+            }
+            _ => secret.into(),
+        };
         let request = PrvKeyDataCreateRequest {
             wallet_secret: wallet_secret.into(),
             prv_key_data_args: PrvKeyDataCreateArgs::new(
                 name,
                 payment_secret.map(Secret::from),
-                secret.into(),
+                secret,
                 kind.into(),
             ),
         };

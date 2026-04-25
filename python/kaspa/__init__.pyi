@@ -3098,7 +3098,9 @@ class Wallet:
         
         Args:
             wallet_secret: Password for the open wallet.
-            secret: The secret material (mnemonic phrase, hex seed, or extended key).
+            secret: The secret value. For Mnemonic, the BIP39 phrase. For
+                Bip39Seed and ExtendedPrivateKey, the encoded string. For
+                SecretKey, a 64-character hex-encoded 32-byte secp256k1 key.
             kind: The variant kind of `secret` (Mnemonic, Bip39Seed, ExtendedPrivateKey, or SecretKey).
             payment_secret: Optional additional secret used to encrypt the entry.
             name: Optional human-readable name for the entry.
