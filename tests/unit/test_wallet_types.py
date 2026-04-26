@@ -13,6 +13,7 @@ from kaspa import (
     AccountId,
     AccountKind,
     AccountsDiscoveryKind,
+    Address,
     CommitRevealAddressKind,
     Mnemonic,
     NewAddressKind,
@@ -241,8 +242,8 @@ class TestAccountDescriptor:
         assert isinstance(descriptor.kind, AccountKind)
         assert descriptor.account_name == "acct-desc"
         assert descriptor.balance is None
-        assert isinstance(descriptor.receive_address, str)
-        assert isinstance(descriptor.change_address, str)
+        assert isinstance(descriptor.receive_address, Address)
+        assert isinstance(descriptor.change_address, Address)
 
     async def test_descriptor_repr(self, open_wallet):
         """Test __repr__ includes the account kind and id."""

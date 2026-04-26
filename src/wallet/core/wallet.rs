@@ -14,6 +14,7 @@ use crate::{
         account::{descriptor::PyAccountDescriptor, kind::PyAccountKind},
         api::message::{PyAccountsDiscoveryKind, PyCommitRevealAddressKind, PyNewAddressKind},
         deterministic::PyAccountId,
+        error::PyWalletFasterHexError,
         events::PyWalletEventType,
         storage::{
             interface::PyWalletDescriptor,
@@ -26,6 +27,7 @@ use crate::{
 use ahash::AHashMap;
 use futures::{FutureExt, select};
 use kaspa_addresses::Address;
+use kaspa_utils::hex::FromHex;
 use kaspa_wallet_core::{
     api::*,
     error::Error as NativeError,
@@ -193,8 +195,9 @@ impl PyWallet {
 
     /// Start the wallet runtime and event notification task.
     ///
-    /// Spawns the background task that dispatches wallet events to any
-    /// registered Python listeners. Must be called before opening a wallet.
+    /// Boots the underlying `UtxoProcessor`, the wRPC client notifier, and
+    /// the background task that dispatches wallet events to registered
+    /// Python listeners. Must be called before opening a wallet.
     #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn start<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         self.start_notification_task(py, self.wallet().multiplexer())
@@ -210,7 +213,7 @@ impl PyWallet {
     /// Stop the wallet runtime and event notification task.
     ///
     /// Tears down the background notification task and stops the wallet's
-    /// internal services. Should be called before disposing of the Wallet.
+    /// `UtxoProcessor`.
     #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn stop<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let slf = self.clone();
@@ -344,7 +347,8 @@ impl PyWallet {
     ///     network_id: The NetworkId (or string) to bind the wallet to.
     ///
     /// Raises:
-    ///     Exception: If the wallet rejects the network change.
+    ///     Exception: If the wRPC client is currently connected. Disconnect
+    ///         before changing networks.
     pub fn set_network_id(
         &self,
         #[gen_stub(override_type(type_repr = "NetworkId | str"))] network_id: PyNetworkId,
@@ -538,10 +542,16 @@ impl PyWallet {
         })
     }
 
-    /// Reload the wallet from disk.
+    /// Reboot the wallet's account runtime without re-reading from disk.
+    ///
+    /// Stops every active account, cleans up the `UtxoProcessor`, and emits
+    /// a `WalletReload` event. The cached wallet data is reused as-is; the
+    /// store is not re-opened.
     ///
     /// Args:
-    ///     reactivate: If True, re-activate previously active accounts after reload.
+    ///     reactivate: If True, re-`start()` previously active accounts so
+    ///         they resume UTXO discovery and balance tracking. If False,
+    ///         the caller is responsible for calling `accounts_activate`.
     #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn wallet_reload<'py>(
         &self,
@@ -565,6 +575,14 @@ impl PyWallet {
     ///     wallet_secret: Password for the open wallet.
     ///     title: New human-readable title, or None to leave unchanged.
     ///     filename: New on-disk filename, or None to leave unchanged.
+    ///
+    /// Note:
+    ///     Upstream rusty-kaspa bug: when `filename` is supplied, the rename
+    ///     resolves the new path relative to the process cwd instead of the
+    ///     wallet store folder, and does not append `.wallet`. The renamed
+    ///     file ends up at `./<filename>` and the in-memory store starts
+    ///     pointing at that bare path, leaving the original wallet behind in
+    ///     the store folder. Prefer renaming `title` only until fixed upstream.
     #[gen_stub(override_return_type(type_repr = "None"))]
     #[pyo3(signature = (wallet_secret, title=None, filename=None))]
     pub fn wallet_rename<'py>(
@@ -614,14 +632,18 @@ impl PyWallet {
         })
     }
 
-    /// Export the wallet's encrypted data as raw bytes.
+    /// Export the wallet's serialized data as a hex string.
+    ///
+    /// Returns the borsh-serialized wallet payload (private key data remains
+    /// encrypted with `wallet_secret`). Suitable for backup or transfer to
+    /// another instance via `wallet_import`.
     ///
     /// Args:
     ///     wallet_secret: Password for the open wallet.
     ///     include_transactions: If True, include stored transaction history in the export.
     ///
     /// Returns:
-    ///     str: The encrypted wallet payload as a hex-encoded string, suitable for backup or transfer.
+    ///     str: The wallet payload as a hex-encoded string.
     #[gen_stub(override_return_type(type_repr = "str"))]
     pub fn wallet_export<'py>(
         &self,
@@ -700,7 +722,9 @@ impl PyWallet {
     ///
     /// Args:
     ///     wallet_secret: Password for the open wallet.
-    ///     secret: The secret material (mnemonic phrase, hex seed, or extended key).
+    ///     secret: The secret value. For Mnemonic, the BIP39 phrase. For
+    ///         Bip39Seed and ExtendedPrivateKey, the encoded string. For
+    ///         SecretKey, a 64-character hex-encoded secp256k1 key.
     ///     kind: The variant kind of `secret` (Mnemonic, Bip39Seed, ExtendedPrivateKey, or SecretKey).
     ///     payment_secret: Optional additional secret used to encrypt the entry.
     ///     name: Optional human-readable name for the entry.
@@ -719,12 +743,20 @@ impl PyWallet {
         payment_secret: Option<String>,
         name: Option<String>,
     ) -> PyResult<Bound<'py, PyAny>> {
+        let secret = match kind {
+            PyPrvKeyDataVariantKind::SecretKey => {
+                let bytes = Vec::from_hex(&secret)
+                    .map_err(|err| PyWalletFasterHexError::new_err(err.to_string()))?;
+                Secret::from(bytes)
+            }
+            _ => secret.into(),
+        };
         let request = PrvKeyDataCreateRequest {
             wallet_secret: wallet_secret.into(),
             prv_key_data_args: PrvKeyDataCreateArgs::new(
                 name,
                 payment_secret.map(Secret::from),
-                secret.into(),
+                secret,
                 kind.into(),
             ),
         };
@@ -739,34 +771,37 @@ impl PyWallet {
         })
     }
 
-    /// Remove a private key data entry from the wallet.
-    ///
-    /// Args:
-    ///     wallet_secret: Password for the open wallet.
-    ///     prv_key_data_id: Id of the entry to remove.
-    #[gen_stub(override_return_type(type_repr = "None"))]
-    pub fn prv_key_data_remove<'py>(
-        &self,
-        py: Python<'py>,
-        wallet_secret: String,
-        #[gen_stub(override_type(type_repr = "PrvKeyDataId | str"))]
-        prv_key_data_id: PyPrvKeyDataId,
-    ) -> PyResult<Bound<'py, PyAny>> {
-        let request = PrvKeyDataRemoveRequest {
-            wallet_secret: wallet_secret.into(),
-            prv_key_data_id: prv_key_data_id.into(),
-        };
+    // Remove a private key data entry from the wallet.
+    //
+    // Args:
+    //     wallet_secret: Password for the open wallet.
+    //     prv_key_data_id: Id of the entry to remove.
+    //
+    // Note:
+    //     Not implemented upstream — currently always raises an exception.
+    // #[gen_stub(override_return_type(type_repr = "None"))]
+    // pub fn prv_key_data_remove<'py>(
+    //     &self,
+    //     py: Python<'py>,
+    //     wallet_secret: String,
+    //     #[gen_stub(override_type(type_repr = "PrvKeyDataId | str"))]
+    //     prv_key_data_id: PyPrvKeyDataId,
+    // ) -> PyResult<Bound<'py, PyAny>> {
+    //     let request = PrvKeyDataRemoveRequest {
+    //         wallet_secret: wallet_secret.into(),
+    //         prv_key_data_id: prv_key_data_id.into(),
+    //     };
 
-        let wallet = self.wallet().clone();
-        pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            wallet
-                .prv_key_data_remove_call(request)
-                .await
-                .into_py_result()?;
+    //     let wallet = self.wallet().clone();
+    //     pyo3_async_runtimes::tokio::future_into_py(py, async move {
+    //         wallet
+    //             .prv_key_data_remove_call(request)
+    //             .await
+    //             .into_py_result()?;
 
-            Ok(())
-        })
-    }
+    //         Ok(())
+    //     })
+    // }
 
     /// Fetch metadata for a single private key data entry.
     ///
@@ -972,6 +1007,10 @@ impl PyWallet {
 
     /// Import a keypair (single-key) account from existing private key data.
     ///
+    /// Like `accounts_create_keypair`, but routes through the import path
+    /// which runs an address-discovery scan before adding the account. The
+    /// scan is effectively a no-op for keypair accounts (no HD derivation).
+    ///
     /// Args:
     ///     wallet_secret: Password for the open wallet.
     ///     prv_key_data_id: Id of the private key data entry to use.
@@ -1091,10 +1130,15 @@ impl PyWallet {
 
     /// Ensure a default account of the given kind exists, creating one if needed.
     ///
+    /// Only `bip32` accounts are supported upstream; any other `account_kind`
+    /// raises an exception. If a new account is created, its private key data
+    /// is generated from `mnemonic_phrase` if supplied (with `payment_secret`
+    /// as the BIP39 passphrase) or from a freshly generated mnemonic otherwise.
+    ///
     /// Args:
     ///     wallet_secret: Password for the open wallet.
     ///     account_kind: The AccountKind of the default account to ensure.
-    ///     payment_secret: Optional payment secret used when generating new key data.
+    ///     payment_secret: Optional BIP39 passphrase used when generating new key data.
     ///     mnemonic_phrase: Optional mnemonic phrase to seed the account.
     ///
     /// Returns:
@@ -1191,11 +1235,14 @@ impl PyWallet {
     //     })
     // }
 
-    /// Verify that an account exists in the open wallet.
+    /// Fetch the AccountDescriptor for an account.
     ///
     /// Args:
     ///     account_id: Hex-encoded id of the account to look up.
-    #[gen_stub(override_return_type(type_repr = "None"))]
+    ///
+    /// Returns:
+    ///     AccountDescriptor: Descriptor of the requested account.
+    #[gen_stub(override_return_type(type_repr = "AccountDescriptor"))]
     pub fn accounts_get<'py>(
         &self,
         py: Python<'py>,
@@ -1207,9 +1254,9 @@ impl PyWallet {
 
         let wallet = self.wallet().clone();
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            wallet.accounts_get_call(request).await.into_py_result()?;
+            let resp = wallet.accounts_get_call(request).await.into_py_result()?;
 
-            Ok(())
+            Ok(PyAccountDescriptor::from(resp.account_descriptor))
         })
     }
 
@@ -1255,7 +1302,9 @@ impl PyWallet {
     ///     priority_fee_sompi: Priority fee specification (Fees object or dict).
     ///     fee_rate: Optional explicit fee rate (sompi per gram of mass).
     ///     payload: Optional binary payload to embed in the transaction.
-    ///     destination: Optional list of PaymentOutputs. If None, sends to change.
+    ///     destination: Optional list of PaymentOutputs. If None, the entire
+    ///         sweepable balance is routed to the account's change address
+    ///         (useful for compounding/sweeping UTXOs).
     ///
     /// Returns:
     ///     GeneratorSummary: Summary of the estimated transaction(s).
@@ -1310,7 +1359,9 @@ impl PyWallet {
     ///     payment_secret: Optional payment secret if the source key data is encrypted with one.
     ///     fee_rate: Optional explicit fee rate (sompi per gram of mass).
     ///     payload: Optional binary payload to embed in the transaction.
-    ///     destination: Optional list of PaymentOutputs. If None, sends to change.
+    ///     destination: Optional list of PaymentOutputs. If None, the entire
+    ///         sweepable balance is routed to the account's change address
+    ///         (useful for compounding/sweeping UTXOs).
     ///
     /// Returns:
     ///     GeneratorSummary: Summary of the submitted transaction(s).
@@ -1365,8 +1416,8 @@ impl PyWallet {
     ///     min_amount_sompi: Optional minimum UTXO value to include, in sompi.
     ///
     /// Returns:
-    ///     dict: A serialized list of UTXO entries belonging to the account.
-    #[gen_stub(override_return_type(type_repr = "dict"))]
+    ///     list[dict]: Serialized UTXO entries belonging to the account.
+    #[gen_stub(override_return_type(type_repr = "list[dict]"))]
     #[pyo3(signature = (account_id, addresses=None, min_amount_sompi=None))]
     pub fn accounts_get_utxos<'py>(
         &self,
@@ -1395,6 +1446,9 @@ impl PyWallet {
 
     /// Transfer funds between two accounts in the same wallet.
     ///
+    /// Unlike funds sent to an external address, transferred funds are
+    /// available immediately on transaction acceptance (no maturity wait).
+    ///
     /// Args:
     ///     wallet_secret: Password for the open wallet.
     ///     source_account_id: Hex-encoded id of the sending account.
@@ -1402,7 +1456,7 @@ impl PyWallet {
     ///     transfer_amount_sompi: Amount to transfer in sompi.
     ///     payment_secret: Optional payment secret if the source key data is encrypted with one.
     ///     fee_rate: Optional explicit fee rate (sompi per gram of mass).
-    ///     priority_fee_sompi: Optional priority fee specification.
+    ///     priority_fee_sompi: Optional priority fee specification. Defaults to `SenderPays(0)`.
     ///
     /// Returns:
     ///     dict: The transfer response, including generator summary and transaction ids.
@@ -1625,6 +1679,10 @@ impl PyWallet {
     ///
     /// Args:
     ///     wallet_secret: Password for the open wallet.
+    ///
+    /// Note:
+    ///     Calling `flush` outside of an active `batch` panics in the
+    ///     upstream local store. Always pair `flush` with a prior `batch`.
     #[gen_stub(override_return_type(type_repr = "None"))]
     pub fn flush<'py>(
         &self,
@@ -1642,7 +1700,11 @@ impl PyWallet {
         })
     }
 
-    /// Persist arbitrary named context data alongside the wallet.
+    /// Store arbitrary named context data in the wallet runtime.
+    ///
+    /// The data lives in memory for the lifetime of the wallet instance and
+    /// is not written to disk. Useful for syncing UI state between front-end
+    /// and back-end processes that share a single wallet instance.
     ///
     /// Args:
     ///     name: A name identifying the context entry.
@@ -1693,21 +1755,23 @@ impl PyWallet {
         })
     }
 
-    /// Enumerate entries in the wallet address book.
-    ///
-    /// Note: this is currently a no-op placeholder that returns nothing; the
-    /// underlying API is reserved for a future address book implementation.
-    #[gen_stub(override_return_type(type_repr = "None"))]
-    pub fn address_book_enumerate<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-        let wallet = self.wallet().clone();
-        pyo3_async_runtimes::tokio::future_into_py(py, async move {
-            wallet
-                .address_book_enumerate_call(AddressBookEnumerateRequest {})
-                .await
-                .into_py_result()?;
-            Ok(())
-        })
-    }
+    // Temporarily removed until upstream is implemented
+    // Enumerate entries in the wallet address book.
+    //
+    // Note:
+    //     Not implemented upstream — currently always raises an exception.
+    //     The underlying API is reserved for a future address book implementation.
+    // #[gen_stub(override_return_type(type_repr = "None"))]
+    // pub fn address_book_enumerate<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+    //     let wallet = self.wallet().clone();
+    //     pyo3_async_runtimes::tokio::future_into_py(py, async move {
+    //         wallet
+    //             .address_book_enumerate_call(AddressBookEnumerateRequest {})
+    //             .await
+    //             .into_py_result()?;
+    //         Ok(())
+    //     })
+    // }
 }
 
 // Wallet API transactions_ functions

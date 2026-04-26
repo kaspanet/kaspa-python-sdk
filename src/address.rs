@@ -159,6 +159,12 @@ impl From<Address> for PyAddress {
     }
 }
 
+impl From<&Address> for PyAddress {
+    fn from(value: &Address) -> Self {
+        PyAddress(value.clone())
+    }
+}
+
 impl From<PyAddress> for Address {
     fn from(value: PyAddress) -> Address {
         value.0

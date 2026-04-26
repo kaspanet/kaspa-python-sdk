@@ -2,12 +2,12 @@
 
 ### Added
 - Class `Wallet` exposed to Python, providing the full rusty-kaspa wallet API: lifecycle (`start`, `stop`, `connect`, `disconnect`, `set_network_id`, `get_status`), wallet file operations (`wallet_enumerate`, `wallet_create`, `wallet_open`, `wallet_close`, `wallet_reload`, `wallet_rename`, `wallet_change_secret`, `wallet_export`, `wallet_import`), private key data (`prv_key_data_enumerate`, `prv_key_data_create`, `prv_key_data_remove`, `prv_key_data_get`), accounts (`accounts_enumerate`, `accounts_create_bip32`, `accounts_create_keypair`, `accounts_import_bip32`, `accounts_import_keypair`, `accounts_rename`, `accounts_discovery`, `accounts_ensure_default`, `accounts_activate`, `accounts_get`, `accounts_create_new_address`, `accounts_get_utxos`), spending (`accounts_estimate`, `accounts_send`, `accounts_transfer`, `accounts_commit_reveal`, `accounts_commit_reveal_manual`), transaction history (`transactions_data_get`, `transactions_replace_note`, `transactions_replace_metadata`), storage (`batch`, `flush`, `retain_context`, `address_book_enumerate`), fee rate (`fee_rate_estimate`, `fee_rate_poller_enable`, `fee_rate_poller_disable`), and event listeners (`add_event_listener`, `remove_event_listener`).
-- Class `AccountDescriptor` exposed to Python. Contains account metadata including kind, ID, name, balance, and addresses.
+- Class `AccountDescriptor` exposed to Python. Contains account metadata including kind, ID, name, balance, and addresses, and account kind specific properties: `account_index`, `xpub_keys`, `ecdsa`, `receive_address_index`, and `change_address_index` (each `None` when the property is not applicable to the account kind).
 - Class `AccountId` exposed to Python. Hex-encoded identifier for a wallet account.
 - Class `PrvKeyDataId` exposed to Python. Hex-encoded identifier for a private key data entry. Constructible from a hex string and accepted interchangeably with `str` by `Wallet` methods.
 - Class `WalletDescriptor` exposed to Python. Contains wallet metadata including title and filename.
 - Class `PrvKeyDataInfo` exposed to Python. Holds private key data info including ID, name, and encryption status.
-- Class `PaymentOutput` exposed to Python. Represents a transaction output with a destination address and amount.
+- Class `PaymentOutput` is now constructible via `PaymentOutput(address, amount)`, and accepted as either an instance or a `{"address": ..., "amount": ...}` dict wherever the bindings take a `PaymentOutput`.
 - Class `Fees` exposed to Python. Specifies transaction fees as an absolute sompi amount with an optional fee source.
 - Enum `WalletEventType` exposed to Python. Enumerates wallet event types such as connection, account, and transaction events.
 - Enum `AccountsDiscoveryKind` exposed to Python. Specifies the account discovery method (e.g. Bip44).
@@ -18,7 +18,7 @@
 - Enum `FeeSource` exposed to Python. Indicates who pays the transaction fee: sender or receiver.
 - Enum `AccountKind` exposed to Python. Represents the account type (legacy, bip32, multisig, keypair, etc.).
 - Wallet-specific exception classes populated into the `kaspa.exceptions` submodule, covering the rusty-kaspa wallet error variants (e.g. `WalletInsufficientFundsError`, `WalletAccountNotFoundError`, `WalletNotSyncedError`, etc.).
-- Example `examples/wallet.py` demonstrating end-to-end wallet usage.
+- Examples under `examples/wallet/` demonstrating wallet usage
 - Pytest options `--network-id` and `--rpc-url` for targeting integration tests at a specific network / node.
 
 ### Changed
@@ -27,6 +27,7 @@
 - `build-dev` script builds with `--strip` for smaller artifacts.
 - `pyproject.toml`: set `python-source = "python"` and moved the package stub tree under `python/kaspa/` (`kaspa.pyi` → `python/kaspa/__init__.pyi`).
 - `Hash` accepts `str` in addition to `Hash` instances wherever it is used as an argument, and gained `to_hex()` and `__repr__` methods.
+- Added `Balance` `__repr__` method.
 
 ### Fixed
 - `AccountDescriptor.__repr__` now correctly renders optional fields.
