@@ -2411,17 +2411,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#kaspa.Wallet.address_book_enumerate" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;address_book_enumerate
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#kaspa.Wallet.batch" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2547,17 +2536,6 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;prv_key_data_get
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#kaspa.Wallet.prv_key_data_remove" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;prv_key_data_remove
       
     </span>
   </a>
@@ -12209,17 +12187,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#kaspa.Wallet.address_book_enumerate" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;address_book_enumerate
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#kaspa.Wallet.batch" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -12345,17 +12312,6 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;prv_key_data_get
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#kaspa.Wallet.prv_key_data_remove" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;prv_key_data_remove
       
     </span>
   </a>
@@ -13965,6 +13921,10 @@ has been used on-chain. Useful when restoring a wallet from a mnemonic.</p>
     <div class="doc doc-contents ">
 
         <p>Ensure a default account of the given kind exists, creating one if needed.</p>
+<p>Only <code>bip32</code> accounts are supported upstream; any other <code>account_kind</code>
+raises an exception. If a new account is created, its private key data
+is generated from <code>mnemonic_phrase</code> if supplied (with <code>payment_secret</code>
+as the BIP39 passphrase) or from a freshly generated mnemonic otherwise.</p>
 
 
 <table>
@@ -14013,7 +13973,7 @@ has been used on-chain. Useful when restoring a wallet from a mnemonic.</p>
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>Optional payment secret used when generating new key data.</p>
+                <p>Optional BIP39 passphrase used when generating new key data.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -14231,7 +14191,9 @@ a summary of what a real send would look like.</p>
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>Optional list of PaymentOutputs. If None, sends to change.</p>
+                <p>Optional list of PaymentOutputs. If None, the entire
+sweepable balance is routed to the account's change address
+(useful for compounding/sweeping UTXOs).</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -14289,12 +14251,12 @@ a summary of what a real send would look like.</p>
 
 
 <a href="#kaspa.Wallet.accounts_get" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">accounts_get</span><span class="p">(</span><span class="n">account_id</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.AccountId" href="../AccountId/#kaspa.AccountId">AccountId</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">accounts_get</span><span class="p">(</span><span class="n">account_id</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.AccountId" href="../AccountId/#kaspa.AccountId">AccountId</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.AccountDescriptor" href="../AccountDescriptor/#kaspa.AccountDescriptor">AccountDescriptor</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
 
-        <p>Verify that an account exists in the open wallet.</p>
+        <p>Fetch the AccountDescriptor for an account.</p>
 
 
 <table>
@@ -14325,6 +14287,34 @@ a summary of what a real send would look like.</p>
     </table>
 
 
+<table>
+      <thead>
+        <tr>
+          <th><span class="doc-section-title">RETURNS</span></th>
+          <th><span>DESCRIPTION</span></th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>AccountDescriptor</code>
+            </td>
+            <td class="doc-returns-details">
+              <div class="doc-md-description">
+                <p>Descriptor of the requested account.</p>
+              </div>
+                <p>
+                  <span class="doc-returns-annotation">
+                    <b>TYPE:</b>
+                      <code><a class="autorefs autorefs-internal" title="kaspa.AccountDescriptor" href="../AccountDescriptor/#kaspa.AccountDescriptor">AccountDescriptor</a></code>
+                  </span>
+                </p>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
     </div>
 
 </div>
@@ -14337,7 +14327,7 @@ a summary of what a real send would look like.</p>
 
 
 <a href="#kaspa.Wallet.accounts_get_utxos" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">accounts_get_utxos</span><span class="p">(</span><span class="n">account_id</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.AccountId" href="../AccountId/#kaspa.AccountId">AccountId</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">addresses</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="n"><span title="typing.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="kaspa.Address" href="../Address/#kaspa.Address">Address</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">min_amount_sompi</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.int">int</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="dict">dict</span></span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">accounts_get_utxos</span><span class="p">(</span><span class="n">account_id</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.AccountId" href="../AccountId/#kaspa.AccountId">AccountId</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">addresses</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="n"><span title="typing.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="kaspa.Address" href="../Address/#kaspa.Address">Address</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">min_amount_sompi</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.int">int</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="dict">dict</span></span><span class="p">]</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -14423,18 +14413,14 @@ a summary of what a real send would look like.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                <code>dict</code>
+                <span class="doc-returns-annotation">
+                    <code><span title="list">list</span>[<span title="dict">dict</span>]</code>
+                </span>
             </td>
             <td class="doc-returns-details">
               <div class="doc-md-description">
-                <p>A serialized list of UTXO entries belonging to the account.</p>
+                <p>list[dict]: Serialized UTXO entries belonging to the account.</p>
               </div>
-                <p>
-                  <span class="doc-returns-annotation">
-                    <b>TYPE:</b>
-                      <code><span title="dict">dict</span></code>
-                  </span>
-                </p>
             </td>
           </tr>
       </tbody>
@@ -14613,6 +14599,9 @@ address discovery before adding the account.</p>
     <div class="doc doc-contents ">
 
         <p>Import a keypair (single-key) account from existing private key data.</p>
+<p>Like <code>accounts_create_keypair</code>, but routes through the import path
+which runs an address-discovery scan before adding the account. The
+scan is effectively a no-op for keypair accounts (no HD derivation).</p>
 
 
 <table>
@@ -14949,7 +14938,9 @@ address discovery before adding the account.</p>
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>Optional list of PaymentOutputs. If None, sends to change.</p>
+                <p>Optional list of PaymentOutputs. If None, the entire
+sweepable balance is routed to the account's change address
+(useful for compounding/sweeping UTXOs).</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -15013,6 +15004,8 @@ address discovery before adding the account.</p>
     <div class="doc doc-contents ">
 
         <p>Transfer funds between two accounts in the same wallet.</p>
+<p>Unlike funds sent to an external address, transferred funds are
+available immediately on transaction acceptance (no maturity wait).</p>
 
 
 <table>
@@ -15133,7 +15126,7 @@ address discovery before adding the account.</p>
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>Optional priority fee specification.</p>
+                <p>Optional priority fee specification. Defaults to <code>SenderPays(0)</code>.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -15281,28 +15274,6 @@ address discovery before adding the account.</p>
           </tr>
       </tbody>
     </table>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h2 id="kaspa.Wallet.address_book_enumerate" class="doc doc-heading">
-<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">address_book_enumerate</span>
-
-
-<a href="#kaspa.Wallet.address_book_enumerate" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">address_book_enumerate</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
-</span></code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Enumerate entries in the wallet address book.</p>
-<p>Note: this is currently a no-op placeholder that returns nothing; the
-underlying API is reserved for a future address book implementation.</p>
 
 
     </div>
@@ -15723,6 +15694,12 @@ until <code>flush</code> is called.</p>
     </table>
 
 
+<details class="note" open>
+  <summary>Note</summary>
+  <p>Calling <code>flush</code> outside of an active <code>batch</code> panics in the
+upstream local store. Always pair <code>flush</code> with a prior <code>batch</code>.</p>
+</details>
+
     </div>
 
 </div>
@@ -15853,7 +15830,9 @@ until <code>flush</code> is called.</p>
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>The secret material (mnemonic phrase, hex seed, or extended key).</p>
+                <p>The secret value. For Mnemonic, the BIP39 phrase. For
+Bip39Seed and ExtendedPrivateKey, the encoded string. For
+SecretKey, a 64-character hex-encoded secp256k1 key.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -16118,70 +16097,6 @@ until <code>flush</code> is called.</p>
 <div class="doc doc-object doc-function">
 
 
-<h2 id="kaspa.Wallet.prv_key_data_remove" class="doc doc-heading">
-<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">prv_key_data_remove</span>
-
-
-<a href="#kaspa.Wallet.prv_key_data_remove" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">prv_key_data_remove</span><span class="p">(</span><span class="n">wallet_secret</span><span class="p">:</span> <span class="n"><span title="builtins.str">str</span></span><span class="p">,</span> <span class="n">prv_key_data_id</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.PrvKeyDataId" href="../PrvKeyDataId/#kaspa.PrvKeyDataId">PrvKeyDataId</a></span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
-</span></code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Remove a private key data entry from the wallet.</p>
-
-
-<table>
-      <thead>
-        <tr>
-          <th><span class="doc-section-title">PARAMETER</span></th>
-          <th><span>DESCRIPTION</span></th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>wallet_secret</code>
-            </td>
-            <td class="doc-param-details">
-              <div class="doc-md-description">
-                <p>Password for the open wallet.</p>
-              </div>
-              <p>
-                  <span class="doc-param-annotation">
-                    <b>TYPE:</b>
-                      <code><span title="builtins.str">str</span></code>
-                  </span>
-              </p>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>prv_key_data_id</code>
-            </td>
-            <td class="doc-param-details">
-              <div class="doc-md-description">
-                <p>Id of the entry to remove.</p>
-              </div>
-              <p>
-                  <span class="doc-param-annotation">
-                    <b>TYPE:</b>
-                      <code><a class="autorefs autorefs-internal" title="kaspa.PrvKeyDataId" href="../PrvKeyDataId/#kaspa.PrvKeyDataId">PrvKeyDataId</a> | <span title="str">str</span></code>
-                  </span>
-              </p>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
 <h2 id="kaspa.Wallet.remove_event_listener" class="doc doc-heading">
 <code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">remove_event_listener</span>
 
@@ -16262,7 +16177,10 @@ callbacks for the given event.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Persist arbitrary named context data alongside the wallet.</p>
+        <p>Store arbitrary named context data in the wallet runtime.</p>
+<p>The data lives in memory for the lifetime of the wallet instance and
+is not written to disk. Useful for syncing UI state between front-end
+and back-end processes that share a single wallet instance.</p>
 
 
 <table>
@@ -16377,7 +16295,8 @@ callbacks for the given event.</p>
             </td>
             <td class="doc-raises-details">
               <div class="doc-md-description">
-                <p>If the wallet rejects the network change.</p>
+                <p>If the wRPC client is currently connected. Disconnect
+before changing networks.</p>
               </div>
             </td>
           </tr>
@@ -16403,8 +16322,9 @@ callbacks for the given event.</p>
     <div class="doc doc-contents ">
 
         <p>Start the wallet runtime and event notification task.</p>
-<p>Spawns the background task that dispatches wallet events to any
-registered Python listeners. Must be called before opening a wallet.</p>
+<p>Boots the underlying <code>UtxoProcessor</code>, the wRPC client notifier, and
+the background task that dispatches wallet events to registered
+Python listeners. Must be called before opening a wallet.</p>
 
 
     </div>
@@ -16426,7 +16346,7 @@ registered Python listeners. Must be called before opening a wallet.</p>
 
         <p>Stop the wallet runtime and event notification task.</p>
 <p>Tears down the background notification task and stops the wallet's
-internal services. Should be called before disposing of the Wallet.</p>
+<code>UtxoProcessor</code>.</p>
 
 
     </div>
@@ -17074,7 +16994,10 @@ internal services. Should be called before disposing of the Wallet.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Export the wallet's encrypted data as raw bytes.</p>
+        <p>Export the wallet's serialized data as a hex string.</p>
+<p>Returns the borsh-serialized wallet payload (private key data remains
+encrypted with <code>wallet_secret</code>). Suitable for backup or transfer to
+another instance via <code>wallet_import</code>.</p>
 
 
 <table>
@@ -17135,7 +17058,7 @@ internal services. Should be called before disposing of the Wallet.</p>
             </td>
             <td class="doc-returns-details">
               <div class="doc-md-description">
-                <p>The encrypted wallet payload as a hex-encoded string, suitable for backup or transfer.</p>
+                <p>The wallet payload as a hex-encoded string.</p>
               </div>
                 <p>
                   <span class="doc-returns-annotation">
@@ -17370,7 +17293,10 @@ internal services. Should be called before disposing of the Wallet.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Reload the wallet from disk.</p>
+        <p>Reboot the wallet's account runtime without re-reading from disk.</p>
+<p>Stops every active account, cleans up the <code>UtxoProcessor</code>, and emits
+a <code>WalletReload</code> event. The cached wallet data is reused as-is; the
+store is not re-opened.</p>
 
 
 <table>
@@ -17387,7 +17313,9 @@ internal services. Should be called before disposing of the Wallet.</p>
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>If True, re-activate previously active accounts after reload.</p>
+                <p>If True, re-<code>start()</code> previously active accounts so
+they resume UTXO discovery and balance tracking. If False,
+the caller is responsible for calling <code>accounts_activate</code>.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -17488,6 +17416,16 @@ internal services. Should be called before disposing of the Wallet.</p>
       </tbody>
     </table>
 
+
+<details class="note" open>
+  <summary>Note</summary>
+  <p>Upstream rusty-kaspa bug: when <code>filename</code> is supplied, the rename
+resolves the new path relative to the process cwd instead of the
+wallet store folder, and does not append <code>.wallet</code>. The renamed
+file ends up at <code>./&lt;filename&gt;</code> and the in-memory store starts
+pointing at that bare path, leaving the original wallet behind in
+the store folder. Prefer renaming <code>title</code> only until fixed upstream.</p>
+</details>
 
     </div>
 
