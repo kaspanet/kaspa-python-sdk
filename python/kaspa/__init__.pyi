@@ -3002,15 +3002,16 @@ class Wallet:
         r"""
         Start the wallet runtime and event notification task.
         
-        Spawns the background task that dispatches wallet events to any
-        registered Python listeners. Must be called before opening a wallet.
+        Boots the underlying `UtxoProcessor`, the wRPC client notifier, and
+        the background task that dispatches wallet events to registered
+        Python listeners. Must be called before opening a wallet.
         """
     def stop(self) -> None:
         r"""
         Stop the wallet runtime and event notification task.
         
         Tears down the background notification task and stops the wallet's
-        internal services. Should be called before disposing of the Wallet.
+        `UtxoProcessor`.
         """
     def connect(self, block_async_connect: typing.Optional[builtins.bool] = None, strategy: typing.Optional[builtins.str] = None, url: typing.Optional[builtins.str] = None, timeout_duration: typing.Optional[builtins.int] = None, retry_interval: typing.Optional[builtins.int] = None) -> None:
         r"""
@@ -3055,7 +3056,8 @@ class Wallet:
             network_id: The NetworkId (or string) to bind the wallet to.
         
         Raises:
-            Exception: If the wallet rejects the network change.
+            Exception: If the wRPC client is currently connected. Disconnect
+                before changing networks.
         """
     def wallet_enumerate(self) -> list[WalletDescriptor]:
         r"""
@@ -3096,10 +3098,16 @@ class Wallet:
         """
     def wallet_reload(self, reactivate: builtins.bool) -> None:
         r"""
-        Reload the wallet from disk.
+        Reboot the wallet's account runtime without re-reading from disk.
+        
+        Stops every active account, cleans up the `UtxoProcessor`, and emits
+        a `WalletReload` event. The cached wallet data is reused as-is; the
+        store is not re-opened.
         
         Args:
-            reactivate: If True, re-activate previously active accounts after reload.
+            reactivate: If True, re-`start()` previously active accounts so
+                they resume UTXO discovery and balance tracking. If False,
+                the caller is responsible for calling `accounts_activate`.
         """
     def wallet_rename(self, wallet_secret: builtins.str, title: typing.Optional[builtins.str] = None, filename: typing.Optional[builtins.str] = None) -> None:
         r"""
@@ -3109,6 +3117,14 @@ class Wallet:
             wallet_secret: Password for the open wallet.
             title: New human-readable title, or None to leave unchanged.
             filename: New on-disk filename, or None to leave unchanged.
+        
+        Note:
+            Upstream rusty-kaspa bug: when `filename` is supplied, the rename
+            resolves the new path relative to the process cwd instead of the
+            wallet store folder, and does not append `.wallet`. The renamed
+            file ends up at `./<filename>` and the in-memory store starts
+            pointing at that bare path, leaving the original wallet behind in
+            the store folder. Prefer renaming `title` only until fixed upstream.
         """
     def wallet_change_secret(self, old_wallet_secret: builtins.str, new_wallet_secret: builtins.str) -> None:
         r"""
@@ -3120,14 +3136,18 @@ class Wallet:
         """
     def wallet_export(self, wallet_secret: builtins.str, include_transactions: builtins.bool) -> str:
         r"""
-        Export the wallet's encrypted data as raw bytes.
+        Export the wallet's serialized data as a hex string.
+        
+        Returns the borsh-serialized wallet payload (private key data remains
+        encrypted with `wallet_secret`). Suitable for backup or transfer to
+        another instance via `wallet_import`.
         
         Args:
             wallet_secret: Password for the open wallet.
             include_transactions: If True, include stored transaction history in the export.
         
         Returns:
-            str: The encrypted wallet payload as a hex-encoded string, suitable for backup or transfer.
+            str: The wallet payload as a hex-encoded string.
         """
     def wallet_import(self, wallet_secret: builtins.str, wallet_data: str | bytes | list[int]) -> dict:
         r"""
@@ -3162,14 +3182,6 @@ class Wallet:
         
         Returns:
             PrvKeyDataId: The id of the newly created private key data entry.
-        """
-    def prv_key_data_remove(self, wallet_secret: builtins.str, prv_key_data_id: PrvKeyDataId | str) -> None:
-        r"""
-        Remove a private key data entry from the wallet.
-        
-        Args:
-            wallet_secret: Password for the open wallet.
-            prv_key_data_id: Id of the entry to remove.
         """
     def prv_key_data_get(self, wallet_secret: builtins.str, prv_key_data_id: PrvKeyDataId | str) -> PrvKeyDataInfo:
         r"""
@@ -3240,6 +3252,10 @@ class Wallet:
         r"""
         Import a keypair (single-key) account from existing private key data.
         
+        Like `accounts_create_keypair`, but routes through the import path
+        which runs an address-discovery scan before adding the account. The
+        scan is effectively a no-op for keypair accounts (no HD derivation).
+        
         Args:
             wallet_secret: Password for the open wallet.
             prv_key_data_id: Id of the private key data entry to use.
@@ -3279,10 +3295,15 @@ class Wallet:
         r"""
         Ensure a default account of the given kind exists, creating one if needed.
         
+        Only `bip32` accounts are supported upstream; any other `account_kind`
+        raises an exception. If a new account is created, its private key data
+        is generated from `mnemonic_phrase` if supplied (with `payment_secret`
+        as the BIP39 passphrase) or from a freshly generated mnemonic otherwise.
+        
         Args:
             wallet_secret: Password for the open wallet.
             account_kind: The AccountKind of the default account to ensure.
-            payment_secret: Optional payment secret used when generating new key data.
+            payment_secret: Optional BIP39 passphrase used when generating new key data.
             mnemonic_phrase: Optional mnemonic phrase to seed the account.
         
         Returns:
@@ -3297,10 +3318,13 @@ class Wallet:
         """
     def accounts_get(self, account_id: AccountId | str) -> AccountDescriptor:
         r"""
-        Verify that an account exists in the open wallet.
+        Fetch the AccountDescriptor for an account.
         
         Args:
             account_id: Hex-encoded id of the account to look up.
+        
+        Returns:
+            AccountDescriptor: Descriptor of the requested account.
         """
     def accounts_create_new_address(self, account_id: AccountId | str, address_kind: NewAddressKind | str) -> Address:
         r"""
@@ -3325,7 +3349,9 @@ class Wallet:
             priority_fee_sompi: Priority fee specification (Fees object or dict).
             fee_rate: Optional explicit fee rate (sompi per gram of mass).
             payload: Optional binary payload to embed in the transaction.
-            destination: Optional list of PaymentOutputs. If None, sends to change.
+            destination: Optional list of PaymentOutputs. If None, the entire
+                sweepable balance is routed to the account's change address
+                (useful for compounding/sweeping UTXOs).
         
         Returns:
             GeneratorSummary: Summary of the estimated transaction(s).
@@ -3341,12 +3367,14 @@ class Wallet:
             payment_secret: Optional payment secret if the source key data is encrypted with one.
             fee_rate: Optional explicit fee rate (sompi per gram of mass).
             payload: Optional binary payload to embed in the transaction.
-            destination: Optional list of PaymentOutputs. If None, sends to change.
+            destination: Optional list of PaymentOutputs. If None, the entire
+                sweepable balance is routed to the account's change address
+                (useful for compounding/sweeping UTXOs).
         
         Returns:
             GeneratorSummary: Summary of the submitted transaction(s).
         """
-    def accounts_get_utxos(self, account_id: AccountId | str, addresses: None | typing.Sequence[Address | str] = None, min_amount_sompi: typing.Optional[builtins.int] = None) -> dict:
+    def accounts_get_utxos(self, account_id: AccountId | str, addresses: None | typing.Sequence[Address | str] = None, min_amount_sompi: typing.Optional[builtins.int] = None) -> list[dict]:
         r"""
         List UTXOs available to an account, optionally filtered.
         
@@ -3356,11 +3384,14 @@ class Wallet:
             min_amount_sompi: Optional minimum UTXO value to include, in sompi.
         
         Returns:
-            dict: A serialized list of UTXO entries belonging to the account.
+            list[dict]: Serialized UTXO entries belonging to the account.
         """
     def accounts_transfer(self, wallet_secret: builtins.str, source_account_id: AccountId | str, destination_account_id: AccountId | str, transfer_amount_sompi: builtins.int, payment_secret: typing.Optional[builtins.str] = None, fee_rate: typing.Optional[builtins.float] = None, priority_fee_sompi: None | Fees | dict = None) -> dict:
         r"""
         Transfer funds between two accounts in the same wallet.
+        
+        Unlike funds sent to an external address, transferred funds are
+        available immediately on transaction acceptance (no maturity wait).
         
         Args:
             wallet_secret: Password for the open wallet.
@@ -3369,7 +3400,7 @@ class Wallet:
             transfer_amount_sompi: Amount to transfer in sompi.
             payment_secret: Optional payment secret if the source key data is encrypted with one.
             fee_rate: Optional explicit fee rate (sompi per gram of mass).
-            priority_fee_sompi: Optional priority fee specification.
+            priority_fee_sompi: Optional priority fee specification. Defaults to `SenderPays(0)`.
         
         Returns:
             dict: The transfer response, including generator summary and transaction ids.
@@ -3431,10 +3462,18 @@ class Wallet:
         
         Args:
             wallet_secret: Password for the open wallet.
+        
+        Note:
+            Calling `flush` outside of an active `batch` panics in the
+            upstream local store. Always pair `flush` with a prior `batch`.
         """
     def retain_context(self, name: builtins.str, data: None | str | bytes | list[int] = None) -> None:
         r"""
-        Persist arbitrary named context data alongside the wallet.
+        Store arbitrary named context data in the wallet runtime.
+        
+        The data lives in memory for the lifetime of the wallet instance and
+        is not written to disk. Useful for syncing UI state between front-end
+        and back-end processes that share a single wallet instance.
         
         Args:
             name: A name identifying the context entry.
@@ -3449,13 +3488,6 @@ class Wallet:
         
         Returns:
             dict: Status information including connection state, sync state, and selected network.
-        """
-    def address_book_enumerate(self) -> None:
-        r"""
-        Enumerate entries in the wallet address book.
-        
-        Note: this is currently a no-op placeholder that returns nothing; the
-        underlying API is reserved for a future address book implementation.
         """
     def transactions_data_get(self, account_id: AccountId | str, network_id: NetworkId | str, start: builtins.int, end: builtins.int, filter: None | typing.Sequence[TransactionKind | str] = None) -> dict:
         r"""
