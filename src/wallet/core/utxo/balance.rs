@@ -47,6 +47,22 @@ impl PyBalance {
     pub fn get_stasis_utxo_count(&self) -> usize {
         self.0.stasis_utxo_count
     }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The Balance as a repr string.
+    pub fn __repr__(&self) -> String {
+        format!(
+            "Balance(mature={}, pending={}, outgoing={}, mature_utxo_count={}, pending_utxo_count={}, stasis_utxo_count={})",
+            self.0.mature,
+            self.0.pending,
+            self.0.outgoing,
+            self.0.mature_utxo_count,
+            self.0.pending_utxo_count,
+            self.0.stasis_utxo_count,
+        )
+    }
 }
 
 impl From<Balance> for PyBalance {

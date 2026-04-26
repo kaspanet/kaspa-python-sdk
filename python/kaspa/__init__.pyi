@@ -302,6 +302,13 @@ class Balance:
         r"""
         Number of stasis (coinbase) UTXOs.
         """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The Balance as a repr string.
+        """
 
 @typing.final
 class BalanceStrings:
