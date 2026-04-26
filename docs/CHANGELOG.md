@@ -7,7 +7,7 @@
 - Class `PrvKeyDataId` exposed to Python. Hex-encoded identifier for a private key data entry. Constructible from a hex string and accepted interchangeably with `str` by `Wallet` methods.
 - Class `WalletDescriptor` exposed to Python. Contains wallet metadata including title and filename.
 - Class `PrvKeyDataInfo` exposed to Python. Holds private key data info including ID, name, and encryption status.
-- Class `PaymentOutput` exposed to Python. Represents a transaction output with a destination address and amount.
+- Class `PaymentOutput` is now constructible via `PaymentOutput(address, amount)`, and accepted as either an instance or a `{"address": ..., "amount": ...}` dict wherever the bindings take a `PaymentOutput`.
 - Class `Fees` exposed to Python. Specifies transaction fees as an absolute sompi amount with an optional fee source.
 - Enum `WalletEventType` exposed to Python. Enumerates wallet event types such as connection, account, and transaction events.
 - Enum `AccountsDiscoveryKind` exposed to Python. Specifies the account discovery method (e.g. Bip44).
@@ -27,6 +27,7 @@
 - `build-dev` script builds with `--strip` for smaller artifacts.
 - `pyproject.toml`: set `python-source = "python"` and moved the package stub tree under `python/kaspa/` (`kaspa.pyi` → `python/kaspa/__init__.pyi`).
 - `Hash` accepts `str` in addition to `Hash` instances wherever it is used as an argument, and gained `to_hex()` and `__repr__` methods.
+- Added `Balance` `__repr__` method.
 
 ### Fixed
 - `AccountDescriptor.__repr__` now correctly renders optional fields.
