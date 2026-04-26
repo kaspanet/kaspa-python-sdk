@@ -908,8 +908,16 @@ class PaymentOutput:
     A payment destination with address and amount.
     
     Represents a single output in a transaction, specifying where funds
-    should be sent and how much. Used with Generator and create_transactions.
+    should be sent and how much.
     """
+    def __new__(cls, address: Address, amount: builtins.int) -> PaymentOutput:
+        r"""
+        Create a new Payment Output.
+        
+        Args:
+            address: The address to send this output to.
+            amount: The amount, in sompi, to send on this output.
+        """
     def __eq__(self, other: PaymentOutput) -> builtins.bool:
         r"""
         Equality comparison.
