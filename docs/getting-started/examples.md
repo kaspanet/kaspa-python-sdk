@@ -2,12 +2,10 @@
 
 This page contains a handful of brief examples showing core features of the Kaspa Python SDK.
 
-!!! danger "Security Warning"
-    **Handle Private Keys Securely**
-
-    **These examples do not use proper private key/mnemonic/seed handling.** This is omitted for brevity.
-
-    Never store your private keys in plain text, or directly in source code. Store securely offline. Anyone with access to this phrase has full control over your funds.
+!!! warning "Handle secrets carefully"
+    These snippets pass private-key material as inline strings for
+    readability. That is not how production code should handle secrets —
+    see [Security](security.md).
 
 ## Examples on Github
 

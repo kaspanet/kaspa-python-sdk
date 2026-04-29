@@ -1,193 +1,110 @@
-# Message Signing
+# Sign and verify a message
 
-This guide covers signing and verifying arbitrary messages with the Kaspa Python SDK.
+Sign arbitrary bytes with a `PrivateKey` and verify with the
+corresponding `PublicKey`. Useful for proving address ownership,
+authenticating off-chain actions, or stamping structured payloads.
 
-!!! danger "Security Warning"
-    **Handle Private Keys Securely**
+Read [Security](../getting-started/security.md) before signing with real
+keys.
 
-    **These examples do not use proper private key/mnemonic/seed handling.** This is omitted for brevity.
-
-    Never store your private keys in plain text, or directly in source code. Store securely offline. Anyone with access to this phrase has full control over your funds.
-
-## Overview
-
-Message signing allows you to:
-
-- **Prove ownership** of an address without revealing your private key
-- **Sign data** for off-chain verification
-- **Authenticate** actions or statements
-
-## Signing a Message
+## Sign
 
 ```python
-from kaspa import sign_message, PrivateKey
+from kaspa import PrivateKey, sign_message
 
-# Your private key
-private_key = PrivateKey("your-private-key-hex")
-
-# Message to sign
-message = "Hello, I own this address!"
-
-# Sign the message
-signature = sign_message(message, private_key)
-print(f"Signature: {signature}")
+key = PrivateKey("<64-char hex>")
+signature = sign_message("Hello, I own this address!", key)
 ```
 
-### Deterministic Signing
-
-By default, signatures use auxiliary randomness for additional security. For deterministic signatures:
+For deterministic signatures (same message + same key produces the same
+signature):
 
 ```python
-# Deterministic signature (same message + key = same signature)
-signature = sign_message(message, private_key, no_aux_rand=True)
+signature = sign_message(message, key, no_aux_rand=True)
 ```
 
-## Verifying a Signature
+The default uses fresh auxiliary randomness; that's the right choice
+unless a downstream consumer needs determinism.
+
+## Verify
 
 ```python
-from kaspa import verify_message, PublicKey
+from kaspa import PublicKey, verify_message
 
-# The public key of the signer
-public_key = PublicKey("02a1b2c3...")
+pub = PublicKey("02a1b2c3...")
+# or: pub = key.to_public_key()
 
-# Or derive from private key
-public_key = private_key.to_public_key()
-
-# Verify the signature
-message = "Hello, I own this address!"
-signature = "signature-from-signing..."
-
-is_valid = verify_message(message, signature, public_key)
-
-if is_valid:
-    print("Signature is valid!")
-else:
-    print("Invalid signature!")
+ok = verify_message(message, signature, pub)
 ```
 
-## Complete Example
+`verify_message` returns `bool`. It does not raise on a mismatch.
 
-```python
-from kaspa import (
-    Mnemonic, XPrv, PrivateKeyGenerator,
-    sign_message, verify_message, NetworkType
-)
-
-# Create a wallet
-mnemonic = Mnemonic.random()
-xprv = XPrv(mnemonic.to_seed())
-key_gen = PrivateKeyGenerator(xprv, False, 0)
-
-# Get a keypair
-private_key = key_gen.receive_key(0)
-public_key = private_key.to_public_key()
-address = private_key.to_address(NetworkType.Mainnet)
-
-print(f"Address: {address.to_string()}")
-
-# Sign a message
-message = f"I control address {address.to_string()} on 2024-01-15"
-signature = sign_message(message, private_key)
-print(f"Signature: {signature}")
-
-# Verify the signature
-is_valid = verify_message(message, signature, public_key)
-print(f"Valid: {is_valid}")
-
-# Try with wrong message
-wrong_message = "I control a different address"
-is_valid_wrong = verify_message(wrong_message, signature, public_key)
-print(f"Wrong message valid: {is_valid_wrong}")  # False
-```
-
-## Use Cases
-
-### Proving Address Ownership
-
-```python
-def prove_ownership(private_key, address, timestamp):
-    """Generate a proof of address ownership."""
-    message = f"I own {address.to_string()} at {timestamp}"
-    signature = sign_message(message, private_key)
-    return {
-        "address": address.to_string(),
-        "message": message,
-        "signature": signature,
-        "timestamp": timestamp
-    }
-
-def verify_ownership(proof, public_key):
-    """Verify a proof of address ownership."""
-    return verify_message(
-        proof["message"],
-        proof["signature"],
-        public_key
-    )
-```
-
-### Signing Structured Data
-
-```python
-import json
-import hashlib
-
-def sign_json_data(data, private_key):
-    """Sign structured JSON data."""
-    # Canonical JSON serialization
-    canonical = json.dumps(data, sort_keys=True, separators=(',', ':'))
-    
-    # Sign the serialized data
-    signature = sign_message(canonical, private_key)
-    
-    return {
-        "data": data,
-        "signature": signature
-    }
-
-def verify_json_data(signed_data, public_key):
-    """Verify signed JSON data."""
-    canonical = json.dumps(
-        signed_data["data"],
-        sort_keys=True,
-        separators=(',', ':')
-    )
-    
-    return verify_message(
-        canonical,
-        signed_data["signature"],
-        public_key
-    )
-```
-
-### Authentication Token
+## Recipe: prove address ownership
 
 ```python
 import time
+from kaspa import sign_message, verify_message
 
-def create_auth_token(private_key, address, validity_seconds=300):
-    """Create a time-limited authentication token."""
-    expires = int(time.time()) + validity_seconds
+def prove_ownership(key, address):
+    timestamp = int(time.time())
+    message = f"I own {address.to_string()} at {timestamp}"
+    return {
+        "address": address.to_string(),
+        "timestamp": timestamp,
+        "message": message,
+        "signature": sign_message(message, key),
+    }
+
+def verify_ownership(proof, pub):
+    return verify_message(proof["message"], proof["signature"], pub)
+```
+
+Include a timestamp so the proof can't be replayed indefinitely; the
+verifier should reject anything older than its acceptable window.
+
+## Recipe: signed JSON payload
+
+When the thing you're signing is structured, canonicalise first:
+
+```python
+import json
+from kaspa import sign_message, verify_message
+
+def sign_json(data, key):
+    canonical = json.dumps(data, sort_keys=True, separators=(",", ":"))
+    return {"data": data, "signature": sign_message(canonical, key)}
+
+def verify_json(envelope, pub):
+    canonical = json.dumps(envelope["data"], sort_keys=True, separators=(",", ":"))
+    return verify_message(canonical, envelope["signature"], pub)
+```
+
+The canonicalisation matters: any non-deterministic serialisation
+(default `json.dumps`, key reordering, whitespace) will produce a
+signature that won't verify.
+
+## Recipe: time-limited auth token
+
+```python
+import time
+from kaspa import sign_message, verify_message
+
+def create_token(key, address, ttl=300):
+    expires = int(time.time()) + ttl
     message = f"auth:{address.to_string()}:{expires}"
-    signature = sign_message(message, private_key)
-    
     return {
         "address": address.to_string(),
         "expires": expires,
-        "signature": signature
+        "signature": sign_message(message, key),
     }
 
-def verify_auth_token(token, public_key):
-    """Verify an authentication token."""
-    # Check expiration
+def verify_token(token, pub):
     if int(time.time()) > token["expires"]:
-        return False, "Token expired"
-    
-    # Verify signature
+        return False, "expired"
     message = f"auth:{token['address']}:{token['expires']}"
-    is_valid = verify_message(message, token["signature"], public_key)
-    
-    if is_valid:
-        return True, "Valid"
-    else:
-        return False, "Invalid signature"
+    return verify_message(message, token["signature"], pub), "ok"
 ```
+
+The signature covers the expiry, so a token can't be forged with a later
+expiry without re-signing. Use it as a bearer token in HTTP headers, or
+embed it in a session payload.
