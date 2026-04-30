@@ -111,13 +111,54 @@ nav:
   - Getting Started:
       - Installation: getting-started/installation.md
       - Examples: getting-started/examples.md
+      - Security: getting-started/security.md
+  - Learn:
+      - Overview: learn/index.md
+      - RPC:
+          - RPC Intro: learn/rpc/overview.md
+          - Connecting: learn/rpc/connecting.md
+          - Resolver: learn/rpc/resolver.md
+          - Calls: learn/rpc/calls.md
+          - Subscriptions: learn/rpc/subscriptions.md
+      - Wallet:
+          - Overview: learn/wallet/overview.md
+          - Architecture: learn/wallet/architecture.md
+          - Lifecycle: learn/wallet/lifecycle.md
+          - Initialize: learn/wallet/initialize.md
+          - Start: learn/wallet/start.md
+          - Open: learn/wallet/open.md
+          - Private Keys: learn/wallet/private-keys.md
+          - Accounts: learn/wallet/accounts.md
+          - Addresses: learn/wallet/addresses.md
+          - Keypair Accounts: learn/wallet/keypair.md
+          - Send Transaction: learn/wallet/send-transaction.md
+          - Sweep Funds: learn/wallet/sweep.md
+          - Transaction History: learn/wallet/transaction-history.md
+      - Wallet SDK:
+          - Overview: learn/wallet-sdk/overview.md
+          - Key Management: learn/wallet-sdk/key-management.md
+          - Transaction Generator: learn/wallet-sdk/tx-generator.md
+          - Derivation: learn/wallet-sdk/derivation.md
+          - UTXO Context: learn/wallet-sdk/utxo-context.md
+          - UTXO Processor: learn/wallet-sdk/utxo-processor.md
+      - Networks: learn/networks.md
+      - Addresses: learn/addresses.md
+      - Transactions:
+          - Overview: learn/transactions/overview.md
+          - Inputs: learn/transactions/inputs.md
+          - Outputs: learn/transactions/outputs.md
+          - Mass & Fees: learn/transactions/mass-and-fees.md
+          - Signing: learn/transactions/signing.md
+          - Submission: learn/transactions/submission.md
+          - Metadata Fields: learn/transactions/metadata.md
+          - Serialization: learn/transactions/serialization.md
+      - Kaspa Concepts: learn/concepts.md
   - Guides:
-      - RPC Client: guides/rpc-client.md
-      - Addresses: guides/addresses.md
-      - Transactions: guides/transactions.md
-      - Mnemonics: guides/mnemonics.md
-      - Key Derivation: guides/key-derivation.md
-      - Message Signing: guides/message-signing.md
+      - Generate or restore a mnemonic: guides/mnemonics.md
+      - Sign and verify a message: guides/message-signing.md
+      - Recover a wallet: guides/wallet-recovery.md
+      - Custom derivation paths: guides/custom-derivation.md
+      - Multi-signature transactions: guides/multisig.md
   - API Reference: reference/
   - Contributing:
       - Overview: contributing/index.md

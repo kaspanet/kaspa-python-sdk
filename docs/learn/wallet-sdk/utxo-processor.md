@@ -4,7 +4,7 @@ A `UtxoProcessor` subscribes to a node's UTXO and virtual-chain
 notifications and dispatches them to one or more
 [UTXO Contexts](utxo-context.md). It's the engine that makes context
 tracking work. If you're using the managed
-[Wallet](../wallet/index.md), one is constructed for you. If you're not,
+[Wallet](../wallet/overview.md), one is constructed for you. If you're not,
 you build one yourself and bind contexts to it.
 
 ## Construction

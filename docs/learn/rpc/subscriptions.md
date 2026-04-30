@@ -1,21 +1,21 @@
 # Subscriptions
 
-Subscriptions turn the `RpcClient` from a request/response API into a live
-feed. The node pushes events; the client invokes callbacks you registered.
-You typically use them to react to UTXO changes for an address you care
-about, or to track block / virtual-chain progression for an indexer.
+Subscriptions let
+[`RpcClient`](../../reference/Classes/RpcClient.md) receive a live feed
+of node events. The node pushes events as they happen; the client
+invokes the callbacks you registered.
 
 ## The two-step pattern
 
 Every subscription has two parts:
 
-1. **A listener** — a Python callback registered with
-   `client.add_event_listener("<event>", callback)`.
-2. **A subscription** — `await client.subscribe_<event>(...)` that tells the
+1. **A listener** — a Python callback registered via
+   [`add_event_listener("<event>", callback)`](../../reference/Classes/RpcClient.md#add_event_listener).
+2. **A subscription** — `await client.subscribe_<event>(...)` tells the
    node to start streaming.
 
-Both halves are required. A listener with no subscription receives nothing;
-a subscription with no listener silently drops events.
+Both halves are required. A listener with no subscription receives
+nothing; a subscription with no listener silently drops events.
 
 ```python
 def on_utxo_change(event):
@@ -27,22 +27,113 @@ await client.subscribe_utxos_changed([Address("kaspa:qz...")])
 
 ## Available events
 
-| Event name | Subscribe with |
-| --- | --- |
-| `utxos-changed` | `subscribe_utxos_changed(addresses)` |
-| `block-added` | `subscribe_block_added()` |
-| `virtual-chain-changed` | `subscribe_virtual_chain_changed(include_accepted_transaction_ids=...)` |
-| `virtual-daa-score-changed` | `subscribe_virtual_daa_score_changed()` |
-| `sink-blue-score-changed` | `subscribe_sink_blue_score_changed()` |
-| `finality-conflict` | `subscribe_finality_conflict()` |
-| `finality-conflict-resolved` | `subscribe_finality_conflict_resolved()` |
-| `new-block-template` | `subscribe_new_block_template()` |
-| `pruning-point-utxo-set-override` | `subscribe_pruning_point_utxo_set_override()` |
+| Event name | Subscribe with | Event payload |
+| --- | --- | --- |
+| `utxos-changed` | [`subscribe_utxos_changed(addresses)`](../../reference/Classes/RpcClient.md#subscribe_utxos_changed) | [`UtxosChangedEvent`](../../reference/TypedDicts/UtxosChangedEvent.md) |
+| `block-added` | [`subscribe_block_added()`](../../reference/Classes/RpcClient.md#subscribe_block_added) | [`BlockAddedEvent`](../../reference/TypedDicts/BlockAddedEvent.md) |
+| `virtual-chain-changed` | [`subscribe_virtual_chain_changed(include_accepted_transaction_ids=...)`](../../reference/Classes/RpcClient.md#subscribe_virtual_chain_changed) | [`VirtualChainChangedEvent`](../../reference/TypedDicts/VirtualChainChangedEvent.md) |
+| `virtual-daa-score-changed` | [`subscribe_virtual_daa_score_changed()`](../../reference/Classes/RpcClient.md#subscribe_virtual_daa_score_changed) | [`VirtualDaaScoreChangedEvent`](../../reference/TypedDicts/VirtualDaaScoreChangedEvent.md) |
+| `sink-blue-score-changed` | [`subscribe_sink_blue_score_changed()`](../../reference/Classes/RpcClient.md#subscribe_sink_blue_score_changed) | [`SinkBlueScoreChangedEvent`](../../reference/TypedDicts/SinkBlueScoreChangedEvent.md) |
+| `finality-conflict` | [`subscribe_finality_conflict()`](../../reference/Classes/RpcClient.md#subscribe_finality_conflict) | [`FinalityConflictEvent`](../../reference/TypedDicts/FinalityConflictEvent.md) |
+| `finality-conflict-resolved` | [`subscribe_finality_conflict_resolved()`](../../reference/Classes/RpcClient.md#subscribe_finality_conflict_resolved) | [`FinalityConflictResolvedEvent`](../../reference/TypedDicts/FinalityConflictResolvedEvent.md) |
+| `new-block-template` | [`subscribe_new_block_template()`](../../reference/Classes/RpcClient.md#subscribe_new_block_template) | [`NewBlockTemplateEvent`](../../reference/TypedDicts/NewBlockTemplateEvent.md) |
+| `pruning-point-utxo-set-override` | [`subscribe_pruning_point_utxo_set_override()`](../../reference/Classes/RpcClient.md#subscribe_pruning_point_utxo_set_override) | [`PruningPointUtxoSetOverrideEvent`](../../reference/TypedDicts/PruningPointUtxoSetOverrideEvent.md) |
 
-Each `subscribe_*` has a matching `unsubscribe_*` that takes the same
-argument shape.
+Each `subscribe_*` has a matching `unsubscribe_*` with the same
+argument shape. Event names also map to the
+[`NotificationEvent`](../../reference/Enums/NotificationEvent.md) enum
+if you prefer typed variants over kebab-case strings.
 
-## Watching addresses for UTXO changes
+The client also emits two control events that don't require a
+`subscribe_*` call — just register a listener:
+
+| Event name | Fires when | Event payload |
+| --- | --- | --- |
+| `connect` | The WebSocket has connected (including after a reconnect). | [`ConnectEvent`](../../reference/TypedDicts/ConnectEvent.md) |
+| `disconnect` | The WebSocket has dropped. | [`DisconnectEvent`](../../reference/TypedDicts/DisconnectEvent.md) |
+
+Use these to track connection state without polling `client.is_connected`.
+
+### Listening to all events
+
+Pass the special `"all"` event name (or `NotificationEvent.All`) to
+register one callback for every notification — node-pushed events plus
+`connect` / `disconnect`. You still need `subscribe_*` for any
+node-pushed event you want to receive; `"all"` only multiplexes
+delivery, it doesn't subscribe on your behalf.
+
+```python
+def on_any(event):
+    print(event["type"], event)
+
+client.add_event_listener("all", on_any)
+await client.subscribe_block_added()
+await client.subscribe_virtual_daa_score_changed()
+```
+
+## Event payload shape
+
+Every callback receives a `dict` with a `"type"` key naming the
+event. The remaining keys depend on the event.
+
+### `utxos-changed` ([`UtxosChangedEvent`](../../reference/TypedDicts/UtxosChangedEvent.md))
+Top-level `"added"` and `"removed"` lists of
+  [`RpcUtxosByAddressesEntry`](../../reference/TypedDicts/RpcUtxosByAddressesEntry.md).
+  This is the only event that does *not* nest its body under `"data"` —
+  it's flattened so callbacks can read `event["added"]` directly:
+
+    ```python
+    {
+        "type": "utxos-changed",
+        "added": [
+            {
+                "address": "kaspa:qz...",
+                "outpoint": {"transactionId": "...", "index": 0},
+                "utxoEntry": {
+                    "amount": 100000000,
+                    "scriptPublicKey": {"version": 0, "script": "..."},
+                    "blockDaaScore": 123456789,
+                    "isCoinbase": False,
+                },
+            },
+        ],
+        "removed": [],
+    }
+    ```
+
+### All other events
+A `"data"` key holds the notification body. Each event has a wrapper
+  TypedDict (e.g. [`BlockAddedEvent`](../../reference/TypedDicts/BlockAddedEvent.md))
+  and a body TypedDict (e.g.
+  [`RpcBlockAddedNotification`](../../reference/TypedDicts/RpcBlockAddedNotification.md)).
+  See the [Available events](#available-events) table for the full
+  list. For example, a `virtual-daa-score-changed` callback receives:
+
+    ```python
+    {
+        "type": "virtual-daa-score-changed",
+        "data": {
+            "virtualDaaScore": 123456789,
+        },
+    }
+    ```
+
+### `connect` / `disconnect`
+  ([`ConnectEvent`](../../reference/TypedDicts/ConnectEvent.md) /
+  [`DisconnectEvent`](../../reference/TypedDicts/DisconnectEvent.md)):
+  a `"rpc"` key with the node URL.
+
+The bundled
+[`Notification`](../../reference/Classes/Notification.md) class wraps
+notifications internally; for callback type hints, use the per-event
+TypedDicts above.
+
+## Examples
+
+### Watching addresses for UTXO changes
+
+Pass [`Address`](../../reference/Classes/Address.md) instances (or
+strings parsed by `Address(...)`):
 
 ```python
 from kaspa import Address
@@ -62,32 +153,52 @@ await client.subscribe_utxos_changed(addresses)
 await client.unsubscribe_utxos_changed(addresses)
 ```
 
-For watching a managed-wallet account rather than raw addresses, use the
-wallet's `Balance` and `Maturity` events instead — see
+To watch a managed-wallet account instead of raw addresses, use the
+wallet's `Balance` and `Maturity` events — see
 [Wallet → Transaction History](../wallet/transaction-history.md).
 
-## Block events
+### Block events
 
 ```python
 def on_block(event):
-    print("new block:", event["block"]["header"]["hash"])
+    print("new block:", event["data"]["block"]["header"]["hash"])
 
 client.add_event_listener("block-added", on_block)
 await client.subscribe_block_added()
 ```
 
-## Virtual chain progression
+### Virtual chain progression
 
 ```python
 def on_chain(event):
-    print("chain update:", event)
+    data = event["data"]
+    print("added:", data["addedChainBlockHashes"])
+    print("removed:", data["removedChainBlockHashes"])
 
 client.add_event_listener("virtual-chain-changed", on_chain)
 await client.subscribe_virtual_chain_changed(include_accepted_transaction_ids=True)
 ```
 
-`include_accepted_transaction_ids=True` makes the event payload usable as
-a confirmation feed — every accepted transaction id appears in the stream.
+With `include_accepted_transaction_ids=True`, the payload doubles as a
+confirmation feed — every accepted transaction id appears in
+`event["data"]["acceptedTransactionIds"]`. For the one-shot equivalent,
+see [`get_virtual_chain_from_block`](calls.md#virtual-chain).
+
+### Connection state
+
+```python
+def on_connect(event):
+    print("connected to", event["rpc"])
+
+def on_disconnect(event):
+    print("disconnected from", event["rpc"])
+
+client.add_event_listener("connect", on_connect)
+client.add_event_listener("disconnect", on_disconnect)
+```
+
+No `subscribe_*` is needed — the client emits these itself when the
+WebSocket transitions.
 
 ## Listener bookkeeping
 
@@ -100,13 +211,19 @@ client.remove_event_listener("block-added")                    # remove all for 
 client.remove_all_event_listeners()                            # remove all globally
 ```
 
-Listeners outlive a single subscription cycle — re-subscribing after an
-unsubscribe does *not* re-fire previously delivered events. If you need to
-catch up, do a one-shot `get_utxos_by_addresses` (or equivalent) before
-re-subscribing.
+Listeners outlive a single subscription cycle. Re-subscribing after an
+unsubscribe does *not* re-fire previously delivered events. To catch
+up, do a one-shot
+[`get_utxos_by_addresses`](calls.md#balances-and-utxos) (or equivalent)
+before re-subscribing.
 
 ## Where to next
 
 - [Calls](calls.md) — the request/response side of the API.
-- [Wallet → Transaction History](../wallet/transaction-history.md) — the
-  managed Wallet's higher-level event surface.
+- [`RpcClient`](../../reference/Classes/RpcClient.md) — full
+  `subscribe_*` / `unsubscribe_*` / `add_event_listener` reference.
+- [`UtxoProcessor`](../wallet-sdk/utxo-processor.md) and
+  [`UtxoContext`](../wallet-sdk/utxo-context.md) — higher-level UTXO
+  tracking built on `utxos-changed`.
+- [Wallet → Transaction History](../wallet/transaction-history.md) —
+  the managed Wallet's higher-level event surface.

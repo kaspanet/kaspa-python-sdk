@@ -108,7 +108,7 @@ field exists for protocol extensions; you'll usually leave
 ## Where to next
 
 - [Networks](networks.md) — picking a chain to talk to.
-- [Addresses](addresses.md) and [Transactions](transactions/index.md) — the
+- [Addresses](addresses.md) and [Transactions](transactions/overview.md) — the
   on-chain primitives in Python.
 - [Wallet → Architecture](wallet/architecture.md) — how the SDK turns
   these concepts into a wallet you can actually use.

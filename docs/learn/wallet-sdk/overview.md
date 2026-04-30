@@ -1,7 +1,7 @@
 # Wallet SDK
 
 The **Wallet SDK** section is the layer beneath the managed
-[Wallet](../wallet/index.md). When you don't need on-disk file storage,
+[Wallet](../wallet/overview.md). When you don't need on-disk file storage,
 multi-account management, or the wallet's event multiplexer — when you
 just want to derive a key, build a transaction, or track UTXOs for a few
 addresses — drop down here.
@@ -20,7 +20,7 @@ addresses — drop down here.
 
 | You want to... | Use |
 | --- | --- |
-| Open a file, manage many accounts, track them long-term | [Wallet](../wallet/index.md) |
+| Open a file, manage many accounts, track them long-term | [Wallet](../wallet/overview.md) |
 | Sign one transaction in a script with a key you already have | Wallet SDK ([Transaction Generator](tx-generator.md)) |
 | Derive an address from a mnemonic without persisting anything | Wallet SDK ([Key Management](key-management.md), [Derivation](derivation.md)) |
 | Watch a fixed set of addresses for incoming UTXOs without a wallet file | Wallet SDK ([UTXO Processor](utxo-processor.md), [UTXO Context](utxo-context.md)) |

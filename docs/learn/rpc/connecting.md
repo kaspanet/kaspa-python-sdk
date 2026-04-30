@@ -1,10 +1,17 @@
 # Connecting
 
-`RpcClient.connect()` opens the WebSocket. `disconnect()` closes it. Between
-those two calls, the client is "connected" — every RPC method is callable
-and notifications stream in.
+[`RpcClient.connect()`](../../reference/Classes/RpcClient.md#connect)
+opens the WebSocket;
+[`disconnect()`](../../reference/Classes/RpcClient.md#disconnect)
+closes it. While connected, every RPC method is callable and
+notifications stream in.
 
-## A connected client, end to end
+You can connect via the Public Node Network (PNN) using
+[`Resolver`](resolver.md), or directly to a node URL.
+
+## Example
+
+Connecting to a PNN mainnet node via `Resolver`:
 
 ```python
 import asyncio
@@ -13,79 +20,89 @@ from kaspa import Resolver, RpcClient
 async def main():
     client = RpcClient(resolver=Resolver(), network_id="mainnet")
     await client.connect()
-    try:
-        info = await client.get_block_dag_info()
-        print(info["networkName"], info["blockCount"])
-    finally:
-        await client.disconnect()
+
+    info = await client.get_block_dag_info()
+
+    await client.disconnect()
 
 asyncio.run(main())
 ```
 
-The `try`/`finally` matters: a Python exception before `disconnect()` would
-otherwise leave the socket open and the event loop holding a reference.
-
 ## Connecting to a known node
 
-Skip the resolver when you have a URL:
+Pass a URL directly. See [Networks](../networks.md) for the canonical
+wRPC ports per network:
 
 ```python
 client = RpcClient(
-    url="wss://node.example.com:17110",
+    url="ws://node.example.com:17110",
     network_id="mainnet",
     encoding="borsh",   # or "json"
 )
 ```
 
-Use this for nodes you operate, paid endpoints, or testnet runs against a
-local `kaspad`.
+## URL schemes
+
+- `ws://` — plaintext WebSocket
+- `wss://` — TLS WebSocket
 
 ## Connection options
 
-`connect()` accepts a handful of behavioural overrides:
+`connect()` takes a few behavioural overrides:
 
 ```python
 await client.connect(
-    block_async_connect=True,   # await until the socket is open (default True)
-    strategy="fallback",        # "retry" or "fallback" — what to do if the first attempt fails
-    timeout_duration=30000,     # per-attempt timeout, ms
-    retry_interval=1000,        # delay between attempts, ms
+    block_async_connect=True,
+    strategy="fallback",
+    url="ws://node.example.com:17110",
+    timeout_duration=30000,
+    retry_interval=1000,
 )
 ```
 
-The defaults are appropriate for production code. Lower `timeout_duration`
-in fast-failure CI environments; raise `retry_interval` if you want to be
-gentler on resolver back-ends during outages.
+- `block_async_connect` — if `False`, `connect()` returns immediately
+  and the socket opens in the background.
+- `strategy` — `"retry"` (default) loops until a connection succeeds;
+  `"fallback"` returns on the first failure. Applies to both URL-based
+  and `Resolver`-driven clients.
+- `url` — overrides the constructor URL for this attempt only. Lets you
+  retarget a long-lived client without rebuilding it.
+- `timeout_duration` — per-attempt ceiling, in milliseconds.
+- `retry_interval` — delay between attempts, in milliseconds.
 
 ## Inspecting the live client
 
 ```python
 print(client.is_connected)   # bool
-print(client.url)            # the resolved or supplied node URL
+print(client.url)            # resolved or supplied node URL, or None
 print(client.encoding)       # "borsh" or "json"
-print(client.node_id)        # node-reported identifier
+print(client.node_id)        # resolver-supplied node UID; None for direct URLs
 print(client.resolver)       # the Resolver instance, or None
 ```
 
-These are all property reads — no I/O, no `await`.
-
 ## Encoding: Borsh vs JSON
 
-`encoding="borsh"` is the default and the right choice. Borsh is the binary
-format the node speaks natively; payloads are smaller and parsing is
-faster. Pick `"json"` only when you need to inspect raw frames in a tool
-that doesn't speak Borsh, or when the node you're targeting doesn't support
-Borsh.
+Borsh (the default) is a compact binary format used natively by the
+node.
+
+Use `"json"` only to inspect raw frames in a tool that doesn't speak
+Borsh, or when targeting a node that doesn't support it. See the
+[`Encoding`](../../reference/Enums/Encoding.md) enum for accepted
+values.
 
 ## Reconnects
 
-If the WebSocket drops mid-session, the client reconnects on its own. Calls
-made *during* the gap raise; calls made *after* the reconnect succeed.
-There is no opt-out — if you need to know about disruptions, listen for the
-relevant connection notifications (see [Subscriptions](subscriptions.md)).
+If the WebSocket drops mid-session, the client reconnects on its own.
+Calls made *during* the gap raise; calls made *after* a successful
+reconnect work normally. To stop reconnect attempts, call
+`disconnect()` — or use `strategy="fallback"`, which gives up after
+one failed reconnect instead of looping. To track disruptions, listen
+for the `connect` and `disconnect` events
+(see [Subscriptions](subscriptions.md#available-events)).
 
 ## Where to next
 
+- [Resolver](resolver.md) — node discovery details.
 - [Calls](calls.md) — what to do once `is_connected` is `True`.
 - [Subscriptions](subscriptions.md) — real-time notifications, including
   connection-state events.

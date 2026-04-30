@@ -7,7 +7,7 @@ into whichever contexts have registered the relevant addresses. The
 context exposes the resulting UTXO set, balance, and mature/pending
 splits.
 
-If you're using the managed [Wallet](../wallet/index.md), it manages a
+If you're using the managed [Wallet](../wallet/overview.md), it manages a
 `UtxoContext` per activated account internally — you usually don't
 construct one yourself. Drop down here when you want UTXO tracking
 without the on-disk wallet file.

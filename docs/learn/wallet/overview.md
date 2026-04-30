@@ -3,14 +3,14 @@
 The `Wallet` class is the SDK's high-level managed wallet. It layers
 encrypted on-disk storage, multi-account management, an event bus, and
 built-in send / transfer / sweep flows on top of the lower-level primitives
-in [Wallet SDK](../wallet-sdk/index.md).
+in [Wallet SDK](../wallet-sdk/overview.md).
 
 ## When to reach for `Wallet`
 
 | You want to... | Use |
 | --- | --- |
 | Persist secrets, manage multiple accounts, react to chain events | `Wallet` |
-| Sign one transaction in a script, no on-disk state | The primitives in [Wallet SDK](../wallet-sdk/index.md) |
+| Sign one transaction in a script, no on-disk state | The primitives in [Wallet SDK](../wallet-sdk/overview.md) |
 | Embed wallet behaviour in your own app | `Wallet` — the listener model and account API are designed for this |
 
 If you only need a one-shot signer, the primitives are simpler. If you need

@@ -60,7 +60,7 @@ section answers a different question:
 ## Where to start
 
 - **New to the SDK:** [Installation](getting-started/installation.md) →
-  [Learn → RPC](learn/rpc/index.md) →
+  [Learn → RPC](learn/rpc/overview.md) →
   [Learn → Wallet SDK → Key Management](learn/wallet-sdk/key-management.md).
 - **Looking for a recipe:** jump to [Guides](guides/mnemonics.md).
 - **Looking up an API:** [API Reference](reference/index.md).

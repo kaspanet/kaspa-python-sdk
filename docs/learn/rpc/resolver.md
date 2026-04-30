@@ -1,53 +1,93 @@
 # Resolver
 
-A `Resolver` finds a Kaspa node for a given [network](network.md). An `RpcClient` can be configured to use a Resolver instance instead of a hard-coded URL. On `connect()` the resolver (attempts) to connect to an available node on the public node-network (PNN).
+A [`Resolver`](../../reference/Classes/Resolver.md) finds a public Kaspa
+node so you don't need a URL up front. Pass one to
+[`RpcClient`](../../reference/Classes/RpcClient.md) instead of `url=`
+and `client.connect()` picks a live node from the Public Node Network
+(PNN).
 
-## When to use it
-
-- **Building an application that talks to mainnet or testnet** without
-  shipping a node alongside.
-- **Quick scripts and notebooks** where "just give me a node" is the right
-  default.
-- **Failover.** The resolver picks a different node if its first choice is
-  unreachable.
-
-If you need a deterministic URL — for example a load-balanced internal
-node, or a node with an authenticated endpoint — point `RpcClient` at it
-directly and don't construct a `Resolver` at all.
-
-## The basic shape
+For most apps, this is all you need:
 
 ```python
 from kaspa import Resolver, RpcClient
 
-resolver = Resolver()
-client = RpcClient(resolver=resolver, network_id="mainnet")
+client = RpcClient(resolver=Resolver(), network_id="mainnet")
 await client.connect()
 ```
 
-The `network_id` argument is what the resolver uses to filter candidate
-nodes — `"mainnet"`, `"testnet-10"`, or `"testnet-11"`. The same `Resolver`
-instance can be reused across networks; the network is a property of the
-*client*, not the resolver.
+**For security critical applications, or to ensure a trusted node, you should consider connecting to your own node.**
 
-## Configuring the resolver
+`network_id` selects the network — `"mainnet"` or a testnet
+(e.g. `"testnet-10"`). It takes a string or a
+[`NetworkId`](../../reference/Classes/NetworkId.md); see
+[Networks](../networks.md) for the full list. Not every testnet has PNN
+nodes.
+
+## Constructor options
 
 ```python
-# Default: uses the public PNN endpoints baked into the SDK
+# Default
 resolver = Resolver()
 
-# Override with explicit resolver URLs (advanced)
-resolver = Resolver(urls=["https://resolver1.example.org"])
-
-# Force TLS on resolver requests
+# Require a TLS-capable node (wss://)
 resolver = Resolver(tls=True)
+
+# Point at your own resolver fleet (advanced — see "Under the hood")
+resolver = Resolver(urls=["https://resolver1.example.org"])
 ```
 
-The default constructor is the right choice for almost everyone. Override
-the URLs only if you're operating a private resolver fleet.
+- `tls=True` — restrict to `wss://` nodes. Default `False` allows any
+  reachable node.
+- `urls=` — replaces the default resolver-service list with your own
+  (see [Under the hood](#under-the-hood)).
+
+## Querying the resolver directly
+
+You can fetch a URL without constructing an `RpcClient`:
+
+```python
+from kaspa import Encoding, NetworkId, Resolver
+
+resolver = Resolver()
+
+url = await resolver.get_url(Encoding.Borsh, NetworkId("mainnet"))
+descriptor = await resolver.get_node(Encoding.Borsh, NetworkId("mainnet"))
+```
+
+[`get_url`](../../reference/Classes/Resolver.md#get_url) returns a
+WebSocket URL ready for `RpcClient(url=...)`.
+[`get_node`](../../reference/Classes/Resolver.md#get_node) returns a
+dict with the node's `uid`, `url`, and other metadata.
+
+## Under the hood
+
+You don't need any of this to use `Resolver` — it's here for anyone
+running their own infrastructure or debugging connectivity.
+
+A `Resolver` doesn't open WebSockets or hold Kaspa node URLs. It holds
+a list of *resolver service* HTTP endpoints (see
+[aspectron/kaspa-resolver](https://github.com/aspectron/kaspa-resolver))
+that track live PNN nodes and load-balance across them.
+
+On `get_url` / `get_node` (called internally by `client.connect()`):
+
+1. Pick a configured resolver-service URL at random.
+2. `GET {url}/v2/kaspa/{network_id}/{tls_or_any}/wrpc/{encoding}`.
+3. Parse the response as a node descriptor and return the URL.
+4. On failure, try the next service; raise if all fail.
+
+The default `Resolver()` ships with the public resolver-service list
+embedded in the SDK (sourced from
+[`Resolvers.toml`](https://github.com/kaspanet/rusty-kaspa/blob/master/rpc/wrpc/client/Resolvers.toml)
+in `kaspa-wrpc-client`). `Resolver(urls=...)` replaces that list —
+useful for a private node cluster behind your own resolver fleet.
+`resolver.urls()` returns the configured list, or an empty list when
+using the embedded defaults (concrete URLs are hidden so they can
+rotate without breaking SDK consumers).
 
 ## Where to next
 
-- [Connecting](connecting.md) — direct URLs, retry/timeout options, the
-  encoding choice.
-- [Calls](calls.md) — what to do once you're connected.
+- [Connecting](connecting.md) — direct URLs, retry/timeout options,
+  encoding.
+- [Calls](calls.md) — what to do once connected.
+- [Subscriptions](subscriptions.md) — real-time notifications.

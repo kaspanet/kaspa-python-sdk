@@ -138,7 +138,7 @@ multiple cosigners, submitting), see the
 ## Where to next
 
 - [Networks](networks.md) — what each prefix means.
-- [Transactions](transactions/index.md) — using addresses inside transaction
+- [Transactions](transactions/overview.md) — using addresses inside transaction
   outputs.
 - [Wallet SDK → Derivation](wallet-sdk/derivation.md) — deriving many
   addresses from one key.
