@@ -1,9 +1,9 @@
 # Send Transaction
 
 Outgoing flows from an activated account. Every method on this page
-requires the wallet to be open, the wRPC client connected, the source
-account activated, and `wallet.is_synced` to be `True` — see
-[Start](start.md).
+requires an open wallet, a connected wRPC client, an activated source
+account, and `wallet.is_synced == True` — see
+[Sync State](sync-state.md).
 
 ## Surface
 
@@ -34,7 +34,7 @@ print(result.final_transaction_id, result.fees, result.final_amount)
 
 ## Multi-output send
 
-A single `destination` list with N outputs becomes one transaction with
+A single `destination` list of N outputs becomes one transaction with
 N + 1 outputs (the +1 is the change return).
 
 ```python
@@ -55,25 +55,28 @@ estimate = await wallet.accounts_estimate(
     priority_fee_sompi=Fees(0, FeeSource.SenderPays),
     destination=outputs,
 )
-print(estimate.fees, estimate.final_amount, estimate.aggregated_utxos)
+print(estimate.fees, estimate.final_amount, estimate.utxos)
 ```
 
 `accounts_estimate` and `accounts_send` take the same arguments.
-Estimating first is cheap — it surfaces fees and UTXO selection before
+Estimating first is cheap and surfaces fees and UTXO selection before
 signing.
 
 ## Fees
 
-`priority_fee_sompi` is a `Fees(amount, FeeSource)` (or equivalent dict):
+`priority_fee_sompi` is a `Fees(amount, FeeSource)` (or equivalent
+dict):
 
 - **`FeeSource.SenderPays`** — fee is added on top of the destination
-  amount. Used in normal sends.
+  amount. Standard sends.
 - **`FeeSource.ReceiverPays`** — fee is deducted from the destination
   amount. Used to sweep an exact balance with no leftover change (see
   [Sweep Funds](sweep.md)).
 
-`fee_rate` overrides the resolved sompi-per-gram rate explicitly. Leave
-it `None` to let the wallet pick the network-suggested rate.
+`fee_rate` overrides the resolved sompi-per-gram rate. Leave it `None`
+to use the network-suggested rate. See
+[Mass & Fees](../transactions/mass-and-fees.md) for the underlying
+model.
 
 ```python
 rates = await wallet.fee_rate_estimate()
@@ -90,8 +93,8 @@ wallet.fee_rate_poller_disable()
 
 ## Internal transfers
 
-Funds moved between two accounts in the **same wallet** are immediately
-spendable on transaction acceptance — no maturity wait:
+Funds moved between two accounts in the **same wallet** are spendable
+immediately on transaction acceptance — no maturity wait:
 
 ```python
 await wallet.accounts_transfer(
@@ -107,16 +110,16 @@ external addresses.
 
 ## Waiting for funds and confirmations
 
-Sends submit immediately, but spent UTXOs need to mature before the next
-`accounts_send` will see them. Two correct waits, both via
+Sends submit immediately, but spent UTXOs need to mature before the
+next `accounts_send` will see them. Two correct waits, both via
 [Transaction History](transaction-history.md):
 
-- **Pending** fires when a UTXO lands but isn't spendable yet — useful
-  for UI.
-- **Maturity** fires when a UTXO crosses the maturity depth and is
-  spendable. This is the right gate for "send → wait → send again" flows.
+- **Pending** — fires when a UTXO lands but isn't yet spendable.
+  Useful for UI.
+- **Maturity** — fires when a UTXO crosses the maturity depth and is
+  spendable. The right gate for "send → wait → send again" flows.
 
-Polling `accounts_get_utxos` works for one-shot scripts, but a `Maturity`
+Polling `accounts_get_utxos` works for one-shot scripts; a `Maturity`
 listener is the production pattern.
 
 ## Where to next

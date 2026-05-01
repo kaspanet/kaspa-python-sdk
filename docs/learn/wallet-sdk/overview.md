@@ -1,10 +1,10 @@
 # Wallet SDK
 
-The **Wallet SDK** section is the layer beneath the managed
-[Wallet](../wallet/overview.md). When you don't need on-disk file storage,
-multi-account management, or the wallet's event multiplexer — when you
-just want to derive a key, build a transaction, or track UTXOs for a few
-addresses — drop down here.
+The **Wallet SDK** is the layer beneath the managed
+[Wallet](../wallet/overview.md). Drop down here when you don't need
+on-disk file storage, multi-account management, or the wallet's event
+multiplexer — when you just want to derive a key, build a transaction,
+or track UTXOs for a few addresses.
 
 ## What lives here
 
@@ -25,12 +25,12 @@ addresses — drop down here.
 | Derive an address from a mnemonic without persisting anything | Wallet SDK ([Key Management](key-management.md), [Derivation](derivation.md)) |
 | Watch a fixed set of addresses for incoming UTXOs without a wallet file | Wallet SDK ([UTXO Processor](utxo-processor.md), [UTXO Context](utxo-context.md)) |
 
-The managed `Wallet` is built from these pieces — every primitive on this
-page is what `Wallet` wraps internally.
+The managed `Wallet` is built from these pieces — every primitive on
+this page is what `Wallet` wraps internally.
 
 ## Where to next
 
 If you're new here, start with [Key Management](key-management.md) →
 [Derivation](derivation.md) → [Transaction Generator](tx-generator.md).
-That sequence walks the typical "make a key, build a transaction, send
-it" flow without any file I/O.
+That sequence walks the typical "make a key, build a transaction,
+send it" flow without any file I/O.

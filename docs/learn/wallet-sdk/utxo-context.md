@@ -1,16 +1,16 @@
 # UTXO Context
 
-A `UtxoContext` tracks UTXOs for a fixed set of addresses. It's bound to
-a [UTXO Processor](utxo-processor.md) and gets fed by it: as the
-processor receives notifications from the node, it routes the changes
-into whichever contexts have registered the relevant addresses. The
-context exposes the resulting UTXO set, balance, and mature/pending
-splits.
+A [`UtxoContext`](../../reference/Classes/UtxoContext.md) tracks UTXOs
+for a fixed set of addresses. It's bound to a
+[UTXO Processor](utxo-processor.md) and fed by it: as the processor
+receives notifications from the node, it routes changes to whichever
+contexts have registered the relevant addresses. The context exposes
+the resulting UTXO set, balance, and mature/pending splits.
 
-If you're using the managed [Wallet](../wallet/overview.md), it manages a
-`UtxoContext` per activated account internally — you usually don't
-construct one yourself. Drop down here when you want UTXO tracking
-without the on-disk wallet file.
+The managed [Wallet](../wallet/overview.md) creates a `UtxoContext`
+per activated account internally — you usually don't construct one
+yourself. Drop down here when you want UTXO tracking without an
+on-disk wallet file.
 
 ## Build one
 
@@ -27,8 +27,8 @@ context = UtxoContext(processor)
 await context.track_addresses(["kaspatest:qr0lr4ml..."])
 ```
 
-`UtxoContext(processor, id=...)` accepts an optional 32-byte hex id. If
-you omit it, one is generated. Use the explicit id when you need the
+`UtxoContext(processor, id=...)` accepts an optional 32-byte hex id;
+omitted ids are generated. Set an explicit id when you need the
 context to be addressable across reconnects.
 
 ## What it exposes
@@ -43,8 +43,8 @@ mature = context.mature_range(from_=0, to=10)   # list[UtxoEntryReference]
 pending = context.pending()                     # list[UtxoEntryReference]
 ```
 
-`balance` is `None` until the first notification arrives. After that it's
-a `Balance(mature, pending, outgoing)` in sompi.
+`balance` is `None` until the first notification arrives; after that
+it's a `Balance(mature, pending, outgoing)` in sompi.
 
 ## Add and remove tracked addresses
 
@@ -55,13 +55,13 @@ await context.clear()           # forget every address and UTXO
 ```
 
 `track_addresses` accepts `Address` instances or their string forms.
-`current_daa_score=...` is optional — supply it if you want the scan to
-ignore confirmations older than that score.
+`current_daa_score=...` is optional — supply it to ignore
+confirmations older than that score.
 
 ## Use as `Generator` input
 
-The [Transaction Generator](tx-generator.md) accepts a `UtxoContext` as
-its `entries` argument:
+The [Transaction Generator](tx-generator.md) accepts a `UtxoContext`
+as its `entries` argument:
 
 ```python
 from kaspa import Generator, PaymentOutput
@@ -73,8 +73,8 @@ gen = Generator(
 )
 ```
 
-This avoids snapshotting the UTXO list yourself; the generator pulls the
-current mature set when it iterates.
+This avoids snapshotting the UTXO list yourself — the generator pulls
+the current mature set when it iterates.
 
 ## Where to next
 

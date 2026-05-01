@@ -70,7 +70,11 @@ plugins:
 markdown_extensions:
   - admonition
   - pymdownx.details
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
@@ -124,13 +128,13 @@ nav:
           - Overview: learn/wallet/overview.md
           - Architecture: learn/wallet/architecture.md
           - Lifecycle: learn/wallet/lifecycle.md
-          - Initialize: learn/wallet/initialize.md
-          - Start: learn/wallet/start.md
-          - Open: learn/wallet/open.md
+          - Sync State: learn/wallet/sync-state.md
+          - Wallet Files: learn/wallet/wallet-files.md
           - Private Keys: learn/wallet/private-keys.md
           - Accounts: learn/wallet/accounts.md
           - Addresses: learn/wallet/addresses.md
           - Keypair Accounts: learn/wallet/keypair.md
+          - UTXO Maturity: learn/wallet/utxo-maturity.md
           - Send Transaction: learn/wallet/send-transaction.md
           - Sweep Funds: learn/wallet/sweep.md
           - Transaction History: learn/wallet/transaction-history.md

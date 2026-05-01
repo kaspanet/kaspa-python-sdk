@@ -1,21 +1,19 @@
 # Wallet
 
-The `Wallet` class is the SDK's high-level managed wallet. It layers
-encrypted on-disk storage, multi-account management, an event bus, and
-built-in send / transfer / sweep flows on top of the lower-level primitives
-in [Wallet SDK](../wallet-sdk/overview.md).
+The [`Wallet`](../../reference/Classes/Wallet.md) class is the SDK's
+high-level managed wallet. It layers encrypted on-disk storage,
+multi-account management, an event bus, and built-in send / transfer /
+sweep flows on top of the primitives in
+[Wallet SDK](../wallet-sdk/overview.md).
 
-## When to reach for `Wallet`
+Features:
 
-| You want to... | Use |
-| --- | --- |
-| Persist secrets, manage multiple accounts, react to chain events | `Wallet` |
-| Sign one transaction in a script, no on-disk state | The primitives in [Wallet SDK](../wallet-sdk/overview.md) |
-| Embed wallet behaviour in your own app | `Wallet` — the listener model and account API are designed for this |
-
-If you only need a one-shot signer, the primitives are simpler. If you need
-the "open file → manage keys → track UTXOs → send" loop, `Wallet` saves
-you from re-implementing it.
+- Persistent encrypted on-disk storage for keys and account metadata
+- Multi-account management across BIP32 and keypair accounts
+- Event bus for chain notifications (balance, maturity, reorg)
+- Built-in send, transfer, and sweep flows
+- Address derivation and discovery
+- Transaction history tracking
 
 ## A wallet, end to end
 
@@ -51,23 +49,24 @@ async def main():
 asyncio.run(main())
 ```
 
-This script creates a wallet file, derives a BIP32 account from a
-mnemonic, and activates it. Re-running fails with
+This script creates a wallet file on disk, derives a BIP32 account from a
+mnemonic, and activates it. Re-running raises
 `WalletAlreadyExistsError` unless you switch to `wallet_open` — see
-[Open](open.md).
+[Lifecycle](lifecycle.md#open-a-wallet-file).
 
 ## How this section is laid out
 
 - [Architecture](architecture.md) — `Wallet` / `UtxoProcessor` /
-  `UtxoContext` and how notifications flow through them.
-- [Lifecycle](lifecycle.md) — the state machine and ordering rules for the
-  whole class.
-- [Initialize](initialize.md), [Start](start.md), [Open](open.md) — each
-  phase of bringing a wallet up.
+  `UtxoContext` and how notifications flow.
+- [Lifecycle](lifecycle.md) — the full state machine: construct,
+  start, connect, open, activate, close, stop.
+- [Sync State](sync-state.md) — node IBD vs. processor readiness.
+- [Wallet Files](wallet-files.md) — enumerate, export, import,
+  rename, change secret.
 - [Private Keys](private-keys.md), [Accounts](accounts.md),
-  [Addresses](addresses.md), [Keypair Accounts](keypair.md) — populating
-  the wallet.
+  [Addresses](addresses.md), [Keypair Accounts](keypair.md) —
+  populating the wallet.
 - [Send Transaction](send-transaction.md), [Sweep Funds](sweep.md) —
   outgoing flows.
-- [Transaction History](transaction-history.md) — the event surface and
-  history APIs.
+- [Transaction History](transaction-history.md) — events and history
+  APIs.

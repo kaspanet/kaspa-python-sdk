@@ -1,8 +1,9 @@
 # Addresses
 
-A Kaspa address encodes a public key or a script hash, the address
-*version* (which signature scheme or script type it pays to), and the
-network it belongs to. The SDK exposes them as `Address` instances.
+A Kaspa address encodes a public key or script hash, the address
+*version* (signature scheme or script type), and its network. The SDK
+exposes them as [`Address`](../reference/Classes/Address.md)
+instances.
 
 ## Anatomy
 
@@ -83,9 +84,9 @@ print(addr.version)
 | `kaspadev:` | devnet |
 | `kaspasim:` | simnet |
 
-To re-encode an address for a different network — for example, to
-display the testnet equivalent of a known mainnet address during
-testing — set the prefix:
+To re-encode an address for a different network — e.g. to display the
+testnet equivalent of a mainnet address during testing — overwrite
+the prefix:
 
 ```python
 addr = Address("kaspa:qz...")
@@ -93,9 +94,9 @@ addr.prefix = "kaspatest"
 print(addr.to_string())   # kaspatest:qz...
 ```
 
-This *does not* re-derive the address from a key; it just rewrites the
-prefix. For programmatic conversion of an actual key to a different
-network's address, derive again with the right `NetworkType`.
+This rewrites the prefix only; it does *not* re-derive from a key. For
+a real key-to-network conversion, derive again with the right
+`NetworkType`.
 
 ## Scripts and addresses
 
@@ -114,8 +115,9 @@ spk = pay_to_address_script(Address("kaspa:qz..."))
 print(spk.script)
 ```
 
-`pay_to_address_script` is the lockup script you put in a
-`TransactionOutput` to pay to that address. See [Transactions → Outputs](transactions/outputs.md).
+[`pay_to_address_script`](../reference/Functions/pay_to_address_script.md)
+is the lockup script you put in a `TransactionOutput` to pay an
+address. See [Transactions → Outputs](transactions/outputs.md).
 
 ## Multi-signature addresses
 
@@ -131,14 +133,14 @@ multi = create_multisig_address(
 print(multi.to_string())
 ```
 
-For the full multisig spend flow (creating the address, signing with
-multiple cosigners, submitting), see the
+For the full multisig spend flow (address creation, multi-cosigner
+signing, submission), see the
 [Multi-signature transactions](../guides/multisig.md) recipe.
 
 ## Where to next
 
 - [Networks](networks.md) — what each prefix means.
-- [Transactions](transactions/overview.md) — using addresses inside transaction
-  outputs.
+- [Transactions → Outputs](transactions/outputs.md) — using addresses
+  inside transaction outputs.
 - [Wallet SDK → Derivation](wallet-sdk/derivation.md) — deriving many
   addresses from one key.

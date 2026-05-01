@@ -1,9 +1,11 @@
 # Transaction Generator
 
-The `Generator` is the SDK's built-in coin selector and fee calculator.
-You hand it UTXOs, a change address, and the outputs you want; it picks
-inputs, computes mass and fees, and yields one or more
-`PendingTransaction`s ready to sign and submit.
+The [`Generator`](../../reference/Classes/Generator.md) is the SDK's
+built-in coin selector and fee calculator. You hand it UTXOs, a change
+address, and the outputs you want; it picks inputs, computes mass and
+fees, and yields one or more
+[`PendingTransaction`](../../reference/Classes/PendingTransaction.md)s
+ready to sign and submit.
 
 ## Send a payment, end to end
 
@@ -45,9 +47,9 @@ async def main():
 asyncio.run(main())
 ```
 
-A `Generator` is *iterable* — when the input set is too large for a single
-transaction's mass budget, it yields a chain of consolidating transactions
-followed by the final payment. Loop and submit each.
+A `Generator` is *iterable* — when the input set is too large for one
+transaction's mass budget, it yields a chain of consolidating
+transactions followed by the final payment. Loop and submit each.
 
 ## Constructor options
 
@@ -68,8 +70,9 @@ gen = Generator(
 )
 ```
 
-`entries` accepts a [`UtxoContext`](utxo-context.md) directly — pass the
-context and it consumes from the mature set without you copying the list.
+`entries` accepts a [`UtxoContext`](utxo-context.md) directly — pass
+the context and it consumes from the mature set without you copying
+the list.
 
 ## Estimate before signing
 
@@ -89,13 +92,12 @@ summary = estimate_transactions(
 )
 ```
 
-`estimate()` does not consume the generator; you can iterate it for real
-afterwards.
+`estimate()` doesn't consume the generator — you can iterate it for
+real afterwards.
 
 ## Pending transactions
 
-Each item the generator yields exposes the proposed transaction's
-metadata:
+Each yielded item exposes the proposed transaction's metadata:
 
 ```python
 for pending in gen:
@@ -106,8 +108,8 @@ for pending in gen:
     raw_tx = pending.transaction
 ```
 
-Use this when you need to surface fee / mass to a user before they
-authorize a signature.
+Use this to surface fee / mass to a user before they authorize a
+signature.
 
 ## Signing
 
@@ -143,9 +145,11 @@ result = await client.submit_transaction({
 })
 ```
 
-`pending.submit(client)` is the right path. The manual route is for cases
-where you need to round-trip the transaction through another system
-before submission.
+`pending.submit(client)` is the right path. The manual route is for
+round-tripping the transaction through another system before
+submission. See
+[Transactions → Submission](../transactions/submission.md) for the
+`allowOrphan` semantics and confirmation states.
 
 ## One-shot helpers
 

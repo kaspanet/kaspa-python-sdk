@@ -1,13 +1,13 @@
 # Signing
 
-Signing fills in each input's `signature_script` with proof that the
-spender controls the key the corresponding UTXO is locked to. Kaspa
-defaults to **Schnorr** signatures over the secp256k1 curve; ECDSA is
-also supported for inputs locked to ECDSA addresses. Multisig inputs
-combine multiple signatures under a script-hash lockup.
+Signing fills each input's `signature_script` with proof that the
+spender controls the key the UTXO is locked to. Kaspa defaults to
+**Schnorr** signatures over secp256k1; ECDSA is supported for inputs
+locked to ECDSA addresses. Multisig inputs combine multiple
+signatures under a script-hash lockup.
 
-For Schnorr-vs-ECDSA on the addressing side, see
-[Addresses → Versions](../addresses.md).
+For Schnorr vs ECDSA on the addressing side, see
+[Addresses → Versions](../addresses.md#versions).
 
 ## Sign a manually built transaction
 
@@ -18,16 +18,17 @@ update_transaction_mass("mainnet", tx)        # do this first — mass is signed
 signed = sign_transaction(tx, [private_key], verify_sig=True)
 ```
 
-`sign_transaction(tx, signers, verify_sig)`:
+[`sign_transaction(tx, signers, verify_sig)`](../../reference/Functions/sign_transaction.md):
 
-- `signers` — a list of `PrivateKey`. The signer for each input is
-  inferred from the input's UTXO lockup; pass every key that any input
-  needs.
-- `verify_sig=True` — verifies each signature after writing it. Cheap
-  insurance during development; you can disable it in performance-
-  sensitive paths once you trust the inputs.
+- `signers` — a list of
+  [`PrivateKey`](../../reference/Classes/PrivateKey.md). The signer
+  for each input is inferred from the input's UTXO lockup; pass every
+  key any input needs.
+- `verify_sig=True` — verify each signature after writing it. Cheap
+  insurance during development; disable in performance-sensitive
+  paths once you trust the inputs.
 
-Sign before submission, after mass is filled in. Mass is part of the
+Sign after mass is filled in, before submission. Mass is part of the
 signed payload, so changing inputs, outputs, or mass *after* signing
 invalidates the signature.
 
@@ -57,9 +58,10 @@ signers (mixed-key wallets, partially-co-signed flows).
 
 ## SighashType
 
-The hash that gets signed describes *which parts of the transaction* the
-signature commits to. `SighashType.All` is the default and the only one
-most code should use.
+The hash that gets signed describes *which parts of the transaction*
+the signature commits to.
+[`SighashType.All`](../../reference/Enums/SighashType.md) is the
+default and the only one most code should use.
 
 ```python
 from kaspa import SighashType
@@ -71,19 +73,19 @@ print(list(SighashType))
 - **`All`** — signs every input and every output. Standard.
 - **`_None`** — signs inputs only; outputs can be modified. Rare;
   underscore-prefixed because `None` is a Python keyword.
-- **`Single`** — signs the input being spent and the matching output by
-  index.
+- **`Single`** — signs the input being spent and the matching output
+  by index.
 - **`*AnyOneCanPay`** — variants that *don't* sign the other inputs,
   letting cosigners add inputs after the fact.
 
-In practice, leave it at `All` unless you have a specific protocol or
-co-signing reason. The non-`All` modes are for advanced flows like
-collaborative coin joins.
+Leave it at `All` unless you have a specific protocol or co-signing
+reason. The non-`All` modes are for advanced flows like collaborative
+coin joins.
 
 ## Build a signature without filling the input
 
-When you need the raw signature bytes — for example, to send to a
-co-signer for aggregation — use `create_input_signature`:
+When you need raw signature bytes — e.g. to send to a co-signer for
+aggregation — use `create_input_signature`:
 
 ```python
 from kaspa import SighashType, create_input_signature
@@ -96,29 +98,29 @@ sig_hex = create_input_signature(
 )
 ```
 
-The same method exists on `PendingTransaction` (`pending.create_input_signature(...)`)
-and you can write the resulting script back with `pending.fill_input(...)`.
+The same method exists on `PendingTransaction`
+(`pending.create_input_signature(...)`); write the resulting script
+back with `pending.fill_input(...)`.
 
 ## Multisig and sig_op_count
 
 Two fields interact with mass when you sign:
 
-- **`sig_op_count`** on each input — how many signature ops that input
-  actually performs. `1` for a single-key spend, `M` for an `M`-of-`N`
-  multisig.
-- **`minimum_signatures`** passed to `update_transaction_mass(...,
-  minimum_signatures=M)` and `calculate_transaction_mass` — tells the
-  mass calculator how big the signature script will be when it's filled
-  in.
+- **`sig_op_count`** on each input — number of signature ops the
+  input actually performs. `1` for a single-key spend, `M` for an
+  `M`-of-`N` multisig.
+- **`minimum_signatures`** passed to
+  `update_transaction_mass(..., minimum_signatures=M)` and
+  `calculate_transaction_mass` — tells the mass calculator how big
+  the filled-in signature script will be.
 
-If either is wrong, mass will be wrong, and the resulting fee will be
-either rejected (too low) or wasted (too high). The Generator handles
-this when you pass `sig_op_count` and `minimum_signatures` to the
-constructor.
+Wrong values yield wrong mass and either rejected (too low) or wasted
+(too high) fees. The Generator handles this when you pass
+`sig_op_count` and `minimum_signatures` to the constructor.
 
-For the full multisig flow (creating the address, signing with multiple
-cosigners, submitting), see the
-[Multi-signature transactions](../../guides/multisig.md) recipe.
+For the full multisig flow (address creation, multi-cosigner signing,
+submission), see
+[Multi-signature transactions](../../guides/multisig.md).
 
 ## Where to next
 

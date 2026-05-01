@@ -1,10 +1,11 @@
 # Key Management
 
-Everything in this page is BIP-39-compatible. The SDK gives you `Mnemonic`
-for the human-readable phrase, the seed bytes that come out of it, and
-`XPrv` for the master extended private key the seed produces. From an
-`XPrv` you derive child keys — that's the next page,
-[Derivation](derivation.md).
+Everything on this page is BIP-39 compatible. The SDK gives you
+[`Mnemonic`](../../reference/Classes/Mnemonic.md) for the
+human-readable phrase, the seed bytes it produces, and
+[`XPrv`](../../reference/Classes/XPrv.md) for the master extended
+private key from that seed. From an `XPrv` you derive child keys —
+that's the next page, [Derivation](derivation.md).
 
 Read [Security](../../getting-started/security.md) before generating a
 real mnemonic.
@@ -20,7 +21,8 @@ print(m.phrase)
 ```
 
 24 words is the recommended default — more entropy, lower brute-force
-risk. 12 words is supported for compatibility with tools that emit them.
+risk. 12 words is supported for compatibility with tools that emit
+them.
 
 ## Restore from a mnemonic
 
@@ -35,8 +37,8 @@ else:
     raise ValueError("invalid mnemonic")
 ```
 
-`Mnemonic.validate(phrase)` checks word membership, length, and the BIP-39
-checksum. It returns a bool — it does not raise.
+`Mnemonic.validate(phrase)` checks word membership, length, and the
+BIP-39 checksum. Returns a bool; never raises.
 
 ## Validation
 
@@ -60,15 +62,15 @@ xprv = XPrv(seed)
 ```
 
 !!! info "Passphrase"
-    The optional passphrase (sometimes called the "25th word") changes
-    the seed. The same mnemonic with different passphrases produces
-    different wallets. An attacker who recovers the mnemonic alone gets
-    nothing without the passphrase.
+    The optional passphrase (the "25th word") changes the seed. The
+    same mnemonic with different passphrases produces different
+    wallets. An attacker who recovers the mnemonic alone gets nothing
+    without the passphrase.
 
 ## Inspect entropy
 
-The `entropy` property exposes the underlying random bits as a hex string
-— the raw input the BIP-39 phrase encodes:
+The `entropy` property exposes the underlying random bits as a hex
+string — the raw input the BIP-39 phrase encodes:
 
 ```python
 m = Mnemonic.random()
@@ -76,7 +78,7 @@ print(m.entropy)                    # hex
 m.entropy = "<new entropy hex>"     # advanced; rebuilds the phrase
 ```
 
-You rarely need to set `entropy` directly. The two cases that come up:
+You rarely need to set `entropy` directly. Two cases that come up:
 re-creating a `Mnemonic` from entropy emitted by another tool, and
 debugging a vector mismatch against a third-party implementation.
 
@@ -88,13 +90,13 @@ from kaspa import Mnemonic, Language
 m = Mnemonic(phrase, Language.English)
 ```
 
-English is the default and is what every Kaspa example uses. The other
-BIP-39 wordlists exist on the enum but are rarely used in practice — if
-you don't know you need a non-English wordlist, use English.
+English is the default and what every Kaspa example uses. Other
+BIP-39 wordlists exist on the enum but are rarely used — if you don't
+know you need a non-English wordlist, use English.
 
 ## Hex private keys (`SecretKey`)
 
-For one-key accounts (a single secp256k1 secret with no derivation),
+For one-key accounts (a single secp256k1 secret, no derivation),
 skip the mnemonic entirely:
 
 ```python
@@ -105,8 +107,9 @@ addr = key.to_address("testnet-10")
 ```
 
 The 64-char hex string is what
-[Wallet → Keypair Accounts](../wallet/keypair.md) takes as the `secret`
-input to `prv_key_data_create(kind=PrvKeyDataVariantKind.SecretKey)`.
+[Wallet → Keypair Accounts](../wallet/keypair.md) takes as the
+`secret` input to
+`prv_key_data_create(kind=PrvKeyDataVariantKind.SecretKey)`.
 
 ## Where to next
 

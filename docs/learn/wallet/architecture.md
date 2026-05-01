@@ -1,77 +1,40 @@
 # Architecture
 
-A `Wallet` is not a single object — it's a small system of cooperating
-pieces. Knowing how they fit together is what makes the rest of this
-section make sense, especially the [sync gate](start.md) and the
-[transaction-history events](transaction-history.md).
+The `Wallet` class has quite a bit going on behind the scenes - it's a small system of cooperating
+pieces. Knowing how they fit together is what makes the
+[sync gate](sync-state.md) and
+[transaction-history events](transaction-history.md) make sense.
 
 ## The pieces
 
-```
-                ┌──────────────────────────────────────────┐
-                │                  Wallet                  │
-                │   (lifecycle, file storage, accounts)    │
-                └───────────┬───────────────┬──────────────┘
-                            │               │
-              owns          │               │     owns
-                            ▼               ▼
-                    ┌────────────────┐  ┌──────────────┐
-                    │ UtxoProcessor  │  │  RpcClient   │
-                    └────────┬───────┘  └──────┬───────┘
-                             │                 │
-                       fans out to             │  pushes notifications
-                             │                 │
-                             ▼                 ▼
-                    ┌────────────────────────────────┐
-                    │   UtxoContext  (one per          │
-                    │   activated account)             │
-                    └────────────────────────────────┘
+```mermaid
+flowchart TD
+    Wallet["<b>Wallet</b><br/>lifecycle, file storage, accounts"]
+    UtxoProcessor["<b>UtxoProcessor</b>"]
+    RpcClient["<b>RpcClient</b>"]
+    UtxoContext["<b>UtxoContext</b><br/>one per activated account"]
+
+    Wallet -- owns --> UtxoProcessor
+    Wallet -- owns --> RpcClient
+    RpcClient -- pushes notifications --> UtxoProcessor
+    UtxoProcessor -- fans out to --> UtxoContext
 ```
 
 | Component | Job |
 | --- | --- |
-| **`Wallet`** | Lifecycle, on-disk file storage, account list, event multiplexer. The thing your code calls. |
-| **`RpcClient`** | The wRPC connection. Used internally for calls and as the source of node-pushed notifications. |
-| **`UtxoProcessor`** | Subscribes to virtual-chain / UTXO notifications, tracks `synced` state, routes incoming UTXO changes to the right `UtxoContext`. |
-| **`UtxoContext`** | One per activated account. Holds the tracked addresses, the per-state balance (`mature`, `pending`, `outgoing`), and the mature UTXO set the coin selector pulls from. |
+| **[`Wallet`](../../reference/Classes/Wallet.md)** | Lifecycle, on-disk file storage, account list, event multiplexer. The thing your code calls. |
+| **[`RpcClient`](../../reference/Classes/RpcClient.md)** | The wRPC connection. Used internally for calls and as the source of node-pushed notifications. |
+| **[`UtxoProcessor`](../../reference/Classes/UtxoProcessor.md)** | Subscribes to virtual-chain / UTXO notifications, tracks `synced` state, routes UTXO changes to the right `UtxoContext`. |
+| **[`UtxoContext`](../../reference/Classes/UtxoContext.md)** | One per activated account. Holds tracked addresses, per-state balance (`mature`, `pending`, `outgoing`), and the mature UTXO set the coin selector pulls from. |
 
-The wallet *does not poll* the node for UTXO state. It is **fed**, by the
-processor, from notifications. This is why the [sync gate](start.md)
-matters — before sync, the processor isn't forwarding anything, so the
-contexts stay empty.
-
-## UTXO maturity
-
-Every UTXO the processor sees moves through three states:
-
-- **Pending** — seen, but the chain confirmation depth is below the
-  maturity threshold. Counted in `Balance.pending`. *Not* spendable.
-- **Mature** — confirmed deeply enough to spend. Counted in
-  `Balance.mature`. Returned by `accounts_get_utxos`. Selectable.
-- **Outgoing** — locked because the wallet just spent it in a transaction
-  it generated. Counted in `Balance.outgoing` until the spend matures or is
-  reorged out.
-
-[Send Transaction](send-transaction.md) waits on `Maturity` for this
-reason: a `Pending` UTXO is real, but the next `accounts_send` won't see
-it as spendable.
-
-## Why `accounts_get_utxos` can return `[]`
-
-`accounts_get_utxos` is a read of the in-memory `UtxoContext`. It returns
-`[]` when:
-
-1. The wallet isn't synced yet (the processor isn't forwarding).
-2. The account hasn't been activated.
-3. No notification for a funding tx has reached the processor yet.
-
-None of these are "the address has no funds" — they're "the wallet hasn't
-been told yet." The fix is to gate UTXO-dependent code on `is_synced` and
-to listen for `Maturity` rather than polling. See [Start](start.md) and
-[Transaction History](transaction-history.md).
+The wallet *does not poll* the node for UTXO state. It is **fed** by
+the processor from notifications — see [Sync State](sync-state.md)
+for what gates that flow.
 
 ## Where to next
 
-- [Lifecycle](lifecycle.md) — the state machine.
-- [Start](start.md) — `start → connect → is_synced` and why each step matters.
+- [Lifecycle](lifecycle.md) — the state machine and boot sequence.
+- [Sync State](sync-state.md) — node IBD vs. processor readiness.
+- [UTXO Maturity](utxo-maturity.md) — Pending / Mature / Outgoing
+  states and why `accounts_get_utxos` can return `[]`.
 - [Transaction History](transaction-history.md) — the event surface.

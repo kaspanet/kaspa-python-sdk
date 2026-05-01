@@ -1,18 +1,21 @@
 # Transactions
 
-A transaction in Kaspa is the same shape as in any UTXO chain: a list of
-inputs (each spending a previous output), a list of outputs, and a few
-metadata fields. The SDK exposes the underlying types — `Transaction`,
-`TransactionInput`, `TransactionOutput`, `TransactionOutpoint`,
-`UtxoEntryReference` — and the helpers that build, sign, mass, and
-serialise them.
+A Kaspa transaction has the same shape as on any UTXO chain: a list
+of inputs (each spending a previous output), a list of outputs, and
+a few metadata fields. The SDK exposes the underlying types —
+[`Transaction`](../../reference/Classes/Transaction.md),
+[`TransactionInput`](../../reference/Classes/TransactionInput.md),
+[`TransactionOutput`](../../reference/Classes/TransactionOutput.md),
+[`TransactionOutpoint`](../../reference/Classes/TransactionOutpoint.md),
+[`UtxoEntryReference`](../../reference/Classes/UtxoEntryReference.md)
+— and helpers that build, sign, mass, and serialise them.
 
 Most of the time you'll use the higher-level
-[Transaction Generator](../wallet-sdk/tx-generator.md) (or the managed
-[Wallet](../wallet/send-transaction.md) on top of it). The pages in this
-section cover the primitives underneath, so you can build manually when
-you need to — custom lockup scripts, exact input ordering, payload data,
-offline signing.
+[Transaction Generator](../wallet-sdk/tx-generator.md) (or the
+managed [Wallet](../wallet/send-transaction.md) on top of it). This
+section covers the primitives underneath, so you can build manually
+when you need custom lockup scripts, exact input ordering, payload
+data, or offline signing.
 
 ## Anatomy
 
@@ -34,18 +37,18 @@ TransactionOutput
   script_public_key (lockup script)
 ```
 
-A few things that distinguish Kaspa from a Bitcoin-shaped chain:
+What sets Kaspa apart from a Bitcoin-shaped chain:
 
 - **Inputs carry their own UTXO context** via `UtxoEntryReference`, so
-  the signer doesn't have to re-fetch the spent output to know its amount
+  the signer doesn't have to re-fetch the spent output for its amount
   and lockup. See [Inputs](inputs.md).
-- **Mass replaces "byte size × rate"** as the fee model. You compute mass
-  on the transaction (including a storage component derived from input
-  and output values), then multiply by the prevailing fee rate. See
-  [Mass & fees](mass-and-fees.md).
-- **The atomic unit is the sompi**: `1 KAS = 100_000_000 sompi`. Every
-  amount in the transaction surface is a sompi int — convert at the UI
-  boundary only.
+- **Mass replaces "byte size × rate"** as the fee model. Compute mass
+  on the transaction (including a storage component derived from
+  input and output values), then multiply by the prevailing fee rate.
+  See [Mass & fees](mass-and-fees.md).
+- **The atomic unit is the sompi**: `1 KAS = 100_000_000 sompi`.
+  Every amount in the transaction surface is a sompi int — convert
+  only at the UI boundary.
 
 ## End-to-end (manual path)
 
@@ -92,16 +95,17 @@ await client.submit_transaction({
 ```
 
 This is what the [Generator](../wallet-sdk/tx-generator.md) does
-internally — it picks UTXOs, computes mass, signs, and yields one or more
-ready-to-submit `PendingTransaction`s. Reach for the manual path when you
-need control the Generator doesn't expose.
+internally — it picks UTXOs, computes mass, signs, and yields one or
+more ready-to-submit `PendingTransaction`s. Reach for the manual path
+when you need control the Generator doesn't expose.
 
 ## In this section
 
-- **[Inputs](inputs.md)** — `TransactionInput`, `TransactionOutpoint`,
-  `UtxoEntryReference`, and why inputs carry their UTXO context.
-- **[Outputs](outputs.md)** — `TransactionOutput`, `ScriptPublicKey`, the
-  lockup scripts that pay to an address.
+- **[Inputs](inputs.md)** — `TransactionInput`,
+  `TransactionOutpoint`, `UtxoEntryReference`, and why inputs carry
+  their UTXO context.
+- **[Outputs](outputs.md)** — `TransactionOutput`, `ScriptPublicKey`,
+  the lockup scripts that pay an address.
 - **[Mass & fees](mass-and-fees.md)** — computing mass, storage mass,
   the fee market, and when to call `update_transaction_mass`.
 - **[Signing](signing.md)** — `sign_transaction`, `SighashType`,
@@ -109,14 +113,16 @@ need control the Generator doesn't expose.
 - **[Submission](submission.md)** — `submit_transaction`, what
   "submitted" means, and how confirmation works.
 - **[Metadata fields](metadata.md)** — `version`, `lock_time`,
-  `subnetwork_id`, `gas`, `payload`, the fields you mostly leave alone.
+  `subnetwork_id`, `gas`, `payload` — the fields you mostly leave
+  alone.
 - **[Serialization](serialization.md)** — `to_dict()` / `from_dict()`
   for round-tripping through other systems.
 
 ## Where to next
 
-- [Wallet SDK → Transaction Generator](../wallet-sdk/tx-generator.md) —
-  the high-level coin selector + signer.
+- [Wallet SDK → Transaction Generator](../wallet-sdk/tx-generator.md)
+  — the high-level coin selector + signer.
 - [Wallet → Send Transaction](../wallet/send-transaction.md) — the
   managed Wallet's send surface.
-- [Kaspa Concepts](../concepts.md) — UTXO model, mass, fees, maturity.
+- [Kaspa Concepts](../concepts.md) — UTXO model, mass, fees,
+  maturity.

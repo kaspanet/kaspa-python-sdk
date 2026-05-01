@@ -1,11 +1,11 @@
 # UTXO Processor
 
-A `UtxoProcessor` subscribes to a node's UTXO and virtual-chain
-notifications and dispatches them to one or more
-[UTXO Contexts](utxo-context.md). It's the engine that makes context
-tracking work. If you're using the managed
-[Wallet](../wallet/overview.md), one is constructed for you. If you're not,
-you build one yourself and bind contexts to it.
+A [`UtxoProcessor`](../../reference/Classes/UtxoProcessor.md)
+subscribes to a node's UTXO and virtual-chain notifications and
+dispatches them to one or more [UTXO Contexts](utxo-context.md). It's
+the engine that makes context tracking work. The managed
+[Wallet](../wallet/overview.md) builds one internally; otherwise,
+build one yourself and bind contexts to it.
 
 ## Construction
 
@@ -23,9 +23,9 @@ await processor.stop()
 await client.disconnect()
 ```
 
-`start()` is what activates the processor — it begins subscribing to
-node notifications and forwarding them. `stop()` is the matching
-shutdown. Without `start()`, contexts bound to it stay empty.
+`start()` activates the processor — it subscribes to node
+notifications and starts forwarding. `stop()` is the matching
+shutdown. Without `start()`, bound contexts stay empty.
 
 ## Properties
 
@@ -37,9 +37,10 @@ shutdown. Without `start()`, contexts bound to it stay empty.
 
 ## Events
 
-The processor has its own event surface — a smaller, lower-level cousin
-of the [managed Wallet's events](../wallet/transaction-history.md).
-Listeners use the same shape:
+The processor has its own event surface — a smaller, lower-level
+cousin of the
+[managed Wallet's events](../wallet/transaction-history.md). Listeners
+use the same shape:
 
 ```python
 def on_event(event):
@@ -64,13 +65,13 @@ Common events:
 | `balance` | A bound `UtxoContext`'s balance changed. |
 | `utxo-proc-error`, `error` | Something went wrong. |
 
-`UtxoProcessorEvent` is the enum form if you'd rather pass it as a
-typed value than a string.
+[`UtxoProcessorEvent`](../../reference/Enums/UtxoProcessorEvent.md)
+is the enum form if you prefer a typed value over a string.
 
 ## Coordinating with `asyncio`
 
-Listener callbacks may run on a background thread. If you need to
-signal an `asyncio.Event` from one, bridge through the loop:
+Listener callbacks may run on a background thread. To signal an
+`asyncio.Event` from one, bridge through the loop:
 
 ```python
 loop = asyncio.get_running_loop()

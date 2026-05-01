@@ -1,13 +1,16 @@
 # Accounts
 
-A wallet holds N accounts of mixed kinds, each backed by exactly one PKD.
-The two everyday kinds are **BIP32** (HD-derived; one mnemonic backs many
-accounts at different `account_index`es) and **keypair** (a single
-secp256k1 key, one address — see [Keypair Accounts](keypair.md)).
+A wallet holds N accounts of mixed kinds, each backed by exactly one
+[private key data entry](private-keys.md). The two everyday kinds:
+
+- **BIP32** — HD-derived; one mnemonic backs many accounts at
+  different `account_index`es.
+- **Keypair** — a single secp256k1 key, one address. See
+  [Keypair Accounts](keypair.md).
 
 ## Account kinds
 
-| Kind | Backing PKD | Address derivation |
+| Kind | Backing private key data | Address derivation |
 | --- | --- | --- |
 | `bip32` | `Mnemonic`, `Bip39Seed`, or `ExtendedPrivateKey` | HD path `m/44'/111111'/<account_index>'/<chain>/<index>` |
 | `keypair` | `SecretKey` | One address per account (Schnorr or ECDSA) |
@@ -66,21 +69,22 @@ for a in await wallet.accounts_enumerate():
     print(" change: ", a.change_address)
 ```
 
-`AccountDescriptor` exposes `kind`, `account_id`, `account_name`,
-`balance`, `prv_key_data_ids`, `receive_address` / `change_address`, and
-(for HD only) `account_index`, `xpub_keys`, `ecdsa`,
-`receive_address_index`, `change_address_index`. `get_addresses()` returns
-every derived address.
+[`AccountDescriptor`](../../reference/Classes/AccountDescriptor.md)
+exposes `kind`, `account_id`, `account_name`, `balance`,
+`prv_key_data_ids`, `receive_address` / `change_address`, and (HD
+only) `account_index`, `xpub_keys`, `ecdsa`, `receive_address_index`,
+`change_address_index`. `get_addresses()` returns every derived
+address.
 
 ## Activate
 
-Accounts must be activated before they emit balance events or are usable
-for sends. Activation requires a connected wRPC client *and* a synced
-wallet — see [Start](start.md).
+Accounts must be activated before they emit balance events or accept
+sends. Activation requires a connected wRPC client *and* a synced
+wallet — see [Sync State](sync-state.md).
 
 ```python
 await wallet.accounts_activate([acct.account_id])
-# or, activate everything in the wallet:
+# or, activate every account:
 await wallet.accounts_activate()
 ```
 
@@ -96,16 +100,16 @@ acct = await wallet.accounts_ensure_default(
 )
 ```
 
-Returns the existing default `bip32` account if there is one, otherwise
-creates one (generating a fresh mnemonic when `mnemonic_phrase` is
-`None`). Only `bip32` is supported; other kinds raise.
+Returns the default `bip32` account if there is one, otherwise creates
+one (generating a fresh mnemonic when `mnemonic_phrase` is `None`).
+Only `bip32` is supported; other kinds raise.
 
 ## Import vs. create
 
 `accounts_import_bip32` is the recovery-flow variant: it runs an
-address-discovery scan before adding the account, so addresses that have
-already received funds are recognised as used. Use it when restoring from
-a known-used mnemonic; use `accounts_create_bip32` for fresh accounts.
+address-discovery scan before adding the account, so previously-funded
+addresses are recognised as used. Use it when restoring a known-used
+mnemonic; use `accounts_create_bip32` for fresh accounts.
 
 To scan a mnemonic *before* picking an index, see
 [Wallet Recovery](../../guides/wallet-recovery.md).
