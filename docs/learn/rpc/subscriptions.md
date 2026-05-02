@@ -87,9 +87,13 @@ flattened so callbacks can read `event["added"]` directly. The
 [`RpcUtxosByAddressesEntry`](../../reference/TypedDicts/RpcUtxosByAddressesEntry.md)
 items.
 
+The `"type"` value is the PascalCase variant name (`"UtxosChanged"`,
+`"BlockAdded"`, …) — the kebab-case form (`"utxos-changed"`,
+`"block-added"`, …) is only used when registering listeners.
+
 ```python
 {
-    "type": "utxos-changed",
+    "type": "UtxosChanged",
     "added": [
         {
             "address": "kaspa:qz...",
@@ -118,7 +122,7 @@ For example, a `virtual-daa-score-changed` callback receives:
 
 ```python
 {
-    "type": "virtual-daa-score-changed",
+    "type": "VirtualDaaScoreChanged",
     "data": {
         "virtualDaaScore": 123456789,
     },

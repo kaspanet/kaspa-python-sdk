@@ -20,6 +20,7 @@
 - Wallet-specific exception classes populated into the `kaspa.exceptions` submodule, covering the rusty-kaspa wallet error variants (e.g. `WalletInsufficientFundsError`, `WalletAccountNotFoundError`, `WalletNotSyncedError`, etc.).
 - Examples under `examples/wallet/` demonstrating wallet usage
 - Pytest options `--network-id` and `--rpc-url` for targeting integration tests at a specific network / node.
+- TypedDicts for `RpcClient` subscription event payloads — `BlockAddedEvent`, `VirtualChainChangedEvent`, `FinalityConflictEvent`, `FinalityConflictResolvedEvent`, `UtxosChangedEvent`, `SinkBlueScoreChangedEvent`, `VirtualDaaScoreChangedEvent`, `PruningPointUtxoSetOverrideEvent`, `NewBlockTemplateEvent`, `ConnectEvent`, `DisconnectEvent` — and their notification body TypedDicts (`RpcBlockAddedNotification`, etc.) for typing event-listener callbacks.
 
 ### Changed
 - `py_error_map!` macro extended to register wallet exception variants into the `kaspa.exceptions` submodule.
