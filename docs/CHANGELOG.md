@@ -20,9 +20,6 @@
 - Wallet-specific exception classes populated into the `kaspa.exceptions` submodule, covering the rusty-kaspa wallet error variants (e.g. `WalletInsufficientFundsError`, `WalletAccountNotFoundError`, `WalletNotSyncedError`, etc.).
 - Examples under `examples/wallet/` demonstrating wallet usage
 - Pytest options `--network-id` and `--rpc-url` for targeting integration tests at a specific network / node.
-- Documentation site reorganised around [Diataxis](https://diataxis.fr): a sequenced **Learn** section (RPC, Wallet, Wallet SDK, Networks, Addresses, Transactions, Kaspa Concepts) covers the SDK topic by topic, with a focused **Guides** cookbook for cross-cutting recipes (mnemonic restore, message signing, wallet recovery, custom derivation, multisig).
-- `docs/getting-started/security.md`: a single canonical page covering secret-handling rules. Other pages link to it instead of duplicating the warning.
-- Learn → Transactions split into a dedicated section: Overview, Inputs, Outputs, Mass & Fees, Signing, Submission, Metadata Fields, Serialization. Each page covers one component of a transaction with light Kaspa-protocol context, replacing the single `learn/transactions.md` page.
 
 ### Changed
 - `py_error_map!` macro extended to register wallet exception variants into the `kaspa.exceptions` submodule.
@@ -31,6 +28,7 @@
 - `pyproject.toml`: set `python-source = "python"` and moved the package stub tree under `python/kaspa/` (`kaspa.pyi` → `python/kaspa/__init__.pyi`).
 - `Hash` accepts `str` in addition to `Hash` instances wherever it is used as an argument, and gained `to_hex()` and `__repr__` methods.
 - Added `Balance` `__repr__` method.
+- Documentation site reorganization
 
 ### Fixed
 - `AccountDescriptor.__repr__` now correctly renders optional fields.

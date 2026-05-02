@@ -1,22 +1,27 @@
 # Kaspa Python SDK
 
 This Python package, `kaspa`, provides an SDK for interacting with the
-Kaspa network from Python.
+Kaspa network from Python. This SDK provides features in the following main categories:
 
-`kaspa` is a native extension module built from bindings to Rust and
-[rusty-kaspa](https://github.com/kaspanet/rusty-kaspa) source.
-[PyO3](https://pyo3.rs/) and [Maturin](https://www.maturin.rs/) are used
-to create bindings and build the extension module. More information on
-the inner workings can be found in the
-[Contributing section](contributing/index.md).
-
-!!! warning "Beta Status"
-    This project is in beta status.
+- [RPC Client](learn/rpc/overview.md) — RPC API for the Kaspa node using WebSockets.
+- [Wallet SDK](learn/wallet-sdk/overview.md) — Bindings for wallet-related primitives such as key management, derivation, and transactions.
+- [Managed Wallet](learn/wallet/overview.md) — A high-level, single Python class interface to the Rusty Kaspa Wallet API. This provides full wallet functionality in the single Python class: `Wallet`.
 
 This project closely mirrors
 [Kaspa's WASM SDK](https://kaspa.aspectron.org/docs/), while trying to
-respect Python conventions. Feature parity with the WASM SDK is a work
-in progress; not every feature is available yet in Python.
+respect Python conventions.
+
+## Bindings to Rusty Kaspa
+
+**`kaspa` is a Python-native extension module built from bindings to Rust and
+[rusty-kaspa](https://github.com/kaspanet/rusty-kaspa) source.** [PyO3](https://pyo3.rs/) and [Maturin](https://www.maturin.rs/) are used
+to create bindings and build the extension module.
+
+!!! info "As-thin-as-possible"
+      This project strives to provide as-thin-as-possible Python-compatible wrappers over rusty-kaspa source. Allowing Python developers leverage the features, stability, and security of rusty-kaspa directly, with minimal reimplementation in Python.
+
+More information on bindings approach and development notes can be found in the
+[Contributing section](contributing/index.md).
 
 ## A (Very) Basic Example
 
@@ -35,9 +40,6 @@ if __name__ == "__main__":
 
 ## How the docs are organised
 
-This site follows the [Diataxis](https://diataxis.fr) framework. Each
-section answers a different question:
-
 <div class="grid cards" markdown>
 
 - **[Getting Started](getting-started/installation.md)**  
@@ -48,24 +50,14 @@ section answers a different question:
   How the SDK is shaped, taught topic by topic. Connections, wallets,
   derivation, transactions, the Kaspa concepts behind them.
 
-- **[Guides](guides/mnemonics.md)**  
-  Recipes for specific tasks — mnemonic restore, message signing,
-  multisig, wallet recovery, custom derivation.
+- **[Examples](examples.md)**  
+  Runnable scripts on GitHub covering RPC, wallet, transactions,
+  derivation, mnemonics, message signing, and addresses.
 
 - **[API Reference](reference/index.md)**  
   Every public class, method, and signature. Auto-generated.
 
 </div>
-
-## Where to start
-
-- **New to the SDK:** [Installation](getting-started/installation.md) →
-  [Learn → RPC](learn/rpc/overview.md) →
-  [Learn → Wallet SDK → Key Management](learn/wallet-sdk/key-management.md).
-- **Looking for a recipe:** jump to [Guides](guides/mnemonics.md).
-- **Looking up an API:** [API Reference](reference/index.md).
-- **Generating real keys:** read
-  [Security](getting-started/security.md) first.
 
 ## License
 

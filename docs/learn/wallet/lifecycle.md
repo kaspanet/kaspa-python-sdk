@@ -1,9 +1,7 @@
 # Lifecycle
 
 A `Wallet` moves through five states. Each transition is async and
-ordered — skipping or repeating steps will either raise (e.g. opening
-without `start()`) or leave the wallet in a broken state (e.g.
-operating before sync).
+ordered.
 
 ```mermaid
 stateDiagram-v2
@@ -21,29 +19,28 @@ stateDiagram-v2
 
 | Step | Method | Effect |
 | --- | --- | --- |
-| Construct | `Wallet(network_id, encoding, url, resolver)` | Builds the local file store and an internal wRPC client. No I/O. |
-| Start | `await wallet.start()` | Boots the `UtxoProcessor`, the wRPC notifier, and the event-dispatch task. |
-| Connect | `await wallet.connect(...)` | Connects the wRPC client to a node (via `resolver` or explicit `url`). |
-| Open | `await wallet.wallet_create(...)` / `wallet_open(...)` | Decrypts and loads a wallet file; secrets become available in memory. |
-| Activate | `await wallet.accounts_activate([ids])` | Begins UTXO tracking and event emission for the chosen accounts. |
-| Close | `await wallet.wallet_close()` | Releases the open wallet; activated accounts stop tracking. |
-| Disconnect | `await wallet.disconnect()` | Drops the wRPC connection; the wallet remains started. |
-| Stop | `await wallet.stop()` | Tears down the runtime and event task. |
+| Construct | [`Wallet(network_id, encoding, url, resolver)`](../../reference/Classes/Wallet.md#kaspa.Wallet) | Builds the local file store and an internal wRPC client. No I/O. |
+| Start | [`await wallet.start()`](../../reference/Classes/Wallet.md#kaspa.Wallet.start) | Boots the `UtxoProcessor`, the wRPC notifier, and the event-dispatch task. |
+| Connect | [`await wallet.connect(...)`](../../reference/Classes/Wallet.md#kaspa.Wallet.connect) | Connects the wRPC client to a node (via `resolver` or explicit `url`). |
+| Open | [`await wallet.wallet_create(...)`](../../reference/Classes/Wallet.md#kaspa.Wallet.wallet_create) / [`wallet_open(...)`](../../reference/Classes/Wallet.md#kaspa.Wallet.wallet_open) | Decrypts and loads a wallet file; secrets become available in memory. |
+| Activate | [`await wallet.accounts_activate([ids])`](../../reference/Classes/Wallet.md#kaspa.Wallet.accounts_activate) | Begins UTXO tracking and event emission for the chosen accounts. |
+| Close | [`await wallet.wallet_close()`](../../reference/Classes/Wallet.md#kaspa.Wallet.wallet_close) | Releases the open wallet; activated accounts stop tracking. |
+| Disconnect | [`await wallet.disconnect()`](../../reference/Classes/Wallet.md#kaspa.Wallet.disconnect) | Drops the wRPC connection; the wallet remains started. |
+| Stop | [`await wallet.stop()`](../../reference/Classes/Wallet.md#kaspa.Wallet.stop) | Tears down the runtime and event task. |
 
 ## Properties
 
 | Property | Type | Meaning |
 | --- | --- | --- |
-| `wallet.rpc` | [`RpcClient`](../../reference/Classes/RpcClient.md) | The underlying wRPC client. Use for direct node calls. |
-| `wallet.is_open` | `bool` | `True` between `wallet_open` / `wallet_create` and `wallet_close`. |
-| `wallet.is_synced` | `bool` | `True` once the `UtxoProcessor` has caught up. See [Sync State](sync-state.md). |
-| `wallet.descriptor` | `WalletDescriptor \| None` | Metadata for the open wallet, or `None` when closed. |
+| [`wallet.rpc`](../../reference/Classes/Wallet.md#kaspa.Wallet.rpc) | [`RpcClient`](../../reference/Classes/RpcClient.md) | The underlying wRPC client. Use for direct node calls. |
+| [`wallet.is_open`](../../reference/Classes/Wallet.md#kaspa.Wallet.is_open) | `bool` | `True` between `wallet_open` / `wallet_create` and `wallet_close`. |
+| [`wallet.is_synced`](../../reference/Classes/Wallet.md#kaspa.Wallet.is_synced) | `bool` | `True` once the `UtxoProcessor` has caught up. See [Sync State](sync-state.md). |
+| [`wallet.descriptor`](../../reference/Classes/Wallet.md#kaspa.Wallet.descriptor) | `WalletDescriptor \| None` | Metadata for the open wallet, or `None` when closed. |
 
-## 1.) Construct
+## Construct
 
 Constructing a [`Wallet`](../../reference/Classes/Wallet.md) does no
-I/O. It builds the local file store and an internal wRPC client —
-that's it.
+I/O. It builds the local file store and an internal wRPC client.
 
 ```python
 from kaspa import Resolver, Wallet
@@ -64,8 +61,7 @@ wallet = Wallet(
 | `encoding` | optional | `"borsh"` (default) or `"json"`. Borsh is right for almost everything. |
 
 Addresses derived from this wallet are encoded for `network_id`, and
-the resolver only returns nodes on that network — pin it before
-`accounts_activate`.
+the resolver only returns nodes on that network.
 
 ### Switching networks
 
@@ -79,71 +75,55 @@ await wallet.connect()
 
 Switching network does not invalidate the file store, but BIP32
 account *addresses* are network-specific — a key created under
-`testnet-10` produces different (testnet) addresses than the same key
-under `mainnet`.
+`testnet-10` produces different addresses than the same key under
+`mainnet`.
 
 ### Storage location
 
 Wallet files live in the SDK's local store (under `~/.kaspa/` by
-default). The folder is created on first write — nothing happens at
-construction time. The current `Wallet` constructor does not expose a
-per-instance override; the location is fixed for the process.
+default). The folder is created on first write. The current `Wallet`
+constructor does not expose a per-instance override; the location is
+fixed for the process.
 
-## 2.) Start the runtime
+## Start and connect
 
-`start()` boots the wallet's runtime — `UtxoProcessor`, wRPC notifier,
-and event-dispatch loop. `connect()` then attaches the wRPC client to
-a node. After both, the wallet is ready to *open a file*, but not yet
-ready to touch UTXO state.
+`start()` boots the runtime. `connect()` attaches the wRPC client to a
+node.
 
 ```python
-wallet = Wallet(network_id="testnet-10", resolver=Resolver())
 await wallet.start()
-await wallet.connect()
+await wallet.connect(strategy="fallback", timeout_duration=5_000)
 ```
 
-Both are required. `start()` without `connect()` leaves the runtime
-running but unable to reach the node; `connect()` without a prior
-`start()` leaves the wallet runtime unstarted, so account activation
-and event dispatch never function.
+`start()` without `connect()` leaves the runtime running but unable to
+reach the node. `connect()` without a prior `start()` leaves the
+wallet runtime unstarted, so account activation and event dispatch
+never function.
 
 ### Connect options
 
 `connect()` takes the same options as
-[`RpcClient.connect`](../rpc/connecting.md#connection-options):
-
-```python
-await wallet.connect(
-    block_async_connect=True,    # await readiness before returning
-    strategy="retry",            # "retry" or "fallback"
-    url=None,                    # override the resolver-discovered URL
-    timeout_duration=10_000,     # ms
-    retry_interval=1_000,        # ms
-)
-```
-
-If you constructed with a `Resolver`, omit `url` and let it pick a
-public node. Pass `url=` to override for one connection (handy for
-pinning to a specific node temporarily).
+[`RpcClient.connect`](../rpc/connecting.md#connection-options) —
+`block_async_connect`, `strategy`, `url`, `timeout_duration`,
+`retry_interval`. Pass `url=` to override the resolver-discovered node
+for one connection.
 
 ### Sync gate
 
-`connect()` resolves as soon as the WebSocket is up — *not* when the
-wallet's UTXO processor has caught up. Until `wallet.is_synced` flips
-to `True`, UTXO-dependent calls (`AccountDescriptor.balance`,
-`accounts_get_utxos`, `accounts_send`) are unusable. Quick polling
-form for scripts:
+[`connect()`](../../reference/Classes/Wallet.md#kaspa.Wallet.connect) resolves as soon as the WebSocket is up — not when the
+processor has caught up. UTXO-dependent calls
+([`AccountDescriptor.balance`](../../reference/Classes/AccountDescriptor.md), [`accounts_get_utxos`](../../reference/Classes/Wallet.md#kaspa.Wallet.accounts_get_utxos), [`accounts_send`](../../reference/Classes/Wallet.md#kaspa.Wallet.accounts_send))
+wait on [`wallet.is_synced`](../../reference/Classes/Wallet.md#kaspa.Wallet.is_synced). Quick polling form for scripts:
 
 ```python
-await wallet.connect(...)
 while not wallet.is_synced:
     await asyncio.sleep(0.5)
 ```
 
-For the event-driven pattern and the node-vs-processor breakdown of
-what "synced" actually means, see [Sync State](sync-state.md).
+For the event-driven pattern and the node-vs-processor breakdown, see
+[Sync State](sync-state.md).
 
-## 3.) Open a wallet file
+## Open a wallet file
 
 A wallet file is a single encrypted file on disk. Only one is open at
 a time per `Wallet` instance.
@@ -159,8 +139,8 @@ created = await wallet.wallet_create(
 ```
 
 - `filename` — on-disk basename; omit for the SDK default.
-- `overwrite_wallet_storage=False` — raises `WalletAlreadyExistsError`
-  if the file exists; pass `True` to clobber.
+- `overwrite_wallet_storage=False` — raises [`WalletAlreadyExistsError`](../../reference/Exceptions/WalletAlreadyExistsError.md)
+  if the file exists; pass `True` to overwrite.
 - `user_hint` — stored alongside the file as a recoverable password
   hint.
 
@@ -169,55 +149,44 @@ To open an existing file:
 ```python
 opened = await wallet.wallet_open(
     wallet_secret="example-secret",
-    account_descriptors=True,   # include account list in the response
+    account_descriptors=True,
     filename="demo",
 )
 ```
 
-`account_descriptors=True` returns the account list in the response
-so you can pick which to activate without a follow-up
-`accounts_enumerate()`.
+`account_descriptors=True` returns the account list in the response so
+you can pick which to activate without a follow-up
+[`accounts_enumerate()`](../../reference/Classes/Wallet.md#kaspa.Wallet.accounts_enumerate).
 
 ### Create-or-open pattern
-
-`wallet_create` raises `WalletAlreadyExistsError` when the file
-exists. The canonical idempotent boot:
 
 ```python
 from kaspa.exceptions import WalletAlreadyExistsError
 
 try:
     await wallet.wallet_create(
-        wallet_secret=secret, filename="demo", overwrite_wallet_storage=False,
+        wallet_secret=secret,
+        filename="demo",
+        overwrite_wallet_storage=False,
     )
 except WalletAlreadyExistsError:
-    await wallet.wallet_open(secret, True, "demo")
+    await wallet.wallet_open(
+        wallet_secret=secret,
+        account_descriptors=True,
+        filename="demo",
+    )
 ```
 
 For listing, exporting, importing, renaming, and re-encrypting wallet
 files, see [Wallet Files](wallet-files.md).
 
-## Activate accounts
-
-`accounts_activate` is what makes accounts emit balance events and
-accept sends. Activation requires a connected wRPC client *and* a
-synced wallet — see [Sync State](sync-state.md).
-
-```python
-await wallet.accounts_activate([acct.account_id])
-# or, activate every account:
-await wallet.accounts_activate()
-```
-
-Account creation, BIP32 derivation, and discovery flows live on
-[Accounts](accounts.md).
-
 ## Reload
 
-`wallet_reload(reactivate)` reboots the account runtime from cached
-wallet data — no disk I/O. Pass `reactivate=True` to resume
-previously active accounts; pass `False` to call `accounts_activate`
-yourself. A `WalletReload` event fires either way.
+[`wallet_reload(reactivate)`](../../reference/Classes/Wallet.md#kaspa.Wallet.wallet_reload) reboots the account runtime from cached
+wallet data without disk I/O. Pass `reactivate=True` to resume
+previously active accounts. A `WalletReload` [event](events.md) fires either way.
+Useful after upstream account-state changes; you usually don't need
+it.
 
 ## Close, disconnect, stop
 
@@ -234,23 +203,22 @@ shutdown. Skipping `stop()` leaks the notification task; skipping
 ## Ordering rules
 
 !!! warning "Preconditions"
-    - `start()` must precede `connect()`, `wallet_create()`, and `wallet_open()`.
-    - `wallet_create()` / `wallet_open()` may run before or after
-      `connect()`, but `accounts_activate()` requires the wRPC client to
-      be connected *and* the wallet to be synced (see [Sync State](sync-state.md)).
-    - `set_network_id()` raises if the wRPC client is currently
-      connected — `disconnect()` first, change the network, then
-      `connect()` again.
-    - `wallet_close()` does not stop the runtime; pair it with `stop()`
+    - [`start()`](../../reference/Classes/Wallet.md#kaspa.Wallet.start) must precede [`connect()`](../../reference/Classes/Wallet.md#kaspa.Wallet.connect), [`wallet_create()`](../../reference/Classes/Wallet.md#kaspa.Wallet.wallet_create), and [`wallet_open()`](../../reference/Classes/Wallet.md#kaspa.Wallet.wallet_open).
+    - [`wallet_create()`](../../reference/Classes/Wallet.md#kaspa.Wallet.wallet_create) / [`wallet_open()`](../../reference/Classes/Wallet.md#kaspa.Wallet.wallet_open) may run before or after
+      [`connect()`](../../reference/Classes/Wallet.md#kaspa.Wallet.connect), but [`accounts_activate()`](../../reference/Classes/Wallet.md#kaspa.Wallet.accounts_activate) requires the wRPC client to
+      be connected and the wallet to be synced (see [Sync State](sync-state.md)).
+    - [`set_network_id()`](../../reference/Classes/Wallet.md#kaspa.Wallet.set_network_id) raises if the wRPC client is currently
+      connected — [`disconnect()`](../../reference/Classes/Wallet.md#kaspa.Wallet.disconnect) first, change the network, then
+      [`connect()`](../../reference/Classes/Wallet.md#kaspa.Wallet.connect) again.
+    - [`wallet_close()`](../../reference/Classes/Wallet.md#kaspa.Wallet.wallet_close) does not stop the runtime; pair it with [`stop()`](../../reference/Classes/Wallet.md#kaspa.Wallet.stop)
       on shutdown.
 
 ## Where to next
 
-- [Sync State](sync-state.md) — node IBD vs. processor readiness.
 - [Wallet Files](wallet-files.md) — enumerate, export, import,
   rename, change secret.
 - [Private Keys](private-keys.md) — the next step after creating a
   wallet.
 - [Accounts](accounts.md) — derive accounts from stored key data.
-- [Architecture](architecture.md) — what `start` / `connect` /
-  `activate` actually wire up.
+- [Sync State](sync-state.md) — node IBD vs. processor readiness.
+- [Errors](errors.md) — common exceptions and their fixes.

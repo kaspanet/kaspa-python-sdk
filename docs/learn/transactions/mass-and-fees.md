@@ -5,10 +5,6 @@ Kaspa uses a **mass-based fee model**. Every transaction has a *mass*
 component tied to input and output values. The required fee is
 `mass × fee_rate`, where `fee_rate` is the network's current rate.
 
-For the protocol view of why mass exists, see
-[Kaspa Concepts](../concepts.md#mass-and-the-fee-market). This page
-covers the SDK helpers.
-
 ## The two kinds of mass
 
 - **Compute / size mass** — from the transaction's serialized size
@@ -16,12 +12,15 @@ covers the SDK helpers.
 - **Storage mass** — from input and output *values*, specifically to
   discourage UTXO-set bloat (many tiny outputs from one large input).
 
-Total mass is the larger of the two. You don't compute the parts
-separately for normal use — `calculate_transaction_mass` and
-`update_transaction_mass` handle it. `calculate_storage_mass` is
-exposed when you want to inspect the storage component alone.
+A transaction's overall mass combines the two; you don't compute the
+parts separately for normal use.
 
 ## Compute mass for a transaction
+
+The relevant helpers:
+[`calculate_transaction_mass`](../../reference/Functions/calculate_transaction_mass.md),
+[`update_transaction_mass`](../../reference/Functions/update_transaction_mass.md),
+[`maximum_standard_transaction_mass`](../../reference/Functions/maximum_standard_transaction_mass.md):
 
 ```python
 from kaspa import (
@@ -35,19 +34,20 @@ print(mass)
 print(maximum_standard_transaction_mass())   # protocol upper bound
 ```
 
-`calculate_transaction_mass(network_id, tx)` returns the mass without
+[`calculate_transaction_mass(network_id, tx)`](../../reference/Functions/calculate_transaction_mass.md) returns the mass without
 mutating the transaction. To write it onto the transaction itself
 (required before signing or serializing):
 
 ```python
-update_transaction_mass("mainnet", tx)
-print(tx.mass)
+ok = update_transaction_mass("mainnet", tx)
+print(tx.mass, ok)   # ok is False if mass exceeds the standard limit
 ```
 
-**Order matters.** Run `update_transaction_mass` after inputs and
-outputs are settled but *before* signing or serializing. Mass is part
-of the signed payload — sign first and you'll be signing over
-`mass=0`.
+!!! warning "Order matters"
+    Run [`update_transaction_mass`](../../reference/Functions/update_transaction_mass.md) after inputs and outputs are
+    settled but **before** signing or serializing. Mass is part of
+    the signed payload — sign first and you'll be signing over
+    `mass=0`.
 
 For multisig estimation, both calls take an optional
 `minimum_signatures` to size the signature script correctly:
@@ -57,6 +57,8 @@ update_transaction_mass("mainnet", tx, minimum_signatures=2)
 ```
 
 ## Storage mass on its own
+
+[`calculate_storage_mass`](../../reference/Functions/calculate_storage_mass.md) computes only the storage component:
 
 ```python
 from kaspa import calculate_storage_mass
@@ -77,17 +79,19 @@ storage mass through the roof, fold it into the fee instead.
 from kaspa import calculate_transaction_fee
 
 fee = calculate_transaction_fee("mainnet", tx)
-print(fee)   # required fee in sompi
+print(fee)   # required fee in sompi, or None if mass exceeds the standard limit
 ```
 
-`calculate_transaction_fee` returns the minimum required fee at the
-network's current rate. The result is a sompi int, or `None` if the
-calculation can't be performed (typically a malformed transaction).
+[`calculate_transaction_fee`](../../reference/Functions/calculate_transaction_fee.md) returns the minimum required fee at the
+network's current rate, or `None` if the transaction's mass exceeds
+[`maximum_standard_transaction_mass()`](../../reference/Functions/maximum_standard_transaction_mass.md). Split the inputs across
+multiple transactions in that case.
 
 ## Querying the fee rate
 
 The network exposes a fee estimator over RPC — see
-[RPC → Calls → Fees](../rpc/calls.md#fees):
+[RPC → Calls → Fees](../rpc/calls.md#fees) and
+[`get_fee_estimate`](../../reference/Classes/RpcClient.md#kaspa.RpcClient.get_fee_estimate):
 
 ```python
 estimate = await client.get_fee_estimate({})
@@ -101,28 +105,18 @@ Each bucket carries a `feerate` (sompi-per-gram-of-mass) and an
 bucket by how much you care about latency, multiply by mass, and
 you have a fee.
 
-The Wallet wraps this as
-[`fee_rate_estimate()`](../wallet/send-transaction.md#fees) and the
-Generator picks a sensible default if you don't pass `fee_rate=`
+The [`Wallet`](../../reference/Classes/Wallet.md) wraps this as
+[`fee_rate_estimate()`](../../reference/Classes/Wallet.md#kaspa.Wallet.fee_rate_estimate) (see [the fee model](../wallet/send-transaction.md#fee-model)) and
+the [`Generator`](../../reference/Classes/Generator.md) picks a sensible default if you don't pass `fee_rate=`
 explicitly.
 
 ## When to set fees explicitly
 
-The [Generator](../wallet-sdk/tx-generator.md) picks a fee rate,
+The [`Generator`](../../reference/Classes/Generator.md) (see [Transaction Generator](../wallet-sdk/tx-generator.md)) picks a fee rate,
 computes mass, and folds the leftover into change. Override only:
 
 - **`fee_rate=`** — when you have a specific sompi-per-gram in mind.
-- **`priority_fee=`** — to add a flat surcharge on top of the computed
-  fee.
-- **Manual path** — when building the transaction yourself and sizing
-  change outputs around the fee.
+- **`priority_fee=`** — to add a flat surcharge on top.
+- **Manual path** — when sizing change around the fee yourself.
 
 For typical sends, the defaults are fine.
-
-## Where to next
-
-- [Signing](signing.md) — runs after mass, before submission.
-- [Submission](submission.md) — `submit_transaction` and what counts
-  as confirmed.
-- [Kaspa Concepts → Mass and the fee market](../concepts.md#mass-and-the-fee-market)
-  — protocol background on why mass is shaped this way.

@@ -15,7 +15,8 @@ client = RpcClient(resolver=Resolver(), network_id="mainnet")
 await client.connect()
 ```
 
-**For security critical applications, or to ensure a trusted node, you should consider connecting to your own node.**
+**For security-critical applications, you should connect to your own
+node.**
 
 `network_id` selects the network — `"mainnet"` or a testnet
 (e.g. `"testnet-10"`). It takes a string or a
@@ -24,6 +25,8 @@ await client.connect()
 nodes.
 
 ## Constructor options
+
+[`Resolver`](../../reference/Classes/Resolver.md) accepts a few keyword arguments at construction time:
 
 ```python
 # Default
@@ -43,20 +46,25 @@ resolver = Resolver(urls=["https://resolver1.example.org"])
 
 ## Querying the resolver directly
 
-You can fetch a URL without constructing an `RpcClient`:
+You can fetch a URL without constructing an [`RpcClient`](../../reference/Classes/RpcClient.md):
 
 ```python
-from kaspa import Encoding, NetworkId, Resolver
+from kaspa import Resolver
 
 resolver = Resolver()
 
-url = await resolver.get_url(Encoding.Borsh, NetworkId("mainnet"))
-descriptor = await resolver.get_node(Encoding.Borsh, NetworkId("mainnet"))
+url = await resolver.get_url("borsh", "mainnet")
+descriptor = await resolver.get_node("borsh", "mainnet")
 ```
 
-[`get_url`](../../reference/Classes/Resolver.md#get_url) returns a
-WebSocket URL ready for `RpcClient(url=...)`.
-[`get_node`](../../reference/Classes/Resolver.md#get_node) returns a
+Both arguments accept the string form shown above or the typed
+equivalents (`Encoding.Borsh`, `NetworkId("mainnet")`) — see
+[`Encoding`](../../reference/Enums/Encoding.md) and
+[`NetworkId`](../../reference/Classes/NetworkId.md).
+
+[`get_url`](../../reference/Classes/Resolver.md#kaspa.Resolver.get_url) returns a
+WebSocket URL ready for [`RpcClient(url=...)`](../../reference/Classes/RpcClient.md).
+[`get_node`](../../reference/Classes/Resolver.md#kaspa.Resolver.get_node) returns a
 dict with the node's `uid`, `url`, and other metadata.
 
 ## Under the hood
@@ -64,12 +72,12 @@ dict with the node's `uid`, `url`, and other metadata.
 You don't need any of this to use `Resolver` — it's here for anyone
 running their own infrastructure or debugging connectivity.
 
-A `Resolver` doesn't open WebSockets or hold Kaspa node URLs. It holds
+A [`Resolver`](../../reference/Classes/Resolver.md) doesn't open WebSockets or hold Kaspa node URLs. It holds
 a list of *resolver service* HTTP endpoints (see
 [aspectron/kaspa-resolver](https://github.com/aspectron/kaspa-resolver))
 that track live PNN nodes and load-balance across them.
 
-On `get_url` / `get_node` (called internally by `client.connect()`):
+On [`get_url`](../../reference/Classes/Resolver.md#kaspa.Resolver.get_url) / [`get_node`](../../reference/Classes/Resolver.md#kaspa.Resolver.get_node) (called internally by [`client.connect()`](../../reference/Classes/RpcClient.md#kaspa.RpcClient.connect)):
 
 1. Pick a configured resolver-service URL at random.
 2. `GET {url}/v2/kaspa/{network_id}/{tls_or_any}/wrpc/{encoding}`.

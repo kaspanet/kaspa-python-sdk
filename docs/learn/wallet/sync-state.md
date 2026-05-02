@@ -9,63 +9,62 @@
    finished registering subscriptions and confirmed the node is in a
    usable state?
 
-`accounts_*` calls — balances, UTXO snapshots, sends — wait on (2),
+`accounts_*` calls (balances, UTXO snapshots, sends) wait on (2),
 which is itself gated on (1). Treating them as one gives the right
-answer most of the time but blurs *what* the wallet is actually
-waiting for. This page splits them.
+answer most of the time but obscurs *what* the wallet is waiting for.
 
 ## Node sync state
 
-A node that's still in IBD doesn't yet have all blocks/UTXOs, so it
-can't answer wallet RPC calls authoritatively. Two surfaces report
-this:
+A node still in IBD doesn't have all blocks/UTXOs and can't answer
+wallet RPC calls authoritatively. Two surfaces report this:
 
-- **`ServerStatus`** event — emitted once after `connect()`, right
-  after the initial `get_server_info` handshake. Payload:
-
-    ```python
-    {
-        "type": "server-status",
-        "data": {
-            "networkId": "testnet-10",
-            "serverVersion": "0.x.y",
-            "isSynced": True,           # node-side flag
-            "url": "wss://node:17110",
-        },
-    }
-    ```
-
-- **`SyncState`** event with an *IBD substate* — while the node is
-  still catching up, the wallet derives progress from log lines the
-  node prints and re-publishes them as `SyncState` events. See
+- **`ServerStatus`** [event](events.md) — emitted once after [`connect()`](../../reference/Classes/Wallet.md#kaspa.Wallet.connect), right
+  after the initial `get_server_info` handshake. Payload includes
+  `isSynced` (the node-side flag), `networkId`, `serverVersion`, and
+  `url`.
+- **`SyncState`** [event](events.md) with an *IBD substate* — see
   [Reading SyncState payloads](#reading-syncstate-payloads).
 
 If the node is missing its UTXO index entirely, the processor
-short-circuits with a **`UtxoIndexNotEnabled`** event and refuses to
+short-circuits with a **`UtxoIndexNotEnabled`** [event](events.md) and refuses to
 proceed — the only fix is to point at a node that has it.
 
 ## Processor sync state
 
-Once the node reports synced, the wallet's `UtxoProcessor` does its
-own setup: registers UTXO/virtual-chain notification listeners, marks
-itself ready, and starts forwarding UTXO changes to per-account
-[`UtxoContext`](../../reference/Classes/UtxoContext.md)s.
+After [`connect()`](../../reference/Classes/Wallet.md#kaspa.Wallet.connect), the wallet's [`UtxoProcessor`](../../reference/Classes/UtxoProcessor.md) runs a short handshake
+against the node:
 
-- **`wallet.is_synced`** — `True` once the processor finishes that
-  setup. This is the flag every `accounts_*` call effectively waits
-  on. Polling it (with `await asyncio.sleep(0.5)`) is fine for
-  scripts.
-- **`SyncState`** event with a *terminal substate* — `Synced` when
+1. One `get_server_info` round trip — validates RPC API version,
+   network-ID match, and that the node has its UTXO index enabled
+   (otherwise it emits `UtxoIndexNotEnabled` and stops). Reads the
+   node's `is_synced` flag and current `virtualDaaScore`. Emits
+   `ServerStatus`.
+2. Registers a single wRPC listener and subscribes to
+   `VirtualDaaScoreChanged`. No `UtxosChanged` subscription is opened
+   at this stage — the processor doesn't know about any addresses yet.
+3. Tracks the node's IBD progress (the `proof` / `headers` / `blocks`
+   / `utxo-sync` substates flow through here), then flips ready.
+
+Per-address `UtxosChanged` subscriptions and the initial UTXO seed
+happen later, inside [`accounts_activate`](../../reference/Classes/Wallet.md#kaspa.Wallet.accounts_activate): each account's
+[`UtxoContext`](../../reference/Classes/UtxoContext.md) issues a single
+`get_utxos_by_addresses` call to populate its mature set and starts a
+`UtxosChanged` subscription scoped to its addresses. After that the
+context is updated purely from streamed notifications — there's no
+periodic re-poll.
+
+- **[`wallet.is_synced`](../../reference/Classes/Wallet.md#kaspa.Wallet.is_synced)** — `True` once the handshake above completes.
+  This is the flag every `accounts_*` call effectively waits on.
+- **`SyncState`** [event](events.md) with a *terminal substate* — `Synced` when
   the processor flips ready, `NotSynced` when it falls back (e.g. on
   reconnect).
 - **`UtxoProcStart`** / **`UtxoProcStop`** — fire when the processor
-  itself starts and stops (lifecycle, not sync per se), but useful as
-  bookends in event logs.
+  itself starts and stops. Useful as bookends in event logs.
 
-The relationship is one-way: the processor cannot be synced if the
-node isn't. So `wallet.is_synced` is the single condition you
-actually need to gate work on — the node-level signals are useful for
-*reporting progress*, not for unblocking calls.
+The processor cannot be synced if the node isn't, so [`wallet.is_synced`](../../reference/Classes/Wallet.md#kaspa.Wallet.is_synced)
+is the single condition you actually need to gate work on. The
+node-level signals are useful for *reporting progress*, not for
+unblocking calls.
 
 ## Reading SyncState payloads
 
@@ -97,8 +96,7 @@ The substates fall into three groups:
 | Terminal | `not-synced` | *(none)* | Processor |
 | | `synced` | *(none)* | Processor |
 
-The IBD substates make it easy to drive a progress bar without
-parsing kaspad logs yourself:
+The IBD substates make it easy to drive a progress bar:
 
 ```python
 def on_event(event):
@@ -116,7 +114,9 @@ def on_event(event):
 
 ## A staged wait
 
-If you want to surface node IBD separately from processor readiness:
+To surface node IBD separately from processor readiness:
+
+Drive `node_synced` and `processor_ready` events with [`add_event_listener`](../../reference/Classes/Wallet.md#kaspa.Wallet.add_event_listener) and the [`WalletEventType`](../../reference/Enums/WalletEventType.md) enum:
 
 ```python
 import asyncio
@@ -137,33 +137,24 @@ wallet.add_event_listener(WalletEventType.All, on_event)
 
 await wallet.start()
 await wallet.connect()
-
-await node_synced.wait()        # node finished IBD
-await processor_ready.wait()    # processor registered + ready
+await node_synced.wait()
+await processor_ready.wait()
 assert wallet.is_synced
 ```
 
-For most scripts, the simpler form is fine:
-
-```python
-await wallet.start()
-await wallet.connect()
-while not wallet.is_synced:
-    await asyncio.sleep(0.5)
-```
+For most scripts the polling form in
+[Lifecycle → Sync gate](lifecycle.md#sync-gate) is enough.
 
 ## Reconnects and `Disconnect`
 
-A `Disconnect` event flips `wallet.is_synced` back to `False`; the
+A `Disconnect` [event](events.md) flips [`wallet.is_synced`](../../reference/Classes/Wallet.md#kaspa.Wallet.is_synced) back to `False`; the
 processor re-runs its handshake on the next `Connect` and re-emits a
 fresh `ServerStatus` plus `SyncState` chain. Long-running listeners
 should treat the gate as *re-arming*, not one-shot — gate every
-`accounts_*` batch on `is_synced`, not on a once-set flag.
+`accounts_*` batch on [`is_synced`](../../reference/Classes/Wallet.md#kaspa.Wallet.is_synced), not on a once-set flag.
 
 ## Where to next
 
-- [Lifecycle](lifecycle.md#sync-gate) — the polling form of the sync gate, in context of the boot sequence.
-- [Architecture](architecture.md) — where the processor and RPC client
-  sit in the component graph.
-- [Transaction History](transaction-history.md) — the full event
-  taxonomy these events live in.
+- [Architecture](architecture.md) — where the processor and RPC
+  client sit in the component graph.
+- [Events](events.md) — the full event taxonomy these signals live in.

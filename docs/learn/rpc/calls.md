@@ -19,24 +19,44 @@ supply     = await client.get_coin_supply()
 network    = await client.get_current_network()
 ```
 
+`get_block_dag_info` returns:
+
+```python
+{
+    "network": "kaspa-mainnet",
+    "blockCount": 12345678,
+    "headerCount": 12345678,
+    "tipHashes": ["..."],
+    "difficulty": 1.23e15,
+    "pastMedianTime": 1700000000000,
+    "virtualParentHashes": ["..."],
+    # ...plus virtualDaaScore, sink, pruningPointHash, etc.
+}
+```
+
 ## Balances and UTXOs
 
 ```python
 balance  = await client.get_balance_by_address({"address": "kaspa:qz..."})
+# {"balance": 100000000}
+
 balances = await client.get_balances_by_addresses({
     "addresses": ["kaspa:qz...", "kaspa:qr..."],
 })
+# {"entries": [{"address": "kaspa:qz...", "balance": 100000000}, ...]}
 
 utxos = await client.get_utxos_by_addresses({"addresses": ["kaspa:qz..."]})
 for entry in utxos.get("entries", []):
     print(entry["outpoint"], entry["utxoEntry"]["amount"])
 ```
 
-Use `get_utxos_by_addresses` for one-shot queries or polling. For
+Balance amounts are in sompi (1 KAS = 100,000,000 sompi).
+
+Use [`get_utxos_by_addresses`](../../reference/Classes/RpcClient.md#kaspa.RpcClient.get_utxos_by_addresses) for one-shot queries or polling. For
 continuous tracking, subscribe to
 [`utxos-changed`](subscriptions.md#available-events), or use
-[`UtxoContext`](../wallet-sdk/utxo-context.md) for per-address tracking
-on top of that subscription.
+[`UtxoContext`](../../reference/Classes/UtxoContext.md) for per-address tracking
+on top of that subscription (see [UTXO Context](../wallet-sdk/utxo-context.md)).
 
 ## Blocks
 
@@ -52,6 +72,10 @@ template = await client.get_block_template({
     "extraData": [],
 })
 ```
+
+`get_block` returns `{"block": {...}}` where the inner block has
+`header`, `transactions`, and `verboseData` keys; verbose data adds the
+block hash, child hashes, and merge-set info.
 
 ## Virtual chain
 
@@ -84,8 +108,9 @@ For a streaming version, subscribe to
 
 ### `get_virtual_chain_from_block_v2`
 
-V2 swaps the boolean flag for a verbosity level and returns richer
-per-block data:
+**Prefer V2 for new code.** It supersedes the V1 call above: it swaps
+the boolean flag for a verbosity level and returns richer per-block
+data. V1 is kept for backward compatibility.
 
 ```python
 chain = await client.get_virtual_chain_from_block_v2({
@@ -115,9 +140,11 @@ bandwidth and node CPU.
 
 ```python
 result  = await client.submit_transaction({
-    "transaction": signed_tx,        # a Transaction instance
+    "transaction": signed_tx,        # required: a Transaction instance, NOT a dict
     "allowOrphan": False,
 })
+# {"transactionId": "..."}
+
 mempool = await client.get_mempool_entries({
     "includeOrphanPool": False,
     "filterTransactionPool": True,
@@ -129,10 +156,16 @@ entry   = await client.get_mempool_entry({
 })
 ```
 
+[`submit_transaction`](../../reference/Classes/RpcClient.md#kaspa.RpcClient.submit_transaction) is the one call where the request dict embeds a
+real Python object: the `transaction` value must be a
+[`Transaction`](../../reference/Classes/Transaction.md) instance
+(passing a dict raises). Every other call on this page is dict-in,
+dict-out.
+
 If you have a
 [`PendingTransaction`](../../reference/Classes/PendingTransaction.md)
 from the [Transaction Generator](../wallet-sdk/tx-generator.md),
-prefer `pending_tx.submit(client)` — it serialises and submits in one
+prefer [`pending_tx.submit(client)`](../../reference/Classes/PendingTransaction.md#kaspa.PendingTransaction.submit) — it serialises and submits in one
 call. See [Submission](../transactions/submission.md) for the full
 flow and `allowOrphan` semantics.
 
@@ -140,7 +173,13 @@ flow and `allowOrphan` semantics.
 
 ```python
 fee = await client.get_fee_estimate()
-# fee["estimate"]["priorityBucket"] etc.
+# {
+#     "estimate": {
+#         "priorityBucket": {"feerate": 1.0, "estimatedSeconds": 1.0},
+#         "normalBuckets": [...],
+#         "lowBuckets": [...],
+#     }
+# }
 
 fee_x = await client.get_fee_estimate_experimental({"verbose": True})
 ```
@@ -180,25 +219,16 @@ metrics = await client.get_metrics({
 
 ## Errors
 
-A failing RPC call raises. Handle it like any other coroutine
-exception:
-
-```python
-try:
-    info = await client.get_balance_by_address({"address": addr})
-except Exception as exc:
-    print("balance lookup failed:", exc)
-```
-
+Protocol-level failures (invalid address, malformed request, node-side
+errors) raise a plain `Exception` — see
+[Errors in the overview](overview.md#errors) for the full picture.
 Connection-level failures retry automatically (see
-[Connecting](connecting.md#reconnects)). The exception surface is for
-protocol-level failures: invalid address, malformed request, node-side
-errors.
+[Connecting → Reconnects](connecting.md#reconnects)).
 
 ## Where to next
 
 - [Subscriptions](subscriptions.md) — server-pushed notifications.
 - [Wallet → Send Transaction](../wallet/send-transaction.md) — the
-  managed Wallet wraps `submit_transaction` with sensible defaults.
+  managed [`Wallet`](../../reference/Classes/Wallet.md) wraps [`submit_transaction`](../../reference/Classes/RpcClient.md#kaspa.RpcClient.submit_transaction) with sensible defaults.
 - [Wallet SDK → Transaction Generator](../wallet-sdk/tx-generator.md) —
-  build the transactions you submit via `submit_transaction`.
+  build the transactions you submit via [`submit_transaction`](../../reference/Classes/RpcClient.md#kaspa.RpcClient.submit_transaction).

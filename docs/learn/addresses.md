@@ -8,9 +8,9 @@ instances.
 ## Anatomy
 
 ```
-kaspa:  qz0s9f5p7d3e2c4x8n1b6m9k0j2h4g5f3d7a8s9w0e1r2t3y4u5i6o7p8
-^^^^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-prefix  bech32-encoded version + payload + checksum
+kaspatest:qrxf48dgrdrm70rsk2nqf9p5xj4d4myrwq8mn3wvxcq8…
+^^^^^^^^^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+prefix    bech32-encoded version + payload + checksum
 ```
 
 | Component | Source |
@@ -62,6 +62,12 @@ pub = PublicKey("02a1b2c3...")
 addr = pub.to_address(NetworkType.Mainnet)
 ```
 
+[`NetworkType`](../reference/Enums/NetworkType.md) (no suffix) is enough for address derivation: testnet-10
+and testnet-11 share the same `kaspatest:` prefix, so
+`NetworkType.Testnet` produces the right address either way. Pass a
+string or [`NetworkId`](../reference/Classes/NetworkId.md) only when an API needs to distinguish the two
+testnets.
+
 ## Versions
 
 | Version | Pays to | Used by |
@@ -72,21 +78,19 @@ addr = pub.to_address(NetworkType.Mainnet)
 
 ```python
 addr = Address("kaspa:qz...")
-print(addr.version)
+print(addr.version)            # "PubKey" / "PubKeyECDSA" / "ScriptHash"
 ```
 
-## Network prefixes
+`addr.version` returns a string. The
+[`AddressVersion`](../reference/Enums/AddressVersion.md) enum exists
+if you'd rather pattern-match.
 
-| Prefix | Network |
-| --- | --- |
-| `kaspa:` | mainnet |
-| `kaspatest:` | testnet-10, testnet-11 |
-| `kaspadev:` | devnet |
-| `kaspasim:` | simnet |
+## Re-encoding for a different network
 
-To re-encode an address for a different network — e.g. to display the
-testnet equivalent of a mainnet address during testing — overwrite
-the prefix:
+The `prefix` attribute is writable. Setting it re-encodes the bech32
+string with the new prefix and checksum, but **does not change the
+underlying public-key or script-hash bytes** — it's a display-time
+operation:
 
 ```python
 addr = Address("kaspa:qz...")
@@ -94,37 +98,46 @@ addr.prefix = "kaspatest"
 print(addr.to_string())   # kaspatest:qz...
 ```
 
-This rewrites the prefix only; it does *not* re-derive from a key. For
-a real key-to-network conversion, derive again with the right
-`NetworkType`.
+To get the genuine testnet address for a specific *key*, derive it
+again under the testnet network:
+
+```python
+key.to_address(NetworkType.Testnet)
+```
 
 ## Scripts and addresses
 
 ```python
 from kaspa import (
-    Address, NetworkType, ScriptPublicKey,
+    Address, NetworkType,
     address_from_script_public_key, pay_to_address_script,
 )
 
-# script → address
-spk = ScriptPublicKey(0, "20a1b2c3...")
-addr = address_from_script_public_key(spk, NetworkType.Mainnet)
-
-# address → script
+# address → script (the lockup you put in a TransactionOutput)
 spk = pay_to_address_script(Address("kaspa:qz..."))
-print(spk.script)
+print(spk.version, spk.script)
+
+# script → address
+addr = address_from_script_public_key(spk, NetworkType.Mainnet)
 ```
 
-[`pay_to_address_script`](../reference/Functions/pay_to_address_script.md)
-is the lockup script you put in a `TransactionOutput` to pay an
-address. See [Transactions → Outputs](transactions/outputs.md).
+[`address_from_script_public_key`](../reference/Functions/address_from_script_public_key.md) needs a [`NetworkType`](../reference/Enums/NetworkType.md) because the
+script doesn't carry a prefix — you have to tell the decoder which
+network you're displaying for. See
+[Transactions → Outputs](transactions/outputs.md).
 
 ## Multi-signature addresses
+
+Build a multi-signature address with [`create_multisig_address`](../reference/Functions/create_multisig_address.md):
 
 ```python
 from kaspa import create_multisig_address, NetworkType, PublicKey
 
-pubkeys = [PublicKey("02key1..."), PublicKey("02key2..."), PublicKey("02key3...")]
+pubkeys = [
+    PublicKey("<33-byte compressed-pubkey hex>"),
+    PublicKey("<33-byte compressed-pubkey hex>"),
+    PublicKey("<33-byte compressed-pubkey hex>"),
+]
 multi = create_multisig_address(
     minimum_signatures=2,
     keys=pubkeys,
@@ -134,13 +147,5 @@ print(multi.to_string())
 ```
 
 For the full multisig spend flow (address creation, multi-cosigner
-signing, submission), see the
-[Multi-signature transactions](../guides/multisig.md) recipe.
-
-## Where to next
-
-- [Networks](networks.md) — what each prefix means.
-- [Transactions → Outputs](transactions/outputs.md) — using addresses
-  inside transaction outputs.
-- [Wallet SDK → Derivation](wallet-sdk/derivation.md) — deriving many
-  addresses from one key.
+signing, submission), see
+[`examples/transactions/multisig.py`](https://github.com/kaspanet/kaspa-python-sdk/blob/main/examples/transactions/multisig.py).

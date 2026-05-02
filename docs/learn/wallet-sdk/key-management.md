@@ -4,13 +4,14 @@ Everything on this page is BIP-39 compatible. The SDK gives you
 [`Mnemonic`](../../reference/Classes/Mnemonic.md) for the
 human-readable phrase, the seed bytes it produces, and
 [`XPrv`](../../reference/Classes/XPrv.md) for the master extended
-private key from that seed. From an `XPrv` you derive child keys —
-that's the next page, [Derivation](derivation.md).
+private key from that seed. From an [`XPrv`](../../reference/Classes/XPrv.md) you [derive](derivation.md) child keys.
 
 Read [Security](../../getting-started/security.md) before generating a
 real mnemonic.
 
 ## Generate a mnemonic
+
+[`Mnemonic.random()`](../../reference/Classes/Mnemonic.md) generates a fresh phrase:
 
 ```python
 from kaspa import Mnemonic
@@ -19,10 +20,6 @@ m = Mnemonic.random()                  # 24 words, default
 m12 = Mnemonic.random(word_count=12)   # 12 words
 print(m.phrase)
 ```
-
-24 words is the recommended default — more entropy, lower brute-force
-risk. 12 words is supported for compatibility with tools that emit
-them.
 
 ## Restore from a mnemonic
 
@@ -37,8 +34,11 @@ else:
     raise ValueError("invalid mnemonic")
 ```
 
-`Mnemonic.validate(phrase)` checks word membership, length, and the
-BIP-39 checksum. Returns a bool; never raises.
+[`Mnemonic.validate(phrase)`](../../reference/Classes/Mnemonic.md) checks word membership, length, and the
+BIP-39 checksum, and returns a bool. The [`Mnemonic(phrase)`](../../reference/Classes/Mnemonic.md) constructor
+raises on the same conditions, so the explicit [`validate()`](../../reference/Classes/Mnemonic.md) call is
+only useful when you want to surface a friendlier error than the
+underlying exception.
 
 ## Validation
 
@@ -48,6 +48,8 @@ from kaspa import Mnemonic, Language
 ok = Mnemonic.validate(phrase)                       # English assumed
 ok_en = Mnemonic.validate(phrase, Language.English)  # explicit
 ```
+
+The [`Language`](../../reference/Enums/Language.md) enum names the BIP-39 wordlist (English by default).
 
 ## Convert to a seed
 
@@ -94,7 +96,7 @@ English is the default and what every Kaspa example uses. Other
 BIP-39 wordlists exist on the enum but are rarely used — if you don't
 know you need a non-English wordlist, use English.
 
-## Hex private keys (`SecretKey`)
+## Hex private keys ([`PrivateKey`](../../reference/Classes/PrivateKey.md))
 
 For one-key accounts (a single secp256k1 secret, no derivation),
 skip the mnemonic entirely:
@@ -106,10 +108,10 @@ key = PrivateKey("<64-char hex>")
 addr = key.to_address("testnet-10")
 ```
 
-The 64-char hex string is what
-[Wallet → Keypair Accounts](../wallet/keypair.md) takes as the
-`secret` input to
-`prv_key_data_create(kind=PrvKeyDataVariantKind.SecretKey)`.
+The wallet's keypair accounts use the same 64-char hex string. When
+calling [`prv_key_data_create`](../../reference/Classes/Wallet.md#kaspa.Wallet.prv_key_data_create), pass it as `secret` with
+[`kind=PrvKeyDataVariantKind.SecretKey`](../../reference/Enums/PrvKeyDataVariantKind.md) — see
+[Wallet → Accounts → Keypair accounts](../wallet/accounts.md#keypair-accounts).
 
 ## Where to next
 

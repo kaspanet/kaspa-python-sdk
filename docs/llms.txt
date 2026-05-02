@@ -21,8 +21,7 @@ Docs are versioned (base URL requires version path like `/latest/` or `/dev/`).
 ## Documentation
 
 - [API Reference](https://kaspanet.github.io/kaspa-python-sdk/latest/reference/): Full API documentation
-- [Examples](https://kaspanet.github.io/kaspa-python-sdk/latest/getting-started/examples/): Code examples
-- [Guides](https://kaspanet.github.io/kaspa-python-sdk/latest/guides/): Feature guides for RPC, transactions, addresses, etc.
+- [Examples](https://kaspanet.github.io/kaspa-python-sdk/latest/examples/): Runnable example scripts on GitHub
 - [Source](https://github.com/kaspanet/kaspa-python-sdk): GitHub repository
 
 ## Optional

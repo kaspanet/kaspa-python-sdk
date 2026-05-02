@@ -10,7 +10,7 @@ invokes the callbacks you registered.
 Every subscription has two parts:
 
 1. **A listener** — a Python callback registered via
-   [`add_event_listener("<event>", callback)`](../../reference/Classes/RpcClient.md#add_event_listener).
+   [`add_event_listener("<event>", callback)`](../../reference/Classes/RpcClient.md#kaspa.RpcClient.add_event_listener).
 2. **A subscription** — `await client.subscribe_<event>(...)` tells the
    node to start streaming.
 
@@ -27,20 +27,22 @@ await client.subscribe_utxos_changed([Address("kaspa:qz...")])
 
 ## Available events
 
-| Event name | Subscribe with | Event payload |
-| --- | --- | --- |
-| `utxos-changed` | [`subscribe_utxos_changed(addresses)`](../../reference/Classes/RpcClient.md#subscribe_utxos_changed) | [`UtxosChangedEvent`](../../reference/TypedDicts/UtxosChangedEvent.md) |
-| `block-added` | [`subscribe_block_added()`](../../reference/Classes/RpcClient.md#subscribe_block_added) | [`BlockAddedEvent`](../../reference/TypedDicts/BlockAddedEvent.md) |
-| `virtual-chain-changed` | [`subscribe_virtual_chain_changed(include_accepted_transaction_ids=...)`](../../reference/Classes/RpcClient.md#subscribe_virtual_chain_changed) | [`VirtualChainChangedEvent`](../../reference/TypedDicts/VirtualChainChangedEvent.md) |
-| `virtual-daa-score-changed` | [`subscribe_virtual_daa_score_changed()`](../../reference/Classes/RpcClient.md#subscribe_virtual_daa_score_changed) | [`VirtualDaaScoreChangedEvent`](../../reference/TypedDicts/VirtualDaaScoreChangedEvent.md) |
-| `sink-blue-score-changed` | [`subscribe_sink_blue_score_changed()`](../../reference/Classes/RpcClient.md#subscribe_sink_blue_score_changed) | [`SinkBlueScoreChangedEvent`](../../reference/TypedDicts/SinkBlueScoreChangedEvent.md) |
-| `finality-conflict` | [`subscribe_finality_conflict()`](../../reference/Classes/RpcClient.md#subscribe_finality_conflict) | [`FinalityConflictEvent`](../../reference/TypedDicts/FinalityConflictEvent.md) |
-| `finality-conflict-resolved` | [`subscribe_finality_conflict_resolved()`](../../reference/Classes/RpcClient.md#subscribe_finality_conflict_resolved) | [`FinalityConflictResolvedEvent`](../../reference/TypedDicts/FinalityConflictResolvedEvent.md) |
-| `new-block-template` | [`subscribe_new_block_template()`](../../reference/Classes/RpcClient.md#subscribe_new_block_template) | [`NewBlockTemplateEvent`](../../reference/TypedDicts/NewBlockTemplateEvent.md) |
-| `pruning-point-utxo-set-override` | [`subscribe_pruning_point_utxo_set_override()`](../../reference/Classes/RpcClient.md#subscribe_pruning_point_utxo_set_override) | [`PruningPointUtxoSetOverrideEvent`](../../reference/TypedDicts/PruningPointUtxoSetOverrideEvent.md) |
-
 Each `subscribe_*` has a matching `unsubscribe_*` with the same
-argument shape. Event names also map to the
+argument shape.
+
+| Event name | Subscribe call | Arguments | Event payload |
+| --- | --- | --- | --- |
+| `utxos-changed` | [`subscribe_utxos_changed`](../../reference/Classes/RpcClient.md#kaspa.RpcClient.subscribe_utxos_changed) | `addresses: list[Address]` | [`UtxosChangedEvent`](../../reference/TypedDicts/UtxosChangedEvent.md) |
+| `block-added` | [`subscribe_block_added`](../../reference/Classes/RpcClient.md#kaspa.RpcClient.subscribe_block_added) | — | [`BlockAddedEvent`](../../reference/TypedDicts/BlockAddedEvent.md) |
+| `virtual-chain-changed` | [`subscribe_virtual_chain_changed`](../../reference/Classes/RpcClient.md#kaspa.RpcClient.subscribe_virtual_chain_changed) | `include_accepted_transaction_ids: bool` | [`VirtualChainChangedEvent`](../../reference/TypedDicts/VirtualChainChangedEvent.md) |
+| `virtual-daa-score-changed` | [`subscribe_virtual_daa_score_changed`](../../reference/Classes/RpcClient.md#kaspa.RpcClient.subscribe_virtual_daa_score_changed) | — | [`VirtualDaaScoreChangedEvent`](../../reference/TypedDicts/VirtualDaaScoreChangedEvent.md) |
+| `sink-blue-score-changed` | [`subscribe_sink_blue_score_changed`](../../reference/Classes/RpcClient.md#kaspa.RpcClient.subscribe_sink_blue_score_changed) | — | [`SinkBlueScoreChangedEvent`](../../reference/TypedDicts/SinkBlueScoreChangedEvent.md) |
+| `finality-conflict` | [`subscribe_finality_conflict`](../../reference/Classes/RpcClient.md#kaspa.RpcClient.subscribe_finality_conflict) | — | [`FinalityConflictEvent`](../../reference/TypedDicts/FinalityConflictEvent.md) |
+| `finality-conflict-resolved` | [`subscribe_finality_conflict_resolved`](../../reference/Classes/RpcClient.md#kaspa.RpcClient.subscribe_finality_conflict_resolved) | — | [`FinalityConflictResolvedEvent`](../../reference/TypedDicts/FinalityConflictResolvedEvent.md) |
+| `new-block-template` | [`subscribe_new_block_template`](../../reference/Classes/RpcClient.md#kaspa.RpcClient.subscribe_new_block_template) | — | [`NewBlockTemplateEvent`](../../reference/TypedDicts/NewBlockTemplateEvent.md) |
+| `pruning-point-utxo-set-override` | [`subscribe_pruning_point_utxo_set_override`](../../reference/Classes/RpcClient.md#kaspa.RpcClient.subscribe_pruning_point_utxo_set_override) | — | [`PruningPointUtxoSetOverrideEvent`](../../reference/TypedDicts/PruningPointUtxoSetOverrideEvent.md) |
+
+Event names also map to the
 [`NotificationEvent`](../../reference/Enums/NotificationEvent.md) enum
 if you prefer typed variants over kebab-case strings.
 
@@ -76,52 +78,62 @@ await client.subscribe_virtual_daa_score_changed()
 Every callback receives a `dict` with a `"type"` key naming the
 event. The remaining keys depend on the event.
 
-### `utxos-changed` ([`UtxosChangedEvent`](../../reference/TypedDicts/UtxosChangedEvent.md))
-Top-level `"added"` and `"removed"` lists of
-  [`RpcUtxosByAddressesEntry`](../../reference/TypedDicts/RpcUtxosByAddressesEntry.md).
-  This is the only event that does *not* nest its body under `"data"` —
-  it's flattened so callbacks can read `event["added"]` directly:
+### utxos-changed
 
-    ```python
-    {
-        "type": "utxos-changed",
-        "added": [
-            {
-                "address": "kaspa:qz...",
-                "outpoint": {"transactionId": "...", "index": 0},
-                "utxoEntry": {
-                    "amount": 100000000,
-                    "scriptPublicKey": {"version": 0, "script": "..."},
-                    "blockDaaScore": 123456789,
-                    "isCoinbase": False,
-                },
+[`UtxosChangedEvent`](../../reference/TypedDicts/UtxosChangedEvent.md)
+is the only event that does *not* nest its body under `"data"` — it's
+flattened so callbacks can read `event["added"]` directly. The
+`"added"` and `"removed"` lists hold
+[`RpcUtxosByAddressesEntry`](../../reference/TypedDicts/RpcUtxosByAddressesEntry.md)
+items.
+
+```python
+{
+    "type": "utxos-changed",
+    "added": [
+        {
+            "address": "kaspa:qz...",
+            "outpoint": {"transactionId": "...", "index": 0},
+            "utxoEntry": {
+                "amount": 100000000,
+                "scriptPublicKey": {"version": 0, "script": "..."},
+                "blockDaaScore": 123456789,
+                "isCoinbase": False,
             },
-        ],
-        "removed": [],
-    }
-    ```
-
-### All other events
-A `"data"` key holds the notification body. Each event has a wrapper
-  TypedDict (e.g. [`BlockAddedEvent`](../../reference/TypedDicts/BlockAddedEvent.md))
-  and a body TypedDict (e.g.
-  [`RpcBlockAddedNotification`](../../reference/TypedDicts/RpcBlockAddedNotification.md)).
-  See the [Available events](#available-events) table for the full
-  list. For example, a `virtual-daa-score-changed` callback receives:
-
-    ```python
-    {
-        "type": "virtual-daa-score-changed",
-        "data": {
-            "virtualDaaScore": 123456789,
         },
-    }
-    ```
+    ],
+    "removed": [],
+}
+```
 
-### `connect` / `disconnect`
-  ([`ConnectEvent`](../../reference/TypedDicts/ConnectEvent.md) /
-  [`DisconnectEvent`](../../reference/TypedDicts/DisconnectEvent.md)):
-  a `"rpc"` key with the node URL.
+### All other node-pushed events
+
+A `"data"` key holds the notification body. Each event has a wrapper
+TypedDict (e.g.
+[`BlockAddedEvent`](../../reference/TypedDicts/BlockAddedEvent.md)) and
+a body TypedDict (e.g.
+[`RpcBlockAddedNotification`](../../reference/TypedDicts/RpcBlockAddedNotification.md)).
+See the [Available events](#available-events) table for the full list.
+For example, a `virtual-daa-score-changed` callback receives:
+
+```python
+{
+    "type": "virtual-daa-score-changed",
+    "data": {
+        "virtualDaaScore": 123456789,
+    },
+}
+```
+
+### connect / disconnect
+
+[`ConnectEvent`](../../reference/TypedDicts/ConnectEvent.md) and
+[`DisconnectEvent`](../../reference/TypedDicts/DisconnectEvent.md) carry
+a single `"rpc"` key holding the node URL as a string:
+
+```python
+{"type": "connect", "rpc": "wss://node.example.com:17110"}
+```
 
 The bundled
 [`Notification`](../../reference/Classes/Notification.md) class wraps
@@ -154,8 +166,8 @@ await client.unsubscribe_utxos_changed(addresses)
 ```
 
 To watch a managed-wallet account instead of raw addresses, use the
-wallet's `Balance` and `Maturity` events — see
-[Wallet → Transaction History](../wallet/transaction-history.md).
+[`Wallet`](../../reference/Classes/Wallet.md)'s `Balance` and `Maturity` events — see
+[Wallet → Events](../wallet/events.md).
 
 ### Block events
 
@@ -221,9 +233,9 @@ before re-subscribing.
 
 - [Calls](calls.md) — the request/response side of the API.
 - [`RpcClient`](../../reference/Classes/RpcClient.md) — full
-  `subscribe_*` / `unsubscribe_*` / `add_event_listener` reference.
-- [`UtxoProcessor`](../wallet-sdk/utxo-processor.md) and
-  [`UtxoContext`](../wallet-sdk/utxo-context.md) — higher-level UTXO
+  `subscribe_*` / `unsubscribe_*` / [`add_event_listener`](../../reference/Classes/RpcClient.md#kaspa.RpcClient.add_event_listener) reference.
+- [`UtxoProcessor`](../../reference/Classes/UtxoProcessor.md) (see [UTXO Processor](../wallet-sdk/utxo-processor.md)) and
+  [`UtxoContext`](../../reference/Classes/UtxoContext.md) (see [UTXO Context](../wallet-sdk/utxo-context.md)) — higher-level UTXO
   tracking built on `utxos-changed`.
-- [Wallet → Transaction History](../wallet/transaction-history.md) —
-  the managed Wallet's higher-level event surface.
+- [Wallet → Events](../wallet/events.md) — the managed [`Wallet`](../../reference/Classes/Wallet.md)'s
+  higher-level event surface.

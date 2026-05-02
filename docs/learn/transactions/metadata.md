@@ -1,10 +1,10 @@
 # Metadata fields
 
 Beyond inputs and outputs, a
-[`Transaction`](../../reference/Classes/Transaction.md) carries five
-fields that affect how it's interpreted on-chain. Typical sends take
-the defaults — this page documents what they are so you know what to
-leave alone and what to set deliberately.
+[`Transaction`](../../reference/Classes/Transaction.md) carries six
+fields that affect how it's interpreted on-chain. Most take defaults
+— this page documents what they are so you know what to leave alone
+and what to set deliberately.
 
 ```python
 Transaction(
@@ -22,52 +22,41 @@ Transaction(
 ## `version`
 
 Transaction format version. Use `0` — the only currently-defined
-version on Kaspa. The field exists for future formats; until then,
-there's nothing to choose.
+version on Kaspa.
 
 ## `lock_time`
 
-The earliest moment a transaction is allowed into a block, encoded as
-a DAA-score threshold. `0` means "no lock" — what you want unless
+Earliest moment a transaction is allowed into a block, encoded as a
+DAA-score threshold. `0` means "no lock" — what you want unless
 building a time-locked construct (e.g. a refund branch).
-
-```python
-Transaction(..., lock_time=0, ...)
-```
-
-A non-zero value rejects the transaction from blocks whose DAA score
-is below the threshold. See
-[Kaspa Concepts → Virtual chain and DAA score](../concepts.md#virtual-chain-and-daa-score).
 
 ## `subnetwork_id`
 
 The subnetwork the transaction belongs to. Most transactions live on
-the default subnetwork — id all zeros — and that's what you pass when
-building manually:
+the default subnetwork — id all zeros:
 
 ```python
 subnetwork_id="0000000000000000000000000000000000000000"
 ```
 
-Non-default subnetwork IDs are reserved for protocol-level transaction
-kinds (coinbase, etc.) that you generally don't construct from the
-SDK.
+Non-default IDs are reserved for protocol-level transaction kinds
+(coinbase, etc.) that you generally don't construct from the SDK.
 
 ## `gas`
 
-Reserved for subnetwork transactions with a compute-cost component.
-On the default subnetwork it must be `0`. Pair with
-`subnetwork_id="00...0"` and forget about it.
+`0` on the default subnetwork. Reserved for subnetwork transactions
+with a compute-cost component.
 
 ## `payload`
 
 Arbitrary bytes attached to the transaction. The closest analog in
 Bitcoin terms is `OP_RETURN`-style data, but `payload` lives at the
-transaction level, not inside a script.
+transaction level, not inside a script. The SDK accepts a hex
+string, raw bytes, or a list of byte values:
 
 ```python
 Transaction(..., payload="68656c6c6f", ...)        # hex string
-Transaction(..., payload=b"hello",     ...)        # or raw bytes
+Transaction(..., payload=b"hello",     ...)        # raw bytes
 ```
 
 Use cases:
@@ -77,11 +66,11 @@ Use cases:
 - **Protocol-level data** for systems built on top of Kaspa
   transactions.
 
-It's not a substitute for cryptographic state. Payload bytes are
-hashed into the transaction ID and signed over, but they don't bind
-the transaction to anything off-chain on their own.
+Payload bytes are hashed into the transaction ID and signed over,
+but they don't bind the transaction to anything off-chain on their
+own.
 
-The Generator accepts `payload=` directly:
+The [`Generator`](../../reference/Classes/Generator.md) (see [Transaction Generator](../wallet-sdk/tx-generator.md)) accepts `payload=` directly:
 
 ```python
 Generator(..., payload=b"invoice-12345")
@@ -90,15 +79,6 @@ Generator(..., payload=b"invoice-12345")
 ## `mass`
 
 The transaction's mass. `0` at construction; populate with
-`update_transaction_mass(network_id, tx)` after inputs and outputs
-are finalized and before signing or serializing. See
-[Mass & fees](mass-and-fees.md).
-
-## Where to next
-
-- [Mass & fees](mass-and-fees.md) — the one metadata field you *must*
-  update.
-- [Serialization](serialization.md) — how these fields round-trip
-  through `to_dict()` / `from_dict()`.
-- [Kaspa Concepts](../concepts.md) — subnetworks, DAA score, virtual
-  chain.
+[`update_transaction_mass(network_id, tx)`](../../reference/Functions/update_transaction_mass.md) after inputs and outputs
+are finalized and **before** signing or serializing — mass is part
+of the signed payload. See [Mass & fees](mass-and-fees.md).

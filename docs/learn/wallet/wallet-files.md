@@ -9,16 +9,16 @@ password.
 
 ## Surface
 
-| Method | Purpose |
-| --- | --- |
-| `wallet_enumerate()` | List every wallet file in the store. |
-| `wallet_export(...)` | Dump the encrypted payload as hex. |
-| `wallet_import(...)` | Materialise a previously exported payload as a new file. |
-| `wallet_change_secret(...)` | Re-encrypt the open file with a new password. |
-| `wallet_rename(...)` | Update the title (and/or filename — see warning below). |
+| Method | Returns | Purpose |
+| --- | --- | --- |
+| [`wallet_enumerate()`](../../reference/Classes/Wallet.md#kaspa.Wallet.wallet_enumerate) | `list[`[`WalletDescriptor`](../../reference/Classes/WalletDescriptor.md)`]` | List every wallet file in the store. |
+| [`wallet_export(...)`](../../reference/Classes/Wallet.md#kaspa.Wallet.wallet_export) | `str` (hex) | Dump the encrypted payload as hex. |
+| [`wallet_import(...)`](../../reference/Classes/Wallet.md#kaspa.Wallet.wallet_import) | `dict` | Materialise a previously exported payload as a new file. |
+| [`wallet_change_secret(...)`](../../reference/Classes/Wallet.md#kaspa.Wallet.wallet_change_secret) | — | Re-encrypt the open file with a new password. |
+| [`wallet_rename(...)`](../../reference/Classes/Wallet.md#kaspa.Wallet.wallet_rename) | — | Update the title (and/or filename — see warning below). |
 
-All methods require `start()`; none require a wRPC connection.
-`wallet_change_secret` and `wallet_rename` operate on the currently
+All methods require [`start()`](../../reference/Classes/Wallet.md#kaspa.Wallet.start); none require a wRPC connection.
+[`wallet_change_secret`](../../reference/Classes/Wallet.md#kaspa.Wallet.wallet_change_secret) and [`wallet_rename`](../../reference/Classes/Wallet.md#kaspa.Wallet.wallet_rename) operate on the currently
 open file.
 
 ## Enumerate
@@ -29,29 +29,36 @@ for d in descriptors:
     print(d.filename, d.title)
 ```
 
-Returns a `list[WalletDescriptor]`. Available before any wallet is
-opened — useful for a wallet picker UI.
+[`WalletDescriptor`](../../reference/Classes/WalletDescriptor.md) is a typed object — use attribute access. Available
+before any wallet is opened, useful for a wallet picker UI.
 
-## Export & import
+## Export and import
 
 ```python
 hex_payload = await wallet.wallet_export(
     wallet_secret="example-secret",
     include_transactions=True,
 )
-# ...transfer hex_payload to another machine, then:
+# ... transfer hex_payload to another machine, then:
 imported = await wallet.wallet_import(
     wallet_secret="example-secret",
     wallet_data=hex_payload,
 )
 new_filename = imported["walletDescriptor"]["filename"]
-await wallet.wallet_open("example-secret", True, new_filename)
+await wallet.wallet_open(
+    wallet_secret="example-secret",
+    account_descriptors=True,
+    filename=new_filename,
+)
 ```
+
+[`wallet_import`](../../reference/Classes/Wallet.md#kaspa.Wallet.wallet_import) is the only file-API method that returns a dict —
+read the new filename via `imported["walletDescriptor"]["filename"]`.
 
 The exported payload is borsh-serialized and remains encrypted with
 `wallet_secret`; private key material never leaves memory in the
-clear. `wallet_import` writes a new file in the store and returns its
-descriptor — you still need to `wallet_open` it.
+clear. [`wallet_import`](../../reference/Classes/Wallet.md#kaspa.Wallet.wallet_import) writes a new file in the store and returns its
+descriptor — you still need to [`wallet_open`](../../reference/Classes/Wallet.md#kaspa.Wallet.wallet_open) it.
 
 ## Change secret
 

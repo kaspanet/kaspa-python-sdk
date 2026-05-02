@@ -1,42 +1,53 @@
 # Networks
 
-Kaspa runs three live networks: a production mainnet and two testnets.
-Every SDK entry point that hits the chain — `RpcClient`, `Wallet`,
-`Address`, derivation — needs a network identifier to pick the right
+The Kaspa community runs various public networks: a production mainnet and a few testnets.
+Every SDK entry point that hits the chain
+([`RpcClient`](../reference/Classes/RpcClient.md),
+[`Wallet`](../reference/Classes/Wallet.md),
+[`Address`](../reference/Classes/Address.md),
+[derivation](wallet-sdk/derivation.md), etc.) needs a network identifier to pick the right
 chain and address prefix.
 
 ## The networks
 
-| Network | `network_id` | Address prefix | When to use |
-| --- | --- | --- | --- |
-| Mainnet | `"mainnet"` | `kaspa:` | Production. Real KAS. |
-| Testnet 10 | `"testnet-10"` | `kaspatest:` | Mature testnet. Default for SDK examples; faucets available. |
-| Testnet 11 | `"testnet-11"` | `kaspatest:` | Higher block-rate testnet for performance work. |
-| Devnet | (operator-defined) | `kaspadev:` | A developer-run private chain. |
-| Simnet | (operator-defined) | `kaspasim:` | Simulation / unit tests against a local sim. |
+| Network | `network_id` | Address prefix |
+| --- | --- | --- |
+| Mainnet | `"mainnet"` | `kaspa:` |
+| Testnet 10 | `"testnet-10"` | `kaspatest:` |
+| Testnet 11 | `"testnet-11"` | `kaspatest:` |
 
-Most readers will only touch mainnet and testnet-10. Use testnet-11
-only when you need its higher block rate — the SDK behaves identically
-on it.
+Operator-run **devnet** (`kaspadev:`) and **simnet**
+(`kaspasim:`) also exist for private chains and simulators.
 
-## `network_id` strings vs `NetworkId`
-
-Most APIs accept the string form (`"mainnet"`, `"testnet-10"`).
-[`NetworkId`](../reference/Classes/NetworkId.md) is the typed form —
-useful when you want to hold a value without re-parsing:
+## Using the identifier
 
 ```python
-from kaspa import NetworkId
+from kaspa import RpcClient, Resolver
 
-mainnet = NetworkId("mainnet")
-testnet = NetworkId("testnet-10")
+client = RpcClient(resolver=Resolver(), network_id="testnet-10")
 ```
 
-`NetworkId.network_type` and `NetworkId.suffix` return the parts.
-[`NetworkType`](../reference/Enums/NetworkType.md) is a third form
-some APIs accept (`NetworkType.Mainnet`, `NetworkType.Testnet`). All
-three describe the same thing; pick whichever reads cleanly at the
-call site.
+Most APIs accept the string form (`"mainnet"`, `"testnet-10"`).
+
+## `network_id` strings, `NetworkId`, and `NetworkType`
+
+Three forms turn up in different APIs:
+
+- **Plain strings** (`"testnet-10"`) — what most call sites accept.
+  Carries the suffix.
+- **[`NetworkId`](../reference/Classes/NetworkId.md)** — typed, also
+  carries the suffix. Useful when you want to hold a value without
+  re-parsing it. Build with `NetworkId("testnet-10")`; read parts with
+  `.network_type` and `.suffix`.
+- **[`NetworkType`](../reference/Enums/NetworkType.md)** — just the
+  base kind (`Mainnet`, `Testnet`, `Devnet`, `Simnet`). **No suffix.**
+  Sufficient anywhere only the address prefix matters (key-to-address
+  derivation, multisig address creation), since testnet-10 and
+  testnet-11 share the same `kaspatest:` prefix. Not enough to pick a
+  specific testnet for an RPC client.
+
+Rule of thumb: pass strings or [`NetworkId`](../reference/Classes/NetworkId.md) to anything that talks to
+the chain; [`NetworkType`](../reference/Enums/NetworkType.md) is fine for derivation and address encoding.
 
 ## What changes between networks
 
@@ -48,26 +59,6 @@ call site.
 - **Resolver pool.** A
   [`Resolver`](rpc/resolver.md) only returns nodes for the configured
   `network_id`.
-- **Maturity depths.** Coinbase maturity differs by network; the SDK
-  applies the right value automatically.
-
-## Picking one for development
-
-- **Writing examples / docs / tests:** use `testnet-10`. It's stable,
-  has a faucet, and addresses are obviously test-shaped
-  (`kaspatest:...`).
-- **Performance experiments:** use `testnet-11`. Higher block rate
-  means UTXO churn and event volume resemble a stress test.
-- **Production code paths under CI:** parametrise the network — keep
-  test runs on testnet, mainnet only on a release pipeline.
-- **Anything touching mainnet:** read
-  [Security](../getting-started/security.md) first.
-
-## Where to next
-
-- [Addresses](addresses.md) — what the prefix encodes and how versions
-  fit in.
-- [Wallet → Lifecycle](wallet/lifecycle.md#construct) — `network_id`
-  is a required constructor argument.
-- [RPC → Resolver](rpc/resolver.md) — how a `Resolver` finds a node for
-  the configured network.
+- **Maturity depths and block rate.** Coinbase maturity and block rate
+  differ by network; the SDK applies the right values automatically.
+  See [UTXO maturity](wallet/send-transaction.md#utxo-maturity).

@@ -1,6 +1,6 @@
 # Serialization
 
-Most transaction-shaped types —
+The transaction-shaped types —
 [`Transaction`](../../reference/Classes/Transaction.md),
 [`TransactionInput`](../../reference/Classes/TransactionInput.md),
 [`TransactionOutput`](../../reference/Classes/TransactionOutput.md),
@@ -17,31 +17,34 @@ restored = Transaction.from_dict(tx_dict)
 assert restored == tx
 ```
 
-The same shape works for the component types:
+[`to_dict()`](../../reference/Classes/Transaction.md) returns a fresh Python dict — modifying it doesn't
+mutate the source object. [`from_dict()`](../../reference/Classes/Transaction.md) raises on malformed input
+(missing required keys, wrong types, invalid values).
+
+## What the dict looks like
 
 ```python
-inp_dict = inputs[0].to_dict()
-restored_inp = TransactionInput.from_dict(inp_dict)
-
-out_dict = outputs[0].to_dict()
-restored_out = TransactionOutput.from_dict(out_dict)
-
-ref_dict = utxo_ref.to_dict()
-restored_ref = UtxoEntryReference.from_dict(ref_dict)
+{
+  "id":           "ab12...",          # transaction id, hex
+  "version":      0,
+  "inputs":       [{ "previousOutpoint": {...}, "signatureScript": "...", "sequence": 0, "sigOpCount": 1 }, ...],
+  "outputs":      [{ "value": 500000000, "scriptPublicKey": {"version": 0, "script": "..."} }, ...],
+  "lockTime":     0,
+  "subnetworkId": "0000000000000000000000000000000000000000",
+  "gas":          0,
+  "payload":      "",                   # hex string
+  "mass":         12345,
+}
 ```
 
-`to_dict()` returns a fresh Python dict — modifying it doesn't mutate
-the source object. `from_dict()` raises on malformed input (missing
-required keys, wrong types, invalid values).
+Field names use camelCase (wRPC convention), unlike the snake_case
+Python class attributes.
 
 ## When you need this
 
 Within a single process, you rarely need to round-trip — pass typed
 objects around. The dict form earns its place at process boundaries:
 
-- **Submission** — `client.submit_transaction({"transaction":
-  tx.serialize_to_dict(), ...})` takes a dict, not a `Transaction`.
-  See [Submission](submission.md).
 - **Offline signing** — build on an online machine, serialize, sign
   on an air-gapped one, serialize again, send back, submit. The dict
   is the natural transport.
@@ -50,18 +53,7 @@ objects around. The dict form earns its place at process boundaries:
 - **Persistence** — saving a pending transaction to disk or a queue.
   Store the dict (as JSON), not the typed object.
 
-## `serialize_to_dict` vs `to_dict`
-
-Both produce a dict matching the wRPC wire shape. `to_dict` is the
-general-purpose Python conversion; `serialize_to_dict` (on
-`Transaction`) is the form `submit_transaction` expects. In practice
-they produce equivalent shapes — use `serialize_to_dict` when about
-to submit, `to_dict` when shuttling the object somewhere else.
-
-## Where to next
-
-- [Submission](submission.md) — where the dict form actually goes.
-- [Inputs](inputs.md) and [Outputs](outputs.md) — the typed objects
-  these dicts represent.
-- [Metadata fields](metadata.md) — how transaction-level fields ride
-  through serialization.
+For submission itself you can pass either a [`Transaction`](../../reference/Classes/Transaction.md) or a dict
+to [`client.submit_transaction({"transaction": ...})`](../../reference/Classes/RpcClient.md#kaspa.RpcClient.submit_transaction); the dict form
+is only required when the transaction has already been serialized
+elsewhere. See [Submission](submission.md).

@@ -7,13 +7,42 @@ fees, and yields one or more
 [`PendingTransaction`](../../reference/Classes/PendingTransaction.md)s
 ready to sign and submit.
 
-## Send a payment, end to end
+## Idiomatic: feed it a `UtxoContext`
+
+In a long-running process, build a [`UtxoContext`](../../reference/Classes/UtxoContext.md) (see [UTXO Context](utxo-context.md))
+once and pass it as `entries`. The generator pulls the current mature
+set on iteration — no manual UTXO snapshot, no stale data. [`PaymentOutput`](../../reference/Classes/PaymentOutput.md) and [`NetworkId`](../../reference/Classes/NetworkId.md) describe the destination.
+
+```python
+gen = Generator(
+    network_id=NetworkId("mainnet"),
+    entries=context,                         # UtxoContext
+    change_address=my_addr,
+    outputs=[PaymentOutput(recipient, 100_000_000)],   # 1 KAS
+)
+for pending in gen:
+    pending.sign([key])
+    print("submitted:", await pending.submit(client))
+```
+
+A [`Generator`](../../reference/Classes/Generator.md) is *iterable* — when the input set is too large for one
+transaction's mass budget, it yields a chain of consolidating
+transactions followed by the final payment. Loop and [`submit`](../../reference/Classes/PendingTransaction.md#kaspa.PendingTransaction.submit) each.
+
+For the full processor → context → generator wiring, see
+[Wallet SDK → Overview](overview.md#end-to-end-without-a-managed-wallet).
+
+## One-shot: raw UTXO list
+
+Without a context (one-shot scripts, ad-hoc tools), pass the entries
+list straight from
+[`get_utxos_by_addresses`](../../reference/Classes/RpcClient.md#kaspa.RpcClient.get_utxos_by_addresses) (see [RPC → Calls](../rpc/calls.md#balances-and-utxos)):
 
 ```python
 import asyncio
 from kaspa import (
     RpcClient, Resolver, Generator, PaymentOutput,
-    Address, PrivateKey, NetworkId,
+    PrivateKey, NetworkId,
 )
 
 async def main():
@@ -27,18 +56,15 @@ async def main():
             "addresses": [my_addr.to_string()],
         })
 
-        recipient = Address("kaspa:...")
         gen = Generator(
             network_id=NetworkId("mainnet"),
             entries=utxos["entries"],
             change_address=my_addr,
-            outputs=[PaymentOutput(recipient, 500_000_000)],   # 5 KAS
+            outputs=[PaymentOutput(my_addr, 100_000_000)],   # 1 KAS
         )
-
         for pending in gen:
             pending.sign([key])
-            tx_id = await pending.submit(client)
-            print("submitted:", tx_id)
+            print("submitted:", await pending.submit(client))
 
         print(gen.summary().fees, gen.summary().transactions)
     finally:
@@ -46,10 +72,6 @@ async def main():
 
 asyncio.run(main())
 ```
-
-A `Generator` is *iterable* — when the input set is too large for one
-transaction's mass budget, it yields a chain of consolidating
-transactions followed by the final payment. Loop and submit each.
 
 ## Constructor options
 
@@ -70,20 +92,24 @@ gen = Generator(
 )
 ```
 
-`entries` accepts a [`UtxoContext`](utxo-context.md) directly — pass
+`entries` accepts a [`UtxoContext`](../../reference/Classes/UtxoContext.md) directly — pass
 the context and it consumes from the mature set without you copying
 the list.
 
 ## Estimate before signing
 
-```python
-from kaspa import estimate_transactions
+Two entry points, same answer. Use [`gen.estimate()`](../../reference/Classes/Generator.md) if you already
+have a [`Generator`](../../reference/Classes/Generator.md); use [`estimate_transactions()`](../../reference/Functions/estimate_transactions.md) to quote a hypothetical
+send without constructing one.
 
-# via a Generator
+```python
+# You already have a Generator — most common case.
 summary = gen.estimate()
 print(summary.fees, summary.transactions, summary.utxos)
 
-# via the standalone function
+# Standalone — no Generator yet.
+from kaspa import estimate_transactions
+
 summary = estimate_transactions(
     network_id="mainnet",
     entries=utxos,
@@ -92,7 +118,7 @@ summary = estimate_transactions(
 )
 ```
 
-`estimate()` doesn't consume the generator — you can iterate it for
+[`estimate()`](../../reference/Classes/Generator.md) doesn't consume the generator — you can iterate it for
 real afterwards.
 
 ## Pending transactions
@@ -113,18 +139,30 @@ signature.
 
 ## Signing
 
+The everyday path: sign every input with one or more keys.
+
 ```python
-# All inputs at once with one or more keys
 pending.sign([key])
 pending.sign([key1, key2, key3])     # multisig
+```
 
-# Per-input control
+### Advanced: per-input and custom scripts
+
+Reach for these only when single-call signing isn't enough — usually
+mixed-key sets, hardware-signer integrations, or non-standard scripts.
+See [`examples/transactions/multisig.py`](https://github.com/kaspanet/kaspa-python-sdk/blob/main/examples/transactions/multisig.py)
+for a full multisig run.
+
+[`SighashType`](../../reference/Enums/SighashType.md) selects which parts of the transaction the signature commits to:
+
+```python
+from kaspa import SighashType
+
+# Per-input control with different keys
 for i, _ in enumerate(pending.get_utxo_entries()):
     pending.sign_input(i, key)
 
-# Custom signature scripts (advanced)
-from kaspa import SighashType
-
+# Custom signature scripts
 sig = pending.create_input_signature(
     input_index=0,
     private_key=key,
@@ -140,12 +178,12 @@ tx_id = await pending.submit(client)
 
 # Or manually:
 result = await client.submit_transaction({
-    "transaction": pending.transaction.serialize_to_dict(),
+    "transaction": pending.transaction,
     "allowOrphan": False,
 })
 ```
 
-`pending.submit(client)` is the right path. The manual route is for
+[`pending.submit(client)`](../../reference/Classes/PendingTransaction.md#kaspa.PendingTransaction.submit) is the right path. The manual route is for
 round-tripping the transaction through another system before
 submission. See
 [Transactions → Submission](../transactions/submission.md) for the
@@ -153,25 +191,33 @@ submission. See
 
 ## One-shot helpers
 
-When the loop-and-submit pattern is more code than you need:
+Two free functions for when the loop-and-submit pattern is more code
+than you need:
+
+- **[`create_transaction`](../../reference/Functions/create_transaction.md)** (singular) — builds a single
+  [`Transaction`](../../reference/Classes/Transaction.md). Use it when you know the input set fits in one tx.
+- **[`create_transactions`](../../reference/Functions/create_transactions.md)** (plural) — wraps [`Generator`](../../reference/Classes/Generator.md) end-to-end
+  and returns `{"transactions": [...], "summary":`[`GeneratorSummary`](../../reference/Classes/GeneratorSummary.md)`}`,
+  matching the chain you'd get from iterating [`Generator`](../../reference/Classes/Generator.md) yourself.
 
 ```python
 from kaspa import create_transaction, create_transactions
 
+# Singular — one transaction.
 tx = create_transaction(
     utxo_entry_source=utxos,
-    outputs=[{"address": "kaspa:...", "amount": 100_000_000}],
+    outputs=[{"address": "kaspa:...", "amount": 100_000_000}],   # 1 KAS
     priority_fee=1000,
 )
 
+# Plural — Generator-equivalent.
 result = create_transactions(
     network_id="mainnet",
     entries=utxos,
     change_address=my_addr,
-    outputs=[{"address": "kaspa:...", "amount": 100_000_000}],
+    outputs=[{"address": "kaspa:...", "amount": 100_000_000}],   # 1 KAS
     priority_fee=1000,
 )
-
 for pending in result["transactions"]:
     pending.sign([key])
     await pending.submit(client)
@@ -181,9 +227,11 @@ print(result["summary"])
 
 ## Where to next
 
-- [UTXO Context](utxo-context.md) — pass a context as `entries` instead
-  of a raw list.
+- [UTXO Context](utxo-context.md) — what to pass as `entries` in a
+  long-running process.
 - [Wallet → Send Transaction](../wallet/send-transaction.md) — the
-  managed Wallet wraps `Generator` with sensible defaults.
-- [Multi-signature transactions](../../guides/multisig.md) — full multisig
-  recipe including `minimum_signatures`.
+  managed [`Wallet`](../../reference/Classes/Wallet.md) wraps [`Generator`](../../reference/Classes/Generator.md) with sensible defaults.
+- [Transactions → Submission](../transactions/submission.md) —
+  `allowOrphan` semantics, confirmation states.
+- [Examples](../../examples.md) — runnable scripts including a full
+  multisig flow.
