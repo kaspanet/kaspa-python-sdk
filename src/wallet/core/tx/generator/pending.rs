@@ -243,6 +243,26 @@ impl PendingTransaction {
     fn get_transaction(&self) -> PyResult<PyTransaction> {
         Ok(Transaction::from_cctx_transaction(&self.0.transaction(), self.0.utxo_entries()).into())
     }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The PendingTransaction as a repr string.
+    fn __repr__(&self) -> String {
+        let transaction_type = if self.0.is_batch() { "batch" } else { "final" };
+        format!(
+            "PendingTransaction(id='{}', type='{}', payment_amount={}, change_amount={}, fee_amount={}, mass={})",
+            self.0.id(),
+            transaction_type,
+            match self.0.payment_value() {
+                Some(v) => v.to_string(),
+                None => "None".to_string(),
+            },
+            self.0.change_value(),
+            self.0.fees(),
+            self.0.mass()
+        )
+    }
 }
 
 impl From<native::PendingTransaction> for PendingTransaction {

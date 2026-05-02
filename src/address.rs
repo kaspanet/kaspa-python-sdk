@@ -151,6 +151,14 @@ impl PyAddress {
     pub fn __str__(&self) -> String {
         self.0.address_to_string()
     }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The Address as a repr string.
+    pub fn __repr__(&self) -> String {
+        format!("Address('{}')", self.0.address_to_string())
+    }
 }
 
 impl From<Address> for PyAddress {

@@ -44,6 +44,18 @@ impl PyPaymentOutput {
             _ => false,
         }
     }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The PaymentOutput as a repr string.
+    fn __repr__(&self) -> String {
+        format!(
+            "PaymentOutput(address='{}', amount={})",
+            self.0.address.address_to_string(),
+            self.0.amount
+        )
+    }
 }
 
 impl From<PyPaymentOutput> for PaymentOutput {

@@ -27,8 +27,8 @@
 - Integration tests now default to `mainnet` (overridable via `--network-id` / `--rpc-url`).
 - `build-dev` script builds with `--strip` for smaller artifacts.
 - `pyproject.toml`: set `python-source = "python"` and moved the package stub tree under `python/kaspa/` (`kaspa.pyi` → `python/kaspa/__init__.pyi`).
-- `Hash` accepts `str` in addition to `Hash` instances wherever it is used as an argument, and gained `to_hex()` and `__repr__` methods.
-- Added `Balance` `__repr__` method.
+- `Hash` accepts `str` in addition to `Hash` instances wherever it is used as an argument, and gained a `to_hex()` method.
+- Added `__repr__` methods to: `Hash`, `Balance`, `Binary`, `Address`, `NetworkId`, `ScriptPublicKey`, `TransactionOutpoint`, `Transaction`, `TransactionInput`, `TransactionOutput`, `UtxoEntry`, `UtxoEntries` (consensus and generator helper), `UtxoEntryReference`, `ScriptBuilder`, `Wallet`, `Fees`, `PaymentOutput`, `Outputs`, `Generator`, `GeneratorSummary`, `PendingTransaction`, `BalanceStrings`, `UtxoProcessorEvent`, `UtxoProcessor`, `UtxoContext`, `Notification`, `Resolver`, `NotificationEvent`, `RpcClient`, `DerivationPath`, `XPub`, `PublicKey`, `XOnlyPublicKey`, `PublicKeyGenerator`.
 - Documentation site reorganization
 
 ### Fixed

@@ -201,6 +201,18 @@ impl PyUtxoContext {
             Ok(None)
         }
     }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The UtxoContext as a repr string.
+    fn __repr__(&self) -> String {
+        format!(
+            "UtxoContext(id='{}', mature_length={})",
+            self.0.id(),
+            self.0.mature_utxo_size()
+        )
+    }
 }
 
 impl From<PyUtxoContext> for UtxoContext {

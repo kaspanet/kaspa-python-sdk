@@ -123,6 +123,15 @@ impl PyResolver {
     }
 
     // fn connect() TODO
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The Resolver as a repr string.
+    fn __repr__(&self) -> String {
+        let urls = self.0.urls().map(|u| u.len()).unwrap_or(0);
+        format!("Resolver(urls={})", urls)
+    }
 }
 
 impl From<PyResolver> for Resolver {

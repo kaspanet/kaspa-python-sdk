@@ -51,6 +51,37 @@ pub enum PyUtxoProcessorEvent {
     Error,
 }
 
+#[gen_stub_pymethods]
+#[pymethods]
+impl PyUtxoProcessorEvent {
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The UtxoProcessorEvent as a repr string.
+    pub fn __repr__(&self) -> String {
+        let variant = match self {
+            PyUtxoProcessorEvent::All => "All",
+            PyUtxoProcessorEvent::Connect => "Connect",
+            PyUtxoProcessorEvent::Disconnect => "Disconnect",
+            PyUtxoProcessorEvent::UtxoIndexNotEnabled => "UtxoIndexNotEnabled",
+            PyUtxoProcessorEvent::SyncState => "SyncState",
+            PyUtxoProcessorEvent::ServerStatus => "ServerStatus",
+            PyUtxoProcessorEvent::UtxoProcStart => "UtxoProcStart",
+            PyUtxoProcessorEvent::UtxoProcStop => "UtxoProcStop",
+            PyUtxoProcessorEvent::UtxoProcError => "UtxoProcError",
+            PyUtxoProcessorEvent::DaaScoreChange => "DaaScoreChange",
+            PyUtxoProcessorEvent::Pending => "Pending",
+            PyUtxoProcessorEvent::Reorg => "Reorg",
+            PyUtxoProcessorEvent::Stasis => "Stasis",
+            PyUtxoProcessorEvent::Maturity => "Maturity",
+            PyUtxoProcessorEvent::Discovery => "Discovery",
+            PyUtxoProcessorEvent::Balance => "Balance",
+            PyUtxoProcessorEvent::Error => "Error",
+        };
+        format!("UtxoProcessorEvent.{}", variant)
+    }
+}
+
 impl<'py> FromPyObject<'_, 'py> for PyUtxoProcessorEvent {
     type Error = PyErr;
 
@@ -480,6 +511,20 @@ impl PyUtxoProcessor {
     fn remove_all_event_listeners(&self) -> PyResult<()> {
         self.callbacks.lock().unwrap().clear();
         Ok(())
+    }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The UtxoProcessor as a repr string.
+    fn __repr__(&self) -> String {
+        let network_id = self
+            .processor
+            .network_id()
+            .ok()
+            .map(|n| format!("'{}'", n))
+            .unwrap_or_else(|| "None".to_string());
+        format!("UtxoProcessor(network_id={})", network_id)
     }
 }
 

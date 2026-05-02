@@ -98,6 +98,18 @@ impl PyTransactionOutpoint {
             _ => false,
         }
     }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The TransactionOutpoint as a repr string.
+    fn __repr__(&self) -> String {
+        format!(
+            "TransactionOutpoint(transaction_id='{}', index={})",
+            self.0.inner().transaction_id,
+            self.0.inner().index
+        )
+    }
 }
 
 impl From<PyTransactionOutpoint> for TransactionOutpoint {
