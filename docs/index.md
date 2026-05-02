@@ -1,24 +1,27 @@
 # Kaspa Python SDK
 
-This Python package, `kaspa`, provides an SDK for interacting with the Kaspa network from Python.
+This Python package, `kaspa`, provides an SDK for interacting with the
+Kaspa network from Python. This SDK provides features in the following main categories:
 
-`kaspa` is a native extension module built from bindings to Rust and [rusty-kaspa](https://github.com/kaspanet/rusty-kaspa) source. [PyO3](https://pyo3.rs/) and [Maturin](https://www.maturin.rs/) are used to create bindings and build the extension module. More information on the inner workings can be found in the [Contributing section](contributing/index.md).
+- [RPC Client](learn/rpc/overview.md) — RPC API for the Kaspa node using WebSockets.
+- [Wallet SDK](learn/wallet-sdk/overview.md) — Bindings for wallet-related primitives such as key management, derivation, and transactions.
+- [Managed Wallet](learn/wallet/overview.md) — A high-level, single Python class interface to the Rusty Kaspa Wallet API. This provides full wallet functionality in the single Python class: `Wallet`.
 
-!!! warning "Beta Status"
-    This project is in beta status.
+This project closely mirrors
+[Kaspa's WASM SDK](https://kaspa.aspectron.org/docs/), while trying to
+respect Python conventions.
 
-This project very closely mirrors [Kaspa's WASM SDK](https://kaspa.aspectron.org/docs/), while trying to respect Python conventions. Feature parity with WASM SDK is a work in progress, not all features are available yet in Python.
+## Bindings to Rusty Kaspa
 
-This documentation site currently provides API reference and basic usage guides. General cryptocurrency concepts, development practices, and Kaspa specific concepts are not covered here.
+**`kaspa` is a Python-native extension module built from bindings to Rust and
+[rusty-kaspa](https://github.com/kaspanet/rusty-kaspa) source.** [PyO3](https://pyo3.rs/) and [Maturin](https://www.maturin.rs/) are used
+to create bindings and build the extension module.
 
-## Features
+!!! info "As-thin-as-possible"
+      This project strives to provide as-thin-as-possible Python-compatible wrappers over rusty-kaspa source. Allowing Python developers leverage the features, stability, and security of rusty-kaspa directly, with minimal reimplementation in Python.
 
-This SDK provides features in two primary categories:
-
-- **RPC Client** - Connect to Kaspa nodes via RPC.
-- **Wallet Management** - Wallet related functionality (key management, derivation, addresses, transactions, etc.).
-
-Most features gaps with Kaspa WASM SDK exist around Wallet functionality.
+More information on bindings approach and development notes can be found in the
+[Contributing section](contributing/index.md).
 
 ## A (Very) Basic Example
 
@@ -35,40 +38,27 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-## Getting Started
-
-1. [Installation](getting-started/installation.md) - Set up the SDK in your environment
-2. [Examples](getting-started/examples.md) - Build your first Kaspa application
-
-## Guides
+## How the docs are organised
 
 <div class="grid cards" markdown>
 
-- **[RPC Client](guides/rpc-client.md)**  
-  Connect to Kaspa nodes
+- **[Getting Started](getting-started/installation.md)**  
+  Install the SDK, run the first script, read the security note before
+  generating real keys.
 
-- **[Transactions](guides/transactions.md)**  
-  Build and sign transactions
+- **[Learn](learn/index.md)**  
+  How the SDK is shaped, taught topic by topic. Connections, wallets,
+  derivation, transactions, the Kaspa concepts behind them.
 
-- **[Addresses](guides/addresses.md)**  
-  Create and validate Kaspa addresses
+- **[Examples](examples.md)**  
+  Runnable scripts on GitHub covering RPC, wallet, transactions,
+  derivation, mnemonics, message signing, and addresses.
 
-- **[Mnemonics](guides/mnemonics.md)**  
-  Generate and use seed phrases
-
-- **[Key Derivation](guides/key-derivation.md)**  
-  HD wallet key generation
-
-- **[Message Signing](guides/message-signing.md)**  
-  Sign and verify messages
+- **[API Reference](reference/index.md)**  
+  Every public class, method, and signature. Auto-generated.
 
 </div>
-
-## API Reference
-
-For complete API documentation, see the [API Reference](reference/index.md).
 
 ## License
 
 This project is licensed under the ISC License.
-

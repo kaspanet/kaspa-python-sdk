@@ -70,7 +70,11 @@ plugins:
 markdown_extensions:
   - admonition
   - pymdownx.details
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
@@ -107,17 +111,53 @@ extra:
 copyright: Copyright &copy; 2022-2026 Kaspa developers
 
 nav:
-  - Home: index.md
   - Getting Started:
+      - index.md
       - Installation: getting-started/installation.md
-      - Examples: getting-started/examples.md
-  - Guides:
-      - RPC Client: guides/rpc-client.md
-      - Addresses: guides/addresses.md
-      - Transactions: guides/transactions.md
-      - Mnemonics: guides/mnemonics.md
-      - Key Derivation: guides/key-derivation.md
-      - Message Signing: guides/message-signing.md
+      - Security: getting-started/security.md
+  - Learn:
+      - Overview: learn/index.md
+      - Fundamentals:
+          - Networks: learn/networks.md
+          - Addresses: learn/addresses.md
+      - RPC:
+          - Overview: learn/rpc/overview.md
+          - Connecting: learn/rpc/connecting.md
+          - Resolver: learn/rpc/resolver.md
+          - Calls: learn/rpc/calls.md
+          - Subscriptions: learn/rpc/subscriptions.md
+      - Wallet:
+          - Overview: learn/wallet/overview.md
+          - Architecture: learn/wallet/architecture.md
+          - Lifecycle: learn/wallet/lifecycle.md
+          - Wallet Files: learn/wallet/wallet-files.md
+          - Private Keys: learn/wallet/private-keys.md
+          - Accounts: learn/wallet/accounts.md
+          - Addresses: learn/wallet/addresses.md
+          - Send Transaction: learn/wallet/send-transaction.md
+          - Sweep Funds: learn/wallet/sweep.md
+          - Sync State: learn/wallet/sync-state.md
+          - Events: learn/wallet/events.md
+          - Transaction History: learn/wallet/transaction-history.md
+          - Errors: learn/wallet/errors.md
+      - Wallet SDK:
+          - Overview: learn/wallet-sdk/overview.md
+          - Key Management: learn/wallet-sdk/key-management.md
+          - Derivation: learn/wallet-sdk/derivation.md
+          - UTXO Processor: learn/wallet-sdk/utxo-processor.md
+          - UTXO Context: learn/wallet-sdk/utxo-context.md
+          - Transaction Generator: learn/wallet-sdk/tx-generator.md
+      - Transactions:
+          - Overview: learn/transactions/overview.md
+          - Metadata Fields: learn/transactions/metadata.md
+          - Inputs: learn/transactions/inputs.md
+          - Outputs: learn/transactions/outputs.md
+          - Mass & Fees: learn/transactions/mass-and-fees.md
+          - Signing: learn/transactions/signing.md
+          - Scripts: learn/transactions/scripts.md
+          - Submission: learn/transactions/submission.md
+          - Serialization: learn/transactions/serialization.md
+  - Examples: examples.md
   - API Reference: reference/
   - Contributing:
       - Overview: contributing/index.md

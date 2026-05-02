@@ -16,8 +16,9 @@ A native extension module, `kaspa`, is built from these bindings using [PyO3](ht
 
 This SDK provides features in two primary categories:
 
-- RPC Client - Connect to Kaspa nodes & PNN, perform calls, subscriptions, etc.
-- Wallet Management - Wallet related functionality (key management, derivation, addresses, transactions, etc.).
+- RPC Client — RPC API for the Kaspa node using WebSockets.
+- Wallet SDK — Bindings for wallet-related primitives such as key management, derivation, and transactions.
+- Managed Wallet — a fully managed interface for the Rusty Kaspa Wallet API bundled into one Python class.
 
 This package strives to mirror the [Kaspa WASM32 SDK](https://kaspa.aspectron.org/docs/) from a feature and API perspective, while respecting Python conventions.
 
