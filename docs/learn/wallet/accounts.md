@@ -1,3 +1,8 @@
+---
+search:
+  boost: 3
+---
+
 # Accounts
 
 A wallet can hold multiple accounts of mixed kinds, each backed by one

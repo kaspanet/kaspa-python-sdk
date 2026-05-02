@@ -1,3 +1,8 @@
+---
+search:
+  boost: 3
+---
+
 # Transaction History
 
 The wallet stores a record of every transaction that touched each

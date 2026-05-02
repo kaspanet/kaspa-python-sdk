@@ -1,3 +1,8 @@
+---
+search:
+  boost: 3
+---
+
 # Lifecycle
 
 A `Wallet` moves through five states. Each transition is async and

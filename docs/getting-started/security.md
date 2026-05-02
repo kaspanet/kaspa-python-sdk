@@ -1,3 +1,8 @@
+---
+search:
+  boost: 3
+---
+
 # Security
 
 The SDK gives you direct access to mnemonics, seeds, private keys, and wallet

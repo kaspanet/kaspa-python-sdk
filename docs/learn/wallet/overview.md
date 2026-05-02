@@ -1,3 +1,8 @@
+---
+search:
+  boost: 5
+---
+
 # Wallet
 
 The [`Wallet`](../../reference/Classes/Wallet.md) class is the SDK's

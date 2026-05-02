@@ -1,3 +1,8 @@
+---
+search:
+  boost: 3
+---
+
 # Resolver
 
 A [`Resolver`](../../reference/Classes/Resolver.md) finds a public Kaspa

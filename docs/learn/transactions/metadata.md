@@ -1,3 +1,8 @@
+---
+search:
+  boost: 3
+---
+
 # Metadata fields
 
 Beyond inputs and outputs, a

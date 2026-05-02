@@ -1,3 +1,8 @@
+---
+search:
+  boost: 3
+---
+
 # Inputs
 
 A transaction's inputs say *which UTXOs are being spent*. Each input

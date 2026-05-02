@@ -1,3 +1,8 @@
+---
+search:
+  boost: 3
+---
+
 # Learn
 
 The Learn section on this site is grouped into the following main categories:

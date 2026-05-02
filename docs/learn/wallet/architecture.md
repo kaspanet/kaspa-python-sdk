@@ -1,3 +1,8 @@
+---
+search:
+  boost: 3
+---
+
 # Architecture
 
 The `Wallet` class is a system of cooperating components. Knowing some of the underlying mechanics is useful for development.

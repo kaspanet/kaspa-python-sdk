@@ -1,3 +1,8 @@
+---
+search:
+  boost: 3
+---
+
 # Addresses
 
 A Kaspa address encodes a public key or script hash, the address

@@ -1,3 +1,8 @@
+---
+search:
+  boost: 5
+---
+
 # RPC
 
 Kaspa nodes expose an RPC API. This SDK provides

@@ -1,3 +1,8 @@
+---
+search:
+  boost: 3
+---
+
 # Connecting
 
 [`RpcClient.connect()`](../../reference/Classes/RpcClient.md#kaspa.RpcClient.connect)

@@ -1,3 +1,8 @@
+---
+search:
+  boost: 5
+---
+
 # Wallet SDK
 
 The **Wallet SDK** is the set of primitives the managed

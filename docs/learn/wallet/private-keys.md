@@ -1,3 +1,8 @@
+---
+search:
+  boost: 3
+---
+
 # Private Keys
 
 A *private key data* entry is the encrypted secret that backs one or

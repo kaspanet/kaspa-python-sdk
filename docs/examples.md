@@ -1,3 +1,8 @@
+---
+search:
+  boost: 3
+---
+
 # Examples
 
 Runnable examples live in the SDK repository, not in these docs. Each

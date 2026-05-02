@@ -1,3 +1,8 @@
+---
+search:
+  boost: 3
+---
+
 # Key Management
 
 Everything on this page is BIP-39 compatible. The SDK gives you
