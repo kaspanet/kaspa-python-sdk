@@ -66,12 +66,3 @@ Code samples pass literal hex strings and short passwords inline for
 readability. **That is not how to handle real secrets.** Replace inline
 strings with values sourced from a secret manager, environment variable,
 hardware wallet, or interactive prompt.
-
-## When something leaks
-
-1. Move every UTXO out of the affected wallet *immediately* — to a freshly
-   derived wallet from a *new* mnemonic.
-2. Stop using the leaked mnemonic. Don't "rotate the passphrase" or "skip
-   account 0" — derive from new entropy.
-3. Audit any service that accepted that wallet's signed messages or extended
-   public key.
