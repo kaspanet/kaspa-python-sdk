@@ -1,3 +1,8 @@
+---
+search:
+  boost: 3
+---
+
 # Wallet Files
 
 A wallet file is a single encrypted file on disk. Only one is open at

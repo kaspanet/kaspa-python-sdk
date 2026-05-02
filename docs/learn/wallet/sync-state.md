@@ -1,3 +1,8 @@
+---
+search:
+  boost: 3
+---
+
 # Sync State
 
 "Sync" in the managed wallet covers two distinct layers:

@@ -1,3 +1,8 @@
+---
+search:
+  boost: 3
+---
+
 # UTXO Processor
 
 A [`UtxoProcessor`](../../reference/Classes/UtxoProcessor.md) is the

@@ -1,3 +1,8 @@
+---
+search:
+  boost: 3
+---
+
 # Events
 
 The wallet emits events for every state change the node pushes

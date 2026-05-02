@@ -1,3 +1,8 @@
+---
+search:
+  boost: 3
+---
+
 # Outputs
 
 A transaction's outputs are the new UTXOs it creates. Each carries a

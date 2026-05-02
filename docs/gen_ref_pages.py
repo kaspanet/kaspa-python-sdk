@@ -19,6 +19,23 @@ CATEGORY_ORDER = [
     "Exceptions",
 ]
 
+CLASS_BOOSTS = {
+    "Wallet": 10,
+    "RpcClient": 8,
+    "Address": 8,
+    "Transaction": 8,
+    "Generator": 6,
+    "UtxoEntry": 5,
+    "PublicKey": 5,
+    "PrivateKey": 5,
+    "Mnemonic": 5,
+    "UtxoProcessor": 5,
+    "UtxoContext": 5,
+    "Resolver": 4,
+    "ScriptBuilder": 4,
+    "NetworkId": 4,
+}
+
 
 def parse_stub_file(content: str) -> dict:
     """
@@ -161,6 +178,10 @@ if stub_file.exists():
             with mkdocs_gen_files.open(doc_path, "w") as f:
                 if category == "Exceptions":
                     f.write("---\nsearch:\n  boost: 0.3\n---\n\n")
+                elif category == "TypedDicts":
+                    f.write("---\nsearch:\n  boost: 0.6\n---\n\n")
+                elif name in CLASS_BOOSTS:
+                    f.write(f"---\nsearch:\n  boost: {CLASS_BOOSTS[name]}\n---\n\n")
                 f.write(f'# `{name}` ({type_label})\n\n')
                 f.write(f"::: {module}.{name}\n")
                 f.write("    options:\n")

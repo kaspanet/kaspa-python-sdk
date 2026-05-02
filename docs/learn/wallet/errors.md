@@ -1,3 +1,8 @@
+---
+search:
+  boost: 3
+---
+
 # Errors
 
 The wallet's errors live in `kaspa.exceptions`. Most are

@@ -1,3 +1,8 @@
+---
+search:
+  boost: 0.2
+---
+
 ## [Unreleased]
 
 ### Added
@@ -29,7 +34,7 @@
 - `pyproject.toml`: set `python-source = "python"` and moved the package stub tree under `python/kaspa/` (`kaspa.pyi` → `python/kaspa/__init__.pyi`).
 - `Hash` accepts `str` in addition to `Hash` instances wherever it is used as an argument, and gained a `to_hex()` method.
 - Added `__repr__` methods to: `Hash`, `Balance`, `Binary`, `Address`, `NetworkId`, `ScriptPublicKey`, `TransactionOutpoint`, `Transaction`, `TransactionInput`, `TransactionOutput`, `UtxoEntry`, `UtxoEntries` (consensus and generator helper), `UtxoEntryReference`, `ScriptBuilder`, `Wallet`, `Fees`, `PaymentOutput`, `Outputs`, `Generator`, `GeneratorSummary`, `PendingTransaction`, `BalanceStrings`, `UtxoProcessorEvent`, `UtxoProcessor`, `UtxoContext`, `Notification`, `Resolver`, `NotificationEvent`, `RpcClient`, `DerivationPath`, `XPub`, `PublicKey`, `XOnlyPublicKey`, `PublicKeyGenerator`.
-- Documentation site reorganization
+- Documentation site reorganization & search ranking
 
 ### Fixed
 - `AccountDescriptor.__repr__` now correctly renders optional fields.

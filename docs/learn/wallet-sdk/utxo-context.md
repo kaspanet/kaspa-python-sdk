@@ -1,3 +1,8 @@
+---
+search:
+  boost: 3
+---
+
 # UTXO Context
 
 A [`UtxoContext`](../../reference/Classes/UtxoContext.md) tracks UTXOs

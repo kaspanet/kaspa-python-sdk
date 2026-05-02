@@ -1,3 +1,8 @@
+---
+search:
+  boost: 3
+---
+
 # Derivation
 
 Once you have an [`XPrv`](../../reference/Classes/XPrv.md) (see

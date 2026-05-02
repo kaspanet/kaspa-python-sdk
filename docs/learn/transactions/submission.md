@@ -1,3 +1,8 @@
+---
+search:
+  boost: 3
+---
+
 # Submission & confirmation
 
 Submitting a signed transaction hands it to a node, which gossips it

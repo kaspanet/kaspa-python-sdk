@@ -1,3 +1,8 @@
+---
+search:
+  boost: 3
+---
+
 # Send Transaction
 
 Outgoing flows from an activated account. Every method on this page

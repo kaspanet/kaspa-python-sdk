@@ -1,3 +1,8 @@
+---
+search:
+  boost: 3
+---
+
 # Calls
 
 Once connected, every RPC method is `await client.<name>(...)`. Most

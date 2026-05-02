@@ -1,3 +1,8 @@
+---
+search:
+  boost: 3
+---
+
 # Transaction Generator
 
 The [`Generator`](../../reference/Classes/Generator.md) is the SDK's

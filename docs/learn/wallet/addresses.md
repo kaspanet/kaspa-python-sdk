@@ -1,3 +1,8 @@
+---
+search:
+  boost: 3
+---
+
 # Addresses
 
 A BIP32 account derives [`Address`](../../reference/Classes/Address.md) instances. The wallet records two

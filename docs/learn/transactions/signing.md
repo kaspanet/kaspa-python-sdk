@@ -1,3 +1,8 @@
+---
+search:
+  boost: 3
+---
+
 # Signing
 
 Signing fills each input's `signature_script` with proof that the

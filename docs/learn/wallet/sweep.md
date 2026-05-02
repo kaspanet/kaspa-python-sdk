@@ -1,3 +1,8 @@
+---
+search:
+  boost: 3
+---
+
 # Sweep Funds
 
 A sweep consolidates every UTXO in an account into one address. Two

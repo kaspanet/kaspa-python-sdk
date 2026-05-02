@@ -1,3 +1,8 @@
+---
+search:
+  boost: 3
+---
+
 # Scripts
 
 A [`ScriptPublicKey`](../../reference/Classes/ScriptPublicKey.md) is the lock on every output. Most of the time it's

@@ -1,3 +1,8 @@
+---
+search:
+  boost: 3
+---
+
 # Networks
 
 The Kaspa community runs various public networks: a production mainnet and a few testnets.

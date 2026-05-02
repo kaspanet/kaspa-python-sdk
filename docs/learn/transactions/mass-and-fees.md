@@ -1,3 +1,8 @@
+---
+search:
+  boost: 3
+---
+
 # Mass & fees
 
 Kaspa uses a **mass-based fee model**. Every transaction has a *mass*

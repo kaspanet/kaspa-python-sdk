@@ -1,3 +1,8 @@
+---
+search:
+  boost: 5
+---
+
 # Transactions
 
 A Kaspa transaction has the same shape as on any UTXO chain: a list
