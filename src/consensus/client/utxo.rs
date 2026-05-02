@@ -106,6 +106,26 @@ impl PyUtxoEntry {
             _ => false,
         }
     }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The UtxoEntry as a repr string.
+    fn __repr__(&self) -> String {
+        let address = match &self.0.address {
+            Some(addr) => format!("'{}'", addr.address_to_string()),
+            None => "None".to_string(),
+        };
+        format!(
+            "UtxoEntry(address={}, outpoint=TransactionOutpoint(transaction_id='{}', index={}), amount={}, block_daa_score={}, is_coinbase={})",
+            address,
+            self.0.outpoint.inner().transaction_id,
+            self.0.outpoint.inner().index,
+            self.0.amount,
+            self.0.block_daa_score,
+            self.0.is_coinbase
+        )
+    }
 }
 
 impl From<PyUtxoEntry> for UtxoEntry {
@@ -266,6 +286,18 @@ impl PyUtxoEntries {
             _ => false,
         }
     }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The UtxoEntries as a repr string.
+    fn __repr__(&self) -> String {
+        format!(
+            "UtxoEntries(items={}, amount={})",
+            self.0.len(),
+            self.0.iter().map(|e| e.amount()).sum::<u64>()
+        )
+    }
 }
 
 /// A reference to a UTXO entry.
@@ -356,6 +388,26 @@ impl PyUtxoEntryReference {
     #[classmethod]
     fn from_dict(_cls: &Bound<'_, PyType>, dict: &Bound<'_, PyDict>) -> PyResult<Self> {
         Self::try_from(dict)
+    }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The UtxoEntryReference as a repr string.
+    fn __repr__(&self) -> String {
+        let address = match &self.0.utxo.address {
+            Some(addr) => format!("'{}'", addr.address_to_string()),
+            None => "None".to_string(),
+        };
+        format!(
+            "UtxoEntryReference(address={}, outpoint=TransactionOutpoint(transaction_id='{}', index={}), amount={}, block_daa_score={}, is_coinbase={})",
+            address,
+            self.0.utxo.outpoint.inner().transaction_id,
+            self.0.utxo.outpoint.inner().index,
+            self.0.utxo.amount,
+            self.0.utxo.block_daa_score,
+            self.0.utxo.is_coinbase
+        )
     }
 }
 

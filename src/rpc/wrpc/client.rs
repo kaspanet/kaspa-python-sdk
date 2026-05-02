@@ -99,6 +99,32 @@ impl<'py> FromPyObject<'_, 'py> for PyNotificationEvent {
     }
 }
 
+#[gen_stub_pymethods]
+#[pymethods]
+impl PyNotificationEvent {
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The NotificationEvent as a repr string.
+    pub fn __repr__(&self) -> String {
+        let variant = match self {
+            PyNotificationEvent::All => "All",
+            PyNotificationEvent::BlockAdded => "BlockAdded",
+            PyNotificationEvent::VirtualChainChanged => "VirtualChainChanged",
+            PyNotificationEvent::FinalityConflict => "FinalityConflict",
+            PyNotificationEvent::FinalityConflictResolved => "FinalityConflictResolved",
+            PyNotificationEvent::UtxosChanged => "UtxosChanged",
+            PyNotificationEvent::SinkBlueScoreChanged => "SinkBlueScoreChanged",
+            PyNotificationEvent::VirtualDaaScoreChanged => "VirtualDaaScoreChanged",
+            PyNotificationEvent::PruningPointUtxoSetOverride => "PruningPointUtxoSetOverride",
+            PyNotificationEvent::NewBlockTemplate => "NewBlockTemplate",
+            PyNotificationEvent::Connect => "Connect",
+            PyNotificationEvent::Disconnect => "Disconnect",
+        };
+        format!("NotificationEvent.{}", variant)
+    }
+}
+
 #[derive(Clone, Debug, Eq, PartialEq, Hash)]
 enum NotificationEvent {
     All,
@@ -572,6 +598,22 @@ impl PyRpcClient {
     fn remove_all_event_listeners(&self) -> PyResult<()> {
         *self.0.callbacks.lock().unwrap() = Default::default();
         Ok(())
+    }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The RpcClient as a repr string.
+    fn __repr__(&self) -> String {
+        let url = match self.0.client.url() {
+            Some(u) => format!("'{}'", u),
+            None => "None".to_string(),
+        };
+        format!(
+            "RpcClient(url={}, is_connected={})",
+            url,
+            self.0.client.is_connected()
+        )
     }
 }
 

@@ -94,6 +94,25 @@ impl PyGeneratorSummary {
             _ => false,
         }
     }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The GeneratorSummary as a repr string.
+    fn __repr__(&self) -> String {
+        format!(
+            "GeneratorSummary(network_id='{}', transactions={}, utxos={}, mass={}, fees={}, final_amount={})",
+            self.0.network_id(),
+            self.0.number_of_generated_transactions(),
+            self.0.aggregated_utxos(),
+            self.0.aggregate_mass(),
+            self.0.aggregate_fees(),
+            match self.0.final_transaction_amount() {
+                Some(v) => v.to_string(),
+                None => "None".to_string(),
+            }
+        )
+    }
 }
 
 impl From<core::GeneratorSummary> for PyGeneratorSummary {

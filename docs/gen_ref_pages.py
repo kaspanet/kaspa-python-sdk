@@ -159,6 +159,8 @@ if stub_file.exists():
             module = objects[name].get("module", "kaspa")
 
             with mkdocs_gen_files.open(doc_path, "w") as f:
+                if category == "Exceptions":
+                    f.write("---\nsearch:\n  boost: 0.3\n---\n\n")
                 f.write(f'# `{name}` ({type_label})\n\n')
                 f.write(f"::: {module}.{name}\n")
                 f.write("    options:\n")

@@ -30,6 +30,22 @@ pub struct PyUtxoEntries {
     pub entries: Vec<UtxoEntryReference>,
 }
 
+#[gen_stub_pymethods]
+#[pymethods]
+impl PyUtxoEntries {
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The UtxoEntries as a repr string.
+    fn __repr__(&self) -> String {
+        format!(
+            "UtxoEntries(items={}, amount={})",
+            self.entries.len(),
+            self.entries.iter().map(|e| e.amount()).sum::<u64>()
+        )
+    }
+}
+
 impl<'py> FromPyObject<'_, 'py> for PyUtxoEntries {
     type Error = PyErr;
 
@@ -70,6 +86,22 @@ impl<'py> FromPyObject<'_, 'py> for PyUtxoEntries {
 #[pyclass(name = "Outputs")]
 pub struct PyOutputs {
     pub outputs: Vec<PaymentOutput>,
+}
+
+#[gen_stub_pymethods]
+#[pymethods]
+impl PyOutputs {
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The Outputs as a repr string.
+    fn __repr__(&self) -> String {
+        format!(
+            "Outputs(items={}, amount={})",
+            self.outputs.len(),
+            self.outputs.iter().map(|o| o.amount).sum::<u64>()
+        )
+    }
 }
 
 impl<'py> FromPyObject<'_, 'py> for PyOutputs {
@@ -242,6 +274,21 @@ impl PyGenerator {
     ///     GeneratorSummary: The generation summary with fees and transaction details.
     pub fn summary(&self) -> PyGeneratorSummary {
         self.0.summary().into()
+    }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The Generator as a repr string.
+    pub fn __repr__(&self) -> String {
+        let summary = self.0.summary();
+        format!(
+            "Generator(network_id='{}', transactions={}, utxos={}, fees={})",
+            summary.network_id(),
+            summary.number_of_generated_transactions(),
+            summary.aggregated_utxos(),
+            summary.aggregate_fees()
+        )
     }
 }
 

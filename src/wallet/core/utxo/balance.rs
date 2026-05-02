@@ -96,6 +96,21 @@ impl PyBalanceStrings {
     pub fn get_pending(&self) -> Option<String> {
         self.0.pending.clone()
     }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The BalanceStrings as a repr string.
+    pub fn __repr__(&self) -> String {
+        let pending = match &self.0.pending {
+            Some(p) => format!("'{}'", p),
+            None => "None".to_string(),
+        };
+        format!(
+            "BalanceStrings(mature='{}', pending={})",
+            self.0.mature, pending
+        )
+    }
 }
 
 impl From<BalanceStrings> for PyBalanceStrings {

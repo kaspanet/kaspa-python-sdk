@@ -111,6 +111,14 @@ impl PyPublicKey {
         // }
         self.0.fingerprint().map(|v| String::try_from(v).unwrap())
     }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The PublicKey as a repr string.
+    pub fn __repr__(&self) -> String {
+        format!("PublicKey('{}')", self.to_string_impl())
+    }
 }
 
 impl From<PublicKey> for PyPublicKey {
@@ -216,6 +224,14 @@ impl PyXOnlyPublicKey {
         // let xonly_public_key = secp256k1::XOnlyPublicKey::from_slice(&address.payload)
         //     .map_err(|err| PyException::new_err(format!("{}", err)))?;
         Ok(xonly_public_key.into())
+    }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The XOnlyPublicKey as a repr string.
+    pub fn __repr__(&self) -> String {
+        format!("XOnlyPublicKey('{}')", self.0.inner)
     }
 }
 

@@ -80,6 +80,14 @@ impl PyDerivationPath {
     pub fn to_str(&self) -> String {
         self.0.to_string()
     }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The DerivationPath as a repr string.
+    pub fn __repr__(&self) -> String {
+        format!("DerivationPath('{}')", self.0)
+    }
 }
 
 impl From<PyDerivationPath> for kaspa_bip32::DerivationPath {

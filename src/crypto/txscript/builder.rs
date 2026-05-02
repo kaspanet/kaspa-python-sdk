@@ -272,6 +272,15 @@ impl PyScriptBuilder {
             _ => false,
         }
     }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The ScriptBuilder as a repr string.
+    fn __repr__(&self) -> String {
+        let inner = self.inner();
+        format!("ScriptBuilder(script='{}')", inner.script().to_hex())
+    }
 }
 
 // TODO change to PyOpcode struct and handle similar to PyBinary?

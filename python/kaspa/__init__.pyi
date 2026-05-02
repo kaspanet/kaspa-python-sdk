@@ -266,6 +266,13 @@ class Address:
         Returns:
             str: The address as a string
         """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The Address as a repr string.
+        """
 
 @typing.final
 class Balance:
@@ -325,6 +332,13 @@ class BalanceStrings:
         r"""
         Pending balance formatted as a string (if any).
         """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The BalanceStrings as a repr string.
+        """
 
 @typing.final
 class Binary:
@@ -340,7 +354,13 @@ class Binary:
         - bytes: Python bytes object.
         - list[int]: A list of byte values (0-255).
     """
-    ...
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The Binary as a repr string.
+        """
 
 @typing.final
 class DerivationPath:
@@ -402,6 +422,13 @@ class DerivationPath:
         Returns:
             str: The path as a string (e.g., "m/44'/111111'/0'").
         """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The DerivationPath as a repr string.
+        """
 
 @typing.final
 class Fees:
@@ -422,6 +449,13 @@ class Fees:
         
         Returns:
             Fees: A new Fees instance.
+        """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The Fees as a repr string.
         """
 
 @typing.final
@@ -470,6 +504,13 @@ class Generator:
         
         Returns:
             GeneratorSummary: The generation summary with fees and transaction details.
+        """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The Generator as a repr string.
         """
     def __iter__(self) -> Generator:
         r"""
@@ -559,6 +600,13 @@ class GeneratorSummary:
         
         Returns:
             bool: True if both summaries serialize to identical bytes.
+        """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The GeneratorSummary as a repr string.
         """
 
 @typing.final
@@ -870,6 +918,13 @@ class NetworkId:
         Returns:
             str: The NetworkId as a string
         """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The NetworkId as a repr string.
+        """
 
 @typing.final
 class Notification:
@@ -892,7 +947,13 @@ class Notification:
         - SinkBlueScoreChanged: The sink blue score changed.
         - VirtualChainChanged: The virtual chain changed.
     """
-    ...
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The Notification as a repr string.
+        """
 
 @typing.final
 class Outputs:
@@ -907,7 +968,13 @@ class Outputs:
         list[PaymentOutput]: A list of PaymentOutput objects.
         list[dict]: A list of dicts with `address` and `amount` keys.
     """
-    ...
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The Outputs as a repr string.
+        """
 
 @typing.final
 class PaymentOutput:
@@ -934,6 +1001,13 @@ class PaymentOutput:
         
         Returns:
             bool: True if both outputs have identical address and amount.
+        """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The PaymentOutput as a repr string.
         """
 
 @typing.final
@@ -1069,6 +1143,13 @@ class PendingTransaction:
         
         Raises:
             Exception: If submission fails.
+        """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The PendingTransaction as a repr string.
         """
 
 @typing.final
@@ -1330,6 +1411,13 @@ class PublicKey:
         
         Returns:
             str | None: The fingerprint as hex, or None if unavailable.
+        """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The PublicKey as a repr string.
         """
 
 @typing.final
@@ -1605,6 +1693,13 @@ class PublicKeyGenerator:
         Returns:
             str: The generator info string.
         """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The PublicKeyGenerator as a repr string.
+        """
 
 @typing.final
 class Resolver:
@@ -1660,6 +1755,13 @@ class Resolver:
         
         Raises:
             Exception: If no node is available or resolution fails.
+        """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The Resolver as a repr string.
         """
 
 @typing.final
@@ -1810,6 +1912,13 @@ class RpcClient:
     def remove_all_event_listeners(self) -> None:
         r"""
         Remove all registered event listeners.
+        """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The RpcClient as a repr string.
         """
     def subscribe_utxos_changed(self, addresses: typing.Sequence[Address]) -> None:
         r"""
@@ -2068,6 +2177,13 @@ class ScriptBuilder:
         Returns:
             bool: True if both builders have produced identical scripts.
         """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The ScriptBuilder as a repr string.
+        """
 
 @typing.final
 class ScriptPublicKey:
@@ -2112,6 +2228,13 @@ class ScriptPublicKey:
         
         Returns:
             bytes: The raw script bytes.
+        """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The ScriptPublicKey as a repr string.
         """
 
 @typing.final
@@ -2311,6 +2434,13 @@ class Transaction:
             ValueError: If values are invalid.
         """
     def __eq__(self, other: Transaction) -> builtins.bool: ...
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The Transaction as a repr string.
+        """
 
 @typing.final
 class TransactionInput:
@@ -2419,6 +2549,13 @@ class TransactionInput:
             ValueError: If values are invalid.
         """
     def __eq__(self, other: TransactionInput) -> builtins.bool: ...
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The TransactionInput as a repr string.
+        """
 
 @typing.final
 class TransactionOutpoint:
@@ -2489,6 +2626,13 @@ class TransactionOutpoint:
         
         Returns:
             bool: True if both outpoints reference the same transaction id and index.
+        """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The TransactionOutpoint as a repr string.
         """
 
 @typing.final
@@ -2571,6 +2715,13 @@ class TransactionOutput:
         Returns:
             bool: True if both outputs have identical value and script.
         """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The TransactionOutput as a repr string.
+        """
 
 @typing.final
 class UtxoContext:
@@ -2629,6 +2780,13 @@ class UtxoContext:
         r"""
         Return pending UTXO entries.
         """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The UtxoContext as a repr string.
+        """
 
 @typing.final
 class UtxoEntries:
@@ -2679,6 +2837,13 @@ class UtxoEntries:
         Returns:
             bool: True if both collections contain identical entries in the same order.
         """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The UtxoEntries as a repr string.
+        """
 
 @typing.final
 class UtxoEntries:
@@ -2693,7 +2858,13 @@ class UtxoEntries:
         list[UtxoEntryReference]: A list of UtxoEntryReference objects.
         list[dict]: A list of dicts with UtxoEntryReference-compatible keys.
     """
-    ...
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The UtxoEntries as a repr string.
+        """
 
 @typing.final
 class UtxoEntry:
@@ -2771,6 +2942,13 @@ class UtxoEntry:
         
         Returns:
             bool: True if both UtxoEntries have identical fields.
+        """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The UtxoEntry as a repr string.
         """
 
 @typing.final
@@ -2850,6 +3028,13 @@ class UtxoEntryReference:
         Raises:
             KeyError: If required keys are missing.
             ValueError: If values are invalid.
+        """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The UtxoEntryReference as a repr string.
         """
 
 @typing.final
@@ -2944,6 +3129,13 @@ class UtxoProcessor:
         
         Returns:
             None
+        """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The UtxoProcessor as a repr string.
         """
 
 @typing.final
@@ -3058,6 +3250,13 @@ class Wallet:
         Raises:
             Exception: If the wRPC client is currently connected. Disconnect
                 before changing networks.
+        """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The Wallet as a repr string.
         """
     def wallet_enumerate(self) -> list[WalletDescriptor]:
         r"""
@@ -3623,6 +3822,13 @@ class XOnlyPublicKey:
         Raises:
             Exception: If extraction fails.
         """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The XOnlyPublicKey as a repr string.
+        """
 
 @typing.final
 class XPrv:
@@ -3849,6 +4055,13 @@ class XPub:
         Returns:
             PublicKey: The public key.
         """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The XPub as a repr string.
+        """
 
 @typing.final
 class NotificationEvent(enum.Enum):
@@ -3884,6 +4097,14 @@ class NotificationEvent(enum.Enum):
     NewBlockTemplate = ...
     Connect = ...
     Disconnect = ...
+
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The NotificationEvent as a repr string.
+        """
 
 @typing.final
 class AccountsDiscoveryKind(enum.Enum):
@@ -4344,6 +4565,14 @@ class UtxoProcessorEvent(enum.Enum):
     Discovery = ...
     Balance = ...
     Error = ...
+
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The UtxoProcessorEvent as a repr string.
+        """
 
 def address_from_script_public_key(script_public_key: ScriptPublicKey, network: str | NetworkType) -> Address:
     r"""

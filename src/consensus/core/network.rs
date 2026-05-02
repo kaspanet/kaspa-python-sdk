@@ -184,6 +184,14 @@ impl PyNetworkId {
     pub fn __str__(&self) -> String {
         self.0.to_string()
     }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The NetworkId as a repr string.
+    pub fn __repr__(&self) -> String {
+        format!("NetworkId('{}')", self.0)
+    }
 }
 
 impl From<PyNetworkId> for NetworkId {

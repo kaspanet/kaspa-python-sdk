@@ -107,6 +107,19 @@ impl PyTransactionOutput {
             _ => false,
         }
     }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The TransactionOutput as a repr string.
+    fn __repr__(&self) -> String {
+        let inner = self.0.inner();
+        format!(
+            "TransactionOutput(value={}, script_public_key='{}')",
+            inner.value,
+            inner.script_public_key.script_as_hex()
+        )
+    }
 }
 
 impl From<TransactionOutput> for PyTransactionOutput {

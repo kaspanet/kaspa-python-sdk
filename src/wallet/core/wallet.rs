@@ -356,6 +356,25 @@ impl PyWallet {
         self.inner.wallet.set_network_id(&(network_id.into()))?;
         Ok(())
     }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The Wallet as a repr string.
+    fn __repr__(&self) -> String {
+        let wallet = self.wallet();
+        let network_id = wallet
+            .network_id()
+            .ok()
+            .map(|n| format!("'{}'", n))
+            .unwrap_or_else(|| "None".to_string());
+        format!(
+            "Wallet(network_id={}, is_open={}, is_synced={})",
+            network_id,
+            wallet.is_open(),
+            wallet.is_synced()
+        )
+    }
 }
 
 impl PyWallet {

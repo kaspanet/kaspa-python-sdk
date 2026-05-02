@@ -326,6 +326,22 @@ impl PyTransaction {
             _ => false,
         }
     }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The Transaction as a repr string.
+    fn __repr__(&self) -> String {
+        let inner = self.0.inner();
+        format!(
+            "Transaction(id='{}', version={}, inputs={}, outputs={}, lock_time={})",
+            inner.id,
+            inner.version,
+            inner.inputs.len(),
+            inner.outputs.len(),
+            inner.lock_time
+        )
+    }
 }
 
 impl From<Transaction> for PyTransaction {

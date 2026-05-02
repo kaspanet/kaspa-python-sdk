@@ -1,7 +1,7 @@
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyList};
-use pyo3_stub_gen::derive::gen_stub_pyclass;
+use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
 
 /// Binary data type for flexible input handling.
 ///
@@ -17,6 +17,18 @@ use pyo3_stub_gen::derive::gen_stub_pyclass;
 #[pyclass(name = "Binary")]
 pub struct PyBinary {
     pub data: Vec<u8>,
+}
+
+#[gen_stub_pymethods]
+#[pymethods]
+impl PyBinary {
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The Binary as a repr string.
+    pub fn __repr__(&self) -> String {
+        format!("Binary({} bytes)", self.data.len())
+    }
 }
 
 impl<'py> FromPyObject<'_, 'py> for PyBinary {

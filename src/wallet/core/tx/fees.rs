@@ -72,6 +72,19 @@ impl PyFees {
     pub fn new(amount: u64, source: Option<PyFeeSource>) -> Self {
         Self { amount, source }
     }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The Fees as a repr string.
+    pub fn __repr__(&self) -> String {
+        let source = match &self.source {
+            Some(PyFeeSource::SenderPays) => "FeeSource.SenderPays",
+            Some(PyFeeSource::ReceiverPays) => "FeeSource.ReceiverPays",
+            None => "None",
+        };
+        format!("Fees(amount={}, source={})", self.amount, source)
+    }
 }
 
 impl<'py> FromPyObject<'_, 'py> for PyFees {
