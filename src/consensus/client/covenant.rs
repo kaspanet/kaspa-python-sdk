@@ -41,6 +41,14 @@ impl PyCovenantBinding {
     pub fn set_covenant_id(&mut self, value: PyHash) {
         self.0.set_covenant_id(value.into());
     }
+
+    pub fn __repr__(&self) -> String {
+        format!(
+            "CovenantBinding(authorizing_input={}, covenant_id={})",
+            self.0.get_authorizing_input(),
+            self.get_covenant_id().__repr__(),
+        )
+    }
 }
 
 impl From<CovenantBinding> for PyCovenantBinding {

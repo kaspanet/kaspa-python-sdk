@@ -1,3 +1,4 @@
+use kaspa_consensus_client::CovenantBinding;
 use kaspa_wallet_core::tx::payment::PaymentOutput;
 use pyo3::{
     exceptions::{PyException, PyKeyError},
@@ -6,7 +7,7 @@ use pyo3::{
 };
 use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
 
-use crate::address::PyAddress;
+use crate::{address::PyAddress, consensus::client::covenant::PyCovenantBinding};
 
 /// A payment destination with address and amount.
 ///
@@ -30,6 +31,15 @@ impl PyPaymentOutput {
         Self(PaymentOutput::new(address.into(), amount))
     }
 
+    #[staticmethod]
+    fn with_covenant(address: PyAddress, amount: u64, covenant: PyCovenantBinding) -> Self {
+        Self(PaymentOutput::with_covenant(
+            address.into(),
+            amount,
+            covenant.into(),
+        ))
+    }
+
     /// Equality comparison.
     ///
     /// Args:
@@ -51,9 +61,13 @@ impl PyPaymentOutput {
     ///     str: The PaymentOutput as a repr string.
     fn __repr__(&self) -> String {
         format!(
-            "PaymentOutput(address='{}', amount={})",
+            "PaymentOutput(address='{}', amount={}, covenant={})",
             self.0.address.address_to_string(),
-            self.0.amount
+            self.0.amount,
+            match &self.0.covenant {
+                Some(covenant) => PyCovenantBinding::from(*covenant).__repr__(),
+                None => "None".to_string(),
+            }
         )
     }
 }
@@ -86,7 +100,16 @@ impl TryFrom<&Bound<'_, PyDict>> for PyPaymentOutput {
             .ok_or_else(|| PyKeyError::new_err("Key `amount` not present"))?
             .extract()?;
 
-        let inner = PaymentOutput::new(address.into(), amount);
+        let covenant_id = value
+            .as_any()
+            .get_item("covenant")?
+            .extract::<Option<PyCovenantBinding>>()?;
+
+        let inner = PaymentOutput {
+            address: address.into(),
+            amount,
+            covenant: covenant_id.map(CovenantBinding::from),
+        };
 
         Ok(Self(inner))
     }
