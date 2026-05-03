@@ -20,7 +20,7 @@
 - Added `version` getter for `ScriptPublicKey`.
 
 ### Changed
-- Bumped rusty-kaspa dependency version to commit a311302.
+- Bumped rusty-kaspa dependency version to commit d290179.
 - Moved Kaspa Python SDK out of Rusty-Kaspa (as a workspace member crate) to its own dedicated repository. The internals of this project have changed significantly as a result. However, all APIs exposed to Python remain unchanged. 
 - All Python-exposed structs and enums are prefixed with `Py` (e.g. `PyAddress`) internally. The corresponding Python class name has not changed (prefix is dropped in Python).
 - All Python-exposed functions are prefixed with `py_` (e.g. `py_sign_message`) internally. The corresponding Python function name has not changed (prefix is dropped in Python).

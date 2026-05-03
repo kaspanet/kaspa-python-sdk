@@ -55,6 +55,7 @@ pub fn py_create_transaction(
                 None,
                 sequence as u64,
                 sig_op_count,
+                0,
                 Some(reference),
             )
         })

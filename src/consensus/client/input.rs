@@ -30,17 +30,19 @@ impl PyTransactionInput {
     ///     signature_script: The unlocking script (signature).
     ///     sequence: Sequence number for relative time locks.
     ///     sig_op_count: Number of signature operations.
+    ///     compute_budget: Compute budget for this input (default: 0).
     ///     utxo: Optional UTXO entry reference for signing.
     ///
     /// Returns:
     ///     TransactionInput: A new TransactionInput instance.
     #[new]
-    #[pyo3(signature = (previous_outpoint, signature_script, sequence, sig_op_count, utxo=None))]
+    #[pyo3(signature = (previous_outpoint, signature_script, sequence, sig_op_count, compute_budget=0, utxo=None))]
     pub fn constructor(
         previous_outpoint: PyTransactionOutpoint,
         signature_script: PyBinary,
         sequence: u64,
         sig_op_count: u8,
+        compute_budget: u16,
         utxo: Option<PyUtxoEntryReference>,
     ) -> PyResult<Self> {
         let inner = TransactionInput::new(
@@ -48,6 +50,7 @@ impl PyTransactionInput {
             Some(signature_script.into()),
             sequence,
             sig_op_count,
+            compute_budget,
             utxo.map(UtxoEntryReference::from),
         );
         Ok(Self(inner))
@@ -119,6 +122,21 @@ impl PyTransactionInput {
         self.0.inner().sig_op_count = value;
     }
 
+    /// The compute budget for this input.
+    #[getter]
+    pub fn get_compute_budget(&self) -> u16 {
+        self.0.inner().compute_budget
+    }
+
+    /// Set the compute budget for this input.
+    ///
+    /// Args:
+    ///     value: The compute budget.
+    #[setter]
+    pub fn set_compute_budget(&mut self, value: u16) {
+        self.0.inner().compute_budget = value;
+    }
+
     /// The UTXO entry reference for transaction signing, or None if not set.
     #[getter]
     pub fn get_utxo(&self) -> Option<PyUtxoEntryReference> {
@@ -142,6 +160,7 @@ impl PyTransactionInput {
     ///         - 'signatureScript' (str | None): The signature script as hex string
     ///         - 'sequence' (int): Sequence number
     ///         - 'sigOpCount' (int): Signature operation count
+    ///         - 'computeBudget' (int, optional): Compute budget for this input (default: 0)
     ///         - 'utxo' (dict | None): Optional UTXO entry reference dict
     ///
     /// Returns:
@@ -218,6 +237,12 @@ impl TryFrom<&Bound<'_, PyDict>> for PyTransactionInput {
             .ok_or_else(|| PyKeyError::new_err("Key `sigOpCount` not present"))?
             .extract()?;
 
+        // Parse computeBudget (optional, defaults to 0)
+        let compute_budget: u16 = match dict.get_item("computeBudget")? {
+            Some(item) if !item.is_none() => item.extract()?,
+            _ => 0,
+        };
+
         // Parse utxo (optional)
         let utxo: Option<UtxoEntryReference> = if let Some(utxo_item) = dict.get_item("utxo")? {
             if utxo_item.is_none() {
@@ -235,6 +260,7 @@ impl TryFrom<&Bound<'_, PyDict>> for PyTransactionInput {
             signature_script,
             sequence,
             sig_op_count,
+            compute_budget,
             utxo,
         );
         Ok(Self(input))
