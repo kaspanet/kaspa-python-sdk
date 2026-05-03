@@ -1,4 +1,5 @@
 use crate::address::PyAddress;
+use crate::callback::PyCallback;
 use crate::consensus::core::network::{PyNetworkId, PyNetworkType};
 use crate::rpc::encoding::PyEncoding;
 use crate::rpc::model::*;
@@ -24,7 +25,7 @@ use paste::paste;
 use pyo3::{
     exceptions::PyException,
     prelude::*,
-    types::{PyDict, PyModule, PyTuple},
+    types::{PyDict, PyTuple},
 };
 use pyo3_stub_gen::derive::*;
 use serde::{Deserialize, Serialize};
@@ -98,6 +99,32 @@ impl<'py> FromPyObject<'_, 'py> for PyNotificationEvent {
     }
 }
 
+#[gen_stub_pymethods]
+#[pymethods]
+impl PyNotificationEvent {
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The NotificationEvent as a repr string.
+    pub fn __repr__(&self) -> String {
+        let variant = match self {
+            PyNotificationEvent::All => "All",
+            PyNotificationEvent::BlockAdded => "BlockAdded",
+            PyNotificationEvent::VirtualChainChanged => "VirtualChainChanged",
+            PyNotificationEvent::FinalityConflict => "FinalityConflict",
+            PyNotificationEvent::FinalityConflictResolved => "FinalityConflictResolved",
+            PyNotificationEvent::UtxosChanged => "UtxosChanged",
+            PyNotificationEvent::SinkBlueScoreChanged => "SinkBlueScoreChanged",
+            PyNotificationEvent::VirtualDaaScoreChanged => "VirtualDaaScoreChanged",
+            PyNotificationEvent::PruningPointUtxoSetOverride => "PruningPointUtxoSetOverride",
+            PyNotificationEvent::NewBlockTemplate => "NewBlockTemplate",
+            PyNotificationEvent::Connect => "Connect",
+            PyNotificationEvent::Disconnect => "Disconnect",
+        };
+        format!("NotificationEvent.{}", variant)
+    }
+}
+
 #[derive(Clone, Debug, Eq, PartialEq, Hash)]
 enum NotificationEvent {
     All,
@@ -161,62 +188,6 @@ impl From<PyNotificationEvent> for NotificationEvent {
             PyNotificationEvent::Connect => NotificationEvent::RpcCtl(Ctl::Connect),
             PyNotificationEvent::Disconnect => NotificationEvent::RpcCtl(Ctl::Disconnect),
         }
-    }
-}
-
-#[derive(Clone)]
-struct PyCallback {
-    callback: Arc<Py<PyAny>>,
-    args: Option<Arc<Py<PyTuple>>>,
-    kwargs: Option<Arc<Py<PyDict>>>,
-}
-
-impl PyCallback {
-    fn add_event_to_args(&self, py: Python, event: Bound<PyDict>) -> PyResult<Py<PyTuple>> {
-        match &self.args {
-            Some(existing_args) => {
-                let tuple_ref = existing_args.bind(py);
-
-                let mut new_args: Vec<Py<PyAny>> =
-                    tuple_ref.iter().map(|arg| arg.unbind()).collect();
-                new_args.push(event.into());
-
-                Ok(Py::from(PyTuple::new(py, new_args)?))
-            }
-            None => Ok(Py::from(PyTuple::new(py, [event])?)),
-        }
-    }
-
-    fn execute(&self, py: Python, event: Bound<PyDict>) -> PyResult<Py<PyAny>> {
-        let args = self.add_event_to_args(py, event)?;
-        let kwargs = self.kwargs.as_ref().map(|kw| kw.bind(py));
-
-        let result = self
-            .callback
-            .call(py, args.bind(py), kwargs)
-            .map_err(|err| {
-                // let fn_name: String = self.callback.getattr(py, "__name__").unwrap().extract(py).unwrap();
-
-                let traceback = PyModule::import(py, "traceback")
-                    .and_then(|traceback| {
-                        traceback.call_method(
-                            "format_exception",
-                            (err.get_type(py), err.value(py), err.traceback(py)),
-                            None,
-                        )
-                    })
-                    .map(|formatted| {
-                        let trace_lines: Vec<String> = formatted
-                            .extract()
-                            .unwrap_or_else(|_| vec!["<Failed to retrieve traceback>".to_string()]);
-                        trace_lines.join("")
-                    })
-                    .unwrap_or_else(|_| "<Failed to retrieve traceback>".to_string());
-
-                PyException::new_err(traceback.to_string())
-            })?;
-
-        Ok(result)
     }
 }
 
@@ -318,7 +289,7 @@ impl PyRpcClient {
     ///     Exception: If client creation fails.
     #[new]
     #[pyo3(signature = (resolver=None, url=None, encoding=None, network_id=None))]
-    fn ctor(
+    pub fn ctor(
         resolver: Option<PyResolver>,
         url: Option<String>,
         #[gen_stub(override_type(type_repr = "str | Encoding | None = Encoding.Borsh"))]
@@ -456,7 +427,7 @@ impl PyRpcClient {
     /// Raises:
     ///     Exception: If disconnection fails.
     #[gen_stub(override_return_type(type_repr = "None"))]
-    fn disconnect<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+    pub fn disconnect<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
         let client = self.clone();
 
         pyo3_async_runtimes::tokio::future_into_py(py, async move {
@@ -534,7 +505,7 @@ impl PyRpcClient {
         &self,
         py: Python,
         event: PyNotificationEvent,
-        callback: Py<PyAny>,
+        #[gen_stub(override_type(type_repr = "typing.Callable[..., None]"))] callback: Py<PyAny>,
         args: &Bound<'_, PyTuple>,
         kwargs: Option<&Bound<'_, PyDict>>,
     ) -> PyResult<()> {
@@ -547,11 +518,7 @@ impl PyRpcClient {
             None => PyDict::new(py).into(),
         };
 
-        let py_callback = PyCallback {
-            callback: Arc::new(callback),
-            args: Some(Arc::new(args)),
-            kwargs: Some(Arc::new(kwargs)),
-        };
+        let py_callback = PyCallback::new(callback, args, kwargs);
 
         self.0
             .callbacks
@@ -576,6 +543,7 @@ impl PyRpcClient {
     fn remove_event_listener(
         &self,
         event: PyNotificationEvent,
+        #[gen_stub(override_type(type_repr = "None | typing.Callable[..., None]"))]
         callback: Option<Py<PyAny>>,
     ) -> PyResult<()> {
         let event: NotificationEvent = event.into();
@@ -589,7 +557,7 @@ impl PyRpcClient {
             (NotificationEvent::All, Some(callback)) => {
                 // Remove given callback from "all" events
                 for callbacks in callbacks.values_mut() {
-                    callbacks.retain(|entry| entry.callback.as_ref().as_ptr() != callback.as_ptr());
+                    callbacks.retain(|entry| !entry.callback_ptr_eq(&callback));
                 }
             }
             (_, None) => {
@@ -599,7 +567,7 @@ impl PyRpcClient {
             (_, Some(callback)) => {
                 // Remove given callback from given event
                 if let Some(callbacks) = callbacks.get_mut(&event) {
-                    callbacks.retain(|entry| entry.callback.as_ref().as_ptr() != callback.as_ptr());
+                    callbacks.retain(|entry| !entry.callback_ptr_eq(&callback));
                 }
             }
         }
@@ -630,6 +598,22 @@ impl PyRpcClient {
     fn remove_all_event_listeners(&self) -> PyResult<()> {
         *self.0.callbacks.lock().unwrap() = Default::default();
         Ok(())
+    }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The RpcClient as a repr string.
+    fn __repr__(&self) -> String {
+        let url = match self.0.client.url() {
+            Some(u) => format!("'{}'", u),
+            None => "None".to_string(),
+        };
+        format!(
+            "RpcClient(url={}, is_connected={})",
+            url,
+            self.0.client.is_connected()
+        )
     }
 }
 

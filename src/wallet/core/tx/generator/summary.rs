@@ -80,12 +80,38 @@ impl PyGeneratorSummary {
         self.0.try_to_pydict(py)
     }
 
+    /// Equality comparison.
+    ///
+    /// Args:
+    ///     other: Another GeneratorSummary to compare against.
+    ///
+    /// Returns:
+    ///     bool: True if both summaries serialize to identical bytes.
     // Cannot be derived via pyclass(eq)
     fn __eq__(&self, other: &PyGeneratorSummary) -> bool {
         match (bincode::serialize(&self.0), bincode::serialize(&other.0)) {
             (Ok(a), Ok(b)) => a == b,
             _ => false,
         }
+    }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The GeneratorSummary as a repr string.
+    fn __repr__(&self) -> String {
+        format!(
+            "GeneratorSummary(network_id='{}', transactions={}, utxos={}, mass={}, fees={}, final_amount={})",
+            self.0.network_id(),
+            self.0.number_of_generated_transactions(),
+            self.0.aggregated_utxos(),
+            self.0.aggregate_mass(),
+            self.0.aggregate_fees(),
+            match self.0.final_transaction_amount() {
+                Some(v) => v.to_string(),
+                None => "None".to_string(),
+            }
+        )
     }
 }
 

@@ -181,6 +181,21 @@ impl PyTransactionInput {
             _ => false,
         }
     }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The TransactionInput as a repr string.
+    fn __repr__(&self) -> String {
+        let inner = self.0.inner();
+        format!(
+            "TransactionInput(previous_outpoint=TransactionOutpoint(transaction_id='{}', index={}), sequence={}, sig_op_count={})",
+            inner.previous_outpoint.inner().transaction_id,
+            inner.previous_outpoint.inner().index,
+            inner.sequence,
+            inner.sig_op_count
+        )
+    }
 }
 
 impl From<TransactionInput> for PyTransactionInput {

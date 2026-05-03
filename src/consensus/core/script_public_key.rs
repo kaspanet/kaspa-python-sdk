@@ -51,9 +51,24 @@ impl PyScriptPublicKey {
         self.0.script_as_hex()
     }
 
-    /// The byte representation
+    /// The byte representation.
+    ///
+    /// Returns:
+    ///     bytes: The raw script bytes.
     pub fn __bytes__<'py>(&self, py: Python<'py>) -> Bound<'py, PyBytes> {
         PyBytes::new(py, self.0.script())
+    }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The ScriptPublicKey as a repr string.
+    pub fn __repr__(&self) -> String {
+        format!(
+            "ScriptPublicKey(version={}, script='{}')",
+            self.0.version(),
+            self.0.script_as_hex()
+        )
     }
 }
 

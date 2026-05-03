@@ -26,7 +26,7 @@ STUB_COMMAND="cargo run --bin stub-gen"
 echo "Generating stub file (.pyi) with command: '$STUB_COMMAND'"
 $STUB_COMMAND
 
-BUILD_CMD="maturin develop --target-dir target"
+BUILD_CMD="maturin develop --strip --target-dir target"
 echo "Building Python package with command: '$BUILD_CMD'"
 $BUILD_CMD
 

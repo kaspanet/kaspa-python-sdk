@@ -100,7 +100,10 @@ impl PyXPrv {
     ///
     /// Raises:
     ///     Exception: If derivation fails.
-    pub fn derive_path(&self, path: &Bound<PyAny>) -> PyResult<PyXPrv> {
+    pub fn derive_path(
+        &self,
+        #[gen_stub(override_type(type_repr = "str | DerivationPath"))] path: &Bound<PyAny>,
+    ) -> PyResult<PyXPrv> {
         let path = if let Ok(path_str) = path.extract::<String>() {
             Ok(PyDerivationPath::new(path_str.as_str())?)
         } else if let Ok(path_obj) = path.extract::<PyDerivationPath>() {

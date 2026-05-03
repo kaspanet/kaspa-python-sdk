@@ -1,13 +1,13 @@
 """
 TypedDict definitions for Kaspa RPC request/response messages & contained types.
 
-This file is maunally maintained and appended to kaspa.pyi file via stub gen process.
+This file is manually maintained and appended to python/kaspa/__init__.pyi via stub gen process.
 
 Long term, attempts should be made to auto generate.
 """
 
 from enum import Enum
-from typing import TypedDict
+from typing import Literal, TypedDict
 
 
 # =============================================================================
@@ -961,4 +961,129 @@ class SubmitTransactionReplacementResponse(TypedDict):
     """Response from submit_transaction_replacement."""
     transactionId: str
     replacedTransaction: RpcTransaction
+
+
+# =============================================================================
+# Notification bodies (the value of the `data` field on subscription events)
+# =============================================================================
+
+class RpcBlockAddedNotification(TypedDict):
+    """Body of a `BlockAdded` event (the value of `event["data"]`)."""
+    block: RpcBlock
+
+
+class RpcVirtualChainChangedNotification(TypedDict):
+    """Body of a `VirtualChainChanged` event."""
+    removedChainBlockHashes: list[str]
+    addedChainBlockHashes: list[str]
+    acceptedTransactionIds: list[RpcAcceptedTransactionIds]
+
+
+class RpcFinalityConflictNotification(TypedDict):
+    """Body of a `FinalityConflict` event."""
+    violatingBlockHash: str
+
+
+class RpcFinalityConflictResolvedNotification(TypedDict):
+    """Body of a `FinalityConflictResolved` event."""
+    finalityBlockHash: str
+
+
+class RpcSinkBlueScoreChangedNotification(TypedDict):
+    """Body of a `SinkBlueScoreChanged` event."""
+    sinkBlueScore: int
+
+
+class RpcVirtualDaaScoreChangedNotification(TypedDict):
+    """Body of a `VirtualDaaScoreChanged` event."""
+    virtualDaaScore: int
+
+
+class RpcPruningPointUtxoSetOverrideNotification(TypedDict):
+    """Body of a `PruningPointUtxoSetOverride` event. The body is empty."""
+    pass
+
+
+class RpcNewBlockTemplateNotification(TypedDict):
+    """Body of a `NewBlockTemplate` event. The body is empty."""
+    pass
+
+
+# =============================================================================
+# Subscription event wrappers (the dict passed to `add_event_listener` callbacks)
+#
+# Note: the `type` field is the PascalCase variant name as emitted by the
+# bindings (e.g. `"BlockAdded"`), even though the kebab-case form (`"block-added"`)
+# is what `add_event_listener` accepts when registering listeners.
+# =============================================================================
+
+class BlockAddedEvent(TypedDict):
+    """Callback payload for the `block-added` subscription."""
+    type: Literal["BlockAdded"]
+    data: RpcBlockAddedNotification
+
+
+class VirtualChainChangedEvent(TypedDict):
+    """Callback payload for the `virtual-chain-changed` subscription."""
+    type: Literal["VirtualChainChanged"]
+    data: RpcVirtualChainChangedNotification
+
+
+class FinalityConflictEvent(TypedDict):
+    """Callback payload for the `finality-conflict` subscription."""
+    type: Literal["FinalityConflict"]
+    data: RpcFinalityConflictNotification
+
+
+class FinalityConflictResolvedEvent(TypedDict):
+    """Callback payload for the `finality-conflict-resolved` subscription."""
+    type: Literal["FinalityConflictResolved"]
+    data: RpcFinalityConflictResolvedNotification
+
+
+class UtxosChangedEvent(TypedDict):
+    """Callback payload for the `utxos-changed` subscription.
+
+    Unlike the other notification events, the body is flattened onto the
+    event itself rather than nested under a `data` key.
+    """
+    type: Literal["UtxosChanged"]
+    added: list[RpcUtxosByAddressesEntry]
+    removed: list[RpcUtxosByAddressesEntry]
+
+
+class SinkBlueScoreChangedEvent(TypedDict):
+    """Callback payload for the `sink-blue-score-changed` subscription."""
+    type: Literal["SinkBlueScoreChanged"]
+    data: RpcSinkBlueScoreChangedNotification
+
+
+class VirtualDaaScoreChangedEvent(TypedDict):
+    """Callback payload for the `virtual-daa-score-changed` subscription."""
+    type: Literal["VirtualDaaScoreChanged"]
+    data: RpcVirtualDaaScoreChangedNotification
+
+
+class PruningPointUtxoSetOverrideEvent(TypedDict):
+    """Callback payload for the `pruning-point-utxo-set-override` subscription."""
+    type: Literal["PruningPointUtxoSetOverride"]
+    data: RpcPruningPointUtxoSetOverrideNotification
+
+
+class NewBlockTemplateEvent(TypedDict):
+    """Callback payload for the `new-block-template` subscription."""
+    type: Literal["NewBlockTemplate"]
+    data: RpcNewBlockTemplateNotification
+
+
+class ConnectEvent(TypedDict):
+    """Emitted by `RpcClient` whenever the underlying WebSocket connects."""
+    type: Literal["connect"]
+    rpc: str
+
+
+class DisconnectEvent(TypedDict):
+    """Emitted by `RpcClient` whenever the underlying WebSocket disconnects."""
+    type: Literal["disconnect"]
+    rpc: str
 

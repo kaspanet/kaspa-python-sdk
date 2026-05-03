@@ -39,7 +39,7 @@ class TestResolver:
     async def test_resolver_get_url_with_encoding(self, encoding):
         """Test getting a node URL from resolver with various encodings."""
         resolver = Resolver()
-        url = await resolver.get_url(encoding, "testnet-10")
+        url = await resolver.get_url(encoding, "mainnet")
         assert isinstance(url, str)
         assert url.startswith("wss://") or url.startswith("ws://")
 
@@ -47,28 +47,31 @@ class TestResolver:
     async def test_resolver_get_node_with_encoding(self, encoding):
         """Test getting node info from resolver with various encodings."""
         resolver = Resolver()
-        node = await resolver.get_node(encoding, "testnet-10")
+        node = await resolver.get_node(encoding, "mainnet")
         assert isinstance(node, dict)
 
 
 class TestRpcClientConnection:
     """Tests for RPC client connection functionality."""
 
-    async def test_create_rpc_client_with_resolver(self):
+    async def test_create_rpc_client_with_resolver(self, network_id):
         """Test creating an RPC client with a resolver."""
-        client = RpcClient(resolver=Resolver(), network_id="testnet-10")
+        client = RpcClient(resolver=Resolver(), network_id=network_id)
         assert isinstance(client, RpcClient)
 
     @pytest.mark.parametrize("encoding", ["borsh", "json", Encoding.Borsh, Encoding.SerdeJson])
-    async def test_create_rpc_client_with_encoding(self, encoding):
+    async def test_create_rpc_client_with_encoding(self, encoding, network_id):
         """Test creating an RPC client with various encoding options."""
         client = RpcClient(resolver=Resolver(),
-                           network_id="testnet-10", encoding=encoding)
+                           network_id=network_id, encoding=encoding)
         assert isinstance(client, RpcClient)
 
-    async def test_rpc_client_connect_disconnect(self):
+    async def test_rpc_client_connect_disconnect(self, network_id, rpc_url):
         """Test connecting and disconnecting from RPC."""
-        client = RpcClient(resolver=Resolver(), network_id="testnet-10")
+        if rpc_url:
+            client = RpcClient(url=rpc_url, network_id=network_id)
+        else:
+            client = RpcClient(resolver=Resolver(), network_id=network_id)
 
         await client.connect()
         assert client.is_connected is True
@@ -76,137 +79,129 @@ class TestRpcClientConnection:
         await client.disconnect()
         assert client.is_connected is False
 
-    async def test_rpc_client_encoding(self, testnet_rpc_client):
+    async def test_rpc_client_encoding(self, rpc_client):
         """Test getting RPC encoding."""
-        encoding = testnet_rpc_client.encoding
+        encoding = rpc_client.encoding
         assert isinstance(encoding, str)
 
-    async def test_rpc_client_url(self, testnet_rpc_client):
+    async def test_rpc_client_url(self, rpc_client):
         """Test getting RPC client URL."""
-        url = testnet_rpc_client.url
+        url = rpc_client.url
         assert isinstance(url, str)
 
-    async def test_rpc_client_node_id(self, testnet_rpc_client):
+    async def test_rpc_client_node_id(self, rpc_client):
         """Test getting RPC node ID."""
-        node_id = testnet_rpc_client.node_id
+        node_id = rpc_client.node_id
         assert node_id is not None
 
 
 class TestRpcClientCalls:
     """Tests for RPC calls."""
 
-    async def test_get_info(self, testnet_rpc_client):
+    async def test_get_info(self, rpc_client):
         """Test get_info RPC call."""
-        result = await testnet_rpc_client.get_info()
+        result = await rpc_client.get_info()
         assert isinstance(result, dict)
 
-    async def test_get_server_info(self, testnet_rpc_client):
+    async def test_get_server_info(self, rpc_client):
         """Test get_server_info RPC call."""
-        result = await testnet_rpc_client.get_server_info()
+        result = await rpc_client.get_server_info()
         assert isinstance(result, dict)
 
-    async def test_get_block_count(self, testnet_rpc_client):
+    async def test_get_block_count(self, rpc_client):
         """Test get_block_count RPC call."""
-        result = await testnet_rpc_client.get_block_count()
+        result = await rpc_client.get_block_count()
         assert isinstance(result, dict)
 
-    async def test_get_block_dag_info(self, testnet_rpc_client):
+    async def test_get_block_dag_info(self, rpc_client):
         """Test get_block_dag_info RPC call."""
-        result = await testnet_rpc_client.get_block_dag_info()
+        result = await rpc_client.get_block_dag_info()
         assert isinstance(result, dict)
 
-    async def test_get_coin_supply(self, testnet_rpc_client):
+    async def test_get_coin_supply(self, rpc_client):
         """Test get_coin_supply RPC call."""
-        result = await testnet_rpc_client.get_coin_supply()
+        result = await rpc_client.get_coin_supply()
         assert isinstance(result, dict)
 
-    async def test_get_sink(self, testnet_rpc_client):
+    async def test_get_sink(self, rpc_client):
         """Test get_sink RPC call."""
-        result = await testnet_rpc_client.get_sink()
+        result = await rpc_client.get_sink()
         assert isinstance(result, dict)
 
-    async def test_get_sink_blue_score(self, testnet_rpc_client):
+    async def test_get_sink_blue_score(self, rpc_client):
         """Test get_sink_blue_score RPC call."""
-        result = await testnet_rpc_client.get_sink_blue_score()
+        result = await rpc_client.get_sink_blue_score()
         assert isinstance(result, dict)
 
-    async def test_get_sync_status(self, testnet_rpc_client):
+    async def test_get_sync_status(self, rpc_client):
         """Test get_sync_status RPC call."""
-        result = await testnet_rpc_client.get_sync_status()
+        result = await rpc_client.get_sync_status()
         assert isinstance(result, dict)
 
-    async def test_get_current_network(self, testnet_rpc_client):
+    async def test_get_current_network(self, rpc_client):
         """Test get_current_network RPC call."""
-        result = await testnet_rpc_client.get_current_network()
+        result = await rpc_client.get_current_network()
         assert isinstance(result, dict)
 
-    async def test_get_fee_estimate(self, testnet_rpc_client):
+    async def test_get_fee_estimate(self, rpc_client):
         """Test get_fee_estimate RPC call."""
-        result = await testnet_rpc_client.get_fee_estimate()
+        result = await rpc_client.get_fee_estimate()
         assert isinstance(result, dict)
 
-    async def test_ping(self, testnet_rpc_client):
+    async def test_ping(self, rpc_client):
         """Test ping RPC call."""
-        result = await testnet_rpc_client.ping()
+        result = await rpc_client.ping()
         assert isinstance(result, dict)
 
-    async def test_get_balance_by_address(self, testnet_rpc_client):
+    async def test_get_balance_by_address(self, rpc_client, test_address):
         """Test get_balance_by_address RPC call."""
-        test_address = "kaspatest:qr0lr4ml9fn3chekrqmjdkergxl93l4wrk3dankcgvjq776s9wn9jhtkdksae"
-
-        result = await testnet_rpc_client.get_balance_by_address({
+        result = await rpc_client.get_balance_by_address({
             "address": test_address
         })
         assert isinstance(result, dict)
 
-    async def test_get_balances_by_addresses(self, testnet_rpc_client):
+    async def test_get_balances_by_addresses(self, rpc_client, test_address):
         """Test get_balances_by_addresses RPC call."""
-        test_address = "kaspatest:qr0lr4ml9fn3chekrqmjdkergxl93l4wrk3dankcgvjq776s9wn9jhtkdksae"
-
-        result = await testnet_rpc_client.get_balances_by_addresses({
+        result = await rpc_client.get_balances_by_addresses({
             "addresses": [test_address]
         })
         assert isinstance(result, dict)
 
-    async def test_get_utxos_by_addresses(self, testnet_rpc_client):
+    async def test_get_utxos_by_addresses(self, rpc_client, test_address):
         """Test get_utxos_by_addresses RPC call."""
-        test_address = "kaspatest:qr0lr4ml9fn3chekrqmjdkergxl93l4wrk3dankcgvjq776s9wn9jhtkdksae"
-
-        result = await testnet_rpc_client.get_utxos_by_addresses({
+        result = await rpc_client.get_utxos_by_addresses({
             "addresses": [test_address]
         })
         assert isinstance(result, dict)
 
-    async def test_get_connected_peer_info(self, testnet_rpc_client):
+    async def test_get_connected_peer_info(self, rpc_client):
         """Test get_connected_peer_info RPC call."""
-        result = await testnet_rpc_client.get_connected_peer_info()
+        result = await rpc_client.get_connected_peer_info()
         assert isinstance(result, dict)
 
-    async def test_get_peer_addresses(self, testnet_rpc_client):
+    async def test_get_peer_addresses(self, rpc_client):
         """Test get_peer_addresses RPC call."""
-        result = await testnet_rpc_client.get_peer_addresses()
+        result = await rpc_client.get_peer_addresses()
         assert isinstance(result, dict)
 
-    async def test_estimate_network_hashes_per_second(self, testnet_rpc_client):
+    async def test_estimate_network_hashes_per_second(self, rpc_client):
         """Test estimate_network_hashes_per_second RPC call."""
-        result = await testnet_rpc_client.estimate_network_hashes_per_second({
+        result = await rpc_client.estimate_network_hashes_per_second({
             "windowSize": 1000
         })
         assert isinstance(result, dict)
 
-    async def test_get_mempool_entries(self, testnet_rpc_client):
+    async def test_get_mempool_entries(self, rpc_client):
         """Test get_mempool_entries RPC call."""
-        result = await testnet_rpc_client.get_mempool_entries({
+        result = await rpc_client.get_mempool_entries({
             "includeOrphanPool": True,
             "filterTransactionPool": False
         })
         assert isinstance(result, dict)
 
-    async def test_get_mempool_entries_by_addresses(self, testnet_rpc_client):
+    async def test_get_mempool_entries_by_addresses(self, rpc_client, test_address):
         """Test get_mempool_entries_by_addresses RPC call."""
-        test_address = "kaspatest:qr0lr4ml9fn3chekrqmjdkergxl93l4wrk3dankcgvjq776s9wn9jhtkdksae"
-
-        result = await testnet_rpc_client.get_mempool_entries_by_addresses({
+        result = await rpc_client.get_mempool_entries_by_addresses({
             "addresses": [test_address],
             "includeOrphanPool": True,
             "filterTransactionPool": False

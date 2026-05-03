@@ -105,12 +105,32 @@ impl PyTransactionOutput {
         Self::try_from(dict)
     }
 
+    /// Equality comparison.
+    ///
+    /// Args:
+    ///     other: Another TransactionOutput to compare against.
+    ///
+    /// Returns:
+    ///     bool: True if both outputs have identical value and script.
     // Cannot be derived via pyclass(eq) as wrapped PyTransactionOutput type does not derive PartialEq/Eq
     fn __eq__(&self, other: &PyTransactionOutput) -> bool {
         match (bincode::serialize(&self.0), bincode::serialize(&other.0)) {
             (Ok(a), Ok(b)) => a == b,
             _ => false,
         }
+    }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The TransactionOutput as a repr string.
+    fn __repr__(&self) -> String {
+        let inner = self.0.inner();
+        format!(
+            "TransactionOutput(value={}, script_public_key='{}')",
+            inner.value,
+            inner.script_public_key.script_as_hex()
+        )
     }
 }
 

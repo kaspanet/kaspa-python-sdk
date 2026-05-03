@@ -553,4 +553,15 @@ impl PyPublicKeyGenerator {
     pub fn to_string(&self) -> PyResult<String> {
         Ok(self.hd_wallet.to_string(None).to_string())
     }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The PublicKeyGenerator as a repr string.
+    pub fn __repr__(&self) -> String {
+        format!(
+            "PublicKeyGenerator('{}')",
+            self.hd_wallet.to_string(None).as_str()
+        )
+    }
 }

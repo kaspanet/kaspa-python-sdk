@@ -34,7 +34,10 @@ impl PyUtxoContext {
     ///     id: Optional 32-byte hex id (string) or Hash.
     #[new]
     #[pyo3(signature = (processor, id=None))]
-    pub fn ctor(processor: PyUtxoProcessor, id: Option<Bound<'_, PyAny>>) -> PyResult<Self> {
+    pub fn ctor(
+        processor: PyUtxoProcessor,
+        #[gen_stub(override_type(type_repr = "str | Hash"))] id: Option<Bound<'_, PyAny>>,
+    ) -> PyResult<Self> {
         let binding = if let Some(value) = id {
             if let Ok(hash) = value.extract::<PyHash>() {
                 UtxoContextBinding::Id(UtxoContextId::new(hash.into()))
@@ -197,6 +200,18 @@ impl PyUtxoContext {
         } else {
             Ok(None)
         }
+    }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The UtxoContext as a repr string.
+    fn __repr__(&self) -> String {
+        format!(
+            "UtxoContext(id='{}', mature_length={})",
+            self.0.id(),
+            self.0.mature_utxo_size()
+        )
     }
 }
 

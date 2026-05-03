@@ -1,6 +1,8 @@
 mod address;
+mod callback;
 mod consensus;
 mod crypto;
+mod error;
 mod macros;
 mod rpc;
 mod traits;
@@ -12,16 +14,19 @@ use pyo3_stub_gen::define_stub_info_gatherer;
 
 define_stub_info_gatherer!(stub_info);
 
+/// The `kaspa` Python module.
+///
+/// Top-level entry point that registers all Rust-backed classes and functions
+/// with Python. Also creates the `kaspa.exceptions` submodule for wallet
+/// error types.
 #[pymodule]
 fn kaspa(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Init logging bridge
     pyo3_log::init();
 
-    // Add exceptions submodule
-    let exceptions = PyModule::new(py, "exceptions")?;
-    m.add_submodule(&exceptions)?;
-
-    // Register classes and functions to module
+    // -------------------------------------------------------
+    // kaspa module registrations
+    // -------------------------------------------------------
 
     m.add_class::<address::PyAddress>()?;
     m.add_class::<address::PyAddressVersion>()?;
@@ -75,6 +80,8 @@ fn kaspa(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<consensus::core::script_public_key::PyScriptPublicKey>()?;
     m.add_class::<consensus::core::tx::TransactionId>()?;
 
+    m.add_class::<wallet::core::account::descriptor::PyAccountDescriptor>()?;
+    m.add_class::<wallet::core::deterministic::PyAccountId>()?;
     m.add_class::<wallet::bip32::language::PyLanguage>()?;
     m.add_class::<wallet::bip32::phrase::PyMnemonic>()?;
     m.add_class::<wallet::core::account::kind::PyAccountKind>()?;
@@ -112,8 +119,11 @@ fn kaspa(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<wallet::core::utxo::balance::PyBalance>()?;
     m.add_class::<wallet::core::utxo::balance::PyBalanceStrings>()?;
     m.add_class::<wallet::core::utxo::context::PyUtxoContext>()?;
+    m.add_class::<wallet::core::utxo::processor::PyUtxoProcessorEvent>()?;
     m.add_class::<wallet::core::utxo::processor::PyUtxoProcessor>()?;
 
+    m.add_class::<wallet::core::tx::fees::PyFees>()?;
+    m.add_class::<wallet::core::tx::fees::PyFeeSource>()?;
     m.add_function(wrap_pyfunction!(
         wallet::core::tx::mass::py_maximum_standard_transaction_mass,
         m
@@ -160,6 +170,16 @@ fn kaspa(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
         wallet::core::message::py_verify_message,
         m
     )?)?;
+    m.add_class::<wallet::core::events::PyWalletEventType>()?;
+    m.add_class::<wallet::core::api::message::PyAccountsDiscoveryKind>()?;
+    m.add_class::<wallet::core::api::message::PyCommitRevealAddressKind>()?;
+    m.add_class::<wallet::core::api::message::PyNewAddressKind>()?;
+    m.add_class::<wallet::core::storage::interface::PyWalletDescriptor>()?;
+    m.add_class::<wallet::core::storage::keydata::PyPrvKeyDataId>()?;
+    m.add_class::<wallet::core::storage::keydata::PyPrvKeyDataInfo>()?;
+    m.add_class::<wallet::core::storage::keydata::PyPrvKeyDataVariantKind>()?;
+    m.add_class::<wallet::core::storage::transaction::PyTransactionKind>()?;
+    m.add_class::<wallet::core::wallet::PyWallet>()?;
 
     m.add_class::<wallet::keys::derivation::PyDerivationPath>()?;
     m.add_class::<wallet::keys::keypair::PyKeypair>()?;
@@ -170,6 +190,23 @@ fn kaspa(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<wallet::keys::publickey::PyXOnlyPublicKey>()?;
     m.add_class::<wallet::keys::xprv::PyXPrv>()?;
     m.add_class::<wallet::keys::xpub::PyXPub>()?;
+
+    // -------------------------------------------------------
+    // exceptions (`kaspad.exceptions`) submodule
+    // -------------------------------------------------------
+
+    // Create exceptions submodule
+    let exceptions = PyModule::new(py, "exceptions")?;
+    m.add_submodule(&exceptions)?;
+
+    // Registrations to exceptions submodule
+    wallet::core::error::register_exceptions(&exceptions)?;
+
+    // Register in sys.modules
+    // Required for `from kaspa.exceptions import ...` to work
+    py.import("sys")?
+        .getattr("modules")?
+        .set_item("kaspa.exceptions", &exceptions)?;
 
     Ok(())
 }

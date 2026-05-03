@@ -7,7 +7,7 @@ use std::str::FromStr;
 ///
 /// Used for transaction IDs, block hashes, and other cryptographic purposes.
 #[gen_stub_pyclass]
-#[pyclass(name = "Hash", eq)]
+#[pyclass(name = "Hash", skip_from_py_object, eq)]
 #[derive(Clone, PartialEq)]
 pub struct PyHash(Hash);
 
@@ -40,12 +40,29 @@ impl PyHash {
         self.0.to_string()
     }
 
+    /// Get the hex string representation.
+    ///
+    /// Returns:
+    ///     str: A 64-character hex string.
+    #[pyo3(name = "to_hex")]
+    pub fn py_to_hex(&self) -> String {
+        self.0.to_string()
+    }
+
     /// The string representation.
     ///
     /// Returns:
     ///     str: The Hash as a hex string
     pub fn __str__(&self) -> String {
         self.0.to_string()
+    }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The Hash as a repr string.
+    pub fn __repr__(&self) -> String {
+        format!("Hash('{}')", self.0)
     }
 
     /// The byte representation
@@ -72,6 +89,21 @@ impl TryFrom<String> for PyHash {
     fn try_from(value: String) -> PyResult<Self> {
         let inner = Hash::from_str(&value).map_err(|err| PyException::new_err(err.to_string()))?;
         Ok(Self(inner))
+    }
+}
+
+impl<'py> FromPyObject<'_, 'py> for PyHash {
+    type Error = PyErr;
+
+    fn extract(obj: Borrowed<'_, 'py, PyAny>) -> Result<Self, Self::Error> {
+        if let Ok(s) = obj.extract::<String>() {
+            let inner = Hash::from_str(&s).map_err(|err| PyException::new_err(err.to_string()))?;
+            Ok(Self(inner))
+        } else if let Ok(hash) = obj.cast::<Self>() {
+            Ok(hash.borrow().clone())
+        } else {
+            Err(PyException::new_err("Expected type `str` or `Hash`"))
+        }
     }
 }
 

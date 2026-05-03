@@ -40,14 +40,26 @@ impl<'py> FromPyObject<'_, 'py> for PyNetworkType {
 #[gen_stub_pymethods]
 #[pymethods]
 impl PyNetworkType {
+    /// The default wRPC port for this network.
+    ///
+    /// Returns:
+    ///     int: The default wRPC port number.
     pub fn default_rpc_port(&self) -> u16 {
         NetworkType::from(self).default_rpc_port()
     }
 
+    /// The default Borsh-encoded wRPC port for this network.
+    ///
+    /// Returns:
+    ///     int: The default Borsh wRPC port number.
     pub fn default_borsh_rpc_port(&self) -> u16 {
         NetworkType::from(self).default_borsh_rpc_port()
     }
 
+    /// The default JSON-encoded wRPC port for this network.
+    ///
+    /// Returns:
+    ///     int: The default JSON wRPC port number.
     pub fn default_json_rpc_port(&self) -> u16 {
         NetworkType::from(self).default_json_rpc_port()
     }
@@ -82,7 +94,9 @@ impl PyNetworkId {
     /// Raises:
     ///     Exception: If the network_id format is invalid.
     #[new]
-    pub fn new(network_id: Bound<PyAny>) -> PyResult<Self> {
+    pub fn new(
+        #[gen_stub(override_type(type_repr = "str | NetworkType"))] network_id: Bound<PyAny>,
+    ) -> PyResult<Self> {
         if let Ok(network_id) = network_id.extract::<String>() {
             PyNetworkId::from_str(&network_id)
         } else if let Ok(network_type) = network_id.extract::<PyNetworkType>() {
@@ -169,6 +183,14 @@ impl PyNetworkId {
     ///     str: The NetworkId as a string
     pub fn __str__(&self) -> String {
         self.0.to_string()
+    }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The NetworkId as a repr string.
+    pub fn __repr__(&self) -> String {
+        format!("NetworkId('{}')", self.0)
     }
 }
 

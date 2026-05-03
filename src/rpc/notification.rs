@@ -1,6 +1,6 @@
 use kaspa_rpc_core::api::notifications::Notification;
 use pyo3::prelude::*;
-use pyo3_stub_gen::derive::gen_stub_pyclass;
+use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
 use serde_pyobject::to_pyobject;
 
 /// RPC notification wrapper for event callbacks.
@@ -23,6 +23,29 @@ use serde_pyobject::to_pyobject;
 #[gen_stub_pyclass]
 #[pyclass(name = "Notification")]
 pub struct PyNotification(pub Notification);
+
+#[gen_stub_pymethods]
+#[pymethods]
+impl PyNotification {
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The Notification as a repr string.
+    pub fn __repr__(&self) -> String {
+        let variant = match &self.0 {
+            Notification::BlockAdded(_) => "BlockAdded",
+            Notification::FinalityConflict(_) => "FinalityConflict",
+            Notification::FinalityConflictResolved(_) => "FinalityConflictResolved",
+            Notification::NewBlockTemplate(_) => "NewBlockTemplate",
+            Notification::PruningPointUtxoSetOverride(_) => "PruningPointUtxoSetOverride",
+            Notification::UtxosChanged(_) => "UtxosChanged",
+            Notification::VirtualDaaScoreChanged(_) => "VirtualDaaScoreChanged",
+            Notification::SinkBlueScoreChanged(_) => "SinkBlueScoreChanged",
+            Notification::VirtualChainChanged(_) => "VirtualChainChanged",
+        };
+        format!("Notification(type='{}')", variant)
+    }
+}
 
 impl PyNotification {
     pub fn to_pyobject(&self, py: Python) -> PyResult<Py<PyAny>> {

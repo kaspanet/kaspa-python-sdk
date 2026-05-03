@@ -11,21 +11,50 @@ use crate::address::PyAddress;
 /// A payment destination with address and amount.
 ///
 /// Represents a single output in a transaction, specifying where funds
-/// should be sent and how much. Used with Generator and create_transactions.
+/// should be sent and how much.
 #[gen_stub_pyclass]
-#[pyclass(name = "PaymentOutput")]
+#[pyclass(name = "PaymentOutput", skip_from_py_object)]
 #[derive(Clone)]
 pub struct PyPaymentOutput(PaymentOutput);
 
 #[gen_stub_pymethods]
 #[pymethods]
 impl PyPaymentOutput {
+    /// Create a new Payment Output.
+    ///
+    /// Args:
+    ///     address: The address to send this output to.
+    ///     amount: The amount, in sompi, to send on this output.
+    #[new]
+    fn new(address: PyAddress, amount: u64) -> Self {
+        Self(PaymentOutput::new(address.into(), amount))
+    }
+
+    /// Equality comparison.
+    ///
+    /// Args:
+    ///     other: Another PaymentOutput to compare against.
+    ///
+    /// Returns:
+    ///     bool: True if both outputs have identical address and amount.
     // Cannot be derived via pyclass(eq)
     fn __eq__(&self, other: &PyPaymentOutput) -> bool {
         match (bincode::serialize(&self.0), bincode::serialize(&other.0)) {
             (Ok(a), Ok(b)) => a == b,
             _ => false,
         }
+    }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The PaymentOutput as a repr string.
+    fn __repr__(&self) -> String {
+        format!(
+            "PaymentOutput(address='{}', amount={})",
+            self.0.address.address_to_string(),
+            self.0.amount
+        )
     }
 }
 
@@ -60,5 +89,21 @@ impl TryFrom<&Bound<'_, PyDict>> for PyPaymentOutput {
         let inner = PaymentOutput::new(address.into(), amount);
 
         Ok(Self(inner))
+    }
+}
+
+impl<'py> FromPyObject<'_, 'py> for PyPaymentOutput {
+    type Error = PyErr;
+
+    fn extract(obj: Borrowed<'_, 'py, PyAny>) -> Result<Self, Self::Error> {
+        if let Ok(output) = obj.cast::<PyPaymentOutput>() {
+            Ok(output.borrow().clone())
+        } else if let Ok(dict) = obj.cast::<PyDict>() {
+            Ok(PyPaymentOutput::try_from(&*dict)?)
+        } else {
+            Err(PyException::new_err(
+                "PaymentOutput must be an instance of `PaymentOutput` or compatible `dict`",
+            ))
+        }
     }
 }

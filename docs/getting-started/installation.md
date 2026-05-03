@@ -1,3 +1,8 @@
+---
+search:
+  boost: 3
+---
+
 # Installation
 
 This Python package can be [installed from PyPi](#installation-via-pypi) or [built from source](#installation-from-source). 

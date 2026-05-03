@@ -84,12 +84,31 @@ impl PyTransactionOutpoint {
         Self::try_from(dict)
     }
 
+    /// Equality comparison.
+    ///
+    /// Args:
+    ///     other: Another TransactionOutpoint to compare against.
+    ///
+    /// Returns:
+    ///     bool: True if both outpoints reference the same transaction id and index.
     // Cannot be derived via pyclass(eq) as wrapped PyTransactionOutpoint does not derive PartialEq/Eq
     fn __eq__(&self, other: &PyTransactionOutpoint) -> bool {
         match (bincode::serialize(&self.0), bincode::serialize(&other.0)) {
             (Ok(a), Ok(b)) => a == b,
             _ => false,
         }
+    }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The TransactionOutpoint as a repr string.
+    fn __repr__(&self) -> String {
+        format!(
+            "TransactionOutpoint(transaction_id='{}', index={})",
+            self.0.inner().transaction_id,
+            self.0.inner().index
+        )
     }
 }
 

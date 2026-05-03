@@ -159,4 +159,22 @@ impl PyXPub {
     pub fn get_chain_code(&self) -> String {
         self.0.inner().attrs().chain_code.to_vec().to_hex()
     }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The XPub as a repr string.
+    pub fn __repr__(&self) -> String {
+        let xpub = self
+            .0
+            .inner()
+            .to_extended_key("kpub".try_into().unwrap())
+            .to_string();
+        format!(
+            "XPub(xpub='{}', depth={}, child_number={})",
+            xpub,
+            self.0.inner().attrs().depth,
+            u32::from(self.0.inner().attrs().child_number)
+        )
+    }
 }
