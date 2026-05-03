@@ -376,6 +376,7 @@ class CovenantBinding:
     @covenant_id.setter
     def covenant_id(self, value: Hash) -> None: ...
     def __new__(cls, authorizing_input: builtins.int, covenant_id: Hash) -> CovenantBinding: ...
+    def __repr__(self) -> builtins.str: ...
 
 @typing.final
 class DerivationPath:
@@ -1015,6 +1016,8 @@ class PaymentOutput:
             address: The address to send this output to.
             amount: The amount, in sompi, to send on this output.
         """
+    @staticmethod
+    def with_covenant(address: Address, amount: builtins.int, covenant: CovenantBinding) -> PaymentOutput: ...
     def __eq__(self, other: PaymentOutput) -> builtins.bool:
         r"""
         Equality comparison.
