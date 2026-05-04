@@ -1074,7 +1074,7 @@ impl PyWallet {
     ///
     /// Args:
     ///     wallet_secret: Password for the open wallet.
-    ///     account_id: Hex-encoded id of the account to rename.
+    ///     account_id: AccountId or hex-encoded string id of the account to rename.
     ///     name: New account name, or None to clear the name.
     #[gen_stub(override_return_type(type_repr = "None"))]
     #[pyo3(signature = (wallet_secret, account_id, name=None))]
@@ -1193,7 +1193,7 @@ impl PyWallet {
     /// Activate one or more accounts so they begin tracking UTXOs.
     ///
     /// Args:
-    ///     account_ids: Optional list of hex-encoded account ids. If None, activates all accounts.
+    ///     account_ids: Optional list of AccountId or hex-encoded string ids. If None, activates all accounts.
     #[gen_stub(override_return_type(type_repr = "None"))]
     #[pyo3(signature = (account_ids=None))]
     pub fn accounts_activate<'py>(
@@ -1257,7 +1257,7 @@ impl PyWallet {
     /// Fetch the AccountDescriptor for an account.
     ///
     /// Args:
-    ///     account_id: Hex-encoded id of the account to look up.
+    ///     account_id: AccountId or hex-encoded string id of the account to look up.
     ///
     /// Returns:
     ///     AccountDescriptor: Descriptor of the requested account.
@@ -1282,7 +1282,7 @@ impl PyWallet {
     /// Generate a new receive or change address for an account.
     ///
     /// Args:
-    ///     account_id: Hex-encoded id of the account.
+    ///     account_id: AccountId or hex-encoded string id of the account.
     ///     address_kind: The NewAddressKind (Receive or Change) to derive.
     ///
     /// Returns:
@@ -1317,7 +1317,7 @@ impl PyWallet {
     /// a summary of what a real send would look like.
     ///
     /// Args:
-    ///     account_id: Hex-encoded id of the source account.
+    ///     account_id: AccountId or hex-encoded string id of the source account.
     ///     priority_fee_sompi: Priority fee specification (Fees object or dict).
     ///     fee_rate: Optional explicit fee rate (sompi per gram of mass).
     ///     payload: Optional binary payload to embed in the transaction.
@@ -1373,7 +1373,7 @@ impl PyWallet {
     ///
     /// Args:
     ///     wallet_secret: Password for the open wallet.
-    ///     account_id: Hex-encoded id of the source account.
+    ///     account_id: AccountId or hex-encoded string id of the source account.
     ///     priority_fee_sompi: Priority fee specification (Fees object or dict).
     ///     payment_secret: Optional payment secret if the source key data is encrypted with one.
     ///     fee_rate: Optional explicit fee rate (sompi per gram of mass).
@@ -1430,7 +1430,7 @@ impl PyWallet {
     /// List UTXOs available to an account, optionally filtered.
     ///
     /// Args:
-    ///     account_id: Hex-encoded id of the account.
+    ///     account_id: AccountId or hex-encoded string id of the account.
     ///     addresses: Optional list of Address objects to restrict results to.
     ///     min_amount_sompi: Optional minimum UTXO value to include, in sompi.
     ///
@@ -1470,8 +1470,8 @@ impl PyWallet {
     ///
     /// Args:
     ///     wallet_secret: Password for the open wallet.
-    ///     source_account_id: Hex-encoded id of the sending account.
-    ///     destination_account_id: Hex-encoded id of the receiving account.
+    ///     source_account_id: AccountId or hex-encoded string id of the sending account.
+    ///     destination_account_id: AccountId or hex-encoded string id of the receiving account.
     ///     transfer_amount_sompi: Amount to transfer in sompi.
     ///     payment_secret: Optional payment secret if the source key data is encrypted with one.
     ///     fee_rate: Optional explicit fee rate (sompi per gram of mass).
@@ -1532,7 +1532,7 @@ impl PyWallet {
     ///
     /// Args:
     ///     wallet_secret: Password for the open wallet.
-    ///     account_id: Hex-encoded id of the source account.
+    ///     account_id: AccountId or hex-encoded string id of the source account.
     ///     address_type: The CommitRevealAddressKind selecting which derivation chain to use.
     ///     address_index: Derivation index for the commit address.
     ///     script_sig: Raw script bytes used to construct the commit P2SH.
@@ -1599,7 +1599,7 @@ impl PyWallet {
     ///
     /// Args:
     ///     wallet_secret: Password for the open wallet.
-    ///     account_id: Hex-encoded id of the source account.
+    ///     account_id: AccountId or hex-encoded string id of the source account.
     ///     script_sig: Raw script bytes used to construct the commit P2SH.
     ///     reveal_fee_sompi: Fee paid by the reveal transaction.
     ///     payment_secret: Optional payment secret if the source key data is encrypted with one.
@@ -1800,7 +1800,7 @@ impl PyWallet {
     /// Fetch a window of stored transaction history for an account.
     ///
     /// Args:
-    ///     account_id: Hex-encoded id of the account.
+    ///     account_id: AccountId or hex-encoded string id of the account.
     ///     network_id: The network the transactions belong to.
     ///     start: Start index (inclusive) into the transaction history.
     ///     end: End index (exclusive) into the transaction history.
