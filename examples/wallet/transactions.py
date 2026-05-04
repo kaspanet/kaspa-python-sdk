@@ -244,10 +244,8 @@ async def main(rpc_url: str | None):
     print("\tSweep account_1 into a fresh receive address")
     print("-" * 100)
 
-    sweep_address = await wallet.accounts_create_new_address(
-        account_1.account_id, NewAddressKind.Receive
-    )
-    print(f"sweep destination: {sweep_address}\n")
+    pre_sweep_account = await wallet.accounts_get(account_1.account_id)
+    print(f"sweep destination (change address): {pre_sweep_account.change_address}\n")
 
     account_1_utxos = await wallet.accounts_get_utxos(account_id=account_1.account_id)
     sweep_total = sum(u["amount"] for u in account_1_utxos)
@@ -256,11 +254,11 @@ async def main(rpc_url: str | None):
     sweep_send = await wallet.accounts_send(
         wallet_secret=WALLET_SECRET,
         account_id=account_1.account_id,
-        priority_fee_sompi=Fees(0, FeeSource.ReceiverPays),
+        priority_fee_sompi=Fees(0, None),
         payment_secret=None,
         fee_rate=None,
         payload=None,
-        destination=[PaymentOutput(sweep_address, sweep_total)],
+        destination=None, # None defaults to change address
     )
     print(f"Sweep send: {sweep_send}")
     print(f" - final_transaction_id: {sweep_send.final_transaction_id}")
@@ -321,6 +319,16 @@ async def main(rpc_url: str | None):
 
     await _wait_for_utxos(
         wallet, account_1.account_id, "account_1 sweep output matured"
+    )
+
+    sweep_address_utxos = await wallet.accounts_get_utxos(
+        account_id=account_1.account_id,
+        addresses=[pre_sweep_account.change_address],
+    )
+    sweep_dest_total = sum(u["amount"] for u in sweep_address_utxos)
+    print(
+        f"Sweep destination {pre_sweep_account.change_address}: {sweep_dest_total} sompi "
+        f"across {len(sweep_address_utxos)} UTXO(s)\n"
     )
 
     for label, acct in (("account_0", account_0), ("account_1", account_1)):
