@@ -3169,8 +3169,8 @@ class Wallet:
         `wallet_open` (or `wallet_create`) to open or initialize a wallet file.
         
         Args:
-            network_id: The network to operate on. May be a NetworkId or string.
-            encoding: The wRPC encoding (Borsh or JSON). Defaults to Borsh.
+            network_id: The network to operate on.
+            encoding: The wRPC encoding. Defaults to Borsh.
             url: Optional explicit wRPC server URL.
             resolver: Optional Resolver to discover wRPC endpoints.
         
@@ -3225,7 +3225,7 @@ class Wallet:
         Register a Python callback for a wallet event.
         
         Args:
-            event: The WalletEventType (or string) to listen for. Use "all" to receive every event.
+            event: The event kind to listen for. Use "all" to receive every event.
             callback: A callable invoked with `(event, *args, **kwargs)` when the event fires.
             *args: Positional arguments forwarded to the callback.
             **kwargs: Keyword arguments forwarded to the callback.
@@ -3235,7 +3235,7 @@ class Wallet:
         Remove previously registered event listener(s).
         
         Args:
-            event: The WalletEventType (or string) to remove listeners from.
+            event: The event kind to remove listeners from.
                 Use "all" to operate across every event kind.
             callback: Optional specific callback to remove. If None, removes all
                 callbacks for the given event.
@@ -3245,7 +3245,7 @@ class Wallet:
         Set the network id used by the wallet runtime.
         
         Args:
-            network_id: The NetworkId (or string) to bind the wallet to.
+            network_id: The network to bind the wallet to.
         
         Raises:
             Exception: If the wRPC client is currently connected. Disconnect
@@ -3354,7 +3354,7 @@ class Wallet:
         
         Args:
             wallet_secret: Password used to decrypt the import payload.
-            wallet_data: The encrypted wallet bytes produced by `wallet_export`.
+            wallet_data: The encrypted wallet payload produced by `wallet_export`.
         
         Returns:
             dict: The wallet import response, including the resulting descriptor.
@@ -3470,7 +3470,7 @@ class Wallet:
         
         Args:
             wallet_secret: Password for the open wallet.
-            account_id: Hex-encoded id of the account to rename.
+            account_id: Id of the account to rename.
             name: New account name, or None to clear the name.
         """
     def accounts_discovery(self, discovery_kind: AccountsDiscoveryKind | str, address_scan_extent: builtins.int, account_scan_extent: builtins.int, bip39_mnemonic: builtins.str, bip39_passphrase: typing.Optional[builtins.str] = None) -> int:
@@ -3481,7 +3481,7 @@ class Wallet:
         has been used on-chain. Useful when restoring a wallet from a mnemonic.
         
         Args:
-            discovery_kind: The discovery scheme (AccountsDiscoveryKind or string).
+            discovery_kind: The discovery scheme to use.
             address_scan_extent: How many consecutive unused addresses to scan before stopping.
             account_scan_extent: How many consecutive unused accounts to scan before stopping.
             bip39_mnemonic: The BIP39 mnemonic phrase to scan.
@@ -3513,14 +3513,14 @@ class Wallet:
         Activate one or more accounts so they begin tracking UTXOs.
         
         Args:
-            account_ids: Optional list of hex-encoded account ids. If None, activates all accounts.
+            account_ids: Optional list of account ids. If None, activates all accounts.
         """
     def accounts_get(self, account_id: AccountId | str) -> AccountDescriptor:
         r"""
         Fetch the AccountDescriptor for an account.
         
         Args:
-            account_id: Hex-encoded id of the account to look up.
+            account_id: Id of the account to look up.
         
         Returns:
             AccountDescriptor: Descriptor of the requested account.
@@ -3530,8 +3530,8 @@ class Wallet:
         Generate a new receive or change address for an account.
         
         Args:
-            account_id: Hex-encoded id of the account.
-            address_kind: The NewAddressKind (Receive or Change) to derive.
+            account_id: Id of the account.
+            address_kind: Whether to derive a receive or change address.
         
         Returns:
             Address: The newly derived address.
@@ -3544,10 +3544,10 @@ class Wallet:
         a summary of what a real send would look like.
         
         Args:
-            account_id: Hex-encoded id of the source account.
-            priority_fee_sompi: Priority fee specification (Fees object or dict).
+            account_id: Id of the source account.
+            priority_fee_sompi: Priority fee specification.
             fee_rate: Optional explicit fee rate (sompi per gram of mass).
-            payload: Optional binary payload to embed in the transaction.
+            payload: Optional payload to embed in the transaction.
             destination: Optional list of PaymentOutputs. If None, the entire
                 sweepable balance is routed to the account's change address
                 (useful for compounding/sweeping UTXOs).
@@ -3561,11 +3561,11 @@ class Wallet:
         
         Args:
             wallet_secret: Password for the open wallet.
-            account_id: Hex-encoded id of the source account.
-            priority_fee_sompi: Priority fee specification (Fees object or dict).
+            account_id: Id of the source account.
+            priority_fee_sompi: Priority fee specification.
             payment_secret: Optional payment secret if the source key data is encrypted with one.
             fee_rate: Optional explicit fee rate (sompi per gram of mass).
-            payload: Optional binary payload to embed in the transaction.
+            payload: Optional payload to embed in the transaction.
             destination: Optional list of PaymentOutputs. If None, the entire
                 sweepable balance is routed to the account's change address
                 (useful for compounding/sweeping UTXOs).
@@ -3578,8 +3578,8 @@ class Wallet:
         List UTXOs available to an account, optionally filtered.
         
         Args:
-            account_id: Hex-encoded id of the account.
-            addresses: Optional list of Address objects to restrict results to.
+            account_id: Id of the account.
+            addresses: Optional addresses to restrict results to.
             min_amount_sompi: Optional minimum UTXO value to include, in sompi.
         
         Returns:
@@ -3594,8 +3594,8 @@ class Wallet:
         
         Args:
             wallet_secret: Password for the open wallet.
-            source_account_id: Hex-encoded id of the sending account.
-            destination_account_id: Hex-encoded id of the receiving account.
+            source_account_id: Id of the sending account.
+            destination_account_id: Id of the receiving account.
             transfer_amount_sompi: Amount to transfer in sompi.
             payment_secret: Optional payment secret if the source key data is encrypted with one.
             fee_rate: Optional explicit fee rate (sompi per gram of mass).
@@ -3613,15 +3613,15 @@ class Wallet:
         
         Args:
             wallet_secret: Password for the open wallet.
-            account_id: Hex-encoded id of the source account.
-            address_type: The CommitRevealAddressKind selecting which derivation chain to use.
+            account_id: Id of the source account.
+            address_type: Selects which derivation chain to use for the commit address.
             address_index: Derivation index for the commit address.
-            script_sig: Raw script bytes used to construct the commit P2SH.
+            script_sig: Raw script used to construct the commit P2SH.
             commit_amount_sompi: Amount to lock in the commit transaction.
             reveal_fee_sompi: Fee paid by the reveal transaction.
             payment_secret: Optional payment secret if the source key data is encrypted with one.
             fee_rate: Optional explicit fee rate for the commit transaction.
-            payload: Optional binary payload to embed in the reveal transaction.
+            payload: Optional payload to embed in the reveal transaction.
         
         Returns:
             list[Hash]: Ids of the submitted commit and reveal transactions.
@@ -3636,12 +3636,12 @@ class Wallet:
         
         Args:
             wallet_secret: Password for the open wallet.
-            account_id: Hex-encoded id of the source account.
-            script_sig: Raw script bytes used to construct the commit P2SH.
+            account_id: Id of the source account.
+            script_sig: Raw script used to construct the commit P2SH.
             reveal_fee_sompi: Fee paid by the reveal transaction.
             payment_secret: Optional payment secret if the source key data is encrypted with one.
             fee_rate: Optional explicit fee rate for the commit transaction.
-            payload: Optional binary payload to embed in the reveal transaction.
+            payload: Optional payload to embed in the reveal transaction.
             start_destination: Optional outputs for the commit transaction. Defaults to change.
             end_destination: Optional outputs for the reveal transaction. Defaults to change.
         
@@ -3693,7 +3693,7 @@ class Wallet:
         Fetch a window of stored transaction history for an account.
         
         Args:
-            account_id: Hex-encoded id of the account.
+            account_id: Id of the account.
             network_id: The network the transactions belong to.
             start: Start index (inclusive) into the transaction history.
             end: End index (exclusive) into the transaction history.
