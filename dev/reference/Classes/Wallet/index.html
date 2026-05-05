@@ -14541,7 +14541,7 @@ wRPC client. The wallet is created in a closed state. Call
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>The network to operate on. May be a NetworkId or string.</p>
+                <p>The network to operate on.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -14561,7 +14561,7 @@ wRPC client. The wallet is created in a closed state. Call
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>The wRPC encoding (Borsh or JSON). Defaults to Borsh.</p>
+                <p>The wRPC encoding. Defaults to Borsh.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -14753,7 +14753,7 @@ wRPC client. The wallet is created in a closed state. Call
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>Optional list of hex-encoded account ids. If None, activates all accounts.</p>
+                <p>Optional list of account ids. If None, activates all accounts.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -14823,7 +14823,7 @@ wRPC client. The wallet is created in a closed state. Call
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>Hex-encoded id of the source account.</p>
+                <p>Id of the source account.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -14839,7 +14839,7 @@ wRPC client. The wallet is created in a closed state. Call
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>The CommitRevealAddressKind selecting which derivation chain to use.</p>
+                <p>Selects which derivation chain to use for the commit address.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -14871,7 +14871,7 @@ wRPC client. The wallet is created in a closed state. Call
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>Raw script bytes used to construct the commit P2SH.</p>
+                <p>Raw script used to construct the commit P2SH.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -14959,7 +14959,7 @@ wRPC client. The wallet is created in a closed state. Call
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>Optional binary payload to embed in the reveal transaction.</p>
+                <p>Optional payload to embed in the reveal transaction.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -15054,7 +15054,7 @@ instead of deriving an address from the account.</p>
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>Hex-encoded id of the source account.</p>
+                <p>Id of the source account.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -15070,7 +15070,7 @@ instead of deriving an address from the account.</p>
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>Raw script bytes used to construct the commit P2SH.</p>
+                <p>Raw script used to construct the commit P2SH.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -15142,7 +15142,7 @@ instead of deriving an address from the account.</p>
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>Optional binary payload to embed in the reveal transaction.</p>
+                <p>Optional payload to embed in the reveal transaction.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -15538,7 +15538,7 @@ instead of deriving an address from the account.</p>
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>Hex-encoded id of the account.</p>
+                <p>Id of the account.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -15554,7 +15554,7 @@ instead of deriving an address from the account.</p>
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>The NewAddressKind (Receive or Change) to derive.</p>
+                <p>Whether to derive a receive or change address.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -15632,7 +15632,7 @@ has been used on-chain. Useful when restoring a wallet from a mnemonic.</p>
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>The discovery scheme (AccountsDiscoveryKind or string).</p>
+                <p>The discovery scheme to use.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -15958,7 +15958,7 @@ a summary of what a real send would look like.</p>
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>Hex-encoded id of the source account.</p>
+                <p>Id of the source account.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -15974,7 +15974,7 @@ a summary of what a real send would look like.</p>
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>Priority fee specification (Fees object or dict).</p>
+                <p>Priority fee specification.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -16010,7 +16010,7 @@ a summary of what a real send would look like.</p>
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>Optional binary payload to embed in the transaction.</p>
+                <p>Optional payload to embed in the transaction.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -16112,7 +16112,7 @@ sweepable balance is routed to the account's change address
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>Hex-encoded id of the account to look up.</p>
+                <p>Id of the account to look up.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -16188,7 +16188,7 @@ sweepable balance is routed to the account's change address
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>Hex-encoded id of the account.</p>
+                <p>Id of the account.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -16204,7 +16204,7 @@ sweepable balance is routed to the account's change address
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>Optional list of Address objects to restrict results to.</p>
+                <p>Optional addresses to restrict results to.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -16601,7 +16601,7 @@ scan is effectively a no-op for keypair accounts (no HD derivation).</p>
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>Hex-encoded id of the account to rename.</p>
+                <p>Id of the account to rename.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -16685,7 +16685,7 @@ scan is effectively a no-op for keypair accounts (no HD derivation).</p>
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>Hex-encoded id of the source account.</p>
+                <p>Id of the source account.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -16701,7 +16701,7 @@ scan is effectively a no-op for keypair accounts (no HD derivation).</p>
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>Priority fee specification (Fees object or dict).</p>
+                <p>Priority fee specification.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -16757,7 +16757,7 @@ scan is effectively a no-op for keypair accounts (no HD derivation).</p>
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>Optional binary payload to embed in the transaction.</p>
+                <p>Optional payload to embed in the transaction.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -16877,7 +16877,7 @@ available immediately on transaction acceptance (no maturity wait).</p>
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>Hex-encoded id of the sending account.</p>
+                <p>Id of the sending account.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -16893,7 +16893,7 @@ available immediately on transaction acceptance (no maturity wait).</p>
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>Hex-encoded id of the receiving account.</p>
+                <p>Id of the receiving account.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -17045,7 +17045,7 @@ available immediately on transaction acceptance (no maturity wait).</p>
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>The WalletEventType (or string) to listen for. Use "all" to receive every event.</p>
+                <p>The event kind to listen for. Use "all" to receive every event.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -17963,7 +17963,7 @@ SecretKey, a 64-character hex-encoded secp256k1 key.</p>
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>The WalletEventType (or string) to remove listeners from.
+                <p>The event kind to remove listeners from.
 Use "all" to operate across every event kind.</p>
               </div>
               <p>
@@ -18104,7 +18104,7 @@ and back-end processes that share a single wallet instance.</p>
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>The NetworkId (or string) to bind the wallet to.</p>
+                <p>The network to bind the wallet to.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -18222,7 +18222,7 @@ Python listeners. Must be called before opening a wallet.</p>
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>Hex-encoded id of the account.</p>
+                <p>Id of the account.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -18961,7 +18961,7 @@ another instance via <code>wallet_import</code>.</p>
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>The encrypted wallet bytes produced by <code>wallet_export</code>.</p>
+                <p>The encrypted wallet payload produced by <code>wallet_export</code>.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
