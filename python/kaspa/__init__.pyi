@@ -5007,12 +5007,19 @@ class RpcScriptPublicKey(TypedDict):
     script: str
 
 
+class RpcCovenantBinding(TypedDict):
+    """Binds a transaction output to the covenant and input authorizing its creation."""
+    authorizingInput: int
+    covenantId: str
+
+
 class RpcUtxoEntry(TypedDict):
     """A UTXO entry."""
     amount: int
     scriptPublicKey: RpcScriptPublicKey
     blockDaaScore: int
     isCoinbase: bool
+    covenantId: str | None
 
 
 class RpcUtxosByAddressesEntry(TypedDict):
@@ -5052,6 +5059,7 @@ class RpcTransactionInput(TypedDict):
     signatureScript: str
     sequence: int
     sigOpCount: int
+    computeBudget: int
     verboseData: RpcVerboseData | None
 
 
@@ -5066,6 +5074,7 @@ class RpcTransactionOutput(TypedDict):
     value: int
     scriptPublicKey: str
     verboseData: RpcTransactionOutputVerboseData | None
+    covenant: RpcCovenantBinding | None
 
 
 class RpcTransaction(TypedDict):
