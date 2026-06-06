@@ -1,7 +1,15 @@
+use kaspa_consensus_client as cctx;
+use kaspa_consensus_core::hashing::covenant_id::covenant_id;
 use kaspa_consensus_core::hashing::wasm::SighashType;
+use kaspa_consensus_core::tx as ctx;
 use pyo3::{exceptions::PyException, prelude::*};
 use pyo3_stub_gen::derive::gen_stub_pyclass_enum;
 use std::str::FromStr;
+
+use crate::{
+    consensus::client::{outpoint::PyTransactionOutpoint, output::PyTransactionOutput},
+    crypto::hashes::PyHash,
+};
 
 crate::wrap_unit_enum_for_py!(
     /// Kaspa signature hash types for transaction signing.
@@ -44,4 +52,23 @@ impl<'py> FromPyObject<'_, 'py> for PySighashType {
             Err(PyException::new_err("Expected type `str` or `SighashType`"))
         }
     }
+}
+
+#[pyfunction]
+#[pyo3(name = "covenant_id")]
+pub fn py_covenant_id(
+    outpoint: PyTransactionOutpoint,
+    auth_outputs: Vec<PyTransactionOutput>,
+) -> PyHash {
+    let outpoint: cctx::TransactionOutpoint = outpoint.into();
+    let auth_outputs = auth_outputs
+        .into_iter()
+        .map(|py_output| ctx::TransactionOutput::from(&cctx::TransactionOutput::from(py_output)))
+        .collect::<Vec<ctx::TransactionOutput>>();
+    let indexed: Vec<(u32, &ctx::TransactionOutput)> = auth_outputs
+        .iter()
+        .enumerate()
+        .map(|(i, o)| (i as u32, o))
+        .collect();
+    covenant_id(outpoint.into(), indexed.into_iter()).into()
 }

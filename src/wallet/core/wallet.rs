@@ -81,6 +81,13 @@ impl Inner {
     }
 }
 
+/// A managed Kaspa wallet with persistent encrypted on-disk storage.
+///
+/// The SDK's high-level wallet. Provides encrypted storage for keys and
+/// account metadata, multi-account management (BIP32 and keypair accounts),
+/// address derivation and discovery, built-in send, transfer, and sweep
+/// flows, transaction history tracking, and an event bus for chain
+/// notifications (balance, maturity, reorg).
 #[gen_stub_pyclass]
 #[pyclass(name = "Wallet")]
 #[derive(Clone)]

@@ -26,12 +26,19 @@ class RpcScriptPublicKey(TypedDict):
     script: str
 
 
+class RpcCovenantBinding(TypedDict):
+    """Binds a transaction output to the covenant and input authorizing its creation."""
+    authorizingInput: int
+    covenantId: str
+
+
 class RpcUtxoEntry(TypedDict):
     """A UTXO entry."""
     amount: int
     scriptPublicKey: RpcScriptPublicKey
     blockDaaScore: int
     isCoinbase: bool
+    covenantId: str | None
 
 
 class RpcUtxosByAddressesEntry(TypedDict):
@@ -71,6 +78,7 @@ class RpcTransactionInput(TypedDict):
     signatureScript: str
     sequence: int
     sigOpCount: int
+    computeBudget: int
     verboseData: RpcVerboseData | None
 
 
@@ -85,6 +93,7 @@ class RpcTransactionOutput(TypedDict):
     value: int
     scriptPublicKey: str
     verboseData: RpcTransactionOutputVerboseData | None
+    covenant: RpcCovenantBinding | None
 
 
 class RpcTransaction(TypedDict):
@@ -601,6 +610,11 @@ class GetBlockTemplateRequest(TypedDict):
     extraData: str
 
 
+class GetBlockRewardInfoRequest(TypedDict):
+    """Request for get_block_reward_info."""
+    hash: str
+
+
 class GetCurrentBlockColorRequest(TypedDict):
     """Request for get_current_block_color."""
     hash: str
@@ -875,6 +889,15 @@ class GetBlockTemplateResponse(TypedDict):
     """Response from get_block_template."""
     block: RpcRawBlock
     isSynced: bool
+
+
+class GetBlockRewardInfoResponse(TypedDict):
+    """Response from get_block_reward_info."""
+    header: RpcBlockHeader
+    blockColor: Literal["unknown", "blue", "red"]
+    confirmationCount: int | None
+    mergingChainBlockHash: str | None
+    rewardAmount: int | None
 
 
 class GetCurrentBlockColorResponse(TypedDict):

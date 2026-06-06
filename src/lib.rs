@@ -31,6 +31,8 @@ fn kaspa(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<address::PyAddress>()?;
     m.add_class::<address::PyAddressVersion>()?;
 
+    m.add_class::<consensus::client::covenant::PyCovenantBinding>()?;
+    m.add_class::<consensus::client::covenant::PyGenesisCovenantGroup>()?;
     m.add_class::<consensus::client::transaction::PyTransaction>()?;
     m.add_class::<consensus::client::input::PyTransactionInput>()?;
     m.add_class::<consensus::client::outpoint::PyTransactionOutpoint>()?;
@@ -69,6 +71,10 @@ fn kaspa(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     )?)?;
 
     m.add_class::<consensus::core::hashing::PySighashType>()?;
+    m.add_function(wrap_pyfunction!(
+        consensus::core::hashing::py_covenant_id,
+        m
+    )?)?;
     m.add_class::<consensus::core::network::PyNetworkId>()?;
     m.add_class::<consensus::core::network::PyNetworkType>()?;
     m.add_class::<consensus::core::script_public_key::PyScriptPublicKey>()?;

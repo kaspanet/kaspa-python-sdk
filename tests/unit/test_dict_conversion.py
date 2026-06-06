@@ -120,6 +120,25 @@ class TestTransactionDict:
         assert "gas" in d
         assert "payload" in d
         assert "mass" in d
+        assert "storageMass" in d
+        assert d["mass"] == d["storageMass"]
+
+    def test_transaction_storage_mass_alias(self):
+        """`storage_mass` mirrors `mass` (kept as an alias for WASM & back-compat)."""
+        tx_hash = Hash("0" * 64)
+        outpoint = TransactionOutpoint(tx_hash, 0)
+        input = TransactionInput(outpoint, "", 0, 1)
+        spk = ScriptPublicKey(0, "51")
+        output = TransactionOutput(1000000, spk)
+
+        tx = Transaction(0, [input], [output], 100, "0" * 40, 0, "", 1234)
+        assert tx.mass == 1234
+        assert tx.storage_mass == 1234
+
+        tx.storage_mass = 5678
+        assert tx.mass == 5678
+        tx.mass = 99
+        assert tx.storage_mass == 99
 
     def test_transaction_from_dict_roundtrip(self):
         """Test Transaction to_dict/from_dict round-trip."""
@@ -150,6 +169,7 @@ class TestUtxoEntryDict:
             "scriptPublicKey": {"version": 0, "script": "20852be1b87fca94453a35027c550a3ccdbebb5913106029f3a8bf18152bf93bffac"},
             "blockDaaScore": 12345,
             "isCoinbase": False,
+            "covenantId": None,
         }
         entry = UtxoEntry.from_dict(entry_dict)
 
@@ -171,6 +191,7 @@ class TestUtxoEntryDict:
             "scriptPublicKey": {"version": 0, "script": "20852be1b87fca94453a35027c550a3ccdbebb5913106029f3a8bf18152bf93bffac"},
             "blockDaaScore": 12345,
             "isCoinbase": False,
+            "covenantId": None,
         }
         original = UtxoEntry.from_dict(entry_dict)
 
@@ -192,6 +213,7 @@ class TestUtxoEntryReferenceDict:
             "scriptPublicKey": {"version": 0, "script": "20852be1b87fca94453a35027c550a3ccdbebb5913106029f3a8bf18152bf93bffac"},
             "blockDaaScore": 12345,
             "isCoinbase": False,
+            "covenantId": None,
         }
         entry_ref = UtxoEntryReference.from_dict(entry_dict)
 
@@ -216,6 +238,7 @@ class TestUtxoEntryReferenceDict:
             "scriptPublicKey": {"version": 0, "script": "20852be1b87fca94453a35027c550a3ccdbebb5913106029f3a8bf18152bf93bffac"},
             "blockDaaScore": 12345,
             "isCoinbase": False,
+            "covenantId": None,
         }
         entry_ref = UtxoEntryReference.from_dict(entry_dict)
         assert entry_ref.amount == 1000000
@@ -230,6 +253,7 @@ class TestUtxoEntryReferenceDict:
                 "scriptPublicKey": {"version": 0, "script": "20852be1b87fca94453a35027c550a3ccdbebb5913106029f3a8bf18152bf93bffac"},
                 "blockDaaScore": 12345,
                 "isCoinbase": False,
+                "covenantId": None,
             },
         }
         entry_ref = UtxoEntryReference.from_dict(entry_dict)
@@ -244,6 +268,7 @@ class TestUtxoEntryReferenceDict:
             "scriptPublicKey": {"version": 0, "script": "20852be1b87fca94453a35027c550a3ccdbebb5913106029f3a8bf18152bf93bffac"},
             "blockDaaScore": 12345,
             "isCoinbase": False,
+            "covenantId": None,
         }
         original = UtxoEntryReference.from_dict(entry_dict)
 

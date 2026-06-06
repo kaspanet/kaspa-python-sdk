@@ -8,6 +8,13 @@ from . import exceptions
 
 @typing.final
 class AccountDescriptor:
+    r"""
+    A read-only snapshot describing a wallet account.
+    
+    Exposes the account's kind, id, name, balance, addresses, and derivation
+    metadata. Returned by `Wallet` account enumeration, creation, and
+    activation methods.
+    """
     @property
     def kind(self) -> AccountKind:
         r"""
@@ -363,6 +370,56 @@ class Binary:
         """
 
 @typing.final
+class CovenantBinding:
+    r"""
+    Binds a transaction output to the covenant and input authorizing its creation.
+    """
+    @property
+    def authorizing_input(self) -> builtins.int:
+        r"""
+        The index of the transaction input authorizing the covenant.
+        """
+    @authorizing_input.setter
+    def authorizing_input(self, value: builtins.int) -> None:
+        r"""
+        Set the authorizing input index.
+        
+        Args:
+            value: The index of the transaction input authorizing the covenant.
+        """
+    @property
+    def covenant_id(self) -> Hash:
+        r"""
+        The covenant id the output is bound to.
+        """
+    @covenant_id.setter
+    def covenant_id(self, value: Hash) -> None:
+        r"""
+        Set the covenant id.
+        
+        Args:
+            value: The covenant id the output is bound to.
+        """
+    def __new__(cls, authorizing_input: builtins.int, covenant_id: Hash) -> CovenantBinding:
+        r"""
+        Create a new CovenantBinding.
+        
+        Args:
+            authorizing_input: The index of the transaction input authorizing the covenant.
+            covenant_id: The covenant id the output is bound to.
+        
+        Returns:
+            CovenantBinding: A new CovenantBinding instance.
+        """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The CovenantBinding as a repr string.
+        """
+
+@typing.final
 class DerivationPath:
     r"""
     A BIP-32 derivation path for hierarchical key derivation.
@@ -607,6 +664,40 @@ class GeneratorSummary:
         
         Returns:
             str: The GeneratorSummary as a repr string.
+        """
+
+@typing.final
+class GenesisCovenantGroup:
+    r"""
+    A genesis covenant group for bulk covenant binding population.
+    
+    All listed outputs are bound to the same covenant id, derived from the
+    authorizing input outpoint and the exact ordered output list. Used with
+    `Transaction.populate_genesis_covenants`.
+    """
+    @property
+    def authorizing_input(self) -> builtins.int:
+        r"""
+        The index of the transaction input authorizing the covenant.
+        """
+    @authorizing_input.setter
+    def authorizing_input(self, value: builtins.int) -> None:
+        r"""
+        Set the authorizing input index.
+        
+        Args:
+            value: The index of the transaction input authorizing the covenant.
+        """
+    def __new__(cls, authorizing_input: builtins.int, outputs: typing.Sequence[builtins.int]) -> GenesisCovenantGroup:
+        r"""
+        Create a new GenesisCovenantGroup.
+        
+        Args:
+            authorizing_input: The index of the transaction input authorizing the covenant.
+            outputs: The indices of the transaction outputs to bind to the covenant.
+        
+        Returns:
+            GenesisCovenantGroup: A new GenesisCovenantGroup instance.
         """
 
 @typing.final
@@ -992,6 +1083,19 @@ class PaymentOutput:
             address: The address to send this output to.
             amount: The amount, in sompi, to send on this output.
         """
+    @staticmethod
+    def with_covenant(address: Address, amount: builtins.int, covenant: CovenantBinding) -> PaymentOutput:
+        r"""
+        Create a new Payment Output bound to a covenant.
+        
+        Args:
+            address: The address to send this output to.
+            amount: The amount, in sompi, to send on this output.
+            covenant: The covenant binding to attach to this output.
+        
+        Returns:
+            PaymentOutput: A new PaymentOutput instance.
+        """
     def __eq__(self, other: PaymentOutput) -> builtins.bool:
         r"""
         Equality comparison.
@@ -1322,6 +1426,13 @@ class PrvKeyDataId:
 
 @typing.final
 class PrvKeyDataInfo:
+    r"""
+    Metadata describing a private key data entry stored in a wallet file.
+    
+    Exposes the entry's id, optional user-assigned name, and whether the
+    underlying key material requires a payment secret (BIP39 passphrase).
+    Returned by `Wallet.prv_key_data_enumerate`.
+    """
     @property
     def id(self) -> PrvKeyDataId:
         r"""
@@ -1999,6 +2110,7 @@ class RpcClient:
     def get_block(self, request: GetBlockRequest) -> GetBlockResponse: ...
     def get_blocks(self, request: GetBlocksRequest) -> GetBlocksResponse: ...
     def get_block_template(self, request: GetBlockTemplateRequest) -> GetBlockTemplateResponse: ...
+    def get_block_reward_info(self, request: GetBlockRewardInfoRequest) -> GetBlockRewardInfoResponse: ...
     def get_current_block_color(self, request: GetCurrentBlockColorRequest) -> GetCurrentBlockColorResponse: ...
     def get_daa_score_timestamp_estimate(self, request: GetDaaScoreTimestampEstimateRequest) -> GetDaaScoreTimestampEstimateResponse: ...
     def get_fee_estimate_experimental(self, request: GetFeeEstimateExperimentalRequest) -> GetFeeEstimateExperimentalResponse: ...
@@ -2026,20 +2138,46 @@ class ScriptBuilder:
     Used for creating complex spending conditions like multi-signature or time-locked
     transactions.
     """
-    def __new__(cls) -> ScriptBuilder:
+    @property
+    def covenants_enabled(self) -> builtins.bool:
+        r"""
+        Whether covenant opcodes and post-Toccata script limits are enabled.
+        
+        Returns:
+            bool: True if covenants are enabled for this builder.
+        """
+    @property
+    def sigop_script_units(self) -> builtins.int:
+        r"""
+        Script units charged for each signature operation.
+        
+        Returns:
+            int: The configured sigop script units.
+        """
+    def __new__(cls, covenants_enabled: builtins.bool = False, sigop_script_units: typing.Optional[builtins.int] = None) -> ScriptBuilder:
         r"""
         Create a new empty script builder.
+        
+        Args:
+            covenants_enabled: Enable covenant opcodes and post-Toccata script
+                limits (default: False).
+            sigop_script_units: Script units charged per signature operation.
+                Defaults to the native engine default when omitted.
         
         Returns:
             ScriptBuilder: A new empty ScriptBuilder instance.
         """
     @staticmethod
-    def from_script(script: Binary) -> ScriptBuilder:
+    def from_script(script: Binary, covenants_enabled: builtins.bool = False, sigop_script_units: typing.Optional[builtins.int] = None) -> ScriptBuilder:
         r"""
         Create a script builder from an existing script.
         
         Args:
             script: Existing script bytes as hex, bytes, or list.
+            covenants_enabled: Enable covenant opcodes and post-Toccata script
+                limits (default: False).
+            sigop_script_units: Script units charged per signature operation.
+                Defaults to the native engine default when omitted.
         
         Returns:
             ScriptBuilder: A new ScriptBuilder initialized with the script.
@@ -2337,14 +2475,32 @@ class Transaction:
     def mass(self) -> builtins.int:
         r"""
         The transaction mass used for fee calculation.
+        
+        Alias of `storage_mass`, retained for compatibility with the WASM SDK
+        and earlier releases of this package.
         """
     @mass.setter
     def mass(self, value: builtins.int) -> None:
         r"""
         Set the transaction mass.
         
+        Alias of `storage_mass`.
+        
         Args:
             value: The transaction mass value.
+        """
+    @property
+    def storage_mass(self) -> builtins.int:
+        r"""
+        The transaction storage mass used for fee calculation.
+        """
+    @storage_mass.setter
+    def storage_mass(self, value: builtins.int) -> None:
+        r"""
+        Set the transaction storage mass.
+        
+        Args:
+            value: The transaction storage mass value.
         """
     @subnetwork_id.setter
     def subnetwork_id(self, value: builtins.str) -> None:
@@ -2400,6 +2556,24 @@ class Transaction:
         
         Returns:
             list[Address]: List of unique addresses referenced by inputs.
+        """
+    def populate_genesis_covenants(self, groups: typing.Sequence[GenesisCovenantGroup]) -> None:
+        r"""
+        Populate genesis covenant bindings for multiple output groups.
+        
+        For each group, computes the covenant id from the authorizing input
+        outpoint and the group's output list, then sets that binding on all
+        listed outputs. All groups are validated before the transaction is
+        mutated.
+        
+        Args:
+            groups: The genesis covenant groups to populate.
+        
+        Raises:
+            Exception: If a group references a non-existent input or output,
+                output indices are not strictly increasing, outputs overlap
+                across groups, or a targeted output already has a covenant
+                binding.
         """
     def to_dict(self) -> dict:
         r"""
@@ -2494,6 +2668,19 @@ class TransactionInput:
             value: The number of signature operations.
         """
     @property
+    def compute_budget(self) -> builtins.int:
+        r"""
+        The compute budget for this input.
+        """
+    @compute_budget.setter
+    def compute_budget(self, value: builtins.int) -> None:
+        r"""
+        Set the compute budget for this input.
+        
+        Args:
+            value: The compute budget.
+        """
+    @property
     def utxo(self) -> typing.Optional[UtxoEntryReference]:
         r"""
         The UTXO entry reference for transaction signing, or None if not set.
@@ -2506,7 +2693,7 @@ class TransactionInput:
         Args:
             value: The signature script as bytes or hex string.
         """
-    def __new__(cls, previous_outpoint: TransactionOutpoint, signature_script: Binary, sequence: builtins.int, sig_op_count: builtins.int, utxo: typing.Optional[UtxoEntryReference] = None) -> TransactionInput:
+    def __new__(cls, previous_outpoint: TransactionOutpoint, signature_script: Binary, sequence: builtins.int, sig_op_count: builtins.int, compute_budget: builtins.int = 0, utxo: typing.Optional[UtxoEntryReference] = None) -> TransactionInput:
         r"""
         Create a new transaction input.
         
@@ -2515,6 +2702,7 @@ class TransactionInput:
             signature_script: The unlocking script (signature).
             sequence: Sequence number for relative time locks.
             sig_op_count: Number of signature operations.
+            compute_budget: Compute budget for this input (default: 0).
             utxo: Optional UTXO entry reference for signing.
         
         Returns:
@@ -2539,6 +2727,7 @@ class TransactionInput:
                 - 'signatureScript' (str | None): The signature script as hex string
                 - 'sequence' (int): Sequence number
                 - 'sigOpCount' (int): Signature operation count
+                - 'computeBudget' (int, optional): Compute budget for this input (default: 0)
                 - 'utxo' (dict | None): Optional UTXO entry reference dict
         
         Returns:
@@ -2669,13 +2858,14 @@ class TransactionOutput:
         Args:
             value: The script public key.
         """
-    def __new__(cls, value: builtins.int, script_public_key: ScriptPublicKey) -> TransactionOutput:
+    def __new__(cls, value: builtins.int, script_public_key: ScriptPublicKey, covenant_id: typing.Optional[CovenantBinding] = None) -> TransactionOutput:
         r"""
         Create a new transaction output.
         
         Args:
             value: Amount in sompi (1 KAS = 100,000,000 sompi).
             script_public_key: The locking script.
+            covenant_id: The covenant ID.
         
         Returns:
             TransactionOutput: A new TransactionOutput instance.
@@ -2697,6 +2887,7 @@ class TransactionOutput:
             dict: Dictionary containing transaction output fields with keys:
                 - 'value' (int): The output value in sompi
                 - 'scriptPublicKey' (dict): Dict with 'version' (int) and 'script' (str) keys
+                - 'covenant' (dict | None): The optional covenant binding.
         
         Returns:
             TransactionOutput: A new TransactionOutput instance.
@@ -2925,6 +3116,7 @@ class UtxoEntry:
                 - 'scriptPublicKey' (dict): Dict with 'version' (int) and 'script' (str) keys
                 - 'blockDaaScore' (int): Block DAA score
                 - 'isCoinbase' (bool): Whether from coinbase transaction
+                - 'covenantId' (str | None): The optional covenant ID of the UTXO.
         
         Returns:
             UtxoEntry: A new UtxoEntry instance.
@@ -3016,11 +3208,12 @@ class UtxoEntryReference:
             - 'scriptPublicKey' (dict | str): Dict with 'version' and 'script', or hex string
             - 'blockDaaScore' (int): Block DAA score
             - 'isCoinbase' (bool): Whether from coinbase transaction
+            - 'covenantId' (str | None): The optional covenant ID of the UTXO.
         
         Nested format:
             - 'address' (str | None): The address string
             - 'outpoint' (dict): Transaction outpoint with 'transactionId' and 'index'
-            - 'utxoEntry' (dict): Nested dict containing amount, scriptPublicKey, blockDaaScore, isCoinbase
+            - 'utxoEntry' (dict): Nested dict containing amount, scriptPublicKey, blockDaaScore, isCoinbase, covenantId
         
         Returns:
             UtxoEntryReference: A new UtxoEntryReference instance.
@@ -3140,6 +3333,15 @@ class UtxoProcessor:
 
 @typing.final
 class Wallet:
+    r"""
+    A managed Kaspa wallet with persistent encrypted on-disk storage.
+    
+    The SDK's high-level wallet. Provides encrypted storage for keys and
+    account metadata, multi-account management (BIP32 and keypair accounts),
+    address derivation and discovery, built-in send, transfer, and sweep
+    flows, transaction history tracking, and an event bus for chain
+    notifications (balance, maturity, reorg).
+    """
     @property
     def rpc(self) -> RpcClient:
         r"""
@@ -3743,6 +3945,12 @@ class Wallet:
 
 @typing.final
 class WalletDescriptor:
+    r"""
+    Describes a wallet file in the wallet store.
+    
+    Pairs the on-disk wallet filename with its optional user-assigned title.
+    Returned by `Wallet.wallet_enumerate`.
+    """
     @property
     def title(self) -> typing.Optional[builtins.str]:
         r"""
@@ -4331,7 +4539,7 @@ class Opcodes(enum.Enum):
     OpSwap = ...
     OpTuck = ...
     OpCat = ...
-    OpSubStr = ...
+    OpSubstr = ...
     OpLeft = ...
     OpRight = ...
     OpSize = ...
@@ -4370,8 +4578,8 @@ class Opcodes(enum.Enum):
     OpMin = ...
     OpMax = ...
     OpWithin = ...
-    OpUnknown166 = ...
-    OpUnknown167 = ...
+    OpZkPrecompile = ...
+    OpBlake2bWithKey = ...
     OpSHA256 = ...
     OpCheckMultiSigECDSA = ...
     OpBlake2b = ...
@@ -4382,47 +4590,47 @@ class Opcodes(enum.Enum):
     OpCheckMultiSigVerify = ...
     OpCheckLockTimeVerify = ...
     OpCheckSequenceVerify = ...
-    OpUnknown178 = ...
-    OpUnknown179 = ...
-    OpUnknown180 = ...
-    OpUnknown181 = ...
-    OpUnknown182 = ...
-    OpUnknown183 = ...
-    OpUnknown184 = ...
-    OpUnknown185 = ...
-    OpUnknown186 = ...
-    OpUnknown187 = ...
-    OpUnknown188 = ...
-    OpUnknown189 = ...
-    OpUnknown190 = ...
-    OpUnknown191 = ...
-    OpUnknown192 = ...
-    OpUnknown193 = ...
-    OpUnknown194 = ...
-    OpUnknown195 = ...
-    OpUnknown196 = ...
-    OpUnknown197 = ...
-    OpUnknown198 = ...
-    OpUnknown199 = ...
-    OpUnknown200 = ...
-    OpUnknown201 = ...
+    OpTxVersion = ...
+    OpTxInputCount = ...
+    OpTxOutputCount = ...
+    OpTxLockTime = ...
+    OpTxSubnetId = ...
+    OpTxGas = ...
+    OpTxPayloadSubstr = ...
+    OpTxInputIndex = ...
+    OpOutpointTxId = ...
+    OpOutpointIndex = ...
+    OpTxInputScriptSigSubstr = ...
+    OpTxInputSeq = ...
+    OpTxInputAmount = ...
+    OpTxInputSpk = ...
+    OpTxInputDaaScore = ...
+    OpTxInputIsCoinbase = ...
+    OpTxOutputAmount = ...
+    OpTxOutputSpk = ...
+    OpTxPayloadLen = ...
+    OpTxInputSpkLen = ...
+    OpTxInputSpkSubstr = ...
+    OpTxOutputSpkLen = ...
+    OpTxOutputSpkSubstr = ...
+    OpTxInputScriptSigLen = ...
     OpUnknown202 = ...
-    OpUnknown203 = ...
-    OpUnknown204 = ...
-    OpUnknown205 = ...
-    OpUnknown206 = ...
-    OpUnknown207 = ...
-    OpUnknown208 = ...
-    OpUnknown209 = ...
-    OpUnknown210 = ...
-    OpUnknown211 = ...
-    OpUnknown212 = ...
-    OpUnknown213 = ...
+    OpAuthOutputCount = ...
+    OpAuthOutputIdx = ...
+    OpNum2Bin = ...
+    OpBin2Num = ...
+    OpInputCovenantId = ...
+    OpCovInputCount = ...
+    OpCovInputIdx = ...
+    OpCovOutputCount = ...
+    OpCovOutputIdx = ...
+    OpChainblockSeqCommit = ...
+    OpOutputCovenantId = ...
     OpUnknown214 = ...
-    OpUnknown215 = ...
-    OpUnknown216 = ...
-    OpUnknown217 = ...
-    OpUnknown218 = ...
+    OpCheckSigFromStack = ...
+    OpCheckSigFromStackECDSA = ...
+    OpBlake3 = ...
+    OpBlake3WithKey = ...
     OpUnknown219 = ...
     OpUnknown220 = ...
     OpUnknown221 = ...
@@ -4961,12 +5169,19 @@ class RpcScriptPublicKey(TypedDict):
     script: str
 
 
+class RpcCovenantBinding(TypedDict):
+    """Binds a transaction output to the covenant and input authorizing its creation."""
+    authorizingInput: int
+    covenantId: str
+
+
 class RpcUtxoEntry(TypedDict):
     """A UTXO entry."""
     amount: int
     scriptPublicKey: RpcScriptPublicKey
     blockDaaScore: int
     isCoinbase: bool
+    covenantId: str | None
 
 
 class RpcUtxosByAddressesEntry(TypedDict):
@@ -5006,6 +5221,7 @@ class RpcTransactionInput(TypedDict):
     signatureScript: str
     sequence: int
     sigOpCount: int
+    computeBudget: int
     verboseData: RpcVerboseData | None
 
 
@@ -5020,6 +5236,7 @@ class RpcTransactionOutput(TypedDict):
     value: int
     scriptPublicKey: str
     verboseData: RpcTransactionOutputVerboseData | None
+    covenant: RpcCovenantBinding | None
 
 
 class RpcTransaction(TypedDict):
@@ -5536,6 +5753,11 @@ class GetBlockTemplateRequest(TypedDict):
     extraData: str
 
 
+class GetBlockRewardInfoRequest(TypedDict):
+    """Request for get_block_reward_info."""
+    hash: str
+
+
 class GetCurrentBlockColorRequest(TypedDict):
     """Request for get_current_block_color."""
     hash: str
@@ -5810,6 +6032,15 @@ class GetBlockTemplateResponse(TypedDict):
     """Response from get_block_template."""
     block: RpcRawBlock
     isSynced: bool
+
+
+class GetBlockRewardInfoResponse(TypedDict):
+    """Response from get_block_reward_info."""
+    header: RpcBlockHeader
+    blockColor: Literal["unknown", "blue", "red"]
+    confirmationCount: int | None
+    mergingChainBlockHash: str | None
+    rewardAmount: int | None
 
 
 class GetCurrentBlockColorResponse(TypedDict):

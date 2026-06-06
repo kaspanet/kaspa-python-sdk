@@ -59,6 +59,7 @@ impl_try_from_pydict!([
     GetBlock,
     GetBlocks,
     GetBlockTemplate,
+    GetBlockRewardInfo,
     GetCurrentBlockColor,
     GetDaaScoreTimestampEstimate,
     GetFeeEstimateExperimental,
@@ -236,10 +237,10 @@ try_from_args! ( dict : PySubmitTransactionRequest, {
         inputs,
         outputs,
         lock_time: inner.lock_time,
-        subnetwork_id: inner.subnetwork_id.clone(),
+        subnetwork_id: inner.subnetwork_id,
         gas: inner.gas,
         payload: inner.payload.clone(),
-        mass: inner.mass,
+        storage_mass: inner.storage_mass,
         verbose_data: None,
     };
 
