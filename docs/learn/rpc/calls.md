@@ -180,7 +180,7 @@ flow and `allowOrphan` semantics.
 fee = await client.get_fee_estimate()
 # {
 #     "estimate": {
-#         "priorityBucket": {"feerate": 1.0, "estimatedSeconds": 1.0},
+#         "priorityBucket": {"feerate": 100.0, "estimatedSeconds": 1.0},
 #         "normalBuckets": [...],
 #         "lowBuckets": [...],
 #     }

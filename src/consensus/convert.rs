@@ -189,8 +189,9 @@ impl TryToPyDict for Transaction {
         // Set `payload` key
         dict.set_item("payload", inner.payload.to_hex())?;
 
-        // Set `mass`
-        dict.set_item("mass", inner.mass)?;
+        // Set `mass` (alias) and `storageMass` (WASM SDK parity)
+        dict.set_item("mass", inner.storage_mass)?;
+        dict.set_item("storageMass", inner.storage_mass)?;
 
         Ok(dict)
     }

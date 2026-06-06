@@ -275,18 +275,38 @@ impl PyTransaction {
     }
 
     /// The transaction mass used for fee calculation.
+    ///
+    /// Alias of `storage_mass`, retained for compatibility with the WASM SDK
+    /// and earlier releases of this package.
     #[getter]
     pub fn get_mass(&self) -> u64 {
-        self.0.inner().mass
+        self.0.inner().storage_mass
     }
 
     /// Set the transaction mass.
+    ///
+    /// Alias of `storage_mass`.
     ///
     /// Args:
     ///     value: The transaction mass value.
     #[setter]
     pub fn set_mass(&mut self, value: u64) {
-        self.0.inner().mass = value;
+        self.0.inner().storage_mass = value;
+    }
+
+    /// The transaction storage mass used for fee calculation.
+    #[getter]
+    pub fn get_storage_mass(&self) -> u64 {
+        self.0.inner().storage_mass
+    }
+
+    /// Set the transaction storage mass.
+    ///
+    /// Args:
+    ///     value: The transaction storage mass value.
+    #[setter]
+    pub fn set_storage_mass(&mut self, value: u64) {
+        self.0.inner().storage_mass = value;
     }
 
     pub fn populate_genesis_covenants(&self, groups: Vec<PyGenesisCovenantGroup>) -> PyResult<()> {
@@ -433,11 +453,16 @@ impl TryFrom<&Bound<'_, PyDict>> for PyTransaction {
             Vec::from_hex(&payload_str).map_err(|err| PyException::new_err(err.to_string()))?
         };
 
-        // Parse mass
-        let mass: u64 = dict
-            .get_item("mass")?
-            .ok_or_else(|| PyKeyError::new_err("Key `mass` not present"))?
-            .extract()?;
+        // Parse mass. Accept `storageMass` (WASM SDK) or the legacy/alias `mass`,
+        // preferring `storageMass` when both are present.
+        let mass: u64 = match (dict.get_item("storageMass")?, dict.get_item("mass")?) {
+            (Some(value), _) | (None, Some(value)) => value.extract()?,
+            (None, None) => {
+                return Err(PyKeyError::new_err(
+                    "Key `mass` or `storageMass` not present",
+                ));
+            }
+        };
 
         // Parse inputs
         let inputs_list = dict

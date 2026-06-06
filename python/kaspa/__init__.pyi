@@ -2025,6 +2025,7 @@ class RpcClient:
     def get_block(self, request: GetBlockRequest) -> GetBlockResponse: ...
     def get_blocks(self, request: GetBlocksRequest) -> GetBlocksResponse: ...
     def get_block_template(self, request: GetBlockTemplateRequest) -> GetBlockTemplateResponse: ...
+    def get_block_reward_info(self, request: GetBlockRewardInfoRequest) -> GetBlockRewardInfoResponse: ...
     def get_current_block_color(self, request: GetCurrentBlockColorRequest) -> GetCurrentBlockColorResponse: ...
     def get_daa_score_timestamp_estimate(self, request: GetDaaScoreTimestampEstimateRequest) -> GetDaaScoreTimestampEstimateResponse: ...
     def get_fee_estimate_experimental(self, request: GetFeeEstimateExperimentalRequest) -> GetFeeEstimateExperimentalResponse: ...
@@ -2052,20 +2053,46 @@ class ScriptBuilder:
     Used for creating complex spending conditions like multi-signature or time-locked
     transactions.
     """
-    def __new__(cls) -> ScriptBuilder:
+    @property
+    def covenants_enabled(self) -> builtins.bool:
+        r"""
+        Whether covenant opcodes and post-Toccata script limits are enabled.
+        
+        Returns:
+            bool: True if covenants are enabled for this builder.
+        """
+    @property
+    def sigop_script_units(self) -> builtins.int:
+        r"""
+        Script units charged for each signature operation.
+        
+        Returns:
+            int: The configured sigop script units.
+        """
+    def __new__(cls, covenants_enabled: builtins.bool = False, sigop_script_units: typing.Optional[builtins.int] = None) -> ScriptBuilder:
         r"""
         Create a new empty script builder.
+        
+        Args:
+            covenants_enabled: Enable covenant opcodes and post-Toccata script
+                limits (default: False).
+            sigop_script_units: Script units charged per signature operation.
+                Defaults to the native engine default when omitted.
         
         Returns:
             ScriptBuilder: A new empty ScriptBuilder instance.
         """
     @staticmethod
-    def from_script(script: Binary) -> ScriptBuilder:
+    def from_script(script: Binary, covenants_enabled: builtins.bool = False, sigop_script_units: typing.Optional[builtins.int] = None) -> ScriptBuilder:
         r"""
         Create a script builder from an existing script.
         
         Args:
             script: Existing script bytes as hex, bytes, or list.
+            covenants_enabled: Enable covenant opcodes and post-Toccata script
+                limits (default: False).
+            sigop_script_units: Script units charged per signature operation.
+                Defaults to the native engine default when omitted.
         
         Returns:
             ScriptBuilder: A new ScriptBuilder initialized with the script.
@@ -2363,14 +2390,32 @@ class Transaction:
     def mass(self) -> builtins.int:
         r"""
         The transaction mass used for fee calculation.
+        
+        Alias of `storage_mass`, retained for compatibility with the WASM SDK
+        and earlier releases of this package.
         """
     @mass.setter
     def mass(self, value: builtins.int) -> None:
         r"""
         Set the transaction mass.
         
+        Alias of `storage_mass`.
+        
         Args:
             value: The transaction mass value.
+        """
+    @property
+    def storage_mass(self) -> builtins.int:
+        r"""
+        The transaction storage mass used for fee calculation.
+        """
+    @storage_mass.setter
+    def storage_mass(self, value: builtins.int) -> None:
+        r"""
+        Set the transaction storage mass.
+        
+        Args:
+            value: The transaction storage mass value.
         """
     @subnetwork_id.setter
     def subnetwork_id(self, value: builtins.str) -> None:
@@ -2835,27 +2880,6 @@ class UtxoContext:
 @typing.final
 class UtxoEntries:
     r"""
-    UTXO entries collection for flexible input handling.
-    
-    This type is not intended to be instantiated directly from Python.
-    It serves as a helper type that allows Rust functions to accept a list
-    of UTXO entries in multiple convenient forms.
-    
-    Accepts:
-        list[UtxoEntryReference]: A list of UtxoEntryReference objects.
-        list[dict]: A list of dicts with UtxoEntryReference-compatible keys.
-    """
-    def __repr__(self) -> builtins.str:
-        r"""
-        The detailed string representation.
-        
-        Returns:
-            str: The UtxoEntries as a repr string.
-        """
-
-@typing.final
-class UtxoEntries:
-    r"""
     A collection of UTXO entry references.
     
     Provides methods for managing and querying multiple UTXOs.
@@ -2902,6 +2926,27 @@ class UtxoEntries:
         Returns:
             bool: True if both collections contain identical entries in the same order.
         """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The UtxoEntries as a repr string.
+        """
+
+@typing.final
+class UtxoEntries:
+    r"""
+    UTXO entries collection for flexible input handling.
+    
+    This type is not intended to be instantiated directly from Python.
+    It serves as a helper type that allows Rust functions to accept a list
+    of UTXO entries in multiple convenient forms.
+    
+    Accepts:
+        list[UtxoEntryReference]: A list of UtxoEntryReference objects.
+        list[dict]: A list of dicts with UtxoEntryReference-compatible keys.
+    """
     def __repr__(self) -> builtins.str:
         r"""
         The detailed string representation.
@@ -5591,6 +5636,11 @@ class GetBlockTemplateRequest(TypedDict):
     extraData: str
 
 
+class GetBlockRewardInfoRequest(TypedDict):
+    """Request for get_block_reward_info."""
+    hash: str
+
+
 class GetCurrentBlockColorRequest(TypedDict):
     """Request for get_current_block_color."""
     hash: str
@@ -5865,6 +5915,15 @@ class GetBlockTemplateResponse(TypedDict):
     """Response from get_block_template."""
     block: RpcRawBlock
     isSynced: bool
+
+
+class GetBlockRewardInfoResponse(TypedDict):
+    """Response from get_block_reward_info."""
+    header: RpcBlockHeader
+    blockColor: Literal["unknown", "blue", "red"]
+    confirmationCount: int | None
+    mergingChainBlockHash: str | None
+    rewardAmount: int | None
 
 
 class GetCurrentBlockColorResponse(TypedDict):
