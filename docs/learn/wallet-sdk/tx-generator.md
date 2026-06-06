@@ -93,7 +93,7 @@ gen = Generator(
     priority_entries=priority,     # UTXOs to consume first
     sig_op_count=1,                # signature ops per input
     minimum_signatures=1,          # for multisig mass estimation
-    fee_rate=2.0,                  # explicit sompi/gram override
+    fee_rate=120.0,                # explicit sompi/gram override (>= network minimum)
 )
 ```
 

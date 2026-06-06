@@ -92,6 +92,11 @@ network's current rate, or `None` if the transaction's mass exceeds
 [`maximum_standard_transaction_mass()`](../../reference/Functions/maximum_standard_transaction_mass.md). Split the inputs across
 multiple transactions in that case.
 
+Since the Toccata hardfork, the network minimum relay fee is **100 sompi per gram
+of mass**. `calculate_transaction_fee` and the fee-estimate buckets are floored at
+this rate, and any explicit `fee_rate` you supply must meet it or the node rejects
+the transaction.
+
 ## Querying the fee rate
 
 The network exposes a fee estimator over RPC — see

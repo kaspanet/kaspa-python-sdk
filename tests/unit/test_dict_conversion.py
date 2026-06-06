@@ -120,6 +120,25 @@ class TestTransactionDict:
         assert "gas" in d
         assert "payload" in d
         assert "mass" in d
+        assert "storageMass" in d
+        assert d["mass"] == d["storageMass"]
+
+    def test_transaction_storage_mass_alias(self):
+        """`storage_mass` mirrors `mass` (kept as an alias for WASM & back-compat)."""
+        tx_hash = Hash("0" * 64)
+        outpoint = TransactionOutpoint(tx_hash, 0)
+        input = TransactionInput(outpoint, "", 0, 1)
+        spk = ScriptPublicKey(0, "51")
+        output = TransactionOutput(1000000, spk)
+
+        tx = Transaction(0, [input], [output], 100, "0" * 40, 0, "", 1234)
+        assert tx.mass == 1234
+        assert tx.storage_mass == 1234
+
+        tx.storage_mass = 5678
+        assert tx.mass == 5678
+        tx.mass = 99
+        assert tx.storage_mass == 99
 
     def test_transaction_from_dict_roundtrip(self):
         """Test Transaction to_dict/from_dict round-trip."""

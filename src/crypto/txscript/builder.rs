@@ -2,7 +2,8 @@ use crate::{
     consensus::core::script_public_key::PyScriptPublicKey, crypto::txscript::opcodes::PyOpcodes,
     types::PyBinary,
 };
-use kaspa_txscript::{script_builder as native, standard};
+use kaspa_consensus_core::mass::ScriptUnits;
+use kaspa_txscript::{EngineFlags, script_builder as native, standard};
 use pyo3::{exceptions::PyException, prelude::*};
 use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
 use std::sync::{Arc, Mutex, MutexGuard};
@@ -36,27 +37,67 @@ impl Default for PyScriptBuilder {
 impl PyScriptBuilder {
     /// Create a new empty script builder.
     ///
+    /// Args:
+    ///     covenants_enabled: Enable covenant opcodes and post-Toccata script
+    ///         limits (default: False).
+    ///     sigop_script_units: Script units charged per signature operation.
+    ///         Defaults to the native engine default when omitted.
+    ///
     /// Returns:
     ///     ScriptBuilder: A new empty ScriptBuilder instance.
     #[new]
-    pub fn new() -> Self {
-        Self::default()
+    #[pyo3(signature = (covenants_enabled=false, sigop_script_units=None))]
+    pub fn new(covenants_enabled: bool, sigop_script_units: Option<u64>) -> Self {
+        let flags = build_engine_flags(covenants_enabled, sigop_script_units);
+        Self(Arc::new(Mutex::new(native::ScriptBuilder::with_flags(
+            flags,
+        ))))
     }
 
     /// Create a script builder from an existing script.
     ///
     /// Args:
     ///     script: Existing script bytes as hex, bytes, or list.
+    ///     covenants_enabled: Enable covenant opcodes and post-Toccata script
+    ///         limits (default: False).
+    ///     sigop_script_units: Script units charged per signature operation.
+    ///         Defaults to the native engine default when omitted.
     ///
     /// Returns:
     ///     ScriptBuilder: A new ScriptBuilder initialized with the script.
     #[staticmethod]
-    pub fn from_script(script: PyBinary) -> PyResult<Self> {
-        let builder = PyScriptBuilder::default();
+    #[pyo3(signature = (script, covenants_enabled=false, sigop_script_units=None))]
+    pub fn from_script(
+        script: PyBinary,
+        covenants_enabled: bool,
+        sigop_script_units: Option<u64>,
+    ) -> PyResult<Self> {
+        let flags = build_engine_flags(covenants_enabled, sigop_script_units);
+        let builder = Self(Arc::new(Mutex::new(native::ScriptBuilder::with_flags(
+            flags,
+        ))));
         let script: Vec<u8> = script.into();
         builder.inner().script_mut().extend(&script);
 
         Ok(builder)
+    }
+
+    /// Whether covenant opcodes and post-Toccata script limits are enabled.
+    ///
+    /// Returns:
+    ///     bool: True if covenants are enabled for this builder.
+    #[getter]
+    pub fn get_covenants_enabled(&self) -> bool {
+        self.inner().flags().covenants_enabled
+    }
+
+    /// Script units charged for each signature operation.
+    ///
+    /// Returns:
+    ///     int: The configured sigop script units.
+    #[getter]
+    pub fn get_sigop_script_units(&self) -> u64 {
+        self.inner().flags().sigop_script_units.0
     }
 
     /// Add a single opcode to the script.
@@ -248,9 +289,13 @@ impl PyScriptBuilder {
     pub fn pay_to_script_hash_signature_script(&self, signature: PyBinary) -> PyResult<String> {
         let inner = self.inner();
         let script = inner.script();
-        let generated_script =
-            standard::pay_to_script_hash_signature_script(script.into(), signature.into())
-                .map_err(|err| PyException::new_err(format!("{}", err)))?;
+        let flags = inner.flags();
+        let generated_script = standard::pay_to_script_hash_signature_script_with_flags(
+            script.into(),
+            signature.into(),
+            flags,
+        )
+        .map_err(|err| PyException::new_err(format!("{}", err)))?;
 
         Ok(generated_script.to_hex())
     }
@@ -281,6 +326,20 @@ impl PyScriptBuilder {
         let inner = self.inner();
         format!("ScriptBuilder(script='{}')", inner.script().to_hex())
     }
+}
+
+// Builds script engine flags from the Python-facing kwargs, mirroring the WASM
+// SDK's `ScriptBuilderOptions { flags: { covenantsEnabled, sigopScriptUnits } }`.
+// `sigop_script_units` falls back to the native engine default when omitted.
+fn build_engine_flags(covenants_enabled: bool, sigop_script_units: Option<u64>) -> EngineFlags {
+    let mut flags = EngineFlags {
+        covenants_enabled,
+        ..Default::default()
+    };
+    if let Some(units) = sigop_script_units {
+        flags.sigop_script_units = ScriptUnits(units);
+    }
+    flags
 }
 
 // TODO change to PyOpcode struct and handle similar to PyBinary?

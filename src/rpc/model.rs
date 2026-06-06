@@ -48,6 +48,7 @@ define_py_request_types!([
     GetBlock,
     GetBlocks,
     GetBlockTemplate,
+    GetBlockRewardInfo,
     GetCurrentBlockColor,
     GetDaaScoreTimestampEstimate,
     GetFeeEstimateExperimental,

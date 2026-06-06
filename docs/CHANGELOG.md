@@ -26,8 +26,13 @@ search:
 - Examples under `examples/wallet/` demonstrating wallet usage
 - Pytest options `--network-id` and `--rpc-url` for targeting integration tests at a specific network / node.
 - TypedDicts for `RpcClient` subscription event payloads — `BlockAddedEvent`, `VirtualChainChangedEvent`, `FinalityConflictEvent`, `FinalityConflictResolvedEvent`, `UtxosChangedEvent`, `SinkBlueScoreChangedEvent`, `VirtualDaaScoreChangedEvent`, `PruningPointUtxoSetOverrideEvent`, `NewBlockTemplateEvent`, `ConnectEvent`, `DisconnectEvent` — and their notification body TypedDicts (`RpcBlockAddedNotification`, etc.) for typing event-listener callbacks.
+- `RpcClient.get_block_reward_info(request)` — new RPC returning a block's reward info (header, block color, confirmation count, merging chain block hash, reward amount).
+- `ScriptBuilder` covenant/engine flags: optional `covenants_enabled` and `sigop_script_units` arguments on `ScriptBuilder(...)` and `ScriptBuilder.from_script(...)`, plus read-only `covenants_enabled` / `sigop_script_units` properties (mirrors the WASM SDK's `ScriptBuilderOptions`).
+- `Transaction.storage_mass` property and a `storageMass` key in the `Transaction` dict output (alongside the existing `mass`), mirroring the WASM SDK.
 
 ### Changed
+- Bumped the pinned `rusty-kaspa` dependency from `d290179` to `90dbf07` (Toccata hardfork). The transaction mass field is now tracked internally as `storage_mass`; the Python-facing `mass` property, constructor argument, and dict key are retained as aliases.
+- The network minimum relay fee was raised upstream to 100 sompi/gram (Toccata). Fees produced by the wallet and `Generator` reflect the new floor; explicit `fee_rate` values must meet it.
 - `py_error_map!` macro extended to register wallet exception variants into the `kaspa.exceptions` submodule.
 - Integration tests now default to `mainnet` (overridable via `--network-id` / `--rpc-url`).
 - `build-dev` script builds with `--strip` for smaller artifacts.
