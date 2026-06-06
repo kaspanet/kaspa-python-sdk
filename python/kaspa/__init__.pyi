@@ -8,6 +8,13 @@ from . import exceptions
 
 @typing.final
 class AccountDescriptor:
+    r"""
+    A read-only snapshot describing a wallet account.
+    
+    Exposes the account's kind, id, name, balance, addresses, and derivation
+    metadata. Returned by `Wallet` account enumeration, creation, and
+    activation methods.
+    """
     @property
     def kind(self) -> AccountKind:
         r"""
@@ -368,15 +375,49 @@ class CovenantBinding:
     Binds a transaction output to the covenant and input authorizing its creation.
     """
     @property
-    def authorizing_input(self) -> builtins.int: ...
+    def authorizing_input(self) -> builtins.int:
+        r"""
+        The index of the transaction input authorizing the covenant.
+        """
     @authorizing_input.setter
-    def authorizing_input(self, value: builtins.int) -> None: ...
+    def authorizing_input(self, value: builtins.int) -> None:
+        r"""
+        Set the authorizing input index.
+        
+        Args:
+            value: The index of the transaction input authorizing the covenant.
+        """
     @property
-    def covenant_id(self) -> Hash: ...
+    def covenant_id(self) -> Hash:
+        r"""
+        The covenant id the output is bound to.
+        """
     @covenant_id.setter
-    def covenant_id(self, value: Hash) -> None: ...
-    def __new__(cls, authorizing_input: builtins.int, covenant_id: Hash) -> CovenantBinding: ...
-    def __repr__(self) -> builtins.str: ...
+    def covenant_id(self, value: Hash) -> None:
+        r"""
+        Set the covenant id.
+        
+        Args:
+            value: The covenant id the output is bound to.
+        """
+    def __new__(cls, authorizing_input: builtins.int, covenant_id: Hash) -> CovenantBinding:
+        r"""
+        Create a new CovenantBinding.
+        
+        Args:
+            authorizing_input: The index of the transaction input authorizing the covenant.
+            covenant_id: The covenant id the output is bound to.
+        
+        Returns:
+            CovenantBinding: A new CovenantBinding instance.
+        """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The CovenantBinding as a repr string.
+        """
 
 @typing.final
 class DerivationPath:
@@ -627,11 +668,37 @@ class GeneratorSummary:
 
 @typing.final
 class GenesisCovenantGroup:
+    r"""
+    A genesis covenant group for bulk covenant binding population.
+    
+    All listed outputs are bound to the same covenant id, derived from the
+    authorizing input outpoint and the exact ordered output list. Used with
+    `Transaction.populate_genesis_covenants`.
+    """
     @property
-    def authorizing_input(self) -> builtins.int: ...
+    def authorizing_input(self) -> builtins.int:
+        r"""
+        The index of the transaction input authorizing the covenant.
+        """
     @authorizing_input.setter
-    def authorizing_input(self, value: builtins.int) -> None: ...
-    def __new__(cls, authorizing_input: builtins.int, outputs: typing.Sequence[builtins.int]) -> GenesisCovenantGroup: ...
+    def authorizing_input(self, value: builtins.int) -> None:
+        r"""
+        Set the authorizing input index.
+        
+        Args:
+            value: The index of the transaction input authorizing the covenant.
+        """
+    def __new__(cls, authorizing_input: builtins.int, outputs: typing.Sequence[builtins.int]) -> GenesisCovenantGroup:
+        r"""
+        Create a new GenesisCovenantGroup.
+        
+        Args:
+            authorizing_input: The index of the transaction input authorizing the covenant.
+            outputs: The indices of the transaction outputs to bind to the covenant.
+        
+        Returns:
+            GenesisCovenantGroup: A new GenesisCovenantGroup instance.
+        """
 
 @typing.final
 class Hash:
@@ -1017,7 +1084,18 @@ class PaymentOutput:
             amount: The amount, in sompi, to send on this output.
         """
     @staticmethod
-    def with_covenant(address: Address, amount: builtins.int, covenant: CovenantBinding) -> PaymentOutput: ...
+    def with_covenant(address: Address, amount: builtins.int, covenant: CovenantBinding) -> PaymentOutput:
+        r"""
+        Create a new Payment Output bound to a covenant.
+        
+        Args:
+            address: The address to send this output to.
+            amount: The amount, in sompi, to send on this output.
+            covenant: The covenant binding to attach to this output.
+        
+        Returns:
+            PaymentOutput: A new PaymentOutput instance.
+        """
     def __eq__(self, other: PaymentOutput) -> builtins.bool:
         r"""
         Equality comparison.
@@ -1348,6 +1426,13 @@ class PrvKeyDataId:
 
 @typing.final
 class PrvKeyDataInfo:
+    r"""
+    Metadata describing a private key data entry stored in a wallet file.
+    
+    Exposes the entry's id, optional user-assigned name, and whether the
+    underlying key material requires a payment secret (BIP39 passphrase).
+    Returned by `Wallet.prv_key_data_enumerate`.
+    """
     @property
     def id(self) -> PrvKeyDataId:
         r"""
@@ -2472,7 +2557,24 @@ class Transaction:
         Returns:
             list[Address]: List of unique addresses referenced by inputs.
         """
-    def populate_genesis_covenants(self, groups: typing.Sequence[GenesisCovenantGroup]) -> None: ...
+    def populate_genesis_covenants(self, groups: typing.Sequence[GenesisCovenantGroup]) -> None:
+        r"""
+        Populate genesis covenant bindings for multiple output groups.
+        
+        For each group, computes the covenant id from the authorizing input
+        outpoint and the group's output list, then sets that binding on all
+        listed outputs. All groups are validated before the transaction is
+        mutated.
+        
+        Args:
+            groups: The genesis covenant groups to populate.
+        
+        Raises:
+            Exception: If a group references a non-existent input or output,
+                output indices are not strictly increasing, outputs overlap
+                across groups, or a targeted output already has a covenant
+                binding.
+        """
     def to_dict(self) -> dict:
         r"""
         Get a dictionary representation of the Transaction.
@@ -3231,6 +3333,15 @@ class UtxoProcessor:
 
 @typing.final
 class Wallet:
+    r"""
+    A managed Kaspa wallet with persistent encrypted on-disk storage.
+    
+    The SDK's high-level wallet. Provides encrypted storage for keys and
+    account metadata, multi-account management (BIP32 and keypair accounts),
+    address derivation and discovery, built-in send, transfer, and sweep
+    flows, transaction history tracking, and an event bus for chain
+    notifications (balance, maturity, reorg).
+    """
     @property
     def rpc(self) -> RpcClient:
         r"""
@@ -3834,6 +3945,12 @@ class Wallet:
 
 @typing.final
 class WalletDescriptor:
+    r"""
+    Describes a wallet file in the wallet store.
+    
+    Pairs the on-disk wallet filename with its optional user-assigned title.
+    Returned by `Wallet.wallet_enumerate`.
+    """
     @property
     def title(self) -> typing.Optional[builtins.str]:
         r"""

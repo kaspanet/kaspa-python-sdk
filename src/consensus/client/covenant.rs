@@ -16,32 +16,54 @@ pub struct PyCovenantBinding(CovenantBinding);
 #[gen_stub_pymethods]
 #[pymethods]
 impl PyCovenantBinding {
+    /// Create a new CovenantBinding.
+    ///
+    /// Args:
+    ///     authorizing_input: The index of the transaction input authorizing the covenant.
+    ///     covenant_id: The covenant id the output is bound to.
+    ///
+    /// Returns:
+    ///     CovenantBinding: A new CovenantBinding instance.
     #[new]
     pub fn new(authorizing_input: u16, covenant_id: PyHash) -> Self {
         let inner = CovenantBinding::new(authorizing_input, covenant_id.into());
         Self(inner)
     }
 
+    /// The index of the transaction input authorizing the covenant.
     #[getter]
     pub fn get_authorizing_input(&self) -> u16 {
         self.0.get_authorizing_input()
     }
 
+    /// Set the authorizing input index.
+    ///
+    /// Args:
+    ///     value: The index of the transaction input authorizing the covenant.
     #[setter]
     pub fn set_authorizing_input(&mut self, value: u16) {
         self.0.set_authorizing_input(value);
     }
 
+    /// The covenant id the output is bound to.
     #[getter]
     pub fn get_covenant_id(&self) -> PyHash {
         self.0.get_covenant_id().into()
     }
 
+    /// Set the covenant id.
+    ///
+    /// Args:
+    ///     value: The covenant id the output is bound to.
     #[setter]
     pub fn set_covenant_id(&mut self, value: PyHash) {
         self.0.set_covenant_id(value.into());
     }
 
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The CovenantBinding as a repr string.
     pub fn __repr__(&self) -> String {
         format!(
             "CovenantBinding(authorizing_input={}, covenant_id={})",
@@ -86,6 +108,11 @@ impl<'a, 'py> FromPyObject<'a, 'py> for PyCovenantBinding {
     }
 }
 
+/// A genesis covenant group for bulk covenant binding population.
+///
+/// All listed outputs are bound to the same covenant id, derived from the
+/// authorizing input outpoint and the exact ordered output list. Used with
+/// `Transaction.populate_genesis_covenants`.
 #[gen_stub_pyclass]
 #[pyclass(name = "GenesisCovenantGroup")]
 #[derive(Clone)]
@@ -94,6 +121,14 @@ pub struct PyGenesisCovenantGroup(GenesisCovenantGroup);
 #[gen_stub_pymethods]
 #[pymethods]
 impl PyGenesisCovenantGroup {
+    /// Create a new GenesisCovenantGroup.
+    ///
+    /// Args:
+    ///     authorizing_input: The index of the transaction input authorizing the covenant.
+    ///     outputs: The indices of the transaction outputs to bind to the covenant.
+    ///
+    /// Returns:
+    ///     GenesisCovenantGroup: A new GenesisCovenantGroup instance.
     #[new]
     pub fn constructor(authorizing_input: u16, outputs: Vec<u32>) -> Self {
         // TODO this tmp construction process is temporary
@@ -103,11 +138,16 @@ impl PyGenesisCovenantGroup {
         Self(inner)
     }
 
+    /// The index of the transaction input authorizing the covenant.
     #[getter]
     pub fn get_authorizing_input(&self) -> u16 {
         self.0.authorizing_input()
     }
 
+    /// Set the authorizing input index.
+    ///
+    /// Args:
+    ///     value: The index of the transaction input authorizing the covenant.
     #[setter]
     pub fn set_authorizing_input(&mut self, value: u16) {
         self.0.set_authorizing_input(value);

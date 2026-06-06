@@ -141,6 +141,11 @@ impl<'py> FromPyObject<'_, 'py> for PyPrvKeyDataId {
     }
 }
 
+/// Metadata describing a private key data entry stored in a wallet file.
+///
+/// Exposes the entry's id, optional user-assigned name, and whether the
+/// underlying key material requires a payment secret (BIP39 passphrase).
+/// Returned by `Wallet.prv_key_data_enumerate`.
 #[gen_stub_pyclass]
 #[pyclass(name = "PrvKeyDataInfo")]
 pub struct PyPrvKeyDataInfo(PrvKeyDataInfo);
