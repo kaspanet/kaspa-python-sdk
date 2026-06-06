@@ -5,6 +5,13 @@ search:
 
 ## [Unreleased]
 
+**Target: 2.0.0**
+
+### Highlights
+- Added full rusty-kaspa wallet API via the new `Wallet` class — wallet files, accounts, sending, transaction history, and events.
+- Covenant (KIP-17) support for the Toccata hardfork — `CovenantBinding`, covenant opcodes, and covenant-aware transactions, UTXOs, and RPC types.
+- Review Breaking Changes below before upgrading.
+
 ### Added
 - Class `Wallet` exposed to Python, providing the full rusty-kaspa wallet API: lifecycle (`start`, `stop`, `connect`, `disconnect`, `set_network_id`, `get_status`), wallet file operations (`wallet_enumerate`, `wallet_create`, `wallet_open`, `wallet_close`, `wallet_reload`, `wallet_rename`, `wallet_change_secret`, `wallet_export`, `wallet_import`), private key data (`prv_key_data_enumerate`, `prv_key_data_create`, `prv_key_data_remove`, `prv_key_data_get`), accounts (`accounts_enumerate`, `accounts_create_bip32`, `accounts_create_keypair`, `accounts_import_bip32`, `accounts_import_keypair`, `accounts_rename`, `accounts_discovery`, `accounts_ensure_default`, `accounts_activate`, `accounts_get`, `accounts_create_new_address`, `accounts_get_utxos`), spending (`accounts_estimate`, `accounts_send`, `accounts_transfer`, `accounts_commit_reveal`, `accounts_commit_reveal_manual`), transaction history (`transactions_data_get`, `transactions_replace_note`, `transactions_replace_metadata`), storage (`batch`, `flush`, `retain_context`, `address_book_enumerate`), fee rate (`fee_rate_estimate`, `fee_rate_poller_enable`, `fee_rate_poller_disable`), and event listeners (`add_event_listener`, `remove_event_listener`).
 - Class `AccountDescriptor` exposed to Python. Contains account metadata including kind, ID, name, balance, and addresses, and account kind specific properties: `account_index`, `xpub_keys`, `ecdsa`, `receive_address_index`, and `change_address_index` (each `None` when the property is not applicable to the account kind).
@@ -24,25 +31,50 @@ search:
 - Enum `AccountKind` exposed to Python. Represents the account type (legacy, bip32, multisig, keypair, etc.).
 - Wallet-specific exception classes populated into the `kaspa.exceptions` submodule, covering the rusty-kaspa wallet error variants (e.g. `WalletInsufficientFundsError`, `WalletAccountNotFoundError`, `WalletNotSyncedError`, etc.).
 - Examples under `examples/wallet/` demonstrating wallet usage
-- Pytest options `--network-id` and `--rpc-url` for targeting integration tests at a specific network / node.
 - TypedDicts for `RpcClient` subscription event payloads — `BlockAddedEvent`, `VirtualChainChangedEvent`, `FinalityConflictEvent`, `FinalityConflictResolvedEvent`, `UtxosChangedEvent`, `SinkBlueScoreChangedEvent`, `VirtualDaaScoreChangedEvent`, `PruningPointUtxoSetOverrideEvent`, `NewBlockTemplateEvent`, `ConnectEvent`, `DisconnectEvent` — and their notification body TypedDicts (`RpcBlockAddedNotification`, etc.) for typing event-listener callbacks.
 - `RpcClient.get_block_reward_info(request)` — new RPC returning a block's reward info (header, block color, confirmation count, merging chain block hash, reward amount).
 - `ScriptBuilder` covenant/engine flags: optional `covenants_enabled` and `sigop_script_units` arguments on `ScriptBuilder(...)` and `ScriptBuilder.from_script(...)`, plus read-only `covenants_enabled` / `sigop_script_units` properties (mirrors the WASM SDK's `ScriptBuilderOptions`).
 - `Transaction.storage_mass` property and a `storageMass` key in the `Transaction` dict output (alongside the existing `mass`), mirroring the WASM SDK.
+- Class `CovenantBinding` exposed to Python. Binds a transaction output to the covenant and the input authorizing its creation. Accepted as either an instance or a `{"authorizingInput": ..., "covenantId": ...}` dict wherever the bindings take a `CovenantBinding`.
+- Class `GenesisCovenantGroup` exposed to Python. Describes a group of transaction outputs bound to a single covenant id, used with `Transaction.populate_genesis_covenants`.
+- `Transaction.populate_genesis_covenants(groups)` — computes covenant ids and sets the bindings on the targeted outputs.
+- Function `covenant_id(outpoint, auth_outputs)` exposed to Python. Computes a covenant id from the authorizing input outpoint and ordered auth outputs.
+- `PaymentOutput.with_covenant(address, amount, covenant)` static method, plus an optional `covenant` key in `PaymentOutput` dicts.
+- `TransactionOutput`: optional `covenant_id` constructor argument, and a `covenant` key in `to_dict()` / `from_dict()`.
+- `TransactionInput`: `compute_budget` constructor argument (default 0) and read/write property; `from_dict()` accepts an optional `computeBudget` key.
+- `UtxoEntry` / `UtxoEntryReference`: `covenantId` key in `to_dict()` / `from_dict()`.
+- `Opcodes`: covenant and transaction-introspection opcodes (`OpTxVersion` through `OpTxInputScriptSigLen`, `OpAuthOutputCount`, `OpAuthOutputIdx`, `OpNum2Bin`, `OpBin2Num`, `OpInputCovenantId`, `OpCovInputCount`, `OpCovInputIdx`, `OpCovOutputCount`, `OpCovOutputIdx`, `OpChainblockSeqCommit`, `OpOutputCovenantId`, `OpCheckSigFromStack`, `OpCheckSigFromStackECDSA`, `OpBlake3`, `OpBlake3WithKey`, `OpZkPrecompile`, `OpBlake2bWithKey`), replacing the corresponding `OpUnknownXXX` placeholders.
+- RPC TypedDicts: `RpcCovenantBinding`, plus `covenantId` on `RpcUtxoEntry`, `computeBudget` on `RpcTransactionInput`, and `covenant` on `RpcTransactionOutput`.
+- Examples under `examples/covenants/` demonstrating KIP-17 covenant usage.
+- `py.typed` marker (PEP 561) so type checkers use the bundled stubs.
 
 ### Changed
-- Bumped the pinned `rusty-kaspa` dependency from `d290179` to `90dbf07` (Toccata hardfork). The transaction mass field is now tracked internally as `storage_mass`; the Python-facing `mass` property, constructor argument, and dict key are retained as aliases.
+- The transaction mass field is now tracked as `storage_mass` following the Toccata hardfork; the Python-facing `mass` property, constructor argument, and dict key are retained as aliases.
 - The network minimum relay fee was raised upstream to 100 sompi/gram (Toccata). Fees produced by the wallet and `Generator` reflect the new floor; explicit `fee_rate` values must meet it.
-- `py_error_map!` macro extended to register wallet exception variants into the `kaspa.exceptions` submodule.
-- Integration tests now default to `mainnet` (overridable via `--network-id` / `--rpc-url`).
-- `build-dev` script builds with `--strip` for smaller artifacts.
-- `pyproject.toml`: set `python-source = "python"` and moved the package stub tree under `python/kaspa/` (`kaspa.pyi` → `python/kaspa/__init__.pyi`).
 - `Hash` accepts `str` in addition to `Hash` instances wherever it is used as an argument, and gained a `to_hex()` method.
+- `Address` accepts `str` in addition to `Address` instances wherever it is used as an argument.
 - Added `__repr__` methods to: `Hash`, `Balance`, `Binary`, `Address`, `NetworkId`, `ScriptPublicKey`, `TransactionOutpoint`, `Transaction`, `TransactionInput`, `TransactionOutput`, `UtxoEntry`, `UtxoEntries` (consensus and generator helper), `UtxoEntryReference`, `ScriptBuilder`, `Wallet`, `Fees`, `PaymentOutput`, `Outputs`, `Generator`, `GeneratorSummary`, `PendingTransaction`, `BalanceStrings`, `UtxoProcessorEvent`, `UtxoProcessor`, `UtxoContext`, `Notification`, `Resolver`, `NotificationEvent`, `RpcClient`, `DerivationPath`, `XPub`, `PublicKey`, `XOnlyPublicKey`, `PublicKeyGenerator`.
-- Documentation site reorganization & search ranking
+- Documentation site reorganization & search ranking.
+- Doc comments added or cleaned up across all Python-exposed classes, methods, and functions.
 
-### Fixed
-- `AccountDescriptor.__repr__` now correctly renders optional fields.
+### Breaking Changes
+- Opcode `OpSubStr` renamed to `OpSubstr`. `OpUnknownXXX` placeholder names for opcodes `0xa6`-`0xa7`, `0xb2`-`0xc9`, `0xcb`-`0xd5`, and `0xd7`-`0xda` are replaced by their real opcode names (see Added).
+- `TransactionInput(...)` gained a `compute_budget` parameter before `utxo`; positional callers passing `utxo` must update.
+- `UtxoEntry.from_dict()` / `UtxoEntryReference.from_dict()` now require a `covenantId` key (value may be `None`).
+- The network minimum relay fee was raised upstream to 100 sompi/gram (Toccata); explicit `fee_rate` values below the new floor are rejected.
+
+### Development
+*Internal SDK changes — not visible through the Python package API.*
+
+- Bumped the pinned `rusty-kaspa` dependency from `d290179` to `90dbf07` (v2.0.0, Toccata hardfork).
+- `py_error_map!` macro generating the wallet exception classes, the rusty-kaspa error → Python exception mapping, and `register_exceptions`. The mapping's `match` is exhaustive, so an upstream error variant addition fails the build until it is mapped.
+- `IntoPyResult` trait for more ergonomic conversion of rusty-kaspa native errors into `PyResult`.
+- `pyproject.toml`: set `python-source = "python"` and moved the package stub tree under `python/kaspa/` (`kaspa.pyi` → `python/kaspa/__init__.pyi`).
+- Stub generation also emits `python/kaspa/exceptions/__init__.pyi`, making `kaspa.exceptions` a proper typed subpackage (`Py` prefix stripped from exception class names).
+- `build-dev` script builds with `--strip` for smaller artifacts.
+- Unit and integration test suites covering the `Wallet` API.
+- Pytest options `--network-id` and `--rpc-url` for targeting integration tests at a specific network / node.
+- Integration tests now default to `mainnet` (overridable via `--network-id` / `--rpc-url`). Prior, `testnet-10` was hardcoded.
 
 ## [1.1.0] - 2026-03-04
 
