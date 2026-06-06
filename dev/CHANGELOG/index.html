@@ -2175,6 +2175,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2423,6 +2427,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../reference/Classes/CovenantBinding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CovenantBinding
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../reference/Classes/DerivationPath/" class="md-nav__link">
         
   
@@ -2515,6 +2547,34 @@
     
   
     GeneratorSummary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/Classes/GenesisCovenantGroup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GenesisCovenantGroup
   
 
     
@@ -5051,6 +5111,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -5783,6 +5849,62 @@
     
   
     GetBlockResponse
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/TypedDicts/GetBlockRewardInfoRequest/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GetBlockRewardInfoRequest
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/TypedDicts/GetBlockRewardInfoResponse/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GetBlockRewardInfoResponse
   
 
     
@@ -7687,6 +7809,34 @@
     
   
     RpcChainBlockAcceptedTransactions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/TypedDicts/RpcCovenantBinding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RpcCovenantBinding
   
 
     
@@ -13524,9 +13674,14 @@
 <li>Examples under <code>examples/wallet/</code> demonstrating wallet usage</li>
 <li>Pytest options <code>--network-id</code> and <code>--rpc-url</code> for targeting integration tests at a specific network / node.</li>
 <li>TypedDicts for <code>RpcClient</code> subscription event payloads — <code>BlockAddedEvent</code>, <code>VirtualChainChangedEvent</code>, <code>FinalityConflictEvent</code>, <code>FinalityConflictResolvedEvent</code>, <code>UtxosChangedEvent</code>, <code>SinkBlueScoreChangedEvent</code>, <code>VirtualDaaScoreChangedEvent</code>, <code>PruningPointUtxoSetOverrideEvent</code>, <code>NewBlockTemplateEvent</code>, <code>ConnectEvent</code>, <code>DisconnectEvent</code> — and their notification body TypedDicts (<code>RpcBlockAddedNotification</code>, etc.) for typing event-listener callbacks.</li>
+<li><code>RpcClient.get_block_reward_info(request)</code> — new RPC returning a block's reward info (header, block color, confirmation count, merging chain block hash, reward amount).</li>
+<li><code>ScriptBuilder</code> covenant/engine flags: optional <code>covenants_enabled</code> and <code>sigop_script_units</code> arguments on <code>ScriptBuilder(...)</code> and <code>ScriptBuilder.from_script(...)</code>, plus read-only <code>covenants_enabled</code> / <code>sigop_script_units</code> properties (mirrors the WASM SDK's <code>ScriptBuilderOptions</code>).</li>
+<li><code>Transaction.storage_mass</code> property and a <code>storageMass</code> key in the <code>Transaction</code> dict output (alongside the existing <code>mass</code>), mirroring the WASM SDK.</li>
 </ul>
 <h3 id="changed">Changed<a class="headerlink" href="#changed" title="Permanent link">&para;</a></h3>
 <ul>
+<li>Bumped the pinned <code>rusty-kaspa</code> dependency from <code>d290179</code> to <code>90dbf07</code> (Toccata hardfork). The transaction mass field is now tracked internally as <code>storage_mass</code>; the Python-facing <code>mass</code> property, constructor argument, and dict key are retained as aliases.</li>
+<li>The network minimum relay fee was raised upstream to 100 sompi/gram (Toccata). Fees produced by the wallet and <code>Generator</code> reflect the new floor; explicit <code>fee_rate</code> values must meet it.</li>
 <li><code>py_error_map!</code> macro extended to register wallet exception variants into the <code>kaspa.exceptions</code> submodule.</li>
 <li>Integration tests now default to <code>mainnet</code> (overridable via <code>--network-id</code> / <code>--rpc-url</code>).</li>
 <li><code>build-dev</code> script builds with <code>--strip</code> for smaller artifacts.</li>
@@ -13560,7 +13715,7 @@
 </ul>
 <h3 id="changed_1">Changed<a class="headerlink" href="#changed_1" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Bumped rusty-kaspa dependency version to commit e97070f.</li>
+<li>Bumped rusty-kaspa dependency version to commit d290179.</li>
 <li>Moved Kaspa Python SDK out of Rusty-Kaspa (as a workspace member crate) to its own dedicated repository. The internals of this project have changed significantly as a result. However, all APIs exposed to Python remain unchanged. </li>
 <li>All Python-exposed structs and enums are prefixed with <code>Py</code> (e.g. <code>PyAddress</code>) internally. The corresponding Python class name has not changed (prefix is dropped in Python).</li>
 <li>All Python-exposed functions are prefixed with <code>py_</code> (e.g. <code>py_sign_message</code>) internally. The corresponding Python function name has not changed (prefix is dropped in Python).</li>

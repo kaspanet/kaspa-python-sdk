@@ -2312,6 +2312,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2560,6 +2564,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../reference/Classes/CovenantBinding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CovenantBinding
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../reference/Classes/DerivationPath/" class="md-nav__link">
         
   
@@ -2652,6 +2684,34 @@
     
   
     GeneratorSummary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/Classes/GenesisCovenantGroup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GenesisCovenantGroup
   
 
     
@@ -5188,6 +5248,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -5920,6 +5986,62 @@
     
   
     GetBlockResponse
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/TypedDicts/GetBlockRewardInfoRequest/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GetBlockRewardInfoRequest
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/TypedDicts/GetBlockRewardInfoResponse/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GetBlockRewardInfoResponse
   
 
     
@@ -7824,6 +7946,34 @@
     
   
     RpcChainBlockAcceptedTransactions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/TypedDicts/RpcCovenantBinding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RpcCovenantBinding
   
 
     
@@ -13394,6 +13544,10 @@ storage mass through the roof, fold it into the fee instead.</p>
 network's current rate, or <code>None</code> if the transaction's mass exceeds
 <a href="../../../reference/Functions/maximum_standard_transaction_mass/"><code>maximum_standard_transaction_mass()</code></a>. Split the inputs across
 multiple transactions in that case.</p>
+<p>Since the Toccata hardfork, the network minimum relay fee is <strong>100 sompi per gram
+of mass</strong>. <code>calculate_transaction_fee</code> and the fee-estimate buckets are floored at
+this rate, and any explicit <code>fee_rate</code> you supply must meet it or the node rejects
+the transaction.</p>
 <h2 id="querying-the-fee-rate">Querying the fee rate<a class="headerlink" href="#querying-the-fee-rate" title="Permanent link">&para;</a></h2>
 <p>The network exposes a fee estimator over RPC — see
 <a href="../../rpc/calls/#fees">RPC → Calls → Fees</a> and

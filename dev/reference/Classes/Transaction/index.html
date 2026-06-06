@@ -2184,6 +2184,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2435,6 +2439,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../CovenantBinding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CovenantBinding
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../DerivationPath/" class="md-nav__link">
         
   
@@ -2527,6 +2559,34 @@
     
   
     GeneratorSummary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GenesisCovenantGroup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GenesisCovenantGroup
   
 
     
@@ -3199,6 +3259,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#kaspa.Transaction.storage_mass" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;storage_mass
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#kaspa.Transaction.subnetwork" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3291,6 +3362,17 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;is_coinbase
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kaspa.Transaction.populate_genesis_covenants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;populate_genesis_covenants
       
     </span>
   </a>
@@ -5325,6 +5407,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -6060,6 +6148,62 @@
     
   
     GetBlockResponse
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../TypedDicts/GetBlockRewardInfoRequest/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GetBlockRewardInfoRequest
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../TypedDicts/GetBlockRewardInfoResponse/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GetBlockRewardInfoResponse
   
 
     
@@ -7964,6 +8108,34 @@
     
   
     RpcChainBlockAcceptedTransactions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../TypedDicts/RpcCovenantBinding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RpcCovenantBinding
   
 
     
@@ -13423,6 +13595,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#kaspa.Transaction.storage_mass" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;storage_mass
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#kaspa.Transaction.subnetwork" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -13515,6 +13698,17 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;is_coinbase
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kaspa.Transaction.populate_genesis_covenants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;populate_genesis_covenants
       
     </span>
   </a>
@@ -13762,6 +13956,8 @@ Transactions are the fundamental unit of value transfer on the Kaspa network.</p
     <div class="doc doc-contents ">
 
         <p>The transaction mass used for fee calculation.</p>
+<p>Alias of <code>storage_mass</code>, retained for compatibility with the WASM SDK
+and earlier releases of this package.</p>
 
     </div>
 
@@ -13812,6 +14008,31 @@ Transactions are the fundamental unit of value transfer on the Kaspa network.</p
     <div class="doc doc-contents ">
 
         <p>The transaction payload data as a hex string.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h2 id="kaspa.Transaction.storage_mass" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">storage_mass</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+      <small class="doc doc-label doc-label-writable"><code>writable</code></small>
+  </span>
+
+<a href="#kaspa.Transaction.storage_mass" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">storage_mass</span><span class="p">:</span> <span class="n"><span title="builtins.int">int</span></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>The transaction storage mass used for fee calculation.</p>
 
     </div>
 
@@ -14430,6 +14651,85 @@ Transactions are the fundamental unit of value transfer on the Kaspa network.</p
                       <code><span title="builtins.bool">bool</span></code>
                   </span>
                 </p>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="kaspa.Transaction.populate_genesis_covenants" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">populate_genesis_covenants</span>
+
+
+<a href="#kaspa.Transaction.populate_genesis_covenants" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">populate_genesis_covenants</span><span class="p">(</span><span class="n">groups</span><span class="p">:</span> <span class="n"><span title="typing.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="kaspa.GenesisCovenantGroup" href="../GenesisCovenantGroup/#kaspa.GenesisCovenantGroup">GenesisCovenantGroup</a></span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Populate genesis covenant bindings for multiple output groups.</p>
+<p>For each group, computes the covenant id from the authorizing input
+outpoint and the group's output list, then sets that binding on all
+listed outputs. All groups are validated before the transaction is
+mutated.</p>
+
+
+<table>
+      <thead>
+        <tr>
+          <th><span class="doc-section-title">PARAMETER</span></th>
+          <th><span>DESCRIPTION</span></th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>groups</code>
+            </td>
+            <td class="doc-param-details">
+              <div class="doc-md-description">
+                <p>The genesis covenant groups to populate.</p>
+              </div>
+              <p>
+                  <span class="doc-param-annotation">
+                    <b>TYPE:</b>
+                      <code><span title="typing.Sequence">Sequence</span>[<a class="autorefs autorefs-internal" title="kaspa.GenesisCovenantGroup" href="../GenesisCovenantGroup/#kaspa.GenesisCovenantGroup">GenesisCovenantGroup</a>]</code>
+                  </span>
+              </p>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<table>
+      <thead>
+        <tr>
+          <th><span class="doc-section-title">RAISES</span></th>
+          <th><span>DESCRIPTION</span></th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+              <span class="doc-raises-annotation">
+                  <code><span title="Exception">Exception</span></code>
+              </span>
+            </td>
+            <td class="doc-raises-details">
+              <div class="doc-md-description">
+                <p>If a group references a non-existent input or output,
+output indices are not strictly increasing, outputs overlap
+across groups, or a targeted output already has a covenant
+binding.</p>
+              </div>
             </td>
           </tr>
       </tbody>
