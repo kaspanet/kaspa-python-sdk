@@ -2,6 +2,10 @@ use kaspa_wallet_core::storage::WalletDescriptor;
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
 
+/// Describes a wallet file in the wallet store.
+///
+/// Pairs the on-disk wallet filename with its optional user-assigned title.
+/// Returned by `Wallet.wallet_enumerate`.
 #[gen_stub_pyclass]
 #[pyclass(name = "WalletDescriptor")]
 pub struct PyWalletDescriptor(WalletDescriptor);

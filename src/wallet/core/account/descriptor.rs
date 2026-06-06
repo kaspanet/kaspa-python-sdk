@@ -13,6 +13,11 @@ use kaspa_wallet_core::{
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
 
+/// A read-only snapshot describing a wallet account.
+///
+/// Exposes the account's kind, id, name, balance, addresses, and derivation
+/// metadata. Returned by `Wallet` account enumeration, creation, and
+/// activation methods.
 #[gen_stub_pyclass]
 #[pyclass(name = "AccountDescriptor")]
 #[derive(Clone)]

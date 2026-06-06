@@ -309,6 +309,21 @@ impl PyTransaction {
         self.0.inner().storage_mass = value;
     }
 
+    /// Populate genesis covenant bindings for multiple output groups.
+    ///
+    /// For each group, computes the covenant id from the authorizing input
+    /// outpoint and the group's output list, then sets that binding on all
+    /// listed outputs. All groups are validated before the transaction is
+    /// mutated.
+    ///
+    /// Args:
+    ///     groups: The genesis covenant groups to populate.
+    ///
+    /// Raises:
+    ///     Exception: If a group references a non-existent input or output,
+    ///         output indices are not strictly increasing, outputs overlap
+    ///         across groups, or a targeted output already has a covenant
+    ///         binding.
     pub fn populate_genesis_covenants(&self, groups: Vec<PyGenesisCovenantGroup>) -> PyResult<()> {
         let groups = groups
             .into_iter()

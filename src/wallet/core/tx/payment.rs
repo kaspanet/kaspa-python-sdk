@@ -31,6 +31,15 @@ impl PyPaymentOutput {
         Self(PaymentOutput::new(address.into(), amount))
     }
 
+    /// Create a new Payment Output bound to a covenant.
+    ///
+    /// Args:
+    ///     address: The address to send this output to.
+    ///     amount: The amount, in sompi, to send on this output.
+    ///     covenant: The covenant binding to attach to this output.
+    ///
+    /// Returns:
+    ///     PaymentOutput: A new PaymentOutput instance.
     #[staticmethod]
     fn with_covenant(address: PyAddress, amount: u64, covenant: PyCovenantBinding) -> Self {
         Self(PaymentOutput::with_covenant(
