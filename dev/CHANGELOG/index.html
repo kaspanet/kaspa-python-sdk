@@ -13226,6 +13226,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#highlights" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Highlights
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#added" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -13248,10 +13259,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fixed" class="md-nav__link">
+  <a href="#breaking-changes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Fixed
+        Breaking Changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#development" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Development
       
     </span>
   </a>
@@ -13298,7 +13320,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fixed_1" class="md-nav__link">
+  <a href="#fixed" class="md-nav__link">
     <span class="md-ellipsis">
       
         Fixed
@@ -13309,7 +13331,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#breaking-changes" class="md-nav__link">
+  <a href="#breaking-changes_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Breaking Changes
@@ -13447,6 +13469,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#highlights" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Highlights
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#added" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -13469,10 +13502,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fixed" class="md-nav__link">
+  <a href="#breaking-changes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Fixed
+        Breaking Changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#development" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Development
       
     </span>
   </a>
@@ -13519,7 +13563,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fixed_1" class="md-nav__link">
+  <a href="#fixed" class="md-nav__link">
     <span class="md-ellipsis">
       
         Fixed
@@ -13530,7 +13574,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#breaking-changes" class="md-nav__link">
+  <a href="#breaking-changes_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Breaking Changes
@@ -13652,6 +13696,13 @@
   <h1>Changelog</h1>
 
 <h2 id="unreleased">[Unreleased]<a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
+<p><strong>Target: 2.0.0</strong></p>
+<h3 id="highlights">Highlights<a class="headerlink" href="#highlights" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Added full rusty-kaspa wallet API via the new <code>Wallet</code> class — wallet files, accounts, sending, transaction history, and events.</li>
+<li>Covenant (KIP-17) support for the Toccata hardfork — <code>CovenantBinding</code>, covenant opcodes, and covenant-aware transactions, UTXOs, and RPC types.</li>
+<li>Review Breaking Changes below before upgrading.</li>
+</ul>
 <h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Class <code>Wallet</code> exposed to Python, providing the full rusty-kaspa wallet API: lifecycle (<code>start</code>, <code>stop</code>, <code>connect</code>, <code>disconnect</code>, <code>set_network_id</code>, <code>get_status</code>), wallet file operations (<code>wallet_enumerate</code>, <code>wallet_create</code>, <code>wallet_open</code>, <code>wallet_close</code>, <code>wallet_reload</code>, <code>wallet_rename</code>, <code>wallet_change_secret</code>, <code>wallet_export</code>, <code>wallet_import</code>), private key data (<code>prv_key_data_enumerate</code>, <code>prv_key_data_create</code>, <code>prv_key_data_remove</code>, <code>prv_key_data_get</code>), accounts (<code>accounts_enumerate</code>, <code>accounts_create_bip32</code>, <code>accounts_create_keypair</code>, <code>accounts_import_bip32</code>, <code>accounts_import_keypair</code>, <code>accounts_rename</code>, <code>accounts_discovery</code>, <code>accounts_ensure_default</code>, <code>accounts_activate</code>, <code>accounts_get</code>, <code>accounts_create_new_address</code>, <code>accounts_get_utxos</code>), spending (<code>accounts_estimate</code>, <code>accounts_send</code>, <code>accounts_transfer</code>, <code>accounts_commit_reveal</code>, <code>accounts_commit_reveal_manual</code>), transaction history (<code>transactions_data_get</code>, <code>transactions_replace_note</code>, <code>transactions_replace_metadata</code>), storage (<code>batch</code>, <code>flush</code>, <code>retain_context</code>, <code>address_book_enumerate</code>), fee rate (<code>fee_rate_estimate</code>, <code>fee_rate_poller_enable</code>, <code>fee_rate_poller_disable</code>), and event listeners (<code>add_event_listener</code>, <code>remove_event_listener</code>).</li>
@@ -13672,27 +13723,52 @@
 <li>Enum <code>AccountKind</code> exposed to Python. Represents the account type (legacy, bip32, multisig, keypair, etc.).</li>
 <li>Wallet-specific exception classes populated into the <code>kaspa.exceptions</code> submodule, covering the rusty-kaspa wallet error variants (e.g. <code>WalletInsufficientFundsError</code>, <code>WalletAccountNotFoundError</code>, <code>WalletNotSyncedError</code>, etc.).</li>
 <li>Examples under <code>examples/wallet/</code> demonstrating wallet usage</li>
-<li>Pytest options <code>--network-id</code> and <code>--rpc-url</code> for targeting integration tests at a specific network / node.</li>
 <li>TypedDicts for <code>RpcClient</code> subscription event payloads — <code>BlockAddedEvent</code>, <code>VirtualChainChangedEvent</code>, <code>FinalityConflictEvent</code>, <code>FinalityConflictResolvedEvent</code>, <code>UtxosChangedEvent</code>, <code>SinkBlueScoreChangedEvent</code>, <code>VirtualDaaScoreChangedEvent</code>, <code>PruningPointUtxoSetOverrideEvent</code>, <code>NewBlockTemplateEvent</code>, <code>ConnectEvent</code>, <code>DisconnectEvent</code> — and their notification body TypedDicts (<code>RpcBlockAddedNotification</code>, etc.) for typing event-listener callbacks.</li>
 <li><code>RpcClient.get_block_reward_info(request)</code> — new RPC returning a block's reward info (header, block color, confirmation count, merging chain block hash, reward amount).</li>
 <li><code>ScriptBuilder</code> covenant/engine flags: optional <code>covenants_enabled</code> and <code>sigop_script_units</code> arguments on <code>ScriptBuilder(...)</code> and <code>ScriptBuilder.from_script(...)</code>, plus read-only <code>covenants_enabled</code> / <code>sigop_script_units</code> properties (mirrors the WASM SDK's <code>ScriptBuilderOptions</code>).</li>
 <li><code>Transaction.storage_mass</code> property and a <code>storageMass</code> key in the <code>Transaction</code> dict output (alongside the existing <code>mass</code>), mirroring the WASM SDK.</li>
+<li>Class <code>CovenantBinding</code> exposed to Python. Binds a transaction output to the covenant and the input authorizing its creation. Accepted as either an instance or a <code>{"authorizingInput": ..., "covenantId": ...}</code> dict wherever the bindings take a <code>CovenantBinding</code>.</li>
+<li>Class <code>GenesisCovenantGroup</code> exposed to Python. Describes a group of transaction outputs bound to a single covenant id, used with <code>Transaction.populate_genesis_covenants</code>.</li>
+<li><code>Transaction.populate_genesis_covenants(groups)</code> — computes covenant ids and sets the bindings on the targeted outputs.</li>
+<li>Function <code>covenant_id(outpoint, auth_outputs)</code> exposed to Python. Computes a covenant id from the authorizing input outpoint and ordered auth outputs.</li>
+<li><code>PaymentOutput.with_covenant(address, amount, covenant)</code> static method, plus an optional <code>covenant</code> key in <code>PaymentOutput</code> dicts.</li>
+<li><code>TransactionOutput</code>: optional <code>covenant_id</code> constructor argument, and a <code>covenant</code> key in <code>to_dict()</code> / <code>from_dict()</code>.</li>
+<li><code>TransactionInput</code>: <code>compute_budget</code> constructor argument (default 0) and read/write property; <code>from_dict()</code> accepts an optional <code>computeBudget</code> key.</li>
+<li><code>UtxoEntry</code> / <code>UtxoEntryReference</code>: <code>covenantId</code> key in <code>to_dict()</code> / <code>from_dict()</code>.</li>
+<li><code>Opcodes</code>: covenant and transaction-introspection opcodes (<code>OpTxVersion</code> through <code>OpTxInputScriptSigLen</code>, <code>OpAuthOutputCount</code>, <code>OpAuthOutputIdx</code>, <code>OpNum2Bin</code>, <code>OpBin2Num</code>, <code>OpInputCovenantId</code>, <code>OpCovInputCount</code>, <code>OpCovInputIdx</code>, <code>OpCovOutputCount</code>, <code>OpCovOutputIdx</code>, <code>OpChainblockSeqCommit</code>, <code>OpOutputCovenantId</code>, <code>OpCheckSigFromStack</code>, <code>OpCheckSigFromStackECDSA</code>, <code>OpBlake3</code>, <code>OpBlake3WithKey</code>, <code>OpZkPrecompile</code>, <code>OpBlake2bWithKey</code>), replacing the corresponding <code>OpUnknownXXX</code> placeholders.</li>
+<li>RPC TypedDicts: <code>RpcCovenantBinding</code>, plus <code>covenantId</code> on <code>RpcUtxoEntry</code>, <code>computeBudget</code> on <code>RpcTransactionInput</code>, and <code>covenant</code> on <code>RpcTransactionOutput</code>.</li>
+<li>Examples under <code>examples/covenants/</code> demonstrating KIP-17 covenant usage.</li>
+<li><code>py.typed</code> marker (PEP 561) so type checkers use the bundled stubs.</li>
 </ul>
 <h3 id="changed">Changed<a class="headerlink" href="#changed" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Bumped the pinned <code>rusty-kaspa</code> dependency from <code>d290179</code> to <code>90dbf07</code> (Toccata hardfork). The transaction mass field is now tracked internally as <code>storage_mass</code>; the Python-facing <code>mass</code> property, constructor argument, and dict key are retained as aliases.</li>
+<li>The transaction mass field is now tracked as <code>storage_mass</code> following the Toccata hardfork; the Python-facing <code>mass</code> property, constructor argument, and dict key are retained as aliases.</li>
 <li>The network minimum relay fee was raised upstream to 100 sompi/gram (Toccata). Fees produced by the wallet and <code>Generator</code> reflect the new floor; explicit <code>fee_rate</code> values must meet it.</li>
-<li><code>py_error_map!</code> macro extended to register wallet exception variants into the <code>kaspa.exceptions</code> submodule.</li>
-<li>Integration tests now default to <code>mainnet</code> (overridable via <code>--network-id</code> / <code>--rpc-url</code>).</li>
-<li><code>build-dev</code> script builds with <code>--strip</code> for smaller artifacts.</li>
-<li><code>pyproject.toml</code>: set <code>python-source = "python"</code> and moved the package stub tree under <code>python/kaspa/</code> (<code>kaspa.pyi</code> → <code>python/kaspa/__init__.pyi</code>).</li>
 <li><code>Hash</code> accepts <code>str</code> in addition to <code>Hash</code> instances wherever it is used as an argument, and gained a <code>to_hex()</code> method.</li>
+<li><code>Address</code> accepts <code>str</code> in addition to <code>Address</code> instances wherever it is used as an argument.</li>
 <li>Added <code>__repr__</code> methods to: <code>Hash</code>, <code>Balance</code>, <code>Binary</code>, <code>Address</code>, <code>NetworkId</code>, <code>ScriptPublicKey</code>, <code>TransactionOutpoint</code>, <code>Transaction</code>, <code>TransactionInput</code>, <code>TransactionOutput</code>, <code>UtxoEntry</code>, <code>UtxoEntries</code> (consensus and generator helper), <code>UtxoEntryReference</code>, <code>ScriptBuilder</code>, <code>Wallet</code>, <code>Fees</code>, <code>PaymentOutput</code>, <code>Outputs</code>, <code>Generator</code>, <code>GeneratorSummary</code>, <code>PendingTransaction</code>, <code>BalanceStrings</code>, <code>UtxoProcessorEvent</code>, <code>UtxoProcessor</code>, <code>UtxoContext</code>, <code>Notification</code>, <code>Resolver</code>, <code>NotificationEvent</code>, <code>RpcClient</code>, <code>DerivationPath</code>, <code>XPub</code>, <code>PublicKey</code>, <code>XOnlyPublicKey</code>, <code>PublicKeyGenerator</code>.</li>
-<li>Documentation site reorganization &amp; search ranking</li>
+<li>Documentation site reorganization &amp; search ranking.</li>
+<li>Doc comments added or cleaned up across all Python-exposed classes, methods, and functions.</li>
 </ul>
-<h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
+<h3 id="breaking-changes">Breaking Changes<a class="headerlink" href="#breaking-changes" title="Permanent link">&para;</a></h3>
 <ul>
-<li><code>AccountDescriptor.__repr__</code> now correctly renders optional fields.</li>
+<li>Opcode <code>OpSubStr</code> renamed to <code>OpSubstr</code>. <code>OpUnknownXXX</code> placeholder names for opcodes <code>0xa6</code>-<code>0xa7</code>, <code>0xb2</code>-<code>0xc9</code>, <code>0xcb</code>-<code>0xd5</code>, and <code>0xd7</code>-<code>0xda</code> are replaced by their real opcode names (see Added).</li>
+<li><code>TransactionInput(...)</code> gained a <code>compute_budget</code> parameter before <code>utxo</code>; positional callers passing <code>utxo</code> must update.</li>
+<li><code>UtxoEntry.from_dict()</code> / <code>UtxoEntryReference.from_dict()</code> now require a <code>covenantId</code> key (value may be <code>None</code>).</li>
+<li>The network minimum relay fee was raised upstream to 100 sompi/gram (Toccata); explicit <code>fee_rate</code> values below the new floor are rejected.</li>
+</ul>
+<h3 id="development">Development<a class="headerlink" href="#development" title="Permanent link">&para;</a></h3>
+<p><em>Internal SDK changes — not visible through the Python package API.</em></p>
+<ul>
+<li>Bumped the pinned <code>rusty-kaspa</code> dependency from <code>d290179</code> to <code>90dbf07</code> (v2.0.0, Toccata hardfork).</li>
+<li><code>py_error_map!</code> macro generating the wallet exception classes, the rusty-kaspa error → Python exception mapping, and <code>register_exceptions</code>. The mapping's <code>match</code> is exhaustive, so an upstream error variant addition fails the build until it is mapped.</li>
+<li><code>IntoPyResult</code> trait for more ergonomic conversion of rusty-kaspa native errors into <code>PyResult</code>.</li>
+<li><code>pyproject.toml</code>: set <code>python-source = "python"</code> and moved the package stub tree under <code>python/kaspa/</code> (<code>kaspa.pyi</code> → <code>python/kaspa/__init__.pyi</code>).</li>
+<li>Stub generation also emits <code>python/kaspa/exceptions/__init__.pyi</code>, making <code>kaspa.exceptions</code> a proper typed subpackage (<code>Py</code> prefix stripped from exception class names).</li>
+<li><code>build-dev</code> script builds with <code>--strip</code> for smaller artifacts.</li>
+<li>Unit and integration test suites covering the <code>Wallet</code> API.</li>
+<li>Pytest options <code>--network-id</code> and <code>--rpc-url</code> for targeting integration tests at a specific network / node.</li>
+<li>Integration tests now default to <code>mainnet</code> (overridable via <code>--network-id</code> / <code>--rpc-url</code>). Prior, <code>testnet-10</code> was hardcoded.</li>
 </ul>
 <h2 id="110-2026-03-04">[1.1.0] - 2026-03-04<a class="headerlink" href="#110-2026-03-04" title="Permanent link">&para;</a></h2>
 <h3 id="added_1">Added<a class="headerlink" href="#added_1" title="Permanent link">&para;</a></h3>
@@ -13728,11 +13804,11 @@
 <li>Python 3.9 is no longer supported. Minimum supported version is now 3.10.</li>
 <li>Fix ScriptBuilder <code>add_op</code>/<code>add_ops</code> functions. <code>add_op</code> incorrectly allowed mulitple ops to be passed. <code>add_ops</code> incorrectly allowed a single op to be passed.</li>
 </ul>
-<h3 id="fixed_1">Fixed<a class="headerlink" href="#fixed_1" title="Permanent link">&para;</a></h3>
+<h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>kaspa.pyi</code>: add overloads for <code>UtxoProcessor.add_event_listener</code> / <code>remove_event_listener</code> (typing only).</li>
 </ul>
-<h3 id="breaking-changes">Breaking Changes<a class="headerlink" href="#breaking-changes" title="Permanent link">&para;</a></h3>
+<h3 id="breaking-changes_1">Breaking Changes<a class="headerlink" href="#breaking-changes_1" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Python 3.9 is no longer supported. Minimum supported version is now 3.10.</li>
 <li><code>Generator</code>, <code>create_transactions</code>, and <code>estimate_transactions</code> reordered parameters to keep required arguments first (entries, change_address, network_id optional). Positional callers must update.</li>
