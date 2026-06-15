@@ -688,6 +688,22 @@ class GenesisCovenantGroup:
         Args:
             value: The index of the transaction input authorizing the covenant.
         """
+    @property
+    def outputs(self) -> builtins.list[builtins.int]:
+        r"""
+        The indices of the transaction outputs bound to the covenant.
+        
+        Returns:
+            list[int]: The output indices in this group.
+        """
+    @outputs.setter
+    def outputs(self, value: builtins.list[builtins.int]) -> None:
+        r"""
+        Set the output indices.
+        
+        Args:
+            value: The indices of the transaction outputs to bind to the covenant.
+        """
     def __new__(cls, authorizing_input: builtins.int, outputs: typing.Sequence[builtins.int]) -> GenesisCovenantGroup:
         r"""
         Create a new GenesisCovenantGroup.
