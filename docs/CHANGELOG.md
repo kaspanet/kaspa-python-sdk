@@ -67,7 +67,7 @@ search:
 ### Development
 *Internal SDK changes — not visible through the Python package API.*
 
-- Bumped the pinned `rusty-kaspa` dependency from `d290179` to `90dbf07` (v2.0.0, Toccata hardfork).
+- Bumped the pinned `rusty-kaspa` dependency from `d290179` to `c53a83bf4` (which includes rusty-kaspa v2.0.0, Toccata hardfork).
 - `py_error_map!` macro generating the wallet exception classes, the rusty-kaspa error → Python exception mapping, and `register_exceptions`. The mapping's `match` is exhaustive, so an upstream error variant addition fails the build until it is mapped.
 - `IntoPyResult` trait for more ergonomic conversion of rusty-kaspa native errors into `PyResult`.
 - `pyproject.toml`: set `python-source = "python"` and moved the package stub tree under `python/kaspa/` (`kaspa.pyi` → `python/kaspa/__init__.pyi`).
