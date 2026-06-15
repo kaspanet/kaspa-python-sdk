@@ -31,12 +31,13 @@ search:
 - Enum `AccountKind` exposed to Python. Represents the account type (legacy, bip32, multisig, keypair, etc.).
 - Wallet-specific exception classes populated into the `kaspa.exceptions` submodule, covering the rusty-kaspa wallet error variants (e.g. `WalletInsufficientFundsError`, `WalletAccountNotFoundError`, `WalletNotSyncedError`, etc.).
 - Examples under `examples/wallet/` demonstrating wallet usage
+- Wallet `sync-state` events now include an SMT-sync phase payload (`{processed, total}`), emitted while the node imports the pruning-point SMT state during IBD.
 - TypedDicts for `RpcClient` subscription event payloads — `BlockAddedEvent`, `VirtualChainChangedEvent`, `FinalityConflictEvent`, `FinalityConflictResolvedEvent`, `UtxosChangedEvent`, `SinkBlueScoreChangedEvent`, `VirtualDaaScoreChangedEvent`, `PruningPointUtxoSetOverrideEvent`, `NewBlockTemplateEvent`, `ConnectEvent`, `DisconnectEvent` — and their notification body TypedDicts (`RpcBlockAddedNotification`, etc.) for typing event-listener callbacks.
 - `RpcClient.get_block_reward_info(request)` — new RPC returning a block's reward info (header, block color, confirmation count, merging chain block hash, reward amount).
 - `ScriptBuilder` covenant/engine flags: optional `covenants_enabled` and `sigop_script_units` arguments on `ScriptBuilder(...)` and `ScriptBuilder.from_script(...)`, plus read-only `covenants_enabled` / `sigop_script_units` properties (mirrors the WASM SDK's `ScriptBuilderOptions`).
 - `Transaction.storage_mass` property and a `storageMass` key in the `Transaction` dict output (alongside the existing `mass`), mirroring the WASM SDK.
 - Class `CovenantBinding` exposed to Python. Binds a transaction output to the covenant and the input authorizing its creation. Accepted as either an instance or a `{"authorizingInput": ..., "covenantId": ...}` dict wherever the bindings take a `CovenantBinding`.
-- Class `GenesisCovenantGroup` exposed to Python. Describes a group of transaction outputs bound to a single covenant id, used with `Transaction.populate_genesis_covenants`.
+- Class `GenesisCovenantGroup` exposed to Python. Describes a group of transaction outputs bound to a single covenant id, used with `Transaction.populate_genesis_covenants`. Constructible via `GenesisCovenantGroup(authorizing_input, outputs)`, with read/write `authorizing_input` and `outputs` properties.
 - `Transaction.populate_genesis_covenants(groups)` — computes covenant ids and sets the bindings on the targeted outputs.
 - Function `covenant_id(outpoint, auth_outputs)` exposed to Python. Computes a covenant id from the authorizing input outpoint and ordered auth outputs.
 - `PaymentOutput.with_covenant(address, amount, covenant)` static method, plus an optional `covenant` key in `PaymentOutput` dicts.
