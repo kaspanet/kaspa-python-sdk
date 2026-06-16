@@ -13723,13 +13723,12 @@
 <li>Enum <code>AccountKind</code> exposed to Python. Represents the account type (legacy, bip32, multisig, keypair, etc.).</li>
 <li>Wallet-specific exception classes populated into the <code>kaspa.exceptions</code> submodule, covering the rusty-kaspa wallet error variants (e.g. <code>WalletInsufficientFundsError</code>, <code>WalletAccountNotFoundError</code>, <code>WalletNotSyncedError</code>, etc.).</li>
 <li>Examples under <code>examples/wallet/</code> demonstrating wallet usage</li>
-<li>Wallet <code>sync-state</code> events now include an SMT-sync phase payload (<code>{processed, total}</code>), emitted while the node imports the pruning-point SMT state during IBD.</li>
 <li>TypedDicts for <code>RpcClient</code> subscription event payloads — <code>BlockAddedEvent</code>, <code>VirtualChainChangedEvent</code>, <code>FinalityConflictEvent</code>, <code>FinalityConflictResolvedEvent</code>, <code>UtxosChangedEvent</code>, <code>SinkBlueScoreChangedEvent</code>, <code>VirtualDaaScoreChangedEvent</code>, <code>PruningPointUtxoSetOverrideEvent</code>, <code>NewBlockTemplateEvent</code>, <code>ConnectEvent</code>, <code>DisconnectEvent</code> — and their notification body TypedDicts (<code>RpcBlockAddedNotification</code>, etc.) for typing event-listener callbacks.</li>
 <li><code>RpcClient.get_block_reward_info(request)</code> — new RPC returning a block's reward info (header, block color, confirmation count, merging chain block hash, reward amount).</li>
 <li><code>ScriptBuilder</code> covenant/engine flags: optional <code>covenants_enabled</code> and <code>sigop_script_units</code> arguments on <code>ScriptBuilder(...)</code> and <code>ScriptBuilder.from_script(...)</code>, plus read-only <code>covenants_enabled</code> / <code>sigop_script_units</code> properties (mirrors the WASM SDK's <code>ScriptBuilderOptions</code>).</li>
 <li><code>Transaction.storage_mass</code> property and a <code>storageMass</code> key in the <code>Transaction</code> dict output (alongside the existing <code>mass</code>), mirroring the WASM SDK.</li>
 <li>Class <code>CovenantBinding</code> exposed to Python. Binds a transaction output to the covenant and the input authorizing its creation. Accepted as either an instance or a <code>{"authorizingInput": ..., "covenantId": ...}</code> dict wherever the bindings take a <code>CovenantBinding</code>.</li>
-<li>Class <code>GenesisCovenantGroup</code> exposed to Python. Describes a group of transaction outputs bound to a single covenant id, used with <code>Transaction.populate_genesis_covenants</code>. Constructible via <code>GenesisCovenantGroup(authorizing_input, outputs)</code>, with read/write <code>authorizing_input</code> and <code>outputs</code> properties.</li>
+<li>Class <code>GenesisCovenantGroup</code> exposed to Python. Describes a group of transaction outputs bound to a single covenant id, used with <code>Transaction.populate_genesis_covenants</code>.</li>
 <li><code>Transaction.populate_genesis_covenants(groups)</code> — computes covenant ids and sets the bindings on the targeted outputs.</li>
 <li>Function <code>covenant_id(outpoint, auth_outputs)</code> exposed to Python. Computes a covenant id from the authorizing input outpoint and ordered auth outputs.</li>
 <li><code>PaymentOutput.with_covenant(address, amount, covenant)</code> static method, plus an optional <code>covenant</code> key in <code>PaymentOutput</code> dicts.</li>
@@ -13761,7 +13760,7 @@
 <h3 id="development">Development<a class="headerlink" href="#development" title="Permanent link">&para;</a></h3>
 <p><em>Internal SDK changes — not visible through the Python package API.</em></p>
 <ul>
-<li>Bumped the pinned <code>rusty-kaspa</code> dependency from <code>d290179</code> to <code>c53a83bf4</code> (which includes rusty-kaspa v2.0.0, Toccata hardfork).</li>
+<li>Bumped the pinned <code>rusty-kaspa</code> dependency from <code>d290179</code> to <code>90dbf07</code> (v2.0.0, Toccata hardfork).</li>
 <li><code>py_error_map!</code> macro generating the wallet exception classes, the rusty-kaspa error → Python exception mapping, and <code>register_exceptions</code>. The mapping's <code>match</code> is exhaustive, so an upstream error variant addition fails the build until it is mapped.</li>
 <li><code>IntoPyResult</code> trait for more ergonomic conversion of rusty-kaspa native errors into <code>PyResult</code>.</li>
 <li><code>pyproject.toml</code>: set <code>python-source = "python"</code> and moved the package stub tree under <code>python/kaspa/</code> (<code>kaspa.pyi</code> → <code>python/kaspa/__init__.pyi</code>).</li>
