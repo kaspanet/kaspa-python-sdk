@@ -8,6 +8,7 @@ search:
 ## [2.0.0] - 2026-06-06
 
 ### Highlights
+- Bumped the pinned `rusty-kaspa` dependency from `d290179` to `90dbf07` (v2.0.0, Toccata hardfork).
 - Added full rusty-kaspa wallet API via the new `Wallet` class — wallet files, accounts, sending, transaction history, and events.
 - Covenant (KIP-17) support for the Toccata hardfork — `CovenantBinding`, covenant opcodes, and covenant-aware transactions, UTXOs, and RPC types.
 - Review Breaking Changes below before upgrading.
