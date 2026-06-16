@@ -1,5 +1,6 @@
 use crate::crypto::hashes::PyHash;
 use kaspa_consensus_client::{CovenantBinding, GenesisCovenantGroup};
+use kaspa_consensus_core::tx::GenesisCovenantGroup as CoreGenesisCovenantGroup;
 use pyo3::{
     prelude::*,
     types::{PyAny, PyDict},
@@ -130,7 +131,11 @@ impl PyGenesisCovenantGroup {
     ///     GenesisCovenantGroup: A new GenesisCovenantGroup instance.
     #[new]
     pub fn constructor(authorizing_input: u16, outputs: Vec<u32>) -> Self {
-        Self(GenesisCovenantGroup::new(authorizing_input, outputs))
+        // TODO this tmp construction process is temporary
+        //  until  client::GenesisCovenantGroup exposes new fn that takes rust native types
+        let tmp = CoreGenesisCovenantGroup::new(authorizing_input, outputs);
+        let inner = GenesisCovenantGroup::from(tmp);
+        Self(inner)
     }
 
     /// The index of the transaction input authorizing the covenant.
@@ -148,23 +153,19 @@ impl PyGenesisCovenantGroup {
         self.0.set_authorizing_input(value);
     }
 
-    /// The indices of the transaction outputs bound to the covenant.
-    ///
-    /// Returns:
-    ///     list[int]: The output indices in this group.
-    #[getter]
-    pub fn get_outputs(&self) -> Vec<u32> {
-        self.0.outputs()
-    }
+    // TODO blocked until GenesisCovenantGroup exposes non-WASM `outputs` fns
+    // `GenesisCovenantGroup::outputs -> NumberArray` instead of Vec<u32> return type
+    // NumberArray is WASM type, we should not convert from that here.
+    // Better solution is that native GenesisCovenantGroup exposes native Rust getter/setter
+    // #[getter]
+    // pub fn get_outputs(&self) -> Vec<u32> {
+    //     self.0.outputs.clone()
+    // }
 
-    /// Set the output indices.
-    ///
-    /// Args:
-    ///     value: The indices of the transaction outputs to bind to the covenant.
-    #[setter]
-    pub fn set_outputs(&mut self, value: Vec<u32>) {
-        self.0.set_outputs(value);
-    }
+    // #[setter]
+    // pub fn set_outputs(&mut self, value: Vec<u32>) {
+    //     self.0.outputs = value
+    // }
 }
 
 impl From<GenesisCovenantGroup> for PyGenesisCovenantGroup {
