@@ -1075,6 +1075,7 @@ build_wrpc_python_interface_with_args!([
     GetMempoolEntries,
     GetMempoolEntriesByAddresses,
     GetMempoolEntry,
+    GetSeqCommitLaneProof,
     GetSubnetwork,
     GetUtxosByAddresses,
     GetUtxoReturnAddress,

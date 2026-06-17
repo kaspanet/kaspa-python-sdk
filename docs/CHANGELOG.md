@@ -7,6 +7,7 @@ search:
 
 ### Added
 - Wallet `sync-state` events now include an SMT-sync phase payload (`{processed, total}`), emitted while the node imports the pruning-point SMT state during IBD.
+- `RpcClient.get_seq_commit_lane_proof(request)` — new RPC method that returns a self-contained proof of a single KIP-21 lane's state against the `seq_commit` in a chain block's header.
 
 ### Changed
 - `GenesisCovenantGroup` is now constructible via `GenesisCovenantGroup(authorizing_input, outputs)`, with read/write `authorizing_input` and `outputs` properties.

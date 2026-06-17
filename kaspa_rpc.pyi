@@ -67,6 +67,12 @@ class RpcFeeEstimate(TypedDict):
     lowBuckets: list[RpcFeeRateBucket]
 
 
+class RpcLaneEntry(TypedDict):
+    """A KIP-21 lane entry: the lane's tip block hash and its blue score."""
+    tip: str
+    blueScore: int
+
+
 class RpcVerboseData(TypedDict):
     """Represent Kaspa transaction input verbose data"""
     ...
@@ -657,6 +663,15 @@ class GetMempoolEntryRequest(TypedDict):
     filterTransactionPool: bool
 
 
+class GetSeqCommitLaneProofRequest(TypedDict):
+    """Request for get_seq_commit_lane_proof.
+
+    `blockHash` must be a chain (selected-parent-chain) block.
+    """
+    blockHash: str
+    laneKey: str
+
+
 class GetSubnetworkRequest(TypedDict):
     """Request for get_subnetwork."""
     subnetworkId: str
@@ -934,6 +949,20 @@ class GetMempoolEntriesByAddressesResponse(TypedDict):
 class GetMempoolEntryResponse(TypedDict):
     """Response from get_mempool_entry."""
     mempoolEntry: RpcMempoolEntry
+
+
+class GetSeqCommitLaneProofResponse(TypedDict):
+    """Response from get_seq_commit_lane_proof.
+
+    A self-contained witness verifiable locally against the block header's
+    `seq_commit`. `lane` is None when the lane has no entry at this block's POV
+    (in which case `smtProof` is a non-inclusion proof).
+    """
+    smtProof: list[int]
+    lane: RpcLaneEntry | None
+    payloadAndCtxDigest: str
+    parentSeqCommit: str
+    inactivityShortcut: str
 
 
 class GetSubnetworkResponse(TypedDict):

@@ -2134,6 +2134,7 @@ class RpcClient:
     def get_mempool_entries(self, request: GetMempoolEntriesRequest) -> GetMempoolEntriesResponse: ...
     def get_mempool_entries_by_addresses(self, request: GetMempoolEntriesByAddressesRequest) -> GetMempoolEntriesByAddressesResponse: ...
     def get_mempool_entry(self, request: GetMempoolEntryRequest) -> GetMempoolEntryResponse: ...
+    def get_seq_commit_lane_proof(self, request: GetSeqCommitLaneProofRequest) -> GetSeqCommitLaneProofResponse: ...
     def get_subnetwork(self, request: GetSubnetworkRequest) -> GetSubnetworkResponse: ...
     def get_utxos_by_addresses(self, request: GetUtxosByAddressesRequest) -> GetUtxosByAddressesResponse: ...
     def get_utxo_return_address(self, request: GetUtxoReturnAddressRequest) -> GetUtxoReturnAddressResponse: ...
@@ -2998,6 +2999,27 @@ class UtxoContext:
 @typing.final
 class UtxoEntries:
     r"""
+    UTXO entries collection for flexible input handling.
+    
+    This type is not intended to be instantiated directly from Python.
+    It serves as a helper type that allows Rust functions to accept a list
+    of UTXO entries in multiple convenient forms.
+    
+    Accepts:
+        list[UtxoEntryReference]: A list of UtxoEntryReference objects.
+        list[dict]: A list of dicts with UtxoEntryReference-compatible keys.
+    """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The UtxoEntries as a repr string.
+        """
+
+@typing.final
+class UtxoEntries:
+    r"""
     A collection of UTXO entry references.
     
     Provides methods for managing and querying multiple UTXOs.
@@ -3044,27 +3066,6 @@ class UtxoEntries:
         Returns:
             bool: True if both collections contain identical entries in the same order.
         """
-    def __repr__(self) -> builtins.str:
-        r"""
-        The detailed string representation.
-        
-        Returns:
-            str: The UtxoEntries as a repr string.
-        """
-
-@typing.final
-class UtxoEntries:
-    r"""
-    UTXO entries collection for flexible input handling.
-    
-    This type is not intended to be instantiated directly from Python.
-    It serves as a helper type that allows Rust functions to accept a list
-    of UTXO entries in multiple convenient forms.
-    
-    Accepts:
-        list[UtxoEntryReference]: A list of UtxoEntryReference objects.
-        list[dict]: A list of dicts with UtxoEntryReference-compatible keys.
-    """
     def __repr__(self) -> builtins.str:
         r"""
         The detailed string representation.
@@ -5226,6 +5227,12 @@ class RpcFeeEstimate(TypedDict):
     lowBuckets: list[RpcFeeRateBucket]
 
 
+class RpcLaneEntry(TypedDict):
+    """A KIP-21 lane entry: the lane's tip block hash and its blue score."""
+    tip: str
+    blueScore: int
+
+
 class RpcVerboseData(TypedDict):
     """Represent Kaspa transaction input verbose data"""
     ...
@@ -5816,6 +5823,15 @@ class GetMempoolEntryRequest(TypedDict):
     filterTransactionPool: bool
 
 
+class GetSeqCommitLaneProofRequest(TypedDict):
+    """Request for get_seq_commit_lane_proof.
+
+    `blockHash` must be a chain (selected-parent-chain) block.
+    """
+    blockHash: str
+    laneKey: str
+
+
 class GetSubnetworkRequest(TypedDict):
     """Request for get_subnetwork."""
     subnetworkId: str
@@ -6093,6 +6109,20 @@ class GetMempoolEntriesByAddressesResponse(TypedDict):
 class GetMempoolEntryResponse(TypedDict):
     """Response from get_mempool_entry."""
     mempoolEntry: RpcMempoolEntry
+
+
+class GetSeqCommitLaneProofResponse(TypedDict):
+    """Response from get_seq_commit_lane_proof.
+
+    A self-contained witness verifiable locally against the block header's
+    `seq_commit`. `lane` is None when the lane has no entry at this block's POV
+    (in which case `smtProof` is a non-inclusion proof).
+    """
+    smtProof: list[int]
+    lane: RpcLaneEntry | None
+    payloadAndCtxDigest: str
+    parentSeqCommit: str
+    inactivityShortcut: str
 
 
 class GetSubnetworkResponse(TypedDict):
