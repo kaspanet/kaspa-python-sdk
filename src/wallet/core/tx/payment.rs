@@ -74,7 +74,7 @@ impl PyPaymentOutput {
             self.0.address.address_to_string(),
             self.0.amount,
             match &self.0.covenant {
-                Some(covenant) => PyCovenantBinding::from(*covenant).__repr__(),
+                Some(covenant) => PyCovenantBinding::from(covenant.clone()).__repr__(),
                 None => "None".to_string(),
             }
         )
