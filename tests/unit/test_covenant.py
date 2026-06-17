@@ -6,7 +6,9 @@ its use via Transaction.populate_genesis_covenants.
 import pytest
 
 from kaspa import (
+    CovenantBinding,
     GenesisCovenantGroup,
+    PaymentOutput,
     Transaction,
     TransactionInput,
     TransactionOutpoint,
@@ -16,6 +18,8 @@ from kaspa import (
 )
 
 SUBNETWORK_ID = bytes(20)
+ADDRESS = "kaspa:qr0lr4ml9fn3chekrqmjdkergxl93l4wrk3dankcgvjq776s9wn9jkdskewva"
+COVENANT_ID = "ab" * 32
 
 
 def _build_tx():
@@ -126,3 +130,93 @@ class TestGenesisCovenantGroupDictErrors:
         tx = _build_tx()
         with pytest.raises(TypeError):
             tx.populate_genesis_covenants([42])
+
+
+class TestCovenantBindingConstruction:
+    """Direct construction, properties, and repr of CovenantBinding."""
+
+    def test_construct(self):
+        cb = CovenantBinding(0, Hash(COVENANT_ID))
+        assert cb.authorizing_input == 0
+        assert cb.covenant_id == Hash(COVENANT_ID)
+
+    def test_setters(self):
+        cb = CovenantBinding(0, Hash(COVENANT_ID))
+        cb.authorizing_input = 5
+        cb.covenant_id = Hash("cd" * 32)
+        assert cb.authorizing_input == 5
+        assert cb.covenant_id == Hash("cd" * 32)
+
+    def test_repr(self):
+        cb = CovenantBinding(0, Hash(COVENANT_ID))
+        assert repr(cb) == f"CovenantBinding(authorizing_input=0, covenant_id=Hash('{COVENANT_ID}'))"
+
+
+class TestCovenantBindingFromObjectOrDict:
+    """CovenantBinding is accepted as an instance OR a {authorizingInput, covenantId} dict."""
+
+    def test_with_covenant_accepts_dict_hex_str(self):
+        po = PaymentOutput.with_covenant(
+            ADDRESS, 1000, {"authorizingInput": 0, "covenantId": COVENANT_ID}
+        )
+        instance = PaymentOutput.with_covenant(ADDRESS, 1000, CovenantBinding(0, Hash(COVENANT_ID)))
+        assert po == instance
+
+    def test_with_covenant_accepts_dict_hash_instance(self):
+        po = PaymentOutput.with_covenant(
+            ADDRESS, 1000, {"authorizingInput": 3, "covenantId": Hash(COVENANT_ID)}
+        )
+        instance = PaymentOutput.with_covenant(ADDRESS, 1000, CovenantBinding(3, Hash(COVENANT_ID)))
+        assert po == instance
+
+    def test_transaction_output_accepts_dict(self):
+        spk = ScriptPublicKey(0, "51")
+        from_dict = TransactionOutput(1000, spk, {"authorizingInput": 0, "covenantId": COVENANT_ID})
+        from_instance = TransactionOutput(1000, spk, CovenantBinding(0, Hash(COVENANT_ID)))
+        assert from_dict == from_instance
+        assert from_dict.to_dict()["covenant"] == {
+            "authorizingInput": 0,
+            "covenantId": COVENANT_ID,
+        }
+
+    def test_missing_authorizing_input_raises(self):
+        with pytest.raises(KeyError):
+            PaymentOutput.with_covenant(ADDRESS, 1000, {"covenantId": COVENANT_ID})
+
+    def test_missing_covenant_id_raises(self):
+        with pytest.raises(KeyError):
+            PaymentOutput.with_covenant(ADDRESS, 1000, {"authorizingInput": 0})
+
+    def test_invalid_covenant_id_raises(self):
+        with pytest.raises(Exception):
+            PaymentOutput.with_covenant(ADDRESS, 1000, {"authorizingInput": 0, "covenantId": "xyz"})
+
+
+class TestCovenantRoundTrip:
+    """Covenant-bound outputs survive to_dict/from_dict round-trips with a flat covenant shape."""
+
+    def test_transaction_output_covenant_roundtrip(self):
+        spk = ScriptPublicKey(0, "51")
+        out = TransactionOutput(1000, spk, CovenantBinding(0, Hash(COVENANT_ID)))
+
+        restored = TransactionOutput.from_dict(out.to_dict())
+
+        assert out == restored
+        assert restored.to_dict()["covenant"] == {"authorizingInput": 0, "covenantId": COVENANT_ID}
+
+    def test_transaction_covenant_roundtrip(self):
+        outpoint = TransactionOutpoint(Hash("0" * 64), 0)
+        inp = TransactionInput(outpoint, b"", 0, 1)
+        spk = ScriptPublicKey(0, "51")
+        bound = TransactionOutput(1000, spk, CovenantBinding(0, Hash("cd" * 32)))
+        unbound = TransactionOutput(500, spk)
+        tx = Transaction(0, [inp], [bound, unbound], 0, SUBNETWORK_ID, 0, b"", 0)
+
+        restored = Transaction.from_dict(tx.to_dict())
+
+        assert tx == restored
+        assert restored.outputs[0].to_dict()["covenant"] == {
+            "authorizingInput": 0,
+            "covenantId": "cd" * 32,
+        }
+        assert restored.outputs[1].to_dict()["covenant"] is None

@@ -1,8 +1,8 @@
 use crate::crypto::hashes::PyHash;
 use crate::traits::TryToPyDict;
 use kaspa_consensus_client::{
-    Transaction, TransactionInput, TransactionOutpoint, TransactionOutput, UtxoEntry,
-    UtxoEntryReference,
+    CovenantBinding, Transaction, TransactionInput, TransactionOutpoint, TransactionOutput,
+    UtxoEntry, UtxoEntryReference,
 };
 use kaspa_consensus_core::tx::ScriptPublicKey;
 use kaspa_utils::hex::ToHex;
@@ -123,6 +123,15 @@ impl TryToPyDict for TransactionInput {
     }
 }
 
+impl TryToPyDict for CovenantBinding {
+    fn try_to_pydict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+        let dict = PyDict::new(py);
+        dict.set_item("authorizingInput", self.get_authorizing_input())?;
+        dict.set_item("covenantId", self.get_covenant_id().to_string())?;
+        Ok(dict)
+    }
+}
+
 impl TryToPyDict for TransactionOutput {
     fn try_to_pydict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
         let inner = self.inner();
@@ -135,10 +144,12 @@ impl TryToPyDict for TransactionOutput {
             inner.script_public_key.try_to_pydict(py)?,
         )?;
 
-        dict.set_item(
-            "covenant",
-            serde_pyobject::to_pyobject(py, &inner.covenant)?,
-        )?;
+        let covenant = inner
+            .covenant
+            .as_ref()
+            .map(|cb| cb.try_to_pydict(py))
+            .transpose()?;
+        dict.set_item("covenant", covenant)?;
 
         Ok(dict)
     }

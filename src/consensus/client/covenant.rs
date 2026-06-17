@@ -89,9 +89,20 @@ impl TryFrom<&Bound<'_, PyDict>> for PyCovenantBinding {
     type Error = PyErr;
 
     fn try_from(dict: &Bound<'_, PyDict>) -> Result<Self, Self::Error> {
-        let inner = serde_pyobject::from_pyobject(dict.clone())?;
+        let authorizing_input: u16 = dict
+            .get_item("authorizingInput")?
+            .ok_or_else(|| PyKeyError::new_err("Key `authorizingInput` not present"))?
+            .extract()?;
 
-        Ok(Self(inner))
+        let covenant_id: PyHash = dict
+            .get_item("covenantId")?
+            .ok_or_else(|| PyKeyError::new_err("Key `covenantId` not present"))?
+            .extract()?;
+
+        Ok(Self(CovenantBinding::new(
+            authorizing_input,
+            covenant_id.into(),
+        )))
     }
 }
 

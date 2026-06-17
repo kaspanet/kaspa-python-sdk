@@ -13,6 +13,10 @@ search:
 - `GenesisCovenantGroup` is now constructible via `GenesisCovenantGroup(authorizing_input, outputs)`, with read/write `authorizing_input` and `outputs` properties and a `__repr__`. It is also accepted as either an instance or a `{"authorizingInput": ..., "outputs": [...]}` dict wherever `Transaction.populate_genesis_covenants` takes a group.
 - `calculate_storage_mass` now clamps the mean of input amounts to a minimum of 1, matching rusty-kaspa v2.0.1's `calc_storage_mass`.
 
+### Fixed
+- `CovenantBinding` dicts now use the documented flat `{"authorizingInput": ..., "covenantId": ...}` shape wherever a `CovenantBinding` is accepted (`PaymentOutput.with_covenant`, the `TransactionOutput` `covenant_id` argument, and the `covenant` key in `PaymentOutput`/`TransactionOutput` `from_dict`). Previously only a nested `{"inner": {...}}` dict was accepted, so the flat shape advertised in 2.0.0 never parsed (`covenantId` may be a hex string or a `Hash`).
+- `TransactionOutput.to_dict()` now emits the `covenant` binding in that same flat shape (previously nested under `inner`), so covenant-bound outputs and transactions round-trip cleanly through `to_dict()`/`from_dict()`.
+
 ### Development
 - Bumped the pinned `rusty-kaspa` dependency from `90dbf07` to `cfafeb4c0` (v2.0.1).
 
