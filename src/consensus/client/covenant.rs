@@ -1,6 +1,7 @@
 use crate::crypto::hashes::PyHash;
 use kaspa_consensus_client::{CovenantBinding, GenesisCovenantGroup};
 use pyo3::{
+    exceptions::PyKeyError,
     prelude::*,
     types::{PyAny, PyDict},
 };
@@ -113,7 +114,7 @@ impl<'a, 'py> FromPyObject<'a, 'py> for PyCovenantBinding {
 /// authorizing input outpoint and the exact ordered output list. Used with
 /// `Transaction.populate_genesis_covenants`.
 #[gen_stub_pyclass]
-#[pyclass(name = "GenesisCovenantGroup")]
+#[pyclass(name = "GenesisCovenantGroup", skip_from_py_object)]
 #[derive(Clone)]
 pub struct PyGenesisCovenantGroup(GenesisCovenantGroup);
 
@@ -165,6 +166,18 @@ impl PyGenesisCovenantGroup {
     pub fn set_outputs(&mut self, value: Vec<u32>) {
         self.0.set_outputs(value);
     }
+
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The GenesisCovenantGroup as a repr string.
+    pub fn __repr__(&self) -> String {
+        format!(
+            "GenesisCovenantGroup(authorizing_input={}, outputs={:?})",
+            self.0.authorizing_input(),
+            self.0.outputs(),
+        )
+    }
 }
 
 impl From<GenesisCovenantGroup> for PyGenesisCovenantGroup {
@@ -183,8 +196,29 @@ impl TryFrom<&Bound<'_, PyDict>> for PyGenesisCovenantGroup {
     type Error = PyErr;
 
     fn try_from(dict: &Bound<'_, PyDict>) -> Result<Self, Self::Error> {
-        let inner: GenesisCovenantGroup = serde_pyobject::from_pyobject(dict.clone())?;
+        let authorizing_input: u16 = dict
+            .get_item("authorizingInput")?
+            .ok_or_else(|| PyKeyError::new_err("Key `authorizingInput` not present"))?
+            .extract()?;
 
-        Ok(Self(inner))
+        let outputs: Vec<u32> = dict
+            .get_item("outputs")?
+            .ok_or_else(|| PyKeyError::new_err("Key `outputs` not present"))?
+            .extract()?;
+
+        Ok(Self(GenesisCovenantGroup::new(authorizing_input, outputs)))
+    }
+}
+
+impl<'a, 'py> FromPyObject<'a, 'py> for PyGenesisCovenantGroup {
+    type Error = PyErr;
+
+    fn extract(ob: Borrowed<'a, 'py, PyAny>) -> PyResult<Self> {
+        // Try native GenesisCovenantGroup instance first, then fall back to dict
+        if let Ok(group) = ob.cast::<Self>() {
+            return Ok(group.to_owned().borrow().clone());
+        }
+        let dict = ob.cast::<PyDict>()?.to_owned();
+        Self::try_from(&dict)
     }
 }

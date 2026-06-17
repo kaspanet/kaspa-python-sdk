@@ -715,6 +715,13 @@ class GenesisCovenantGroup:
         Returns:
             GenesisCovenantGroup: A new GenesisCovenantGroup instance.
         """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The GenesisCovenantGroup as a repr string.
+        """
 
 @typing.final
 class Hash:
