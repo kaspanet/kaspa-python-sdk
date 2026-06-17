@@ -167,10 +167,10 @@ impl TryFrom<&Bound<'_, PyDict>> for PyTransactionOutput {
             ));
         };
 
-        let covenant_id = dict
-            .as_any()
-            .get_item("covenant")?
-            .extract::<Option<PyCovenantBinding>>()?;
+        let covenant_id = match dict.get_item("covenant")? {
+            Some(covenant) => covenant.extract::<Option<PyCovenantBinding>>()?,
+            None => None,
+        };
 
         Ok(Self::ctor(value, spk, covenant_id))
     }

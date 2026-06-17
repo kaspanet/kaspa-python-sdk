@@ -15,11 +15,14 @@ from kaspa import (
     TransactionOutput,
     ScriptPublicKey,
     Hash,
+    create_transaction,
 )
 
 SUBNETWORK_ID = bytes(20)
 ADDRESS = "kaspa:qr0lr4ml9fn3chekrqmjdkergxl93l4wrk3dankcgvjq776s9wn9jkdskewva"
 COVENANT_ID = "ab" * 32
+# A P2PK script-public-key matching ADDRESS, reused for synchronous UTXO fixtures.
+SCRIPT_PUBLIC_KEY = "20852be1b87fca94453a35027c550a3ccdbebb5913106029f3a8bf18152bf93bffac"
 
 
 def _build_tx():
@@ -220,3 +223,87 @@ class TestCovenantRoundTrip:
             "covenantId": "cd" * 32,
         }
         assert restored.outputs[1].to_dict()["covenant"] is None
+
+
+class TestCovenantKeyOptional:
+    """The `covenant` key is optional when coercing an output from a dict.
+
+    Mirrors the WASM SDK, where `PaymentOutput.try_cast_from` reads `covenant`
+    via `Reflect::get` (absent -> None) rather than throwing on a missing key.
+    """
+
+    def test_transaction_output_from_dict_without_covenant_key(self):
+        """from_dict succeeds on a dict with no `covenant` key (covenant -> None)."""
+        out = TransactionOutput.from_dict(
+            {"value": 1000, "scriptPublicKey": {"version": 0, "script": "51"}}
+        )
+        assert out.to_dict()["covenant"] is None
+
+    def test_transaction_output_from_dict_explicit_none_covenant(self):
+        """An explicit `covenant: None` is accepted too (value may be None)."""
+        out = TransactionOutput.from_dict(
+            {"value": 1000, "scriptPublicKey": {"version": 0, "script": "51"}, "covenant": None}
+        )
+        assert out.to_dict()["covenant"] is None
+
+    def test_payment_output_dict_without_covenant_key(self):
+        """A plain {address, amount} output dict coerces (no `covenant` key required).
+
+        Exercised through `create_transaction`, whose `outputs` argument coerces
+        each dict via the same `PaymentOutput` from-dict path used by Generator,
+        wallet send, etc.
+        """
+        entry = {
+            "address": ADDRESS,
+            "outpoint": {"transactionId": "a" * 64, "index": 0},
+            "amount": 5_000_000,
+            "scriptPublicKey": {"version": 0, "script": SCRIPT_PUBLIC_KEY},
+            "blockDaaScore": 0,
+            "isCoinbase": False,
+            "covenantId": None,
+        }
+        tx = create_transaction([entry], [{"address": ADDRESS, "amount": 1_000_000}], 0)
+        assert tx.outputs[0].to_dict()["covenant"] is None
+
+    def test_payment_output_dict_explicit_none_covenant(self):
+        """An explicit `covenant: None` on a payment-output dict is accepted too."""
+        entry = {
+            "address": ADDRESS,
+            "outpoint": {"transactionId": "a" * 64, "index": 0},
+            "amount": 5_000_000,
+            "scriptPublicKey": {"version": 0, "script": SCRIPT_PUBLIC_KEY},
+            "blockDaaScore": 0,
+            "isCoinbase": False,
+            "covenantId": None,
+        }
+        tx = create_transaction(
+            [entry], [{"address": ADDRESS, "amount": 1_000_000, "covenant": None}], 0
+        )
+        assert tx.outputs[0].to_dict()["covenant"] is None
+
+    def test_payment_output_dict_still_accepts_covenant(self):
+        """The covenant key still works when present (no regression)."""
+        entry = {
+            "address": ADDRESS,
+            "outpoint": {"transactionId": "a" * 64, "index": 0},
+            "amount": 5_000_000,
+            "scriptPublicKey": {"version": 0, "script": SCRIPT_PUBLIC_KEY},
+            "blockDaaScore": 0,
+            "isCoinbase": False,
+            "covenantId": None,
+        }
+        tx = create_transaction(
+            [entry],
+            [
+                {
+                    "address": ADDRESS,
+                    "amount": 1_000_000,
+                    "covenant": {"authorizingInput": 0, "covenantId": COVENANT_ID},
+                }
+            ],
+            0,
+        )
+        assert tx.outputs[0].to_dict()["covenant"] == {
+            "authorizingInput": 0,
+            "covenantId": COVENANT_ID,
+        }

@@ -116,10 +116,10 @@ impl TryFrom<&Bound<'_, PyDict>> for PyPaymentOutput {
             .ok_or_else(|| PyKeyError::new_err("Key `amount` not present"))?
             .extract()?;
 
-        let covenant_id = value
-            .as_any()
-            .get_item("covenant")?
-            .extract::<Option<PyCovenantBinding>>()?;
+        let covenant_id = match value.get_item("covenant")? {
+            Some(covenant) => covenant.extract::<Option<PyCovenantBinding>>()?,
+            None => None,
+        };
 
         let inner = PaymentOutput {
             address: address.into(),

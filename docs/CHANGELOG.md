@@ -16,6 +16,7 @@ search:
 ### Fixed
 - `CovenantBinding` dicts now use the documented flat `{"authorizingInput": ..., "covenantId": ...}` shape wherever a `CovenantBinding` is accepted (`PaymentOutput.with_covenant`, the `TransactionOutput` `covenant_id` argument, and the `covenant` key in `PaymentOutput`/`TransactionOutput` `from_dict`). Previously only a nested `{"inner": {...}}` dict was accepted, so the flat shape advertised in 2.0.0 never parsed (`covenantId` may be a hex string or a `Hash`).
 - `TransactionOutput.to_dict()` now emits the `covenant` binding in that same flat shape (previously nested under `inner`), so covenant-bound outputs and transactions round-trip cleanly through `to_dict()`/`from_dict()`.
+- The `covenant` key is now optional when converting a `PaymentOutput` or `TransactionOutput` from a dict, matching the docs and the WASM SDK. Previously a dict without a `covenant` key raised `KeyError` (key was required but the value could be `None`), so a plain `{"address": ..., "amount": ...}` output dict failed wherever a `PaymentOutput` is accepted.
 
 ### Development
 - Bumped the pinned `rusty-kaspa` dependency from `90dbf07` to `cfafeb4c0` (v2.0.1).
