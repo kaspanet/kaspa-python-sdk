@@ -2581,7 +2581,7 @@ class Transaction:
         Returns:
             list[Address]: List of unique addresses referenced by inputs.
         """
-    def populate_genesis_covenants(self, groups: typing.Sequence[GenesisCovenantGroup]) -> None:
+    def populate_genesis_covenants(self, groups: typing.Sequence[GenesisCovenantGroup | dict]) -> None:
         r"""
         Populate genesis covenant bindings for multiple output groups.
         
@@ -2591,7 +2591,9 @@ class Transaction:
         mutated.
         
         Args:
-            groups: The genesis covenant groups to populate.
+            groups: The genesis covenant groups to populate. Each may be a
+                GenesisCovenantGroup instance or a
+                {"authorizingInput": int, "outputs": list[int]} dict.
         
         Raises:
             Exception: If a group references a non-existent input or output,
