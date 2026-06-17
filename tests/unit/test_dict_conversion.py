@@ -94,6 +94,36 @@ class TestTransactionInputDict:
 
         assert original == restored
 
+    def test_input_from_dict_without_compute_budget_defaults_zero(self):
+        """A v0-shape input dict (no `computeBudget` key) defaults `compute_budget` to 0.
+
+        Regression guard for rusty-kaspa v2.0.1's transaction-v0 deserialization fix
+        (#1052): legacy/pre-covenant input JSON omits `computeBudget`, and it must still
+        deserialize rather than raise a KeyError.
+        """
+        d = {
+            "previousOutpoint": {"transactionId": "a" * 64, "index": 0},
+            "signatureScript": "01",
+            "sequence": 0,
+            "sigOpCount": 1,
+            "utxo": None,
+        }
+        restored = TransactionInput.from_dict(d)
+        assert restored.compute_budget == 0
+
+    def test_input_from_dict_with_compute_budget_preserved(self):
+        """An explicit `computeBudget` key is honored by from_dict."""
+        d = {
+            "previousOutpoint": {"transactionId": "a" * 64, "index": 0},
+            "signatureScript": "01",
+            "sequence": 0,
+            "sigOpCount": 1,
+            "computeBudget": 7,
+            "utxo": None,
+        }
+        restored = TransactionInput.from_dict(d)
+        assert restored.compute_budget == 7
+
 
 class TestTransactionDict:
     """Tests for Transaction to_dict/from_dict methods."""
@@ -155,6 +185,39 @@ class TestTransactionDict:
         restored = Transaction.from_dict(d)
 
         assert original == restored
+
+    def test_transaction_from_dict_accepts_v0_shape(self):
+        """Transaction.from_dict accepts a v0-shape dict.
+
+        Regression guard for rusty-kaspa v2.0.1's transaction-v0 deserialization fix
+        (#1052): a legacy transaction uses the `mass` key (no `storageMass`) and its
+        inputs omit `computeBudget`. Both must deserialize, with `compute_budget`
+        defaulting to 0 and `mass`/`storage_mass` taking the `mass` value.
+        """
+        v0_input = {
+            "previousOutpoint": {"transactionId": "01" * 32, "index": 0},
+            "signatureScript": "01",
+            "sequence": 0,
+            "sigOpCount": 1,
+            "utxo": None,
+        }
+        v0_tx = {
+            "id": "0" * 64,
+            "version": 0,
+            "inputs": [v0_input],
+            "outputs": [],
+            "subnetworkId": "0" * 40,
+            "lockTime": 0,
+            "gas": 0,
+            "mass": 1,
+            "payload": "",
+        }
+
+        tx = Transaction.from_dict(v0_tx)
+        assert tx.version == 0
+        assert tx.mass == 1
+        assert tx.storage_mass == 1
+        assert tx.inputs[0].compute_budget == 0
 
 
 class TestUtxoEntryDict:
