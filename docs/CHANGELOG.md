@@ -5,6 +5,15 @@ search:
 
 ## [Unreleased]
 
+### Added
+- Wallet `sync-state` events now include an SMT-sync phase payload (`{processed, total}`), emitted while the node imports the pruning-point SMT state during IBD.
+
+### Changed
+- `GenesisCovenantGroup` is now constructible via `GenesisCovenantGroup(authorizing_input, outputs)`, with read/write `authorizing_input` and `outputs` properties.
+
+### Development
+- Bumped the pinned `rusty-kaspa` dependency from `90dbf07` to `c53a83bf4`.
+
 ## [2.0.0] - 2026-06-06
 
 ### Highlights
