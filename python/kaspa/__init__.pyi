@@ -1107,14 +1107,16 @@ class PaymentOutput:
             amount: The amount, in sompi, to send on this output.
         """
     @staticmethod
-    def with_covenant(address: Address, amount: builtins.int, covenant: CovenantBinding) -> PaymentOutput:
+    def with_covenant(address: Address, amount: builtins.int, covenant: CovenantBinding | dict) -> PaymentOutput:
         r"""
         Create a new Payment Output bound to a covenant.
         
         Args:
             address: The address to send this output to.
             amount: The amount, in sompi, to send on this output.
-            covenant: The covenant binding to attach to this output.
+            covenant: The covenant binding to attach to this output. May be a
+                CovenantBinding instance or a
+                {"authorizingInput": int, "covenantId": str} dict.
         
         Returns:
             PaymentOutput: A new PaymentOutput instance.
@@ -2884,14 +2886,15 @@ class TransactionOutput:
         Args:
             value: The script public key.
         """
-    def __new__(cls, value: builtins.int, script_public_key: ScriptPublicKey, covenant_id: typing.Optional[CovenantBinding] = None) -> TransactionOutput:
+    def __new__(cls, value: builtins.int, script_public_key: ScriptPublicKey, covenant_id: CovenantBinding | dict | None = None) -> TransactionOutput:
         r"""
         Create a new transaction output.
         
         Args:
             value: Amount in sompi (1 KAS = 100,000,000 sompi).
             script_public_key: The locking script.
-            covenant_id: The covenant ID.
+            covenant_id: The covenant binding to attach. May be a CovenantBinding
+                instance or a {"authorizingInput": int, "covenantId": str} dict.
         
         Returns:
             TransactionOutput: A new TransactionOutput instance.

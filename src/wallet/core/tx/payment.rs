@@ -36,12 +36,19 @@ impl PyPaymentOutput {
     /// Args:
     ///     address: The address to send this output to.
     ///     amount: The amount, in sompi, to send on this output.
-    ///     covenant: The covenant binding to attach to this output.
+    ///     covenant: The covenant binding to attach to this output. May be a
+    ///         CovenantBinding instance or a
+    ///         {"authorizingInput": int, "covenantId": str} dict.
     ///
     /// Returns:
     ///     PaymentOutput: A new PaymentOutput instance.
     #[staticmethod]
-    fn with_covenant(address: PyAddress, amount: u64, covenant: PyCovenantBinding) -> Self {
+    fn with_covenant(
+        address: PyAddress,
+        amount: u64,
+        #[gen_stub(override_type(type_repr = "CovenantBinding | dict"))]
+        covenant: PyCovenantBinding,
+    ) -> Self {
         Self(PaymentOutput::with_covenant(
             address.into(),
             amount,
