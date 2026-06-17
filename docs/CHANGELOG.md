@@ -3,16 +3,17 @@ search:
   boost: 0.2
 ---
 
-## [Unreleased]
+## [Unreleased] - Target [2.0.1]
 
 ### Added
 - Wallet `sync-state` events now include an SMT-sync phase payload (`{processed, total}`), emitted while the node imports the pruning-point SMT state during IBD.
 
 ### Changed
 - `GenesisCovenantGroup` is now constructible via `GenesisCovenantGroup(authorizing_input, outputs)`, with read/write `authorizing_input` and `outputs` properties.
+- `calculate_storage_mass` now clamps the mean of input amounts to a minimum of 1, matching rusty-kaspa v2.0.1's `calc_storage_mass`.
 
 ### Development
-- Bumped the pinned `rusty-kaspa` dependency from `90dbf07` to `c53a83bf4`.
+- Bumped the pinned `rusty-kaspa` dependency from `90dbf07` to `cfafeb4c0` (v2.0.1).
 
 ## [2.0.0] - 2026-06-06
 
