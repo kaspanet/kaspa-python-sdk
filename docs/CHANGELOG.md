@@ -57,6 +57,7 @@ search:
 - Added `__repr__` methods to: `Hash`, `Balance`, `Binary`, `Address`, `NetworkId`, `ScriptPublicKey`, `TransactionOutpoint`, `Transaction`, `TransactionInput`, `TransactionOutput`, `UtxoEntry`, `UtxoEntries` (consensus and generator helper), `UtxoEntryReference`, `ScriptBuilder`, `Wallet`, `Fees`, `PaymentOutput`, `Outputs`, `Generator`, `GeneratorSummary`, `PendingTransaction`, `BalanceStrings`, `UtxoProcessorEvent`, `UtxoProcessor`, `UtxoContext`, `Notification`, `Resolver`, `NotificationEvent`, `RpcClient`, `DerivationPath`, `XPub`, `PublicKey`, `XOnlyPublicKey`, `PublicKeyGenerator`.
 - Documentation site reorganization & search ranking.
 - Doc comments added or cleaned up across all Python-exposed classes, methods, and functions.
+- Linux wheels now target `manylinux_2_28` (glibc 2.28+) instead of `manylinux2014` (glibc 2.17+). This was required because `openssl-sys` (pulled in transitively via `native-tls`/`tungstenite` for the wRPC `wss://` client) dropped support for the EOL OpenSSL 1.0.2 that the `manylinux2014` image ships; `manylinux_2_28` ships OpenSSL 1.1.1. Impact: binary wheels no longer install on EOL distros below glibc 2.28 (e.g. CentOS 7, Ubuntu 18.04).
 
 ### Breaking Changes
 - Opcode `OpSubStr` renamed to `OpSubstr`. `OpUnknownXXX` placeholder names for opcodes `0xa6`-`0xa7`, `0xb2`-`0xc9`, `0xcb`-`0xd5`, and `0xd7`-`0xda` are replaced by their real opcode names (see Added).
