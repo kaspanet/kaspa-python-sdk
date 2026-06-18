@@ -56,6 +56,7 @@ define_py_request_types!([
     GetMempoolEntries,
     GetMempoolEntriesByAddresses,
     GetMempoolEntry,
+    GetSeqCommitLaneProof,
     GetSubnetwork,
     GetUtxosByAddresses,
     GetUtxoReturnAddress,

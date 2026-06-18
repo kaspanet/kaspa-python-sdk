@@ -32,6 +32,29 @@ class TestScriptBuilderCreation:
         assert isinstance(builder, ScriptBuilder)
 
 
+class TestScriptBuilderCovenantFlags:
+    """covenants_enabled / sigop_script_units round-trip through both
+    ScriptBuilder(...) and ScriptBuilder.from_script(...)."""
+
+    # EngineFlags::default() sets sigop_script_units to Gram(1000), i.e.
+    # 1000 * SCRIPT_UNITS_PER_GRAM (100) = 100_000. Pinned so an upstream change
+    # to the default price is caught and audited rather than passing silently.
+    DEFAULT_SIGOP_SCRIPT_UNITS = 100_000
+
+    def test_defaults(self):
+        for builder in (ScriptBuilder(), ScriptBuilder.from_script("51")):
+            assert builder.covenants_enabled is False
+            assert builder.sigop_script_units == self.DEFAULT_SIGOP_SCRIPT_UNITS
+
+    def test_flags_round_trip(self):
+        for builder in (
+            ScriptBuilder(covenants_enabled=True, sigop_script_units=250),
+            ScriptBuilder.from_script("51", covenants_enabled=True, sigop_script_units=250),
+        ):
+            assert builder.covenants_enabled is True
+            assert builder.sigop_script_units == 250
+
+
 class TestScriptBuilderOperations:
     """Tests for ScriptBuilder operations."""
 

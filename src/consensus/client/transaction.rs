@@ -317,14 +317,20 @@ impl PyTransaction {
     /// mutated.
     ///
     /// Args:
-    ///     groups: The genesis covenant groups to populate.
+    ///     groups: The genesis covenant groups to populate. Each may be a
+    ///         GenesisCovenantGroup instance or a
+    ///         {"authorizingInput": int, "outputs": list[int]} dict.
     ///
     /// Raises:
     ///     Exception: If a group references a non-existent input or output,
     ///         output indices are not strictly increasing, outputs overlap
     ///         across groups, or a targeted output already has a covenant
     ///         binding.
-    pub fn populate_genesis_covenants(&self, groups: Vec<PyGenesisCovenantGroup>) -> PyResult<()> {
+    pub fn populate_genesis_covenants(
+        &self,
+        #[gen_stub(override_type(type_repr = "typing.Sequence[GenesisCovenantGroup | dict]"))]
+        groups: Vec<PyGenesisCovenantGroup>,
+    ) -> PyResult<()> {
         let groups = groups
             .into_iter()
             .map(|g| {

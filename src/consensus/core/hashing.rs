@@ -3,7 +3,7 @@ use kaspa_consensus_core::hashing::covenant_id::covenant_id;
 use kaspa_consensus_core::hashing::wasm::SighashType;
 use kaspa_consensus_core::tx as ctx;
 use pyo3::{exceptions::PyException, prelude::*};
-use pyo3_stub_gen::derive::gen_stub_pyclass_enum;
+use pyo3_stub_gen::derive::{gen_stub_pyclass_enum, gen_stub_pyfunction};
 use std::str::FromStr;
 
 use crate::{
@@ -54,6 +54,18 @@ impl<'py> FromPyObject<'_, 'py> for PySighashType {
     }
 }
 
+/// Compute the covenant id for a set of authorizing outputs.
+///
+/// The id commits to the authorizing outpoint and the authorizing outputs;
+/// each output's index is its position in `auth_outputs` (0, 1, 2, ...).
+///
+/// Args:
+///     outpoint: The authorizing transaction outpoint.
+///     auth_outputs: The authorizing outputs, in order.
+///
+/// Returns:
+///     Hash: The computed covenant id.
+#[gen_stub_pyfunction]
 #[pyfunction]
 #[pyo3(name = "covenant_id")]
 pub fn py_covenant_id(

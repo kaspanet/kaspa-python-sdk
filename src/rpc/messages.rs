@@ -67,6 +67,7 @@ impl_try_from_pydict!([
     GetMempoolEntries,
     // GetMempoolEntriesByAddresses,
     GetMempoolEntry,
+    GetSeqCommitLaneProof,
     GetSubnetwork,
     // GetUtxosByAddresses,
     GetUtxoReturnAddress,

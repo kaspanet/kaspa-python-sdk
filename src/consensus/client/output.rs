@@ -28,7 +28,8 @@ impl PyTransactionOutput {
     /// Args:
     ///     value: Amount in sompi (1 KAS = 100,000,000 sompi).
     ///     script_public_key: The locking script.
-    ///     covenant_id: The covenant ID.
+    ///     covenant_id: The covenant binding to attach. May be a CovenantBinding
+    ///         instance or a {"authorizingInput": int, "covenantId": str} dict.
     ///
     /// Returns:
     ///     TransactionOutput: A new TransactionOutput instance.
@@ -37,6 +38,7 @@ impl PyTransactionOutput {
     pub fn ctor(
         value: u64,
         script_public_key: PyScriptPublicKey,
+        #[gen_stub(override_type(type_repr = "CovenantBinding | dict | None = None"))]
         covenant_id: Option<PyCovenantBinding>,
     ) -> Self {
         let inner = TransactionOutput::new(
@@ -165,10 +167,10 @@ impl TryFrom<&Bound<'_, PyDict>> for PyTransactionOutput {
             ));
         };
 
-        let covenant_id = dict
-            .as_any()
-            .get_item("covenant")?
-            .extract::<Option<PyCovenantBinding>>()?;
+        let covenant_id = match dict.get_item("covenant")? {
+            Some(covenant) => covenant.extract::<Option<PyCovenantBinding>>()?,
+            None => None,
+        };
 
         Ok(Self::ctor(value, spk, covenant_id))
     }

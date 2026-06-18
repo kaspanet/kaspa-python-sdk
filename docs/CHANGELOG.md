@@ -5,14 +5,24 @@ search:
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-06-18
+
 ### Added
-- Wallet `sync-state` events now include an SMT-sync phase payload (`{processed, total}`), emitted while the node imports the pruning-point SMT state during IBD.
+- Wallet `sync-state` events now include an SMT-sync phase payload (`{processed, total}`), emitted during pruning-point SMT import in IBD.
+- `RpcClient.get_seq_commit_lane_proof(request)` — new RPC method added in rusty-kaspa 2.0.0.
 
 ### Changed
-- `GenesisCovenantGroup` is now constructible via `GenesisCovenantGroup(authorizing_input, outputs)`, with read/write `authorizing_input` and `outputs` properties.
+- `GenesisCovenantGroup` is now constructible via `GenesisCovenantGroup(authorizing_input, outputs)` (with `authorizing_input`/`outputs` properties and a `__repr__`), and accepted as either an instance or a `{"authorizingInput": ..., "outputs": [...]}` dict wherever `Transaction.populate_genesis_covenants` takes a group.
+- `calculate_storage_mass` now clamps the mean of input amounts to a minimum of 1, matching rusty-kaspa v2.0.1's `calc_storage_mass`.
+- Promoted from Beta to Production/Stable (PyPI `Development Status` classifier).
+
+### Fixed
+- `CovenantBinding` dicts now use the flat `{"authorizingInput": ..., "covenantId": ...}` shape on both `to_dict()` and `from_dict()`, matching the 2.0.0 docs. Previously those keys were nested inside and `inner` key (e.g. `{"inner": {...}}`).
+- The `covenant` key is now optional when building a `PaymentOutput`/`TransactionOutput` from a dict, matching the docs and WASM SDK. Previously a missing key raised `KeyError`, so a plain `{"address": ..., "amount": ...}` output dict failed.
+- The `covenant_id(outpoint, auth_outputs)` function now appears in the type stubs (`.pyi`). Previously it was importable and callable at runtime but absent from the stubs, so it had no type hints or autocomplete.
 
 ### Development
-- Bumped the pinned `rusty-kaspa` dependency from `90dbf07` to `c53a83bf4`.
+- Bumped the pinned `rusty-kaspa` dependency from `90dbf07` to `cfafeb4c0` (v2.0.1).
 
 ## [2.0.0] - 2026-06-06
 
