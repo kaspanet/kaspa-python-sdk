@@ -4874,6 +4874,21 @@ def calculate_transaction_mass(network_id: NetworkId, tx: Transaction, minimum_s
         Exception: If mass calculation fails.
     """
 
+def covenant_id(outpoint: TransactionOutpoint, auth_outputs: typing.Sequence[TransactionOutput]) -> Hash:
+    r"""
+    Compute the covenant id for a set of authorizing outputs.
+    
+    The id commits to the authorizing outpoint and the authorizing outputs;
+    each output's index is its position in `auth_outputs` (0, 1, 2, ...).
+    
+    Args:
+        outpoint: The authorizing transaction outpoint.
+        auth_outputs: The authorizing outputs, in order.
+    
+    Returns:
+        Hash: The computed covenant id.
+    """
+
 def create_input_signature(tx: Transaction, input_index: builtins.int, private_key: PrivateKey, sighash_type: str | SighashType | None = SighashType.All) -> builtins.str:
     r"""
     Create a signature for a specific transaction input.
