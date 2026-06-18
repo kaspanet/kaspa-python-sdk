@@ -3,7 +3,9 @@ search:
   boost: 0.2
 ---
 
-## [Unreleased] - Target [2.0.1]
+## [Unreleased]
+
+## [2.0.1] - 2026-06-18
 
 ### Added
 - Wallet `sync-state` events now include an SMT-sync phase payload (`{processed, total}`), emitted during pruning-point SMT import in IBD.
