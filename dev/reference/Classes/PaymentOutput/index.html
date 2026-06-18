@@ -4208,6 +4208,8 @@
       
         
       
+        
+      
     
     
     
@@ -4355,6 +4357,34 @@
     
   
     calculate_transaction_mass
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Functions/covenant_id/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    covenant_id
   
 
     
@@ -4944,6 +4974,12 @@
   
     
     
+      
+        
+      
+        
+      
+        
       
         
       
@@ -7000,6 +7036,62 @@
   
   
     <li class="md-nav__item">
+      <a href="../../TypedDicts/GetSeqCommitLaneProofRequest/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GetSeqCommitLaneProofRequest
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../TypedDicts/GetSeqCommitLaneProofResponse/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GetSeqCommitLaneProofResponse
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../TypedDicts/GetServerInfoRequest/" class="md-nav__link">
         
   
@@ -8072,6 +8164,34 @@
     
   
     RpcFinalityConflictResolvedNotification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../TypedDicts/RpcLaneEntry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RpcLaneEntry
   
 
     
@@ -13688,7 +13808,7 @@ should be sent and how much.</p>
   </span>
 
 <a href="#kaspa.PaymentOutput.with_covenant" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">with_covenant</span><span class="p">(</span><span class="n">address</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.Address" href="../Address/#kaspa.Address">Address</a></span><span class="p">,</span> <span class="n">amount</span><span class="p">:</span> <span class="n"><span title="builtins.int">int</span></span><span class="p">,</span> <span class="n">covenant</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.CovenantBinding" href="../CovenantBinding/#kaspa.CovenantBinding">CovenantBinding</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.PaymentOutput" href="#kaspa.PaymentOutput">PaymentOutput</a></span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">with_covenant</span><span class="p">(</span><span class="n">address</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.Address" href="../Address/#kaspa.Address">Address</a></span><span class="p">,</span> <span class="n">amount</span><span class="p">:</span> <span class="n"><span title="builtins.int">int</span></span><span class="p">,</span> <span class="n">covenant</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.CovenantBinding" href="../CovenantBinding/#kaspa.CovenantBinding">CovenantBinding</a></span> <span class="o">|</span> <span class="n"><span title="dict">dict</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.PaymentOutput" href="#kaspa.PaymentOutput">PaymentOutput</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -13742,12 +13862,14 @@ should be sent and how much.</p>
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>The covenant binding to attach to this output.</p>
+                <p>The covenant binding to attach to this output. May be a
+CovenantBinding instance or a
+{"authorizingInput": int, "covenantId": str} dict.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
                     <b>TYPE:</b>
-                      <code><a class="autorefs autorefs-internal" title="kaspa.CovenantBinding" href="../CovenantBinding/#kaspa.CovenantBinding">CovenantBinding</a></code>
+                      <code><a class="autorefs autorefs-internal" title="kaspa.CovenantBinding" href="../CovenantBinding/#kaspa.CovenantBinding">CovenantBinding</a> | <span title="dict">dict</span></code>
                   </span>
               </p>
             </td>
