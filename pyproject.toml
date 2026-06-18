@@ -56,7 +56,6 @@ docs = [
 [tool.maturin]
 python-source = "python"
 bindings = "pyo3"
-strip = true
 include = [
     "LICENSE",
     "docs/CHANGELOG.md",
