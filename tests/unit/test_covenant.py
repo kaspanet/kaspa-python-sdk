@@ -16,6 +16,7 @@ from kaspa import (
     ScriptPublicKey,
     Hash,
     create_transaction,
+    covenant_id,
 )
 
 SUBNETWORK_ID = bytes(20)
@@ -307,3 +308,94 @@ class TestCovenantKeyOptional:
             "authorizingInput": 0,
             "covenantId": COVENANT_ID,
         }
+
+
+class TestPopulateGenesisCovenantsValidation:
+    """Native (consensus) validation failures surface as Exception with the
+    message intact.
+
+    The validation logic itself is tested upstream in rusty-kaspa; these confirm
+    the binding forwards each documented failure mode. They are distinct from the
+    dict-coercion errors in TestGenesisCovenantGroupDictErrors. `_build_tx()` has
+    1 input and 3 outputs.
+    """
+
+    def test_authorizing_input_out_of_bounds(self):
+        tx = _build_tx()
+        with pytest.raises(
+            Exception, match="authorizing input index 1 is out of bounds for 1 inputs"
+        ):
+            tx.populate_genesis_covenants([GenesisCovenantGroup(1, [0])])
+
+    def test_output_index_out_of_bounds(self):
+        tx = _build_tx()
+        with pytest.raises(Exception, match="output index 3 is out of bounds for 3 outputs"):
+            tx.populate_genesis_covenants([GenesisCovenantGroup(0, [3])])
+
+    def test_outputs_not_strictly_ordered(self):
+        tx = _build_tx()
+        with pytest.raises(Exception, match="outputs are not strictly ordered"):
+            tx.populate_genesis_covenants([GenesisCovenantGroup(0, [1, 0])])
+
+    def test_outputs_overlap_across_groups(self):
+        tx = _build_tx()
+        with pytest.raises(Exception, match="output index 1 appears in more than one group"):
+            tx.populate_genesis_covenants(
+                [GenesisCovenantGroup(0, [0, 1]), GenesisCovenantGroup(0, [1, 2])]
+            )
+
+    def test_output_already_populated(self):
+        tx = _build_tx()
+        tx.populate_genesis_covenants([GenesisCovenantGroup(0, [0])])
+        with pytest.raises(
+            Exception, match="output index 0 covenant field is already populated"
+        ):
+            tx.populate_genesis_covenants([GenesisCovenantGroup(0, [0])])
+
+
+class TestCovenantIdFunction:
+    """`covenant_id(outpoint, auth_outputs)` is a deterministic hash of the
+    authorizing outpoint and the (positionally-indexed) output list."""
+
+    @staticmethod
+    def _outpoint(prefix="0"):
+        return TransactionOutpoint(Hash(prefix + "0" * 63), 0)
+
+    def test_deterministic(self):
+        op = self._outpoint()
+        spk = ScriptPublicKey(0, "51")
+        outs = [TransactionOutput(1000, spk), TransactionOutput(2000, spk)]
+        assert covenant_id(op, outs) == covenant_id(op, outs)
+        assert isinstance(covenant_id(op, outs), Hash)
+
+    def test_sensitive_to_inputs(self):
+        """Any change to the outpoint or the output list (value, count, order)
+        yields a different id."""
+        op = self._outpoint()
+        spk = ScriptPublicKey(0, "51")
+        o0 = TransactionOutput(1000, spk)
+        o1 = TransactionOutput(2000, spk)
+        base = covenant_id(op, [o0, o1])
+        assert base != covenant_id(self._outpoint("1"), [o0, o1])  # outpoint
+        assert base != covenant_id(op, [TransactionOutput(1001, spk), o1])  # value
+        assert base != covenant_id(op, [o0])  # count
+        assert base != covenant_id(op, [o1, o0])  # index/order
+
+    def test_matches_populate_genesis_covenants(self):
+        """The free function reproduces the id that populate_genesis_covenants
+        writes, for a group whose output indices are contiguous from 0 (so the
+        function's positional enumerate matches the transaction output indices).
+        """
+        op = TransactionOutpoint(Hash("0" * 64), 0)
+        inp = TransactionInput(op, b"", 0, 1)
+        spk = ScriptPublicKey(0, "51")
+        o0 = TransactionOutput(1000, spk)
+        o1 = TransactionOutput(2000, spk)
+        tx = Transaction(
+            0, [inp], [o0, o1, TransactionOutput(500, spk)], 0, SUBNETWORK_ID, 0, b"", 0
+        )
+        tx.populate_genesis_covenants([GenesisCovenantGroup(0, [0, 1])])
+
+        expected = covenant_id(op, [o0, o1]).to_string()
+        assert tx.outputs[0].to_dict()["covenant"]["covenantId"] == expected
+        assert tx.outputs[1].to_dict()["covenant"]["covenantId"] == expected
