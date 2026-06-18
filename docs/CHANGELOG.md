@@ -6,17 +6,17 @@ search:
 ## [Unreleased] - Target [2.0.1]
 
 ### Added
-- Wallet `sync-state` events now include an SMT-sync phase payload (`{processed, total}`), emitted while the node imports the pruning-point SMT state during IBD.
-- `RpcClient.get_seq_commit_lane_proof(request)` — new RPC method that returns a self-contained proof of a single KIP-21 lane's state against the `seq_commit` in a chain block's header.
+- Wallet `sync-state` events now include an SMT-sync phase payload (`{processed, total}`), emitted during pruning-point SMT import in IBD.
+- `RpcClient.get_seq_commit_lane_proof(request)` — new RPC method added in rusty-kaspa 2.0.0.
 
 ### Changed
-- `GenesisCovenantGroup` is now constructible via `GenesisCovenantGroup(authorizing_input, outputs)`, with read/write `authorizing_input` and `outputs` properties and a `__repr__`. It is also accepted as either an instance or a `{"authorizingInput": ..., "outputs": [...]}` dict wherever `Transaction.populate_genesis_covenants` takes a group.
+- `GenesisCovenantGroup` is now constructible via `GenesisCovenantGroup(authorizing_input, outputs)` (with `authorizing_input`/`outputs` properties and a `__repr__`), and accepted as either an instance or a `{"authorizingInput": ..., "outputs": [...]}` dict wherever `Transaction.populate_genesis_covenants` takes a group.
 - `calculate_storage_mass` now clamps the mean of input amounts to a minimum of 1, matching rusty-kaspa v2.0.1's `calc_storage_mass`.
 
 ### Fixed
-- `CovenantBinding` dicts now use the documented flat `{"authorizingInput": ..., "covenantId": ...}` shape wherever a `CovenantBinding` is accepted (`PaymentOutput.with_covenant`, the `TransactionOutput` `covenant_id` argument, and the `covenant` key in `PaymentOutput`/`TransactionOutput` `from_dict`). Previously only a nested `{"inner": {...}}` dict was accepted, so the flat shape advertised in 2.0.0 never parsed (`covenantId` may be a hex string or a `Hash`).
-- `TransactionOutput.to_dict()` now emits the `covenant` binding in that same flat shape (previously nested under `inner`), so covenant-bound outputs and transactions round-trip cleanly through `to_dict()`/`from_dict()`.
-- The `covenant` key is now optional when converting a `PaymentOutput` or `TransactionOutput` from a dict, matching the docs and the WASM SDK. Previously a dict without a `covenant` key raised `KeyError` (key was required but the value could be `None`), so a plain `{"address": ..., "amount": ...}` output dict failed wherever a `PaymentOutput` is accepted.
+- `CovenantBinding` dicts now use the flat `{"authorizingInput": ..., "covenantId": ...}` shape on both `to_dict()` and `from_dict()`, matching the 2.0.0 docs. Previously those keys were nested inside and `inner` key (e.g. `{"inner": {...}}`).
+- The `covenant` key is now optional when building a `PaymentOutput`/`TransactionOutput` from a dict, matching the docs and WASM SDK. Previously a missing key raised `KeyError`, so a plain `{"address": ..., "amount": ...}` output dict failed.
+- The `covenant_id(outpoint, auth_outputs)` function now appears in the type stubs (`.pyi`). Previously it was importable and callable at runtime but absent from the stubs, so it had no type hints or autocomplete.
 
 ### Development
 - Bumped the pinned `rusty-kaspa` dependency from `90dbf07` to `cfafeb4c0` (v2.0.1).
