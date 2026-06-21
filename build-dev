@@ -26,6 +26,22 @@ STUB_COMMAND="cargo run --bin stub-gen"
 echo "Generating stub file (.pyi) with command: '$STUB_COMMAND'"
 $STUB_COMMAND
 
+# Build the kaspa.silverscript extension module (a separate workspace member)
+# and inject its .so into the python-source tree so maturin bundles it under 
+# kaspa/silverscript/.
+echo "Building kaspa.silverscript extension module"
+if [ "$(uname)" = "Darwin" ]; then
+    SS_RUSTFLAGS="-C link-arg=-undefined -C link-arg=dynamic_lookup"
+    SS_DYLIB="target/debug/libsilverscript.dylib"
+else
+    SS_RUSTFLAGS=""
+    SS_DYLIB="target/debug/libsilverscript.so"
+fi
+RUSTFLAGS="$SS_RUSTFLAGS" cargo build -p kaspa-silverscript --target-dir target
+SS_SUFFIX=$(python -c "import importlib.machinery as m; print(m.EXTENSION_SUFFIXES[0])")
+mkdir -p python/kaspa/silverscript
+cp "$SS_DYLIB" "python/kaspa/silverscript/silverscript${SS_SUFFIX}"
+
 BUILD_CMD="maturin develop --strip --target-dir target"
 echo "Building Python package with command: '$BUILD_CMD'"
 $BUILD_CMD

@@ -1,0 +1,17 @@
+[package]
+name = "kaspa-silverscript"
+version = "2.0.1"
+edition = "2024"
+
+[lib]
+# Compiled to `kaspa/silverscript/silverscript.<abi>.so` and re-exported by
+# `kaspa/silverscript/__init__.py` as `from .silverscript import *`.
+name = "silverscript"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.27.1", features = ["extension-module"] }
+# Consumed as an ordinary dependency. It transitively pins rusty-kaspa @ tn12
+# (kaspa-txscript 1.1.1-toc.1), independent of the core crate's cfafeb4c0 pin.
+# TODO: switch to a pinned git rev before release (path dep is dev-only).
+silverscript-lang = { path = "../../../silverscript/silverscript-lang" }

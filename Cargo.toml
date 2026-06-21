@@ -1,3 +1,11 @@
+[workspace]
+# The root package (this crate) is the workspace root and first member; the
+# SilverScript bindings are a second member that links a *different* rusty-kaspa
+# revision. Two separate cdylib extension modules keep the dependency graphs
+# isolated — they meet only in Python, via script bytes.
+members = ["crates/kaspa-silverscript"]
+resolver = "3"
+
 [package]
 name = "kaspa-python-sdk"
 version = "2.0.1"
