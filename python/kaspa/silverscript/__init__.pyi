@@ -78,13 +78,6 @@ class FunctionInputAbi:
         """
     def __repr__(self) -> builtins.str: ...
 
-@typing.final
-class SilverScriptError(builtins.Exception):
-    r"""
-    Raised when SilverScript compilation or signature-script construction fails.
-    """
-    ...
-
 def compile(source: builtins.str, constructor_args: typing.Optional[typing.Any] = None, *, allow_entrypoint_return: builtins.bool = False, record_debug_infos: builtins.bool = False) -> CompiledContract:
     r"""
     Compile SilverScript `source` into a `CompiledContract`.
@@ -93,3 +86,8 @@ def compile(source: builtins.str, constructor_args: typing.Optional[typing.Any] 
     constructor parameters.
     """
 
+
+@typing.final
+class SilverScriptError(builtins.Exception):
+    r"""Raised when SilverScript compilation or signature-script construction fails."""
+    ...

@@ -33,7 +33,16 @@ fn main() -> Result<()> {
         .unwrap_or_else(|| panic!("stub not generated; looked in {candidates:?}"));
 
     fs::create_dir_all("python/kaspa/silverscript")?;
-    fs::copy(generated, DEST)?;
+    let mut content = fs::read_to_string(generated)?;
+    // `SilverScriptError` is declared via `create_exception!`, which pyo3-stub-gen
+    // doesn't capture — append it so it appears in the reference + type checking.
+    if !content.contains("class SilverScriptError") {
+        content.push_str(
+            "\n@typing.final\nclass SilverScriptError(builtins.Exception):\n    \
+             r\"\"\"Raised when SilverScript compilation or signature-script construction fails.\"\"\"\n    ...\n",
+        );
+    }
+    fs::write(DEST, content)?;
     fs::remove_dir_all(&stubgen_root).ok();
 
     println!("wrote {DEST}");

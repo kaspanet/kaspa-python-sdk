@@ -30,7 +30,7 @@ jobs:
         run: cargo fmt --all -- --check
 
       - name: Run clippy
-        run: cargo clippy -- -D warnings
+        run: cargo clippy --workspace -- -D warnings
 
   build-and-test:
     name: Build & Test
@@ -50,6 +50,10 @@ jobs:
           command: build
           args: --release --out dist
           sccache: 'true'
+          # Build + inject the abi3 kaspa.silverscript module so the bundled
+          # wheel can `import kaspa.silverscript` (exercised by the unit tests).
+          before-script-linux: |
+            bash ci/build-and-inject-silverscript.sh release
 
       - name: Install wheel and test dependencies
         run: |

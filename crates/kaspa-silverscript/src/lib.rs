@@ -12,7 +12,6 @@
 //!   - `CompiledContract.build_sig_script_for_covenant_decl(function_name, args=[], *, is_leader=False) -> bytes`
 //!   - `FunctionAbiEntry`, `FunctionInputAbi`, `SilverScriptError`
 
-use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::{PyBool, PyByteArray, PyBytes, PyDict, PyInt, PyList, PyString, PyTuple};
 use pyo3_stub_gen::define_stub_info_gatherer;
@@ -22,30 +21,16 @@ use silverscript_lang::ast::{Expr, ExprKind, StateFieldExpr};
 use silverscript_lang::compiler::{CompileOptions, CovenantDeclCallOptions, compile_contract};
 use silverscript_lang::errors::CompilerError;
 
-/// Raised when SilverScript compilation or signature-script construction fails.
-//
-// A real `#[pyclass]` (rather than `create_exception!`) so pyo3-stub-gen emits
-// it into the `.pyi`, mirroring the core crate's exception pattern.
-#[gen_stub_pyclass]
-#[pyclass(name = "SilverScriptError", extends = PyException, module = "kaspa.silverscript")]
-pub struct SilverScriptError {
-    #[allow(dead_code)]
-    message: String,
-}
-
-#[pymethods]
-impl SilverScriptError {
-    #[new]
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-}
-
-impl SilverScriptError {
-    fn new_err(message: impl Into<String>) -> PyErr {
-        PyErr::new::<Self, String>(message.into())
-    }
-}
+// abi3 (the limited API) can't subclass a native exception via `#[pyclass]`, so
+// use `create_exception!` (C-API based, works under abi3 and the full API alike).
+// It isn't captured by pyo3-stub-gen, so the `stub-gen` bin appends it to the
+// generated `.pyi`.
+pyo3::create_exception!(
+    silverscript,
+    SilverScriptError,
+    pyo3::exceptions::PyException,
+    "Raised when SilverScript compilation or signature-script construction fails."
+);
 
 fn map_err(err: CompilerError) -> PyErr {
     match err.span() {
@@ -103,9 +88,9 @@ fn py_to_value(obj: &Bound<'_, PyAny>) -> PyResult<Value> {
     if let Ok(dict) = obj.cast::<PyDict>() {
         let mut fields = Vec::with_capacity(dict.len());
         for (key, value) in dict.iter() {
-            let key = key.cast::<PyString>().map_err(|_| {
-                SilverScriptError::new_err("struct argument keys must be strings")
-            })?;
+            let key = key
+                .cast::<PyString>()
+                .map_err(|_| SilverScriptError::new_err("struct argument keys must be strings"))?;
             fields.push((key.to_str()?.to_owned(), py_to_value(&value)?));
         }
         return Ok(Value::Struct(fields));
@@ -175,7 +160,10 @@ struct FunctionInputAbi {
 #[pymethods]
 impl FunctionInputAbi {
     fn __repr__(&self) -> String {
-        format!("FunctionInputAbi(name={:?}, type_name={:?})", self.name, self.type_name)
+        format!(
+            "FunctionInputAbi(name={:?}, type_name={:?})",
+            self.name, self.type_name
+        )
     }
 }
 
@@ -194,7 +182,11 @@ struct FunctionAbiEntry {
 #[pymethods]
 impl FunctionAbiEntry {
     fn __repr__(&self) -> String {
-        format!("FunctionAbiEntry(name={:?}, inputs={} input(s))", self.name, self.inputs.len())
+        format!(
+            "FunctionAbiEntry(name={:?}, inputs={} input(s))",
+            self.name,
+            self.inputs.len()
+        )
     }
 }
 
@@ -217,7 +209,12 @@ struct CompiledContract {
 }
 
 impl CompiledContract {
-    fn sig_script(&self, function_name: &str, args: Vec<Value>, covenant: Option<bool>) -> PyResult<Vec<u8>> {
+    fn sig_script(
+        &self,
+        function_name: &str,
+        args: Vec<Value>,
+        covenant: Option<bool>,
+    ) -> PyResult<Vec<u8>> {
         let ctor: Vec<Expr<'static>> = self.constructor_args.iter().map(value_to_expr).collect();
         let compiled = compile_contract(&self.source, &ctor, self.options).map_err(map_err)?;
         let call_args: Vec<Expr<'static>> = args.iter().map(value_to_expr).collect();
@@ -327,7 +324,10 @@ fn compile(
     record_debug_infos: bool,
 ) -> PyResult<CompiledContract> {
     let constructor_args = collect_args(constructor_args.as_ref())?;
-    let options = CompileOptions { allow_entrypoint_return, record_debug_infos };
+    let options = CompileOptions {
+        allow_entrypoint_return,
+        record_debug_infos,
+    };
 
     // Compile once to extract owned metadata, then drop the borrowing native
     // artifact before moving `source`/`constructor_args` into the pyclass.
@@ -378,7 +378,7 @@ fn silverscript(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<CompiledContract>()?;
     m.add_class::<FunctionAbiEntry>()?;
     m.add_class::<FunctionInputAbi>()?;
-    m.add_class::<SilverScriptError>()?;
+    m.add("SilverScriptError", m.py().get_type::<SilverScriptError>())?;
     Ok(())
 }
 
