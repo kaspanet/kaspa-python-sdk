@@ -35,7 +35,7 @@ echo "Building kaspa.silverscript extension module"
 # Generate kaspa.silverscript type stubs -> python/kaspa/silverscript/__init__.pyi.
 # Built in an isolated target dir to avoid overwriting the main build cache.
 echo "Generating kaspa.silverscript stub file"
-cargo run --release -p kaspa-silverscript --bin stub-gen --no-default-features --target-dir target/silverscript-stubgen
+cargo run --release -p kaspa-python-sdk-silverscript --bin stub-gen --no-default-features --target-dir target/silverscript-stubgen
 
 BUILD_CMD="maturin build --release --strip --sdist --target-dir target --out target/wheels"
 echo "Building Python package with command: '$BUILD_CMD'"

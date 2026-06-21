@@ -3,7 +3,7 @@
 # into the throwaway `_stubgen/` dir and the `stub-gen` bin copies the result to
 # `python/kaspa/silverscript/__init__.pyi`. This is NOT a maturin build project.
 [project]
-name = "kaspa-silverscript"
+name = "kaspa-python-sdk-silverscript"
 version = "2.0.1"
 
 [tool.maturin]

@@ -47,7 +47,7 @@ esac
 
 # Enable the cdylib-only features explicitly here (not as crate defaults) so
 # they never unify into the core crate during a workspace build.
-cargo build -p kaspa-silverscript --lib --features extension-module,abi3 $flag $target_flag --target-dir target
+cargo build -p kaspa-python-sdk-silverscript --lib --features extension-module,abi3 $flag $target_flag --target-dir target
 lib="target/${target_subdir}${profile}/${libname}"
 
 mkdir -p python/kaspa/silverscript

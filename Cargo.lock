@@ -2878,6 +2878,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "kaspa-python-sdk-silverscript"
+version = "2.0.1"
+dependencies = [
+ "pyo3",
+ "pyo3-stub-gen",
+ "silverscript-lang",
+]
+
+[[package]]
 name = "kaspa-rpc-core"
 version = "2.0.1"
 source = "git+https://github.com/kaspanet/rusty-kaspa.git?rev=cfafeb4c0#cfafeb4c093fa37a303f1b9f19c58f986b870ce3"
@@ -2930,15 +2939,6 @@ dependencies = [
  "quote",
  "regex",
  "syn 1.0.109",
-]
-
-[[package]]
-name = "kaspa-silverscript"
-version = "2.0.1"
-dependencies = [
- "pyo3",
- "pyo3-stub-gen",
- "silverscript-lang",
 ]
 
 [[package]]
