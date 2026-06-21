@@ -1,7 +1,7 @@
 [package]
-name = "kaspa-silverscript"
-version = "2.0.1"
-edition = "2024"
+name = "kaspa-python-sdk-silverscript"
+version.workspace = true
+edition.workspace = true
 
 [lib]
 # Compiled to `kaspa/silverscript/silverscript.<abi>.so` and re-exported by
