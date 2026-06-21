@@ -5377,6 +5377,7 @@ dependencies = [
 [[package]]
 name = "silverscript-lang"
 version = "0.1.0"
+source = "git+https://github.com/kaspanet/silverscript.git?rev=faaa074915edd1e885e4dd552051e348d1854c87#faaa074915edd1e885e4dd552051e348d1854c87"
 dependencies = [
  "blake2b_simd",
  "chrono",
