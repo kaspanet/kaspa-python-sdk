@@ -12,20 +12,40 @@
 //!   - `CompiledContract.build_sig_script_for_covenant_decl(function_name, args=[], *, is_leader=False) -> bytes`
 //!   - `FunctionAbiEntry`, `FunctionInputAbi`, `SilverScriptError`
 
-use pyo3::create_exception;
+use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::{PyBool, PyByteArray, PyBytes, PyDict, PyInt, PyList, PyString, PyTuple};
+use pyo3_stub_gen::define_stub_info_gatherer;
+use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pyfunction, gen_stub_pymethods};
 
 use silverscript_lang::ast::{Expr, ExprKind, StateFieldExpr};
 use silverscript_lang::compiler::{CompileOptions, CovenantDeclCallOptions, compile_contract};
 use silverscript_lang::errors::CompilerError;
 
-create_exception!(
-    silverscript,
-    SilverScriptError,
-    pyo3::exceptions::PyException,
-    "Raised when SilverScript compilation or signature-script construction fails."
-);
+/// Raised when SilverScript compilation or signature-script construction fails.
+//
+// A real `#[pyclass]` (rather than `create_exception!`) so pyo3-stub-gen emits
+// it into the `.pyi`, mirroring the core crate's exception pattern.
+#[gen_stub_pyclass]
+#[pyclass(name = "SilverScriptError", extends = PyException, module = "kaspa.silverscript")]
+pub struct SilverScriptError {
+    #[allow(dead_code)]
+    message: String,
+}
+
+#[pymethods]
+impl SilverScriptError {
+    #[new]
+    fn new(message: String) -> Self {
+        Self { message }
+    }
+}
+
+impl SilverScriptError {
+    fn new_err(message: impl Into<String>) -> PyErr {
+        PyErr::new::<Self, String>(message.into())
+    }
+}
 
 fn map_err(err: CompilerError) -> PyErr {
     match err.span() {
@@ -139,8 +159,9 @@ fn collect_args(obj: Option<&Bound<'_, PyAny>>) -> PyResult<Vec<Value>> {
     items.iter().map(py_to_value).collect()
 }
 
-/// A single function entry in a compiled contract's ABI.
-#[pyclass(name = "FunctionInputAbi", frozen)]
+/// A single input parameter of a contract entrypoint.
+#[gen_stub_pyclass]
+#[pyclass(name = "FunctionInputAbi", module = "kaspa.silverscript", frozen)]
 #[derive(Clone)]
 struct FunctionInputAbi {
     #[pyo3(get)]
@@ -150,6 +171,7 @@ struct FunctionInputAbi {
     type_name: String,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl FunctionInputAbi {
     fn __repr__(&self) -> String {
@@ -157,7 +179,9 @@ impl FunctionInputAbi {
     }
 }
 
-#[pyclass(name = "FunctionAbiEntry", frozen)]
+/// A single callable entrypoint in a compiled contract's ABI.
+#[gen_stub_pyclass]
+#[pyclass(name = "FunctionAbiEntry", module = "kaspa.silverscript", frozen)]
 #[derive(Clone)]
 struct FunctionAbiEntry {
     #[pyo3(get)]
@@ -166,6 +190,7 @@ struct FunctionAbiEntry {
     inputs: Vec<FunctionInputAbi>,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl FunctionAbiEntry {
     fn __repr__(&self) -> String {
@@ -175,7 +200,8 @@ impl FunctionAbiEntry {
 
 /// A compiled SilverScript contract: the locking script plus the metadata
 /// needed to build unlocking (signature) scripts for its entrypoints.
-#[pyclass(name = "CompiledContract", frozen)]
+#[gen_stub_pyclass]
+#[pyclass(name = "CompiledContract", module = "kaspa.silverscript", frozen)]
 struct CompiledContract {
     contract_name: String,
     compiler_version: String,
@@ -208,6 +234,7 @@ impl CompiledContract {
     }
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl CompiledContract {
     /// The contract name from the SilverScript source.
@@ -290,6 +317,7 @@ impl CompiledContract {
 ///
 /// `constructor_args` are native Python values matching the contract's
 /// constructor parameters.
+#[gen_stub_pyfunction(module = "kaspa.silverscript")]
 #[pyfunction]
 #[pyo3(signature = (source, constructor_args=None, *, allow_entrypoint_return=false, record_debug_infos=false))]
 fn compile(
@@ -350,6 +378,8 @@ fn silverscript(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<CompiledContract>()?;
     m.add_class::<FunctionAbiEntry>()?;
     m.add_class::<FunctionInputAbi>()?;
-    m.add("SilverScriptError", m.py().get_type::<SilverScriptError>())?;
+    m.add_class::<SilverScriptError>()?;
     Ok(())
 }
+
+define_stub_info_gatherer!(stub_info);

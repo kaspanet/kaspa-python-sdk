@@ -37,10 +37,15 @@ else
     SS_RUSTFLAGS=""
     SS_DYLIB="target/release/libsilverscript.so"
 fi
-RUSTFLAGS="$SS_RUSTFLAGS" cargo build --release -p kaspa-silverscript --target-dir target
+RUSTFLAGS="$SS_RUSTFLAGS" cargo build --release -p kaspa-silverscript --lib --target-dir target
 SS_SUFFIX=$(python -c "import importlib.machinery as m; print(m.EXTENSION_SUFFIXES[0])")
 mkdir -p python/kaspa/silverscript
 cp "$SS_DYLIB" "python/kaspa/silverscript/silverscript${SS_SUFFIX}"
+
+# Generate kaspa.silverscript type stubs -> python/kaspa/silverscript/__init__.pyi.
+# Built in an isolated target dir to avoid overwriting the main build cache.
+echo "Generating kaspa.silverscript stub file"
+cargo run --release -p kaspa-silverscript --bin stub-gen --no-default-features --target-dir target/silverscript-stubgen
 
 BUILD_CMD="maturin build --release --strip --sdist --target-dir target --out target/wheels"
 echo "Building Python package with command: '$BUILD_CMD'"

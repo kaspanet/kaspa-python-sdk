@@ -119,6 +119,26 @@ if stub_file.exists():
             info["module"] = "kaspa.exceptions"
             objects[name] = info
 
+    # Parse the kaspa.silverscript submodule into its own dedicated section.
+    silverscript_stub_file = Path("python/kaspa/silverscript/__init__.pyi")
+    if silverscript_stub_file.exists():
+        ss_content = silverscript_stub_file.read_text()
+        ss_objects = parse_stub_file(ss_content)
+        # parse_stub_file categorizes Exception subclasses as plain classes;
+        # detect them so they land under SilverScript/Exceptions.
+        ss_exceptions = set(
+            re.findall(r"class\s+(\w+)\([^)]*Exception[^)]*\)", ss_content)
+        )
+        for name, info in ss_objects.items():
+            if name in ss_exceptions:
+                info["type"] = "exception"
+                leaf = "Exceptions"
+            else:
+                leaf = info["category"]
+            info["category"] = f"SilverScript/{leaf}"
+            info["module"] = "kaspa.silverscript"
+            objects[name] = info
+
     # Group objects by category
     by_category: dict[str, list[str]] = {}
     for name, info in objects.items():
@@ -151,6 +171,8 @@ if stub_file.exists():
             return "Enum"
         elif obj_type == "typeddict":
             return "TypedDict"
+        elif obj_type == "exception":
+            return "Exception"
         elif obj_type == "class":
             return "Class"
         else:
@@ -175,10 +197,11 @@ if stub_file.exists():
 
             module = objects[name].get("module", "kaspa")
 
+            leaf_category = category.split("/")[-1]
             with mkdocs_gen_files.open(doc_path, "w") as f:
-                if category == "Exceptions":
+                if leaf_category == "Exceptions":
                     f.write("---\nsearch:\n  boost: 0.3\n---\n\n")
-                elif category == "TypedDicts":
+                elif leaf_category == "TypedDicts":
                     f.write("---\nsearch:\n  boost: 0.6\n---\n\n")
                 elif name in CLASS_BOOSTS:
                     f.write(f"---\nsearch:\n  boost: {CLASS_BOOSTS[name]}\n---\n\n")
@@ -191,6 +214,8 @@ if stub_file.exists():
             # Add to nav with category hierarchy
             nav[(*nav_path, nav_label(name))] = f"{category}/{name}.md"
 
-    # Generate the navigation file
+    # Generate the navigation file. literate-nav consumes it for the nav tree,
+    # but it is also rendered as a standalone page — exclude it from search.
     with mkdocs_gen_files.open("reference/SUMMARY.md", "w") as nav_file:
+        nav_file.write("---\nsearch:\n  exclude: true\n---\n\n")
         nav_file.writelines(nav.build_literate_nav())

@@ -2937,6 +2937,7 @@ name = "kaspa-silverscript"
 version = "2.0.1"
 dependencies = [
  "pyo3",
+ "pyo3-stub-gen",
  "silverscript-lang",
 ]
 
