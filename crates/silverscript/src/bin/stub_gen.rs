@@ -5,7 +5,7 @@
 //! generation can never touch the core crate's `python/kaspa/__init__.pyi`,
 //! then copy just the SilverScript stub into the package as `__init__.pyi`.
 //!
-//! Run from the repository root (e.g. `cargo run -p kaspa-silverscript
+//! Run from the repository root (e.g. `cargo run -p kaspa-python-sdk-silverscript
 //! --bin stub-gen --no-default-features`).
 
 use std::fs;
@@ -13,7 +13,7 @@ use std::path::Path;
 
 use pyo3_stub_gen::Result;
 
-const CRATE_DIR: &str = "crates/kaspa-silverscript";
+const CRATE_DIR: &str = "crates/silverscript";
 const DEST: &str = "python/kaspa/silverscript/__init__.pyi";
 
 fn main() -> Result<()> {
