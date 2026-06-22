@@ -75,12 +75,10 @@ jobs:
             if command -v apt-get >/dev/null; then
               apt-get update -y && apt-get install -y pkg-config libssl-dev
             fi
-            # Build + inject the kaspa.silverscript module for this interpreter.
-            # The manylinux container ships each CPython under /opt/python; pick
-            # the one matching this job's version (e.g. 3.12 -> cp312-cp312).
-            PYVER="${{ matrix.python }}"
-            PYTAG="cp${PYVER//./}"
-            export SILVERSCRIPT_PYTHON="/opt/python/${PYTAG}-${PYTAG}/bin/python"
+            # Build + inject the kaspa.silverscript module for this interpreter
+            # (the script picks the matching CPython from the manylinux
+            # container's /opt/python).
+            export SILVERSCRIPT_PY_VERSION="${{ matrix.python }}"
             bash ci/build-and-inject-silverscript.sh release
       
       - name: Upload artifacts

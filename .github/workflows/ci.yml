@@ -52,12 +52,9 @@ jobs:
           sccache: 'true'
           # Build + inject the kaspa.silverscript module for the test interpreter
           # so the bundled wheel can `import kaspa.silverscript` (exercised by the
-          # unit tests). It isn't abi3, so it must match the wheel's version; pick
-          # the matching CPython from the manylinux container's /opt/python.
+          # unit tests). It isn't abi3, so it must match the wheel's version.
           before-script-linux: |
-            PYVER="${{ env.PYTHON_VERSION }}"
-            PYTAG="cp${PYVER//./}"
-            export SILVERSCRIPT_PYTHON="/opt/python/${PYTAG}-${PYTAG}/bin/python"
+            export SILVERSCRIPT_PY_VERSION="${{ env.PYTHON_VERSION }}"
             bash ci/build-and-inject-silverscript.sh release
 
       - name: Install wheel and test dependencies

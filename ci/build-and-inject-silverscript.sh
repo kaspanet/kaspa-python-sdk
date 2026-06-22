@@ -15,19 +15,43 @@
 # `maturin build --interpreter <that version>` that should bundle it.
 #
 # Usage: ci/build-and-inject-silverscript.sh [debug|release]
-# Env:
-#   SILVERSCRIPT_PYTHON  interpreter to build for (default: python3). On the
-#                        manylinux container set this to e.g.
-#                        /opt/python/cp312-cp312/bin/python.
-#   SILVERSCRIPT_TARGET  Rust target triple to cross-compile (e.g. the macOS
-#                        x86_64 wheel built on an arm64 runner).
+# Env (interpreter selection, in priority order):
+#   SILVERSCRIPT_PYTHON      explicit interpreter path; wins if set.
+#   SILVERSCRIPT_PY_VERSION  version like "3.12". When building inside a
+#                            manylinux container the matching
+#                            /opt/python/cp312-cp312/bin/python is used; on a
+#                            native runner (no /opt/python) it falls back to
+#                            python3 (which setup-python pins to that version).
+#   (neither)                python3 on PATH.
+#   SILVERSCRIPT_TARGET      Rust target triple to cross-compile (e.g. the macOS
+#                            x86_64 wheel built on an arm64 runner).
 set -euo pipefail
 
 profile="${1:-debug}"
 flag=""
 [ "$profile" = "release" ] && flag="--release"
 
-pybin="${SILVERSCRIPT_PYTHON:-python3}"
+# Resolve the interpreter to build for. An explicit SILVERSCRIPT_PYTHON wins.
+# Otherwise, if SILVERSCRIPT_PY_VERSION is given and the matching manylinux
+# interpreter exists under /opt/python (release builds run in that container),
+# use it; else fall back to python3 (native runners use setup-python's python3).
+pybin="${SILVERSCRIPT_PYTHON:-}"
+if [ -z "$pybin" ] && [ -n "${SILVERSCRIPT_PY_VERSION:-}" ]; then
+    tag="cp${SILVERSCRIPT_PY_VERSION//./}"
+    candidate="/opt/python/${tag}-${tag}/bin/python"
+    [ -x "$candidate" ] && pybin="$candidate"
+fi
+if [ -z "$pybin" ]; then
+    # Native runners: setup-python pins python3 (Windows bash may only have python).
+    if command -v python3 >/dev/null 2>&1; then
+        pybin="python3"
+    elif command -v python >/dev/null 2>&1; then
+        pybin="python"
+    else
+        echo "no python interpreter found (set SILVERSCRIPT_PYTHON)" >&2
+        exit 1
+    fi
+fi
 # Build pyo3 against this specific interpreter (no abi3 → version-specific).
 export PYO3_PYTHON="$pybin"
 ext_suffix="$("$pybin" -c 'import sysconfig; print(sysconfig.get_config_var("EXT_SUFFIX"))')"
