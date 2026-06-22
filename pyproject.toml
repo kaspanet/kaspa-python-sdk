@@ -59,6 +59,15 @@ bindings = "pyo3"
 include = [
     "LICENSE",
     "docs/CHANGELOG.md",
+    # The kaspa.silverscript extension is built separately (it links a different
+    # rusty-kaspa revision) and injected into python/kaspa/silverscript/ by
+    # ci/build-and-inject-silverscript.sh. It matches the global `*.so` rule in
+    # .gitignore, which maturin's python-source walk would otherwise honor and
+    # exclude from the wheel. Listing it here force-includes it (override wins
+    # over .gitignore) at the python-source-mapped path kaspa/silverscript/.
+    # Keep it gitignored (it's a per-version build artifact, never committed).
+    "python/kaspa/silverscript/silverscript*.so",
+    "python/kaspa/silverscript/silverscript*.pyd",
 ]
 
 [tool.pytest.ini_options]
