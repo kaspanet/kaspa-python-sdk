@@ -47,6 +47,7 @@ jobs:
         if: runner.os != 'Linux'
         shell: bash
         run: |
+          export SILVERSCRIPT_PY_VERSION="${{ matrix.python }}"
           if [ "${{ matrix.platform.target }}" = "x86_64-apple-darwin" ]; then
             rustup target add x86_64-apple-darwin
             export SILVERSCRIPT_TARGET=x86_64-apple-darwin

@@ -31,18 +31,26 @@ profile="${1:-debug}"
 flag=""
 [ "$profile" = "release" ] && flag="--release"
 
-# Resolve the interpreter to build for. An explicit SILVERSCRIPT_PYTHON wins.
-# Otherwise, if SILVERSCRIPT_PY_VERSION is given and the matching manylinux
-# interpreter exists under /opt/python (release builds run in that container),
-# use it; else fall back to python3 (native runners use setup-python's python3).
+# Resolve the interpreter to build for. The module is NOT abi3, so this MUST be
+# the exact CPython version the resulting wheel targets — a mismatch produces a
+# .so named for the wrong version that the target interpreter can't import.
+# Priority:
+#   1. SILVERSCRIPT_PYTHON      explicit path, wins.
+#   2. SILVERSCRIPT_PY_VERSION  look for that version: the manylinux container's
+#                               /opt/python/cp3XX-cp3XX, then python3.X on PATH.
+#   3. python3 / python on PATH (only when no version was requested).
+req_ver="${SILVERSCRIPT_PY_VERSION:-}"
 pybin="${SILVERSCRIPT_PYTHON:-}"
-if [ -z "$pybin" ] && [ -n "${SILVERSCRIPT_PY_VERSION:-}" ]; then
-    tag="cp${SILVERSCRIPT_PY_VERSION//./}"
-    candidate="/opt/python/${tag}-${tag}/bin/python"
-    [ -x "$candidate" ] && pybin="$candidate"
+if [ -z "$pybin" ] && [ -n "$req_ver" ]; then
+    tag="cp${req_ver//./}"
+    for candidate in "/opt/python/${tag}-${tag}/bin/python" "python${req_ver}"; do
+        if command -v "$candidate" >/dev/null 2>&1; then
+            pybin="$candidate"
+            break
+        fi
+    done
 fi
 if [ -z "$pybin" ]; then
-    # Native runners: setup-python pins python3 (Windows bash may only have python).
     if command -v python3 >/dev/null 2>&1; then
         pybin="python3"
     elif command -v python >/dev/null 2>&1; then
@@ -54,8 +62,15 @@ if [ -z "$pybin" ]; then
 fi
 # Build pyo3 against this specific interpreter (no abi3 → version-specific).
 export PYO3_PYTHON="$pybin"
-ext_suffix="$("$pybin" -c 'import sysconfig; print(sysconfig.get_config_var("EXT_SUFFIX"))')"
 py_version="$("$pybin" -c 'import sys; print(f"{sys.version_info[0]}.{sys.version_info[1]}")')"
+# Guard: if a version was requested, the resolved interpreter MUST match it —
+# otherwise we'd silently bundle a .so for the wrong Python (not importable).
+if [ -n "$req_ver" ] && [ "$py_version" != "$req_ver" ]; then
+    echo "requested Python $req_ver but '$pybin' is $py_version" >&2
+    echo "set SILVERSCRIPT_PYTHON to the matching interpreter" >&2
+    exit 1
+fi
+ext_suffix="$("$pybin" -c 'import sysconfig; print(sysconfig.get_config_var("EXT_SUFFIX"))')"
 
 target_flag=""
 target_subdir=""
