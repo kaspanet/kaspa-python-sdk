@@ -2853,6 +2853,7 @@ dependencies = [
  "kaspa-consensus-core 2.0.1",
  "kaspa-hashes 2.0.1",
  "kaspa-notify",
+ "kaspa-python-sdk-core",
  "kaspa-rpc-core",
  "kaspa-txscript 2.0.1",
  "kaspa-utils 2.0.1",
@@ -2878,9 +2879,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "kaspa-python-sdk-core"
+version = "2.0.1"
+
+[[package]]
 name = "kaspa-python-sdk-silverscript"
 version = "2.0.1"
 dependencies = [
+ "kaspa-python-sdk-core",
  "pyo3",
  "pyo3-stub-gen",
  "silverscript-lang",

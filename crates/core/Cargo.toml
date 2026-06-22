@@ -1,0 +1,14 @@
+[package]
+name = "kaspa-python-sdk-core"
+version.workspace = true
+edition.workspace = true
+
+# Shared, dependency-light building blocks used by both the core `kaspa` crate
+# and the `kaspa-python-sdk-silverscript` crate. This crate intentionally has NO
+# dependencies: it only exports `macro_rules!` macros, whose expansions resolve
+# `pyo3` / `pyo3-stub-gen` paths at the *call site* (each consumer already
+# depends on them). Keeping it dep-free means depending on it never pulls a
+# second copy of rusty-kaspa into silverscript's graph.
+
+[lib]
+name = "kaspa_python_sdk_core"

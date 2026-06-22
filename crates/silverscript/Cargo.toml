@@ -15,9 +15,9 @@ path = "src/bin/stub_gen.rs"
 
 [features]
 extension-module = ["pyo3/extension-module"]
-abi3 = ["pyo3/abi3-py310"]
 
 [dependencies]
+kaspa-python-sdk-core = { path = "../core" }
 pyo3 = { version = "0.27.1" }
 pyo3-stub-gen = "0.17.2"
 silverscript-lang = { git = "https://github.com/kaspanet/silverscript.git", rev = "faaa074915edd1e885e4dd552051e348d1854c87" }

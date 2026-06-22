@@ -6,7 +6,7 @@ on:
 
 jobs:
   build-python-sdk:
-    name: Building Python SDK (${{ matrix.platform.runner }} ${{ matrix.platform.target }})
+    name: Building Python SDK (${{ matrix.platform.runner }} ${{ matrix.platform.target }} py${{ matrix.python }})
     strategy:
       fail-fast: false
       matrix:
@@ -25,6 +25,9 @@ jobs:
             target: x86_64
           # - runner: windows-latest
           #   target: aarch64
+        # silverscript isn't abi3, so it's built per CPython version; each job
+        # produces one wheel for one interpreter, bundling the matching .so.
+        python: ['3.10', '3.11', '3.12', '3.13', '3.14']
 
     runs-on: ${{ matrix.platform.runner }}
     steps:
@@ -34,10 +37,11 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.14"
+          python-version: ${{ matrix.python }}
 
-      # Build + inject the abi3 kaspa.silverscript module before maturin builds
-      # the core wheels. One abi3 .so serves every interpreter maturin targets.
+      # Build + inject the kaspa.silverscript module for this interpreter before
+      # maturin builds the core wheel. silverscript isn't abi3, so it's per
+      # version; setup-python's python3 is matrix.python here.
       # Linux is handled inside the manylinux container via before-script-linux.
       - name: Build & inject kaspa.silverscript (macOS/Windows)
         if: runner.os != 'Linux'
@@ -53,7 +57,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --strip --out dist --interpreter 3.10 3.11 3.12 3.13 3.14
+          args: --release --strip --out dist --interpreter ${{ matrix.python }}
           # sccache disabled: the maturin-action manylinux container doesn't reliably have
           # the sccache binary on PATH, which fails the build with "could not execute
           # process sccache ... No such file or directory". Release builds don't need it.
@@ -71,13 +75,18 @@ jobs:
             if command -v apt-get >/dev/null; then
               apt-get update -y && apt-get install -y pkg-config libssl-dev
             fi
-            # Build + inject the abi3 kaspa.silverscript module
+            # Build + inject the kaspa.silverscript module for this interpreter.
+            # The manylinux container ships each CPython under /opt/python; pick
+            # the one matching this job's version (e.g. 3.12 -> cp312-cp312).
+            PYVER="${{ matrix.python }}"
+            PYTAG="cp${PYVER//./}"
+            export SILVERSCRIPT_PYTHON="/opt/python/${PYTAG}-${PYTAG}/bin/python"
             bash ci/build-and-inject-silverscript.sh release
       
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ runner.os }}-${{ matrix.platform.target }}
+          name: ${{ runner.os }}-${{ matrix.platform.target }}-py${{ matrix.python }}
           path: dist/
 
   upload-to-release:

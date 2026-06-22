@@ -12,24 +12,26 @@
 //!   - `CompiledContract.build_sig_script_for_covenant_decl(function_name, args=[], *, is_leader=False) -> bytes`
 //!   - `FunctionAbiEntry`, `FunctionInputAbi`, `SilverScriptError`
 
+use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::{PyBool, PyByteArray, PyBytes, PyDict, PyInt, PyList, PyString, PyTuple};
 use pyo3_stub_gen::define_stub_info_gatherer;
 use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pyfunction, gen_stub_pymethods};
 
+use kaspa_python_sdk_core::create_py_exception;
 use silverscript_lang::ast::{Expr, ExprKind, StateFieldExpr};
 use silverscript_lang::compiler::{CompileOptions, CovenantDeclCallOptions, compile_contract};
 use silverscript_lang::errors::CompilerError;
 
-// abi3 (the limited API) can't subclass a native exception via `#[pyclass]`, so
-// use `create_exception!` (C-API based, works under abi3 and the full API alike).
-// It isn't captured by pyo3-stub-gen, so the `stub-gen` bin appends it to the
-// generated `.pyi`.
-pyo3::create_exception!(
-    silverscript,
+// Defined via the shared `create_py_exception!` macro — the same
+// `#[pyclass(extends = PyException)]` approach the core `kaspa` module uses for
+// its wallet exceptions, so pyo3-stub-gen captures it automatically (no manual
+// stub append needed).
+create_py_exception!(
+    /// Raised when SilverScript compilation or signature-script construction fails.
     SilverScriptError,
-    pyo3::exceptions::PyException,
-    "Raised when SilverScript compilation or signature-script construction fails."
+    "SilverScriptError",
+    "kaspa.silverscript"
 );
 
 fn map_err(err: CompilerError) -> PyErr {
@@ -378,7 +380,7 @@ fn silverscript(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<CompiledContract>()?;
     m.add_class::<FunctionAbiEntry>()?;
     m.add_class::<FunctionInputAbi>()?;
-    m.add("SilverScriptError", m.py().get_type::<SilverScriptError>())?;
+    m.add_class::<SilverScriptError>()?;
     Ok(())
 }
 
