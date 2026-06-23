@@ -82,6 +82,18 @@ jobs:
             export SILVERSCRIPT_PY_VERSION="${{ matrix.python }}"
             bash ci/build-and-inject-silverscript.sh release
       
+      # Install the freshly-built wheel and import both modules, proving the
+      # per-version silverscript .so was injected and loads at runtime (the
+      # matrix otherwise only builds, never imports). Offline install (deps are
+      # empty) also confirms the wheel is self-contained. Skipped for the
+      # cross-compiled macOS x86_64 wheel — it can't run on the arm64 runner.
+      - name: Smoke-test wheel import
+        if: matrix.platform.target != 'x86_64-apple-darwin'
+        shell: bash
+        run: |
+          python -m pip install --force-reinstall --no-index --find-links dist kaspa
+          python -I -c "import kaspa, kaspa.silverscript as ss; assert hasattr(ss, 'compile'); print('import OK:', kaspa.__file__)"
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
