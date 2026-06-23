@@ -368,7 +368,7 @@ async def main() -> None:
         await wait_until_accepted(client, counter)
         show_step(f"add(5)       count {prev} -> {counter.count}", counter)
 
-        # Subtract transaction: the output re-locks the funds at the count=3 address
+        # Subtract 3 transaction: the output re-locks the funds at the count=2 address
         prev = counter.count
         counter = await transition(client, counter, "subtract", 3)
         await wait_until_accepted(client, counter)
