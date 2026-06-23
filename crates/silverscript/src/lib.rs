@@ -56,13 +56,36 @@ enum Value {
     Struct(Vec<(String, Value)>),
 }
 
+/// Maximum nesting depth of a single Python argument. Bounds the recursion in
+/// `py_to_value` so a pathologically nested value (e.g. `[[[…]]]`) raises a
+/// `SilverScriptError` instead of overflowing the native stack and aborting the
+/// whole process. Far above any realistic contract argument, far below the
+/// stack cliff.
+const MAX_ARG_DEPTH: usize = 128;
+
 fn py_to_value(obj: &Bound<'_, PyAny>) -> PyResult<Value> {
+    py_to_value_at(obj, 0)
+}
+
+fn py_to_value_at(obj: &Bound<'_, PyAny>, depth: usize) -> PyResult<Value> {
+    if depth >= MAX_ARG_DEPTH {
+        return Err(SilverScriptError::new_err(format!(
+            "argument nesting too deep (exceeds {MAX_ARG_DEPTH} levels)"
+        )));
+    }
     // bool must precede int: in Python, bool is a subclass of int.
     if obj.cast::<PyBool>().is_ok() {
         return Ok(Value::Bool(obj.extract::<bool>()?));
     }
     if obj.cast::<PyInt>().is_ok() {
-        return Ok(Value::Int(obj.extract::<i64>()?));
+        // Map pyo3's `OverflowError` for out-of-`i64` ints onto the domain
+        // error, so callers only ever see `SilverScriptError`.
+        let int = obj.extract::<i64>().map_err(|_| {
+            SilverScriptError::new_err(
+                "integer argument out of range (must fit in a signed 64-bit integer)",
+            )
+        })?;
+        return Ok(Value::Int(int));
     }
     if let Ok(s) = obj.cast::<PyString>() {
         return Ok(Value::Str(s.to_str()?.to_owned()));
@@ -76,14 +99,14 @@ fn py_to_value(obj: &Bound<'_, PyAny>) -> PyResult<Value> {
     if let Ok(list) = obj.cast::<PyList>() {
         let mut items = Vec::with_capacity(list.len());
         for item in list.iter() {
-            items.push(py_to_value(&item)?);
+            items.push(py_to_value_at(&item, depth + 1)?);
         }
         return Ok(Value::List(items));
     }
     if let Ok(tuple) = obj.cast::<PyTuple>() {
         let mut items = Vec::with_capacity(tuple.len());
         for item in tuple.iter() {
-            items.push(py_to_value(&item)?);
+            items.push(py_to_value_at(&item, depth + 1)?);
         }
         return Ok(Value::List(items));
     }
@@ -93,7 +116,7 @@ fn py_to_value(obj: &Bound<'_, PyAny>) -> PyResult<Value> {
             let key = key
                 .cast::<PyString>()
                 .map_err(|_| SilverScriptError::new_err("struct argument keys must be strings"))?;
-            fields.push((key.to_str()?.to_owned(), py_to_value(&value)?));
+            fields.push((key.to_str()?.to_owned(), py_to_value_at(&value, depth + 1)?));
         }
         return Ok(Value::Struct(fields));
     }
