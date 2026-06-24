@@ -29,7 +29,7 @@ use silverscript_lang::errors::CompilerError;
 // stub append needed).
 create_py_exception!(
     /// Raised when SilverScript compilation or signature-script construction fails.
-    SilverScriptError,
+    PySilverScriptError,
     "SilverScriptError",
     "kaspa.silverscript"
 );
@@ -37,9 +37,9 @@ create_py_exception!(
 fn map_err(err: CompilerError) -> PyErr {
     match err.span() {
         Some(span) => {
-            SilverScriptError::new_err(format!("{err} (at bytes {}..{})", span.start, span.end))
+            PySilverScriptError::new_err(format!("{err} (at bytes {}..{})", span.start, span.end))
         }
-        None => SilverScriptError::new_err(err.to_string()),
+        None => PySilverScriptError::new_err(err.to_string()),
     }
 }
 
@@ -69,7 +69,7 @@ fn py_to_value(obj: &Bound<'_, PyAny>) -> PyResult<Value> {
 
 fn py_to_value_at(obj: &Bound<'_, PyAny>, depth: usize) -> PyResult<Value> {
     if depth >= MAX_ARG_DEPTH {
-        return Err(SilverScriptError::new_err(format!(
+        return Err(PySilverScriptError::new_err(format!(
             "argument nesting too deep (exceeds {MAX_ARG_DEPTH} levels)"
         )));
     }
@@ -81,7 +81,7 @@ fn py_to_value_at(obj: &Bound<'_, PyAny>, depth: usize) -> PyResult<Value> {
         // Map pyo3's `OverflowError` for out-of-`i64` ints onto the domain
         // error, so callers only ever see `SilverScriptError`.
         let int = obj.extract::<i64>().map_err(|_| {
-            SilverScriptError::new_err(
+            PySilverScriptError::new_err(
                 "integer argument out of range (must fit in a signed 64-bit integer)",
             )
         })?;
@@ -113,14 +113,14 @@ fn py_to_value_at(obj: &Bound<'_, PyAny>, depth: usize) -> PyResult<Value> {
     if let Ok(dict) = obj.cast::<PyDict>() {
         let mut fields = Vec::with_capacity(dict.len());
         for (key, value) in dict.iter() {
-            let key = key
-                .cast::<PyString>()
-                .map_err(|_| SilverScriptError::new_err("struct argument keys must be strings"))?;
+            let key = key.cast::<PyString>().map_err(|_| {
+                PySilverScriptError::new_err("struct argument keys must be strings")
+            })?;
             fields.push((key.to_str()?.to_owned(), py_to_value_at(&value, depth + 1)?));
         }
         return Ok(Value::Struct(fields));
     }
-    Err(SilverScriptError::new_err(
+    Err(PySilverScriptError::new_err(
         "unsupported argument type (expected int, bool, str, bytes, list/tuple, or dict)",
     ))
 }
@@ -162,7 +162,7 @@ fn collect_args(obj: Option<&Bound<'_, PyAny>>) -> PyResult<Vec<Value>> {
     } else if let Ok(tuple) = obj.cast::<PyTuple>() {
         tuple.iter().collect()
     } else {
-        return Err(SilverScriptError::new_err(
+        return Err(PySilverScriptError::new_err(
             "arguments must be a list or tuple",
         ));
     };
@@ -173,7 +173,7 @@ fn collect_args(obj: Option<&Bound<'_, PyAny>>) -> PyResult<Vec<Value>> {
 #[gen_stub_pyclass]
 #[pyclass(name = "FunctionInputAbi", module = "kaspa.silverscript", frozen)]
 #[derive(Clone)]
-struct FunctionInputAbi {
+pub struct PyFunctionInputAbi {
     #[pyo3(get)]
     name: String,
     /// SilverScript type, e.g. `"int"`, `"byte[32]"`, `"pubkey"`.
@@ -183,8 +183,8 @@ struct FunctionInputAbi {
 
 #[gen_stub_pymethods]
 #[pymethods]
-impl FunctionInputAbi {
-    fn __repr__(&self) -> String {
+impl PyFunctionInputAbi {
+    pub fn __repr__(&self) -> String {
         format!(
             "FunctionInputAbi(name={:?}, type_name={:?})",
             self.name, self.type_name
@@ -196,17 +196,17 @@ impl FunctionInputAbi {
 #[gen_stub_pyclass]
 #[pyclass(name = "FunctionAbiEntry", module = "kaspa.silverscript", frozen)]
 #[derive(Clone)]
-struct FunctionAbiEntry {
+pub struct PyFunctionAbiEntry {
     #[pyo3(get)]
     name: String,
     #[pyo3(get)]
-    inputs: Vec<FunctionInputAbi>,
+    inputs: Vec<PyFunctionInputAbi>,
 }
 
 #[gen_stub_pymethods]
 #[pymethods]
-impl FunctionAbiEntry {
-    fn __repr__(&self) -> String {
+impl PyFunctionAbiEntry {
+    pub fn __repr__(&self) -> String {
         format!(
             "FunctionAbiEntry(name={:?}, inputs={} input(s))",
             self.name,
@@ -219,12 +219,12 @@ impl FunctionAbiEntry {
 /// needed to build unlocking (signature) scripts for its entrypoints.
 #[gen_stub_pyclass]
 #[pyclass(name = "CompiledContract", module = "kaspa.silverscript", frozen)]
-struct CompiledContract {
+pub struct PyCompiledContract {
     contract_name: String,
     compiler_version: String,
     without_selector: bool,
     script: Vec<u8>,
-    abi: Vec<FunctionAbiEntry>,
+    abi: Vec<PyFunctionAbiEntry>,
     state_layout: (usize, usize),
     // Retained so `build_sig_script*` can recompile (the native
     // `CompiledContract` borrows the source string and can't be stored).
@@ -233,7 +233,7 @@ struct CompiledContract {
     options: CompileOptions,
 }
 
-impl CompiledContract {
+impl PyCompiledContract {
     fn sig_script(
         &self,
         function_name: &str,
@@ -258,49 +258,59 @@ impl CompiledContract {
 
 #[gen_stub_pymethods]
 #[pymethods]
-impl CompiledContract {
+impl PyCompiledContract {
     /// The contract name from the SilverScript source.
     #[getter]
-    fn contract_name(&self) -> &str {
+    pub fn contract_name(&self) -> &str {
         &self.contract_name
     }
 
     /// The compiler version that produced this contract.
     #[getter]
-    fn compiler_version(&self) -> &str {
+    pub fn compiler_version(&self) -> &str {
         &self.compiler_version
     }
 
     /// Whether the contract has a single entrypoint (no function selector).
     #[getter]
-    fn without_selector(&self) -> bool {
+    pub fn without_selector(&self) -> bool {
         self.without_selector
     }
 
     /// The compiled locking script (redeem script) bytes.
     #[getter]
-    fn script<'py>(&self, py: Python<'py>) -> Bound<'py, PyBytes> {
+    pub fn script<'py>(&self, py: Python<'py>) -> Bound<'py, PyBytes> {
         PyBytes::new(py, &self.script)
     }
 
     /// The contract ABI: one entry per callable entrypoint.
     #[getter]
-    fn abi(&self) -> Vec<FunctionAbiEntry> {
+    pub fn abi(&self) -> Vec<PyFunctionAbiEntry> {
         self.abi.clone()
     }
 
-    /// `(start, len)` byte offsets of the contract state within the script.
+    /// `(start, len)`: byte offset and length of the contract state within the script.
     #[getter]
-    fn state_layout(&self) -> (usize, usize) {
+    pub fn state_layout(&self) -> (usize, usize) {
         self.state_layout
     }
 
-    /// Build the signature (unlocking) script for `function_name`.
+    /// Build the signature (unlocking) script for an entrypoint.
     ///
-    /// `args` are native Python values (int/bool/str/bytes/list/dict) matching
-    /// the function's ABI input types.
+    /// Args:
+    ///     function_name: The entrypoint to call.
+    ///     args: Native Python values (int, bool, str, bytes, list/tuple, or
+    ///         dict) matching the entrypoint's ABI input types. Omit or pass
+    ///         None for an entrypoint that takes no arguments.
+    ///
+    /// Returns:
+    ///     bytes: The signature (unlocking) script.
+    ///
+    /// Raises:
+    ///     SilverScriptError: If the entrypoint is unknown or an argument is
+    ///         invalid (wrong type, out of range, or too deeply nested).
     #[pyo3(signature = (function_name, args=None))]
-    fn build_sig_script<'py>(
+    pub fn build_sig_script<'py>(
         &self,
         py: Python<'py>,
         function_name: &str,
@@ -311,9 +321,24 @@ impl CompiledContract {
         Ok(PyBytes::new(py, &bytes))
     }
 
-    /// Build the signature script for a covenant declaration entrypoint.
+    /// Build the signature (unlocking) script for a covenant declaration entrypoint.
+    ///
+    /// Args:
+    ///     function_name: The covenant entrypoint to call.
+    ///     args: Native Python values matching the entrypoint's ABI input
+    ///         types. Omit or pass None for an entrypoint that takes no
+    ///         arguments.
+    ///     is_leader: Select the leader path for covenants that distinguish a
+    ///         leader from delegates (default: False).
+    ///
+    /// Returns:
+    ///     bytes: The signature (unlocking) script.
+    ///
+    /// Raises:
+    ///     SilverScriptError: If the entrypoint is unknown or an argument is
+    ///         invalid (wrong type, out of range, or too deeply nested).
     #[pyo3(signature = (function_name, args=None, *, is_leader=false))]
-    fn build_sig_script_for_covenant_decl<'py>(
+    pub fn build_sig_script_for_covenant_decl<'py>(
         &self,
         py: Python<'py>,
         function_name: &str,
@@ -325,7 +350,7 @@ impl CompiledContract {
         Ok(PyBytes::new(py, &bytes))
     }
 
-    fn __repr__(&self) -> String {
+    pub fn __repr__(&self) -> String {
         format!(
             "CompiledContract(name={:?}, script={} bytes, entrypoints={})",
             self.contract_name,
@@ -337,17 +362,32 @@ impl CompiledContract {
 
 /// Compile SilverScript `source` into a `CompiledContract`.
 ///
-/// `constructor_args` are native Python values matching the contract's
-/// constructor parameters.
+/// Args:
+///     source: The SilverScript contract source.
+///     constructor_args: Native Python values matching the contract's
+///         constructor parameters. Omit or pass None for a contract with no
+///         constructor parameters.
+///     allow_entrypoint_return: Permit entrypoints that return a value
+///         (default: False).
+///     record_debug_infos: Record debug information during compilation
+///         (default: False).
+///
+/// Returns:
+///     CompiledContract: The compiled contract.
+///
+/// Raises:
+///     SilverScriptError: If compilation fails (syntax error, type error, or
+///         incompatible pragma).
 #[gen_stub_pyfunction(module = "kaspa.silverscript")]
 #[pyfunction]
+#[pyo3(name = "compile")]
 #[pyo3(signature = (source, constructor_args=None, *, allow_entrypoint_return=false, record_debug_infos=false))]
-fn compile(
+pub fn py_compile(
     source: String,
     constructor_args: Option<Bound<'_, PyAny>>,
     allow_entrypoint_return: bool,
     record_debug_infos: bool,
-) -> PyResult<CompiledContract> {
+) -> PyResult<PyCompiledContract> {
     let constructor_args = collect_args(constructor_args.as_ref())?;
     let options = CompileOptions {
         allow_entrypoint_return,
@@ -362,12 +402,12 @@ fn compile(
         let abi = compiled
             .abi
             .iter()
-            .map(|entry| FunctionAbiEntry {
+            .map(|entry| PyFunctionAbiEntry {
                 name: entry.name.clone(),
                 inputs: entry
                     .inputs
                     .iter()
-                    .map(|input| FunctionInputAbi {
+                    .map(|input| PyFunctionInputAbi {
                         name: input.name.clone(),
                         type_name: input.type_name.clone(),
                     })
@@ -384,7 +424,7 @@ fn compile(
         )
     };
 
-    Ok(CompiledContract {
+    Ok(PyCompiledContract {
         contract_name,
         compiler_version,
         without_selector,
@@ -397,13 +437,18 @@ fn compile(
     })
 }
 
+/// The `kaspa.silverscript` Python module.
+///
+/// Compiles SilverScript contracts to script bytes and builds the unlocking
+/// scripts that spend them. A separate extension module from the core `kaspa`
+/// package — the two interoperate only through script `bytes`.
 #[pymodule]
 fn silverscript(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(compile, m)?)?;
-    m.add_class::<CompiledContract>()?;
-    m.add_class::<FunctionAbiEntry>()?;
-    m.add_class::<FunctionInputAbi>()?;
-    m.add_class::<SilverScriptError>()?;
+    m.add_function(wrap_pyfunction!(py_compile, m)?)?;
+    m.add_class::<PyCompiledContract>()?;
+    m.add_class::<PyFunctionAbiEntry>()?;
+    m.add_class::<PyFunctionInputAbi>()?;
+    m.add_class::<PySilverScriptError>()?;
     Ok(())
 }
 

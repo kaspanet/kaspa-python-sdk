@@ -33,13 +33,47 @@ fn main() -> Result<()> {
         .unwrap_or_else(|| panic!("stub not generated; looked in {candidates:?}"));
 
     fs::create_dir_all("python/kaspa/silverscript")?;
-    // `SilverScriptError` is now a `#[pyclass(extends = PyException)]` (via the
-    // shared `create_py_exception!` macro), so pyo3-stub-gen captures it into the
-    // generated stub automatically — no manual append.
-    let content = fs::read_to_string(generated)?;
+    // `SilverScriptError` is a `#[pyclass(extends = PyException)]` (via the shared
+    // `create_py_exception!` macro), so pyo3-stub-gen captures it automatically —
+    // but for exception classes it emits the Rust ident (`PySilverScriptError`)
+    // rather than the `#[pyclass(name = "...")]` value. Strip the `Py` prefix so
+    // the stub matches the Python name, mirroring the core crate's stub_gen.
+    let content = strip_py_prefix_from_exceptions(fs::read_to_string(generated)?);
     fs::write(DEST, content)?;
     fs::remove_dir_all(&stubgen_root).ok();
 
     println!("wrote {DEST}");
     Ok(())
+}
+
+/// Removes the `Py` prefix from exception class names in the generated stub.
+/// pyo3-stub-gen emits the Rust ident for `extends = PyException` classes
+/// (e.g. `class PySilverScriptError(builtins.Exception)`) rather than the
+/// `#[pyclass(name = "...")]` value, so we rewrite them to the Python name.
+/// Mirrors `strip_py_prefix_from_exceptions` in the core crate's `src/bin/stub_gen.rs`.
+fn strip_py_prefix_from_exceptions(content: String) -> String {
+    let mut exception_names: Vec<String> = Vec::new();
+
+    for line in content.lines() {
+        if let Some(start) = line.find("class Py")
+            && line.contains("(builtins.Exception)")
+        {
+            let after_class = &line[start + 6..];
+            if let Some(paren_pos) = after_class.find('(') {
+                let class_name = &after_class[..paren_pos];
+                if class_name.starts_with("Py") {
+                    exception_names.push(class_name.to_string());
+                }
+            }
+        }
+    }
+
+    let mut result = content;
+    for py_name in &exception_names {
+        if let Some(stripped) = py_name.strip_prefix("Py") {
+            result = result.replace(py_name, stripped);
+        }
+    }
+
+    result
 }

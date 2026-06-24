@@ -38,18 +38,43 @@ class CompiledContract:
     @property
     def state_layout(self) -> tuple[builtins.int, builtins.int]:
         r"""
-        `(start, len)` byte offsets of the contract state within the script.
+        `(start, len)`: byte offset and length of the contract state within the script.
         """
     def build_sig_script(self, function_name: builtins.str, args: typing.Optional[typing.Any] = None) -> bytes:
         r"""
-        Build the signature (unlocking) script for `function_name`.
+        Build the signature (unlocking) script for an entrypoint.
         
-        `args` are native Python values (int/bool/str/bytes/list/dict) matching
-        the function's ABI input types.
+        Args:
+            function_name: The entrypoint to call.
+            args: Native Python values (int, bool, str, bytes, list/tuple, or
+                dict) matching the entrypoint's ABI input types. Omit or pass
+                None for an entrypoint that takes no arguments.
+        
+        Returns:
+            bytes: The signature (unlocking) script.
+        
+        Raises:
+            SilverScriptError: If the entrypoint is unknown or an argument is
+                invalid (wrong type, out of range, or too deeply nested).
         """
     def build_sig_script_for_covenant_decl(self, function_name: builtins.str, args: typing.Optional[typing.Any] = None, *, is_leader: builtins.bool = False) -> bytes:
         r"""
-        Build the signature script for a covenant declaration entrypoint.
+        Build the signature (unlocking) script for a covenant declaration entrypoint.
+        
+        Args:
+            function_name: The covenant entrypoint to call.
+            args: Native Python values matching the entrypoint's ABI input
+                types. Omit or pass None for an entrypoint that takes no
+                arguments.
+            is_leader: Select the leader path for covenants that distinguish a
+                leader from delegates (default: False).
+        
+        Returns:
+            bytes: The signature (unlocking) script.
+        
+        Raises:
+            SilverScriptError: If the entrypoint is unknown or an argument is
+                invalid (wrong type, out of range, or too deeply nested).
         """
     def __repr__(self) -> builtins.str: ...
 
@@ -89,7 +114,21 @@ def compile(source: builtins.str, constructor_args: typing.Optional[typing.Any] 
     r"""
     Compile SilverScript `source` into a `CompiledContract`.
     
-    `constructor_args` are native Python values matching the contract's
-    constructor parameters.
+    Args:
+        source: The SilverScript contract source.
+        constructor_args: Native Python values matching the contract's
+            constructor parameters. Omit or pass None for a contract with no
+            constructor parameters.
+        allow_entrypoint_return: Permit entrypoints that return a value
+            (default: False).
+        record_debug_infos: Record debug information during compilation
+            (default: False).
+    
+    Returns:
+        CompiledContract: The compiled contract.
+    
+    Raises:
+        SilverScriptError: If compilation fails (syntax error, type error, or
+            incompatible pragma).
     """
 
