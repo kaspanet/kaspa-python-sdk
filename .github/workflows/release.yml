@@ -25,8 +25,6 @@ jobs:
             target: x86_64
           # - runner: windows-latest
           #   target: aarch64
-        # silverscript isn't abi3, so it's built per CPython version; each job
-        # produces one wheel for one interpreter, bundling the matching .so.
         python: ['3.10', '3.11', '3.12', '3.13', '3.14']
 
     runs-on: ${{ matrix.platform.runner }}
@@ -39,10 +37,6 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
-      # Build + inject the kaspa.experimental.silverscript module for this interpreter before
-      # maturin builds the core wheel. silverscript isn't abi3, so it's per
-      # version; setup-python's python3 is matrix.python here.
-      # Linux is handled inside the manylinux container via before-script-linux.
       - name: Build & inject kaspa.experimental.silverscript (macOS/Windows)
         if: runner.os != 'Linux'
         shell: bash
@@ -59,9 +53,6 @@ jobs:
         with:
           target: ${{ matrix.platform.target }}
           args: --release --strip --out dist --interpreter ${{ matrix.python }}
-          # sccache disabled: the maturin-action manylinux container doesn't reliably have
-          # the sccache binary on PATH, which fails the build with "could not execute
-          # process sccache ... No such file or directory". Release builds don't need it.
           sccache: 'false'
           manylinux: ${{ matrix.platform.manylinux || '' }}
           before-script-linux: |
@@ -81,12 +72,7 @@ jobs:
             # container's /opt/python).
             export SILVERSCRIPT_PY_VERSION="${{ matrix.python }}"
             bash ci/build-and-inject-silverscript.sh release
-      
-      # Install the freshly-built wheel and import both modules, proving the
-      # per-version silverscript .so was injected and loads at runtime (the
-      # matrix otherwise only builds, never imports). Offline install (deps are
-      # empty) also confirms the wheel is self-contained. Skipped for the
-      # cross-compiled macOS x86_64 wheel — it can't run on the arm64 runner.
+
       - name: Smoke-test wheel import
         if: matrix.platform.target != 'x86_64-apple-darwin'
         shell: bash

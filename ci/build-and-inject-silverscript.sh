@@ -1,44 +1,28 @@
 #!/usr/bin/env bash
-# Build the kaspa.experimental.silverscript extension module and inject the resulting shared
-# library into python/kaspa/experimental/silverscript/ so the subsequent `maturin` build
-# bundles it into the kaspa wheel (under kaspa/experimental/silverscript/).
+# Build the kaspa.experimental.silverscript extension and inject its shared
+# library into python/kaspa/experimental/silverscript/ for the next `maturin`
+# build to bundle into the kaspa wheel.
 #
-# It's a SEPARATE workspace member that links a different rusty-kaspa revision
-# than the core, so it must be compiled on its own and dropped into the
-# python-source tree.
+# It's a separate workspace member on a different rusty-kaspa revision, and not
+# abi3. So, it's built once per CPython version and
+# named with the interpreter's EXT_SUFFIX, so only that version imports it.
 #
-# The module is NOT abi3 (it subclasses PyException via #[pyclass], which the
-# limited API can't do), so it must be built once per CPython version. The
-# output is named with the interpreter's EXT_SUFFIX (e.g.
-# silverscript.cpython-312-x86_64-linux-gnu.so) so only the matching interpreter
-# imports it. Run this once per interpreter, each time immediately before the
-# `maturin build --interpreter <that version>` that should bundle it.
+# Output: python/kaspa/experimental/silverscript/silverscript<EXT_SUFFIX>
 #
-# Usage: ci/build-and-inject-silverscript.sh [debug|release]
 # Env (interpreter selection, in priority order):
-#   SILVERSCRIPT_PYTHON      explicit interpreter path; wins if set.
-#   SILVERSCRIPT_PY_VERSION  version like "3.12". When building inside a
-#                            manylinux container the matching
-#                            /opt/python/cp312-cp312/bin/python is used; on a
-#                            native runner (no /opt/python) it falls back to
-#                            python3 (which setup-python pins to that version).
+#   SILVERSCRIPT_PYTHON      explicit interpreter path.
+#   SILVERSCRIPT_PY_VERSION  version like "3.12"; finds the manylinux
+#                            /opt/python/cp3XX or python3.X on PATH.
 #   (neither)                python3 on PATH.
-#   SILVERSCRIPT_TARGET      Rust target triple to cross-compile (e.g. the macOS
-#                            x86_64 wheel built on an arm64 runner).
+#   SILVERSCRIPT_TARGET      Rust target triple to cross-compile.
 set -euo pipefail
 
 profile="${1:-debug}"
 flag=""
 [ "$profile" = "release" ] && flag="--release"
 
-# Resolve the interpreter to build for. The module is NOT abi3, so this MUST be
-# the exact CPython version the resulting wheel targets — a mismatch produces a
-# .so named for the wrong version that the target interpreter can't import.
-# Priority:
-#   1. SILVERSCRIPT_PYTHON      explicit path, wins.
-#   2. SILVERSCRIPT_PY_VERSION  look for that version: the manylinux container's
-#                               /opt/python/cp3XX-cp3XX, then python3.X on PATH.
-#   3. python3 / python on PATH (only when no version was requested).
+# Resolve the interpreter (priority: SILVERSCRIPT_PYTHON, SILVERSCRIPT_PY_VERSION,
+# then python3/python on PATH). Must match the wheel's CPython version — not abi3.
 req_ver="${SILVERSCRIPT_PY_VERSION:-}"
 pybin="${SILVERSCRIPT_PYTHON:-}"
 if [ -z "$pybin" ] && [ -n "$req_ver" ]; then
@@ -63,8 +47,7 @@ fi
 # Build pyo3 against this specific interpreter (no abi3 → version-specific).
 export PYO3_PYTHON="$pybin"
 py_version="$("$pybin" -c 'import sys; print(f"{sys.version_info[0]}.{sys.version_info[1]}")')"
-# Guard: if a version was requested, the resolved interpreter MUST match it —
-# otherwise we'd silently bundle a .so for the wrong Python (not importable).
+# If a version was requested, the resolved interpreter must match it.
 if [ -n "$req_ver" ] && [ "$py_version" != "$req_ver" ]; then
     echo "requested Python $req_ver but '$pybin' is $py_version" >&2
     echo "set SILVERSCRIPT_PYTHON to the matching interpreter" >&2
@@ -77,16 +60,13 @@ target_subdir=""
 if [ -n "${SILVERSCRIPT_TARGET:-}" ]; then
     target_flag="--target $SILVERSCRIPT_TARGET"
     target_subdir="$SILVERSCRIPT_TARGET/"
-    # Cross-compiling: pyo3 can't run the target interpreter, so tell it the
-    # version explicitly. On macOS the extension links no libpython (symbols
-    # resolve at load time via dynamic_lookup, below), so only the version matters.
+    # Cross-compiling: pyo3 can't run the target interpreter, so pass the version.
     export PYO3_CROSS_PYTHON_VERSION="$py_version"
 fi
 
 case "$(uname -s)" in
     Darwin)
-        # extension-module cdylibs resolve Python symbols from the host at load
-        # time; tell the linker to allow the resulting undefined symbols.
+        # Let the linker leave Python symbols undefined; resolved at load time.
         export RUSTFLAGS="-C link-arg=-undefined -C link-arg=dynamic_lookup ${RUSTFLAGS:-}"
         libname="libsilverscript.dylib"
         ;;
@@ -102,8 +82,7 @@ case "$(uname -s)" in
         ;;
 esac
 
-# Name the injected module with the interpreter's extension suffix so Python's
-# import machinery loads it only on the matching version.
+# Name the module with the interpreter's EXT_SUFFIX so only that version imports it.
 out="silverscript${ext_suffix}"
 
 # Enable the cdylib-only feature explicitly here (not as a crate default) so it
@@ -112,8 +91,7 @@ cargo build -p kaspa-python-sdk-silverscript --lib --features extension-module $
 lib="target/${target_subdir}${profile}/${libname}"
 
 mkdir -p python/kaspa/experimental/silverscript
-# Drop any previously-injected library so only the version we're about to build
-# for is present — each maturin call should bundle exactly one silverscript .so.
+# Drop any previously-injected library; each maturin call bundles exactly one.
 rm -f python/kaspa/experimental/silverscript/silverscript*.so python/kaspa/experimental/silverscript/silverscript*.pyd
 cp "$lib" "python/kaspa/experimental/silverscript/$out"
 echo "injected python/kaspa/experimental/silverscript/$out (py $py_version, from $lib)"
