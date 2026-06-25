@@ -171,7 +171,11 @@ fn collect_args(obj: Option<&Bound<'_, PyAny>>) -> PyResult<Vec<Value>> {
 
 /// A single input parameter of a contract entrypoint.
 #[gen_stub_pyclass]
-#[pyclass(name = "FunctionInputAbi", module = "kaspa.experimental.silverscript", frozen)]
+#[pyclass(
+    name = "FunctionInputAbi",
+    module = "kaspa.experimental.silverscript",
+    frozen
+)]
 #[derive(Clone)]
 pub struct PyFunctionInputAbi {
     #[pyo3(get)]
@@ -194,7 +198,11 @@ impl PyFunctionInputAbi {
 
 /// A single callable entrypoint in a compiled contract's ABI.
 #[gen_stub_pyclass]
-#[pyclass(name = "FunctionAbiEntry", module = "kaspa.experimental.silverscript", frozen)]
+#[pyclass(
+    name = "FunctionAbiEntry",
+    module = "kaspa.experimental.silverscript",
+    frozen
+)]
 #[derive(Clone)]
 pub struct PyFunctionAbiEntry {
     #[pyo3(get)]
@@ -218,7 +226,11 @@ impl PyFunctionAbiEntry {
 /// A compiled SilverScript contract: the locking script plus the metadata
 /// needed to build unlocking (signature) scripts for its entrypoints.
 #[gen_stub_pyclass]
-#[pyclass(name = "CompiledContract", module = "kaspa.experimental.silverscript", frozen)]
+#[pyclass(
+    name = "CompiledContract",
+    module = "kaspa.experimental.silverscript",
+    frozen
+)]
 pub struct PyCompiledContract {
     contract_name: String,
     compiler_version: String,
