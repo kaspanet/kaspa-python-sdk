@@ -76,7 +76,7 @@ directly:
 from kaspa import address_from_script_public_key
 
 spk = script.create_pay_to_script_hash_script()
-p2sh_address = address_from_script_public_key(spk, "testnet-10")
+p2sh_address = address_from_script_public_key(spk, "testnet")
 ```
 
 Place `spk` on a [`TransactionOutput`](../../reference/Classes/TransactionOutput.md), or share `p2sh_address` so

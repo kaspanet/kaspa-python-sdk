@@ -12,6 +12,7 @@ The Learn section on this site is grouped into the following main categories:
 - **[Wallet](wallet/overview.md)** — managed high-level API.
 - **[Wallet SDK](wallet-sdk/overview.md)** — primitives the `Wallet` is built on.
 - **[Transactions](transactions/overview.md)** — on-chain primitives.
+- **[SilverScript](silverscript/overview.md)** — compile smart contracts to scripts (experimental).
 
 ---
 
