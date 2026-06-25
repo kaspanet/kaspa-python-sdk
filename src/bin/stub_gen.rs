@@ -1,5 +1,6 @@
 use std::fs;
 
+use kaspa_python_sdk_core::strip_py_prefix;
 use pyo3_stub_gen::Result;
 
 fn main() -> Result<()> {
@@ -30,7 +31,7 @@ fn main() -> Result<()> {
 fn post_process_stub_file(path: &str) {
     let content = fs::read_to_string(path).unwrap();
 
-    let content = strip_py_prefix_from_enums(content);
+    let content = strip_py_prefix(content, "(enum.Enum)");
     let content = rename_none_enum_variant(content);
     let content = fix_rpc_method_signatures(content);
     let content = remove_duplicate_default_none(content);
@@ -42,7 +43,7 @@ fn post_process_stub_file(path: &str) {
 
 fn post_process_exceptions_stub_file(input_path: &str, output_path: &str) {
     let content = fs::read_to_string(input_path).unwrap();
-    let content = strip_py_prefix_from_exceptions(content);
+    let content = strip_py_prefix(content, "(builtins.Exception)");
     fs::write(output_path, content).unwrap();
 }
 
@@ -69,64 +70,6 @@ fn append_rpc_types(content: String) -> String {
             content
         }
     }
-}
-
-/// Removes the "Py" prefix from enum class names and all their references.
-/// e.g., `class PyNetworkType(enum.Enum)` becomes `class NetworkType(enum.Enum)`
-fn strip_py_prefix_from_enums(content: String) -> String {
-    let mut enum_names: Vec<String> = Vec::new();
-
-    for line in content.lines() {
-        if let Some(start) = line.find("class Py")
-            && line.contains("(enum.Enum)")
-        {
-            let after_class = &line[start + 6..];
-            if let Some(paren_pos) = after_class.find('(') {
-                let class_name = &after_class[..paren_pos];
-                if class_name.starts_with("Py") {
-                    enum_names.push(class_name.to_string());
-                }
-            }
-        }
-    }
-
-    let mut result = content;
-    for py_name in &enum_names {
-        if let Some(stripped) = py_name.strip_prefix("Py") {
-            result = result.replace(py_name, stripped);
-        }
-    }
-
-    result
-}
-
-/// Removes the "Py" prefix from exception class names in the exceptions stub file.
-/// e.g., `class PyWalletError(builtins.Exception)` becomes `class WalletError(builtins.Exception)`
-fn strip_py_prefix_from_exceptions(content: String) -> String {
-    let mut exception_names: Vec<String> = Vec::new();
-
-    for line in content.lines() {
-        if let Some(start) = line.find("class Py")
-            && line.contains("(builtins.Exception)")
-        {
-            let after_class = &line[start + 6..];
-            if let Some(paren_pos) = after_class.find('(') {
-                let class_name = &after_class[..paren_pos];
-                if class_name.starts_with("Py") {
-                    exception_names.push(class_name.to_string());
-                }
-            }
-        }
-    }
-
-    let mut result = content;
-    for py_name in &exception_names {
-        if let Some(stripped) = py_name.strip_prefix("Py") {
-            result = result.replace(py_name, stripped);
-        }
-    }
-
-    result
 }
 
 /// Renames `None = ...` to `_None = ...` for enum variants.
