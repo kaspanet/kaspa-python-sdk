@@ -1,16 +1,6 @@
 //! Python bindings for the SilverScript compiler (`kaspa.experimental.silverscript`).
 //!
-//! This is a separate extension module from the `kaspa` core: it links
-//! rusty-kaspa @ tn12 (kaspa-txscript 1.1.1-toc.1) via `silverscript-lang`,
-//! whereas the core links @ cfafeb4c0 (2.0.1). The two never share Rust types —
-//! they interoperate purely through script `bytes`.
-//!
-//! Exposed surface (Tier 0 + Tier 1 of the design inventory):
-//!   - `compile(source, constructor_args=[], *, allow_entrypoint_return, record_debug_infos) -> CompiledContract`
-//!   - `CompiledContract.{contract_name, compiler_version, without_selector, script, abi, state_layout}`
-//!   - `CompiledContract.build_sig_script(function_name, args=[]) -> bytes`
-//!   - `CompiledContract.build_sig_script_for_covenant_decl(function_name, args=[], *, is_leader=False) -> bytes`
-//!   - `FunctionAbiEntry`, `FunctionInputAbi`, `SilverScriptError`
+//! A separate extension module from the core `kaspa`, since SilverScript pins a different rusty-kaspa dep commit.
 
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
@@ -23,10 +13,8 @@ use silverscript_lang::ast::{Expr, ExprKind, StateFieldExpr};
 use silverscript_lang::compiler::{CompileOptions, CovenantDeclCallOptions, compile_contract};
 use silverscript_lang::errors::CompilerError;
 
-// Defined via the shared `create_py_exception!` macro — the same
-// `#[pyclass(extends = PyException)]` approach the core `kaspa` module uses for
-// its wallet exceptions, so pyo3-stub-gen captures it automatically (no manual
-// stub append needed).
+// Shared `create_py_exception!` macro: `#[pyclass(extends = PyException)]` so
+// pyo3-stub-gen captures it in the `.pyi` automatically.
 create_py_exception!(
     /// Raised when SilverScript compilation or signature-script construction fails.
     PySilverScriptError,
@@ -43,9 +31,8 @@ fn map_err(err: CompilerError) -> PyErr {
     }
 }
 
-/// Owned, `'static` representation of a Python argument value. We convert
-/// Python → this once, store it, and rebuild `Expr`s from it on demand — which
-/// sidesteps `CompiledContract<'i>` borrowing the source string.
+/// Owned, `'static` form of a Python argument. Converted once, then rebuilt into
+/// `Expr`s on demand — sidesteps `CompiledContract<'i>` borrowing the source.
 #[derive(Clone)]
 enum Value {
     Int(i64),
@@ -56,11 +43,8 @@ enum Value {
     Struct(Vec<(String, Value)>),
 }
 
-/// Maximum nesting depth of a single Python argument. Bounds the recursion in
-/// `py_to_value` so a pathologically nested value (e.g. `[[[…]]]`) raises a
-/// `SilverScriptError` instead of overflowing the native stack and aborting the
-/// whole process. Far above any realistic contract argument, far below the
-/// stack cliff.
+/// Max argument nesting depth. Bounds `py_to_value` recursion so a deeply nested
+/// value raises `SilverScriptError` instead of overflowing the native stack.
 const MAX_ARG_DEPTH: usize = 128;
 
 fn py_to_value(obj: &Bound<'_, PyAny>) -> PyResult<Value> {
@@ -78,8 +62,7 @@ fn py_to_value_at(obj: &Bound<'_, PyAny>, depth: usize) -> PyResult<Value> {
         return Ok(Value::Bool(obj.extract::<bool>()?));
     }
     if obj.cast::<PyInt>().is_ok() {
-        // Map pyo3's `OverflowError` for out-of-`i64` ints onto the domain
-        // error, so callers only ever see `SilverScriptError`.
+        // Remap pyo3's OverflowError so callers only ever see SilverScriptError.
         let int = obj.extract::<i64>().map_err(|_| {
             PySilverScriptError::new_err(
                 "integer argument out of range (must fit in a signed 64-bit integer)",
@@ -125,8 +108,7 @@ fn py_to_value_at(obj: &Bound<'_, PyAny>, depth: usize) -> PyResult<Value> {
     ))
 }
 
-/// Build an owned (`'static`) literal `Expr` — no borrows into the source, so
-/// the result is freely usable as a constructor or call argument.
+/// Build an owned (`'static`) literal `Expr` from a `Value` — no source borrows.
 fn value_to_expr(value: &Value) -> Expr<'static> {
     match value {
         Value::Int(i) => Expr::int(*i),
@@ -453,17 +435,8 @@ pub fn py_compile(
     })
 }
 
-/// The `kaspa.experimental.silverscript` Python module.
-///
-/// **Experimental.** Lives under `kaspa.experimental` because both SilverScript
-/// and these bindings are under active development; the API and the compiler's
-/// output may change in breaking ways between releases. Pin your version, test
-/// thoroughly, and verify any contract end-to-end on a test network before
-/// locking real value.
-///
-/// Compiles SilverScript contracts to script bytes and builds the unlocking
-/// scripts that spend them. A separate extension module from the core `kaspa`
-/// package — the two interoperate only through script `bytes`.
+/// The `kaspa.experimental.silverscript` extension module. Compiles SilverScript
+/// to script bytes; see the package docstring for the experimental-API caveats.
 #[pymodule]
 fn silverscript(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(py_compile, m)?)?;

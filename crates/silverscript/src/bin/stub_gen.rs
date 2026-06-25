@@ -1,13 +1,7 @@
 //! Generates `python/kaspa/experimental/silverscript/__init__.pyi`.
 //!
-//! pyo3-stub-gen writes one `.pyi` per module under the `python-source` root
-//! from `pyproject.toml`. We point that root at a throwaway `_stubgen/` dir so
-//! generation can never touch the core crate's `python/kaspa/__init__.pyi`,
-//! then copy just the SilverScript stub into the package as `__init__.pyi`.
-//!
-//! Run from the repository root (e.g. `cargo run -p kaspa-python-sdk-silverscript
-//! --bin stub-gen --no-default-features`).
-
+//! Generates into a throwaway dir (set in `pyproject.toml`) so it
+//! can't clobber the core crate's stub, then copies the result into the package.
 use std::fs;
 use std::path::Path;
 
@@ -20,8 +14,6 @@ fn main() -> Result<()> {
     let stub = silverscript::stub_info()?;
     stub.generate()?;
 
-    // generate() writes `<crate>/_stubgen/kaspa/experimental/silverscript.pyi` (single
-    // module) — fall back to the package form just in case.
     let stubgen_root = format!("{CRATE_DIR}/_stubgen");
     let candidates = [
         format!("{stubgen_root}/kaspa/experimental/silverscript.pyi"),
@@ -41,11 +33,9 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-/// Removes the `Py` prefix from exception class names in the generated stub.
-/// pyo3-stub-gen emits the Rust ident for `extends = PyException` classes
-/// (e.g. `class PySilverScriptError(builtins.Exception)`) rather than the
-/// `#[pyclass(name = "...")]` value, so we rewrite them to the Python name.
-/// Mirrors `strip_py_prefix_from_exceptions` in the core crate's `src/bin/stub_gen.rs`.
+/// Strips the `Py` prefix from exception class names in the stub: pyo3-stub-gen
+/// emits the Rust ident (e.g. `PySilverScriptError`) instead of the
+/// `#[pyclass(name = "...")]` value.
 fn strip_py_prefix_from_exceptions(content: String) -> String {
     let mut exception_names: Vec<String> = Vec::new();
 

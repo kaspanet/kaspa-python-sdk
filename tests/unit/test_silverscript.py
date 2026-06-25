@@ -1,23 +1,5 @@
-"""Unit tests for the kaspa.experimental.silverscript module.
-
-This module compiles SilverScript contracts to script bytes and builds the
-unlocking scripts that spend covenant/P2SH UTXOs. The output goes on-chain and
-controls real funds, so the tests below lean hard on:
-
-  * byte-exact golden vectors (the locking/unlocking scripts are the artifact);
-  * determinism (a contract state must re-derive the same P2SH address);
-  * the Python -> Value -> Expr argument conversion (the binding's main new
-    logic, and the untrusted-input boundary);
-  * robustness: no input should ever panic or crash the interpreter.
-
-`TestUpstreamParity` and the type-safety cases mirror tests from the pinned
-`silverscript-lang` revision (faaa074) so the Python surface enforces the same
-guarantees the compiler's own suite does. Referenced upstream tests are named in
-comments (file `silverscript-lang/tests/...`).
-
-Golden hex values were captured from the pinned compiler revision and are
-intentionally pinned: any silent change in the binding or a compiler bump flips
-them, which is exactly the canary we want for a funds-sensitive module.
+"""
+Unit tests for the kaspa.experimental.silverscript module.
 """
 
 import os
@@ -29,10 +11,9 @@ import pytest
 
 import kaspa.experimental.silverscript as silverscript
 
-# The core `kaspa` extension links a *different* rusty-kaspa revision; the two
-# modules meet only through script `bytes`. Importing it lets us exercise that
-# boundary (compile here, wrap into a P2SH address there). Guarded so the file
-# still runs if the core module's script API is unavailable.
+# The core `kaspa` extension links a different rusty-kaspa revision; importing it
+# lets us exercise the bytes-only boundary (compile here, wrap to P2SH there).
+# Guarded so the file still runs if the core script API is unavailable.
 try:
     import kaspa as _kaspa
 

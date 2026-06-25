@@ -1,7 +1,5 @@
-# Used only by pyo3-stub-gen (via define_stub_info_gatherer!) to locate the
-# python root and module name when generating `.pyi` stubs. Stubs are emitted
-# into the throwaway `_stubgen/` dir and the `stub-gen` bin copies the result to
-# `python/kaspa/experimental/silverscript/__init__.pyi`. This is NOT a maturin build project.
+# Used only by pyo3-stub-gen to locate the python root and module name.
+# NOT a maturin build project.
 [project]
 name = "kaspa-python-sdk-silverscript"
 version = "2.0.1"

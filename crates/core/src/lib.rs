@@ -1,25 +1,12 @@
-//! Shared building blocks for the Kaspa Python SDK crates.
-//!
-//! Currently this is just `create_py_exception!`, used by both the core `kaspa`
-//! module (for its wallet exceptions) and `kaspa.experimental.silverscript`. The macro is
-//! `macro_rules!`, so its expansion resolves `pyo3` / `pyo3-stub-gen` names at
-//! the call site — this crate needs no dependencies of its own.
+//! Shared building blocks for the Kaspa Python SDK crates: currently just
+//! `create_py_exception!`, used by the core `kaspa` module and `kaspa.experimental.silverscript`.
 
-/// Defines a Python exception class backed by a `#[pyclass]`, the idiomatic way
-/// to expose a custom exception that pyo3-stub-gen can capture.
+/// Defines a `#[pyclass(extends = PyException)]` exception class. Unlike PyO3's
+/// `create_exception!`, the result takes `#[gen_stub_pyclass]`, so pyo3-stub-gen
+/// captures it in the `.pyi`.
 ///
-/// We can't use PyO3's `create_exception!` here: that macro produces a type we
-/// can't decorate with `#[gen_stub_pyclass]`, so the exception would be missing
-/// from the generated `.pyi`. Defining it as `#[pyclass(extends = PyException)]`
-/// instead lets stub generation pick it up automatically.
-///
-/// `$module` is matched as `:tt` (not `:literal`) on purpose: pyo3-stub-gen's
-/// attribute parser pattern-matches a raw `Literal` token for `module = "..."`.
-/// A `:literal` metavariable interpolates as an invisible None-delimited group,
-/// which the parser silently drops — routing the exception into the wrong stub
-/// file. `:tt` passes the string literal through as a raw token.
-///
-/// Usage:
+/// `$module` is `:tt`, not `:literal`: stub-gen matches a raw `module = "..."`
+/// token, and a `:literal` interpolates as a group it silently drops.
 ///
 /// ```ignore
 /// create_py_exception!(
@@ -27,10 +14,7 @@
 ///     MyError, "MyError", "my_module"
 /// );
 /// ```
-///
-/// The call site must have `pyclass`, `PyException`, `PyErr`, and
-/// `gen_stub_pyclass` in scope (e.g. `use pyo3::prelude::*;
-/// use pyo3::exceptions::PyException; use pyo3_stub_gen::derive::*;`).
+/// Requires `pyclass`, `PyException`, `PyErr`, and `gen_stub_pyclass` in scope.
 #[macro_export]
 macro_rules! create_py_exception {
     ($(#[$meta:meta])* $name:ident, $py_name:literal, $module:tt) => {
