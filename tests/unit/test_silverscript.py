@@ -1,4 +1,4 @@
-"""Unit tests for the kaspa.silverscript module.
+"""Unit tests for the kaspa.experimental.silverscript module.
 
 This module compiles SilverScript contracts to script bytes and builds the
 unlocking scripts that spend covenant/P2SH UTXOs. The output goes on-chain and
@@ -27,7 +27,7 @@ import textwrap
 
 import pytest
 
-import kaspa.silverscript as silverscript
+import kaspa.experimental.silverscript as silverscript
 
 # The core `kaspa` extension links a *different* rusty-kaspa revision; the two
 # modules meet only through script `bytes`. Importing it lets us exercise that
@@ -610,7 +610,7 @@ class TestRobustness:
     def test_deeply_nested_arg_does_not_crash_process(self):
         snippet = textwrap.dedent(
             """
-            import kaspa.silverscript as ss
+            import kaspa.experimental.silverscript as ss
             SRC = ("pragma silverscript ^0.1.0;\\n"
                    "contract D() { entrypoint function f(int[] xs) { require(true); } }")
             n = []

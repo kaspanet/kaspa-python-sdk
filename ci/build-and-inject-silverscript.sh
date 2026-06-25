@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Build the kaspa.silverscript extension module and inject the resulting shared
-# library into python/kaspa/silverscript/ so the subsequent `maturin` build
-# bundles it into the kaspa wheel (under kaspa/silverscript/).
+# Build the kaspa.experimental.silverscript extension module and inject the resulting shared
+# library into python/kaspa/experimental/silverscript/ so the subsequent `maturin` build
+# bundles it into the kaspa wheel (under kaspa/experimental/silverscript/).
 #
 # It's a SEPARATE workspace member that links a different rusty-kaspa revision
 # than the core, so it must be compiled on its own and dropped into the
@@ -111,9 +111,9 @@ out="silverscript${ext_suffix}"
 cargo build -p kaspa-python-sdk-silverscript --lib --features extension-module $flag $target_flag --target-dir target
 lib="target/${target_subdir}${profile}/${libname}"
 
-mkdir -p python/kaspa/silverscript
+mkdir -p python/kaspa/experimental/silverscript
 # Drop any previously-injected library so only the version we're about to build
 # for is present — each maturin call should bundle exactly one silverscript .so.
-rm -f python/kaspa/silverscript/silverscript*.so python/kaspa/silverscript/silverscript*.pyd
-cp "$lib" "python/kaspa/silverscript/$out"
-echo "injected python/kaspa/silverscript/$out (py $py_version, from $lib)"
+rm -f python/kaspa/experimental/silverscript/silverscript*.so python/kaspa/experimental/silverscript/silverscript*.pyd
+cp "$lib" "python/kaspa/experimental/silverscript/$out"
+echo "injected python/kaspa/experimental/silverscript/$out (py $py_version, from $lib)"

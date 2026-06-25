@@ -47,12 +47,12 @@ jobs:
       - name: Install OpenSSL (for openssl-sys on the host build)
         run: sudo apt-get update && sudo apt-get install -y pkg-config libssl-dev
 
-      # Build + inject the kaspa.silverscript module for the test interpreter so
-      # the bundled wheel can `import kaspa.silverscript` (exercised by the unit
+      # Build + inject the kaspa.experimental.silverscript module for the test interpreter so
+      # the bundled wheel can `import kaspa.experimental.silverscript` (exercised by the unit
       # tests). It isn't abi3, so its .so must match the wheel's Python version.
       # We build on the host here (not the manylinux container) so build-Python
       # is exactly setup-python's interpreter — the same one the tests run under.
-      - name: Build & inject kaspa.silverscript
+      - name: Build & inject kaspa.experimental.silverscript
         run: |
           export SILVERSCRIPT_PY_VERSION="${{ env.PYTHON_VERSION }}"
           bash ci/build-and-inject-silverscript.sh release

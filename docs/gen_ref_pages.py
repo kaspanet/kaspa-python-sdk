@@ -119,8 +119,8 @@ if stub_file.exists():
             info["module"] = "kaspa.exceptions"
             objects[name] = info
 
-    # Parse the kaspa.silverscript submodule into its own dedicated section.
-    silverscript_stub_file = Path("python/kaspa/silverscript/__init__.pyi")
+    # Parse the kaspa.experimental.silverscript submodule into its own dedicated section.
+    silverscript_stub_file = Path("python/kaspa/experimental/silverscript/__init__.pyi")
     if silverscript_stub_file.exists():
         ss_content = silverscript_stub_file.read_text()
         ss_objects = parse_stub_file(ss_content)
@@ -136,7 +136,7 @@ if stub_file.exists():
             else:
                 leaf = info["category"]
             info["category"] = f"SilverScript/{leaf}"
-            info["module"] = "kaspa.silverscript"
+            info["module"] = "kaspa.experimental.silverscript"
             objects[name] = info
 
     # Group objects by category

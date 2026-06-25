@@ -1,4 +1,4 @@
-//! Generates `python/kaspa/silverscript/__init__.pyi`.
+//! Generates `python/kaspa/experimental/silverscript/__init__.pyi`.
 //!
 //! pyo3-stub-gen writes one `.pyi` per module under the `python-source` root
 //! from `pyproject.toml`. We point that root at a throwaway `_stubgen/` dir so
@@ -14,30 +14,25 @@ use std::path::Path;
 use pyo3_stub_gen::Result;
 
 const CRATE_DIR: &str = "crates/silverscript";
-const DEST: &str = "python/kaspa/silverscript/__init__.pyi";
+const DEST: &str = "python/kaspa/experimental/silverscript/__init__.pyi";
 
 fn main() -> Result<()> {
     let stub = silverscript::stub_info()?;
     stub.generate()?;
 
-    // generate() writes `<crate>/_stubgen/kaspa/silverscript.pyi` (single
+    // generate() writes `<crate>/_stubgen/kaspa/experimental/silverscript.pyi` (single
     // module) — fall back to the package form just in case.
     let stubgen_root = format!("{CRATE_DIR}/_stubgen");
     let candidates = [
-        format!("{stubgen_root}/kaspa/silverscript.pyi"),
-        format!("{stubgen_root}/kaspa/silverscript/__init__.pyi"),
+        format!("{stubgen_root}/kaspa/experimental/silverscript.pyi"),
+        format!("{stubgen_root}/kaspa/experimental/silverscript/__init__.pyi"),
     ];
     let generated = candidates
         .iter()
         .find(|p| Path::new(p).exists())
         .unwrap_or_else(|| panic!("stub not generated; looked in {candidates:?}"));
 
-    fs::create_dir_all("python/kaspa/silverscript")?;
-    // `SilverScriptError` is a `#[pyclass(extends = PyException)]` (via the shared
-    // `create_py_exception!` macro), so pyo3-stub-gen captures it automatically —
-    // but for exception classes it emits the Rust ident (`PySilverScriptError`)
-    // rather than the `#[pyclass(name = "...")]` value. Strip the `Py` prefix so
-    // the stub matches the Python name, mirroring the core crate's stub_gen.
+    fs::create_dir_all("python/kaspa/experimental/silverscript")?;
     let content = strip_py_prefix_from_exceptions(fs::read_to_string(generated)?);
     fs::write(DEST, content)?;
     fs::remove_dir_all(&stubgen_root).ok();

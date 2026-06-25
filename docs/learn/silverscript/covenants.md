@@ -10,7 +10,7 @@ next.
 
 The state lives in the locking script, so each state results in its own P2SH
 address (see
-[Compiling → Constructor args bake state](compiling.md#constructor-args-bake-state-into-the-script)).
+[Compiling → Constructor args embed state](compiling.md#constructor-args-embed-state-into-the-script)).
 A transition spends the UTXO at the current address and creates a new
 output at a new address (which is derived from the newly created covenant state).
 

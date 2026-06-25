@@ -12,7 +12,7 @@ the locking script plus everything needed to build unlocking scripts
 to spend.
 
 ```python
-import kaspa.silverscript as silverscript
+import kaspa.experimental.silverscript as silverscript
 
 contract = silverscript.compile(source, constructor_args=None)
 ```

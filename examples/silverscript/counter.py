@@ -1,6 +1,6 @@
 """Run a SilverScript Counter covenant live on testnet-10, one tx at a time.
 
-`kaspa.silverscript` compiles the contract to script bytes; the core `kaspa`
+`kaspa.experimental.silverscript` compiles the contract to script bytes; the core `kaspa`
 module builds and submits the transactions. The Counter holds one `count` in
 covenant state, and each spend is a 1:1 transition that updates it and re-locks
 the funds into the next Counter UTXO:
@@ -44,7 +44,7 @@ from kaspa import (
     calculate_transaction_mass,
     sign_transaction,
 )
-import kaspa.silverscript as silverscript
+import kaspa.experimental.silverscript as silverscript
 
 NETWORK_ID = "testnet-10"
 NETWORK_TYPE = "testnet"

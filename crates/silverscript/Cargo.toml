@@ -4,8 +4,8 @@ version.workspace = true
 edition.workspace = true
 
 [lib]
-# Compiled to `kaspa/silverscript/silverscript.<abi>.so` and re-exported by
-# `kaspa/silverscript/__init__.py` as `from .silverscript import *`.
+# Compiled to `kaspa/experimental/silverscript/silverscript.<abi>.so` and re-exported by
+# `kaspa/experimental/silverscript/__init__.py` as `from .silverscript import *`.
 name = "silverscript"
 crate-type = ["cdylib", "rlib"]
 

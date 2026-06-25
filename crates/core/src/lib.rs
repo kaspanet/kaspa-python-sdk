@@ -1,7 +1,7 @@
 //! Shared building blocks for the Kaspa Python SDK crates.
 //!
 //! Currently this is just `create_py_exception!`, used by both the core `kaspa`
-//! module (for its wallet exceptions) and `kaspa.silverscript`. The macro is
+//! module (for its wallet exceptions) and `kaspa.experimental.silverscript`. The macro is
 //! `macro_rules!`, so its expansion resolves `pyo3` / `pyo3-stub-gen` names at
 //! the call site — this crate needs no dependencies of its own.
 

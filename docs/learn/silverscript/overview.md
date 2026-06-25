@@ -33,7 +33,7 @@ and [Scripts](../transactions/scripts.md).
 
 ## A separate module
 
-`kaspa.silverscript` is a sub-package — import it on
+`kaspa.experimental.silverscript` is a sub-package — import it on
 its own. The Silverscript compiler takes plain Python values (`int`, `bool`, `str`,
 `bytes`, `list`/`tuple`, `dict`), not `kaspa` objects like
 [`Address`](../../reference/Classes/Address.md) or
@@ -44,7 +44,7 @@ back script `bytes`. Those `bytes` are the whole interface to core
 then build the transaction with core as usual.
 
 ```python
-import kaspa.silverscript as silverscript   # Silverscript
+import kaspa.experimental.silverscript as silverscript   # Silverscript
 from kaspa import ScriptBuilder             # Kaspa core SDK
 ```
 
@@ -65,7 +65,7 @@ A minimal contract: a `Guard` that only lets a spend through if
 `amount` is above a threshold baked in at compile time.
 
 ```python
-import kaspa.silverscript as silverscript
+import kaspa.experimental.silverscript as silverscript
 from kaspa import ScriptBuilder, address_from_script_public_key
 
 SOURCE = """

@@ -1,4 +1,4 @@
-//! Python bindings for the SilverScript compiler (`kaspa.silverscript`).
+//! Python bindings for the SilverScript compiler (`kaspa.experimental.silverscript`).
 //!
 //! This is a separate extension module from the `kaspa` core: it links
 //! rusty-kaspa @ tn12 (kaspa-txscript 1.1.1-toc.1) via `silverscript-lang`,
@@ -31,7 +31,7 @@ create_py_exception!(
     /// Raised when SilverScript compilation or signature-script construction fails.
     PySilverScriptError,
     "SilverScriptError",
-    "kaspa.silverscript"
+    "kaspa.experimental.silverscript"
 );
 
 fn map_err(err: CompilerError) -> PyErr {
@@ -171,7 +171,7 @@ fn collect_args(obj: Option<&Bound<'_, PyAny>>) -> PyResult<Vec<Value>> {
 
 /// A single input parameter of a contract entrypoint.
 #[gen_stub_pyclass]
-#[pyclass(name = "FunctionInputAbi", module = "kaspa.silverscript", frozen)]
+#[pyclass(name = "FunctionInputAbi", module = "kaspa.experimental.silverscript", frozen)]
 #[derive(Clone)]
 pub struct PyFunctionInputAbi {
     #[pyo3(get)]
@@ -194,7 +194,7 @@ impl PyFunctionInputAbi {
 
 /// A single callable entrypoint in a compiled contract's ABI.
 #[gen_stub_pyclass]
-#[pyclass(name = "FunctionAbiEntry", module = "kaspa.silverscript", frozen)]
+#[pyclass(name = "FunctionAbiEntry", module = "kaspa.experimental.silverscript", frozen)]
 #[derive(Clone)]
 pub struct PyFunctionAbiEntry {
     #[pyo3(get)]
@@ -218,7 +218,7 @@ impl PyFunctionAbiEntry {
 /// A compiled SilverScript contract: the locking script plus the metadata
 /// needed to build unlocking (signature) scripts for its entrypoints.
 #[gen_stub_pyclass]
-#[pyclass(name = "CompiledContract", module = "kaspa.silverscript", frozen)]
+#[pyclass(name = "CompiledContract", module = "kaspa.experimental.silverscript", frozen)]
 pub struct PyCompiledContract {
     contract_name: String,
     compiler_version: String,
@@ -362,6 +362,10 @@ impl PyCompiledContract {
 
 /// Compile SilverScript `source` into a `CompiledContract`.
 ///
+/// **Experimental:** SilverScript and these bindings are under active
+/// development; the API and the compiler's output may change in breaking ways
+/// between releases. See the `kaspa.experimental.silverscript` module docs.
+///
 /// Args:
 ///     source: The SilverScript contract source.
 ///     constructor_args: Native Python values matching the contract's
@@ -378,7 +382,7 @@ impl PyCompiledContract {
 /// Raises:
 ///     SilverScriptError: If compilation fails (syntax error, type error, or
 ///         incompatible pragma).
-#[gen_stub_pyfunction(module = "kaspa.silverscript")]
+#[gen_stub_pyfunction(module = "kaspa.experimental.silverscript")]
 #[pyfunction]
 #[pyo3(name = "compile")]
 #[pyo3(signature = (source, constructor_args=None, *, allow_entrypoint_return=false, record_debug_infos=false))]
@@ -437,7 +441,13 @@ pub fn py_compile(
     })
 }
 
-/// The `kaspa.silverscript` Python module.
+/// The `kaspa.experimental.silverscript` Python module.
+///
+/// **Experimental.** Lives under `kaspa.experimental` because both SilverScript
+/// and these bindings are under active development; the API and the compiler's
+/// output may change in breaking ways between releases. Pin your version, test
+/// thoroughly, and verify any contract end-to-end on a test network before
+/// locking real value.
 ///
 /// Compiles SilverScript contracts to script bytes and builds the unlocking
 /// scripts that spend them. A separate extension module from the core `kaspa`

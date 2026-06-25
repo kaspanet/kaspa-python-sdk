@@ -114,6 +114,10 @@ def compile(source: builtins.str, constructor_args: typing.Optional[typing.Any] 
     r"""
     Compile SilverScript `source` into a `CompiledContract`.
     
+    **Experimental:** SilverScript and these bindings are under active
+    development; the API and the compiler's output may change in breaking ways
+    between releases. See the `kaspa.experimental.silverscript` module docs.
+    
     Args:
         source: The SilverScript contract source.
         constructor_args: Native Python values matching the contract's
