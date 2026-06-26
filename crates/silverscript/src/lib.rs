@@ -16,8 +16,6 @@ use silverscript_lang::compiler::{
 };
 use silverscript_lang::errors::CompilerError;
 
-// Shared `create_py_exception!` macro: `#[pyclass(extends = PyException)]` so
-// pyo3-stub-gen captures it in the `.pyi` automatically.
 create_py_exception!(
     /// Raised when SilverScript compilation or signature-script construction fails.
     PySilverScriptError,
@@ -164,7 +162,6 @@ fn collect_args(obj: Option<&Bound<'_, PyAny>>) -> PyResult<Vec<Value>> {
 pub struct PyFunctionInputAbi {
     #[pyo3(get)]
     name: String,
-    /// SilverScript type, e.g. `"int"`, `"byte[32]"`, `"pubkey"`.
     #[pyo3(get)]
     type_name: String,
 }
@@ -209,9 +206,9 @@ impl PyFunctionAbiEntry {
 
 // Holds the contract source and lowered constructor args alongside the native
 // `CompiledContract` that borrows them. `CompiledContract<'i>` borrows the source
-// (its AST spans point into it) and has no owned form, so this self-referential
-// cell lets us compile once in `py_compile` and reuse the artifact for every
-// `build_sig_script*` call instead of recompiling the whole contract per call.
+//  and has no owned form, so this self-referential cell lets us compile once in `py_compile`
+// and reuse the artifact for every `build_sig_script*` call instead of recompiling
+// the whole contract per call.
 self_cell!(
     struct CompiledCell {
         owner: (String, Vec<Expr<'static>>),
@@ -235,8 +232,7 @@ pub struct PyCompiledContract {
     script: Vec<u8>,
     abi: Vec<PyFunctionAbiEntry>,
     state_layout: (usize, usize),
-    // The native `CompiledContract` (plus the source and constructor args it
-    // borrows), compiled once at construction and reused by `build_sig_script*`.
+    // The native `CompiledContract` compiled once at construction and reused.
     compiled: CompiledCell,
 }
 
@@ -450,8 +446,7 @@ pub fn py_compile(
     })
 }
 
-/// The `kaspa.experimental.silverscript` extension module. Compiles SilverScript
-/// to script bytes; see the package docstring for the experimental-API caveats.
+/// The `kaspa.experimental.silverscript` extension module.
 #[pymodule]
 fn silverscript(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(py_compile, m)?)?;
