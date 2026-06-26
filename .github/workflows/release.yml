@@ -81,7 +81,7 @@ jobs:
           python -I -c "import kaspa, kaspa.experimental.silverscript as ss; assert hasattr(ss, 'compile'); print('import OK:', kaspa.__file__)"
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ runner.os }}-${{ matrix.platform.target }}-py${{ matrix.python }}
           path: dist/
