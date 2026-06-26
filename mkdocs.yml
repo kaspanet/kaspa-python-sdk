@@ -157,6 +157,11 @@ nav:
           - Scripts: learn/transactions/scripts.md
           - Submission: learn/transactions/submission.md
           - Serialization: learn/transactions/serialization.md
+      - SilverScript:
+          - Overview: learn/silverscript/overview.md
+          - Compiling Contracts: learn/silverscript/compiling.md
+          - Unlocking Scripts: learn/silverscript/unlocking-scripts.md
+          - Covenants: learn/silverscript/covenants.md
   - Examples: examples.md
   - API Reference: reference/
   - Contributing:

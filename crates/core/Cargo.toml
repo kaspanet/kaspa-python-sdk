@@ -1,0 +1,7 @@
+[package]
+name = "kaspa-python-sdk-core"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+name = "kaspa_python_sdk_core"

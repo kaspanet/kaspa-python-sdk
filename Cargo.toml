@@ -1,7 +1,21 @@
-[package]
-name = "kaspa-python-sdk"
+[workspace]
+# The root package (this crate) is the workspace root and first member; the
+# SilverScript bindings are a second member that links a *different* rusty-kaspa
+# revision. Two separate cdylib extension modules keep the dependency graphs
+# isolated — they meet only in Python, via script bytes.
+members = ["crates/core", "crates/silverscript"]
+resolver = "3"
+
+# Single source of truth for version/edition across the workspace; members
+# inherit via `version.workspace = true` / `edition.workspace = true`.
+[workspace.package]
 version = "2.0.1"
 edition = "2024"
+
+[package]
+name = "kaspa-python-sdk"
+version.workspace = true
+edition.workspace = true
 
 [lib]
 name = "kaspa"
@@ -22,6 +36,7 @@ kaspa-consensus-client = { git = "https://github.com/kaspanet/rusty-kaspa.git", 
 kaspa-consensus-core = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "cfafeb4c0" }
 kaspa-hashes = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "cfafeb4c0" }
 kaspa-notify = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "cfafeb4c0" }
+kaspa-python-sdk-core = { path = "crates/core" }
 kaspa-rpc-core = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "cfafeb4c0" }
 kaspa-txscript = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "cfafeb4c0", features = ["wasm32-sdk"]}
 kaspa-utils = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "cfafeb4c0" }

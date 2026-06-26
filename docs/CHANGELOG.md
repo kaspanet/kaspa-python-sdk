@@ -5,6 +5,15 @@ search:
 
 ## [Unreleased]
 
+### Added
+- New `kaspa.experimental.silverscript` module — compile [SilverScript](https://github.com/kaspanet/silverscript) script-based smart-contract source and build transaction scripts from Python.
+  
+### Fixed
+- `requires-python` upper bound changed from `<=3.14` to `<3.15`. Under PEP 440 version ordering `<=3.14` excludes every 3.14 patch release (`3.14.1` and later).
+
+### Development
+- The crate is now a Cargo workspace with three members: the core `kaspa` crate, `crates/silverscript` (the SilverScript bindings — a second `cdylib` linking a different rusty-kaspa revision), and `crates/core` (`kaspa-python-sdk-core`, a dependency-light crate sharing the `create_py_exception!` macro between the two). The SilverScript bindings are injected into the wheel under `kaspa/experimental/silverscript/`.
+
 ## [2.0.1] - 2026-06-18
 
 ### Added

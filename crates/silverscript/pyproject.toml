@@ -1,0 +1,9 @@
+# Used only by pyo3-stub-gen to locate the python root and module name.
+# NOT a maturin build project.
+[project]
+name = "kaspa-python-sdk-silverscript"
+version = "2.0.1"
+
+[tool.maturin]
+module-name = "kaspa.experimental.silverscript"
+python-source = "_stubgen"

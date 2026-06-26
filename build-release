@@ -26,6 +26,12 @@ STUB_COMMAND="cargo run --bin stub-gen --release"
 echo "Generating stub file (.pyi) with command: '$STUB_COMMAND'"
 $STUB_COMMAND
 
+echo "Building kaspa.experimental.silverscript extension module"
+./ci/build-and-inject-silverscript.sh release
+
+echo "Generating kaspa.experimental.silverscript stub file"
+cargo run --release -p kaspa-python-sdk-silverscript --bin stub-gen --no-default-features --target-dir target/silverscript-stubgen
+
 BUILD_CMD="maturin build --release --strip --sdist --target-dir target --out target/wheels"
 echo "Building Python package with command: '$BUILD_CMD'"
 $BUILD_CMD

@@ -1,0 +1,24 @@
+[package]
+name = "kaspa-python-sdk-silverscript"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+# Compiled to `kaspa/experimental/silverscript/silverscript.<abi>.so` and re-exported by
+# `kaspa/experimental/silverscript/__init__.py` as `from .silverscript import *`.
+name = "silverscript"
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "stub-gen"
+path = "src/bin/stub_gen.rs"
+
+[features]
+extension-module = ["pyo3/extension-module"]
+
+[dependencies]
+kaspa-python-sdk-core = { path = "../core" }
+pyo3 = { version = "0.27.1" }
+pyo3-stub-gen = "0.17.2"
+self_cell = "1"
+silverscript-lang = { git = "https://github.com/kaspanet/silverscript.git", rev = "faaa074915edd1e885e4dd552051e348d1854c87" }

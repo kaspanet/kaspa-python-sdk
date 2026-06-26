@@ -6,7 +6,7 @@ on:
 
 jobs:
   build-python-sdk:
-    name: Building Python SDK (${{ matrix.platform.runner }} ${{ matrix.platform.target }})
+    name: Building Python SDK (${{ matrix.platform.runner }} ${{ matrix.platform.target }} py${{ matrix.python }})
     strategy:
       fail-fast: false
       matrix:
@@ -25,6 +25,7 @@ jobs:
             target: x86_64
           # - runner: windows-latest
           #   target: aarch64
+        python: ['3.10', '3.11', '3.12', '3.13', '3.14']
 
     runs-on: ${{ matrix.platform.runner }}
     steps:
@@ -34,16 +35,24 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.14"
+          python-version: ${{ matrix.python }}
+
+      - name: Build & inject kaspa.experimental.silverscript (macOS/Windows)
+        if: runner.os != 'Linux'
+        shell: bash
+        run: |
+          export SILVERSCRIPT_PY_VERSION="${{ matrix.python }}"
+          if [ "${{ matrix.platform.target }}" = "x86_64-apple-darwin" ]; then
+            rustup target add x86_64-apple-darwin
+            export SILVERSCRIPT_TARGET=x86_64-apple-darwin
+          fi
+          bash ci/build-and-inject-silverscript.sh release
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --strip --out dist --interpreter 3.10 3.11 3.12 3.13 3.14
-          # sccache disabled: the maturin-action manylinux container doesn't reliably have
-          # the sccache binary on PATH, which fails the build with "could not execute
-          # process sccache ... No such file or directory". Release builds don't need it.
+          args: --release --strip --out dist --interpreter ${{ matrix.python }}
           sccache: 'false'
           manylinux: ${{ matrix.platform.manylinux || '' }}
           before-script-linux: |
@@ -58,11 +67,23 @@ jobs:
             if command -v apt-get >/dev/null; then
               apt-get update -y && apt-get install -y pkg-config libssl-dev
             fi
-      
+            # Build + inject the kaspa.experimental.silverscript module for this interpreter
+            # (the script picks the matching CPython from the manylinux
+            # container's /opt/python).
+            export SILVERSCRIPT_PY_VERSION="${{ matrix.python }}"
+            bash ci/build-and-inject-silverscript.sh release
+
+      - name: Smoke-test wheel import
+        if: matrix.platform.target != 'x86_64-apple-darwin'
+        shell: bash
+        run: |
+          python -m pip install --force-reinstall --no-index --find-links dist kaspa
+          python -I -c "import kaspa, kaspa.experimental.silverscript as ss; assert hasattr(ss, 'compile'); print('import OK:', kaspa.__file__)"
+
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: ${{ runner.os }}-${{ matrix.platform.target }}
+          name: ${{ runner.os }}-${{ matrix.platform.target }}-py${{ matrix.python }}
           path: dist/
 
   upload-to-release:

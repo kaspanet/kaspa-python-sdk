@@ -6,7 +6,7 @@ build-backend = "maturin"
 name = "kaspa"
 version = "2.0.1"
 description = "Kaspa Python SDK"
-requires-python = ">=3.10,<=3.14"
+requires-python = ">=3.10,<3.15"
 readme = "README.md"
 license = "ISC"
 authors = [
@@ -59,6 +59,17 @@ bindings = "pyo3"
 include = [
     "LICENSE",
     "docs/CHANGELOG.md",
+    # The kaspa.experimental.silverscript extension is built separately (it links
+    # a different rusty-kaspa revision) and injected into
+    # python/kaspa/experimental/silverscript/ by
+    # ci/build-and-inject-silverscript.sh. It matches the global `*.so` rule in
+    # .gitignore, which maturin's python-source walk would otherwise honor and
+    # exclude from the wheel. Listing it here force-includes it (override wins
+    # over .gitignore) at the python-source-mapped path
+    # kaspa/experimental/silverscript/.
+    # Keep it gitignored (it's a per-version build artifact, never committed).
+    "python/kaspa/experimental/silverscript/silverscript*.so",
+    "python/kaspa/experimental/silverscript/silverscript*.pyd",
 ]
 
 [tool.pytest.ini_options]
