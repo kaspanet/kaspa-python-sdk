@@ -97,10 +97,7 @@ class FunctionInputAbi:
     @property
     def name(self) -> builtins.str: ...
     @property
-    def type_name(self) -> builtins.str:
-        r"""
-        SilverScript type, e.g. `"int"`, `"byte[32]"`, `"pubkey"`.
-        """
+    def type_name(self) -> builtins.str: ...
     def __repr__(self) -> builtins.str: ...
 
 @typing.final
