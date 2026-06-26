@@ -7,10 +7,13 @@ use pyo3::prelude::*;
 use pyo3::types::{PyBool, PyByteArray, PyBytes, PyDict, PyInt, PyList, PyString, PyTuple};
 use pyo3_stub_gen::define_stub_info_gatherer;
 use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pyfunction, gen_stub_pymethods};
+use self_cell::self_cell;
 
 use kaspa_python_sdk_core::create_py_exception;
 use silverscript_lang::ast::{Expr, ExprKind, StateFieldExpr};
-use silverscript_lang::compiler::{CompileOptions, CovenantDeclCallOptions, compile_contract};
+use silverscript_lang::compiler::{
+    CompileOptions, CompiledContract, CovenantDeclCallOptions, compile_contract,
+};
 use silverscript_lang::errors::CompilerError;
 
 // Shared `create_py_exception!` macro: `#[pyclass(extends = PyException)]` so
@@ -139,16 +142,15 @@ fn collect_args(obj: Option<&Bound<'_, PyAny>>) -> PyResult<Vec<Value>> {
     let Some(obj) = obj else {
         return Ok(Vec::new());
     };
-    let items: Vec<Bound<'_, PyAny>> = if let Ok(list) = obj.cast::<PyList>() {
-        list.iter().collect()
+    if let Ok(list) = obj.cast::<PyList>() {
+        list.iter().map(|item| py_to_value(&item)).collect()
     } else if let Ok(tuple) = obj.cast::<PyTuple>() {
-        tuple.iter().collect()
+        tuple.iter().map(|item| py_to_value(&item)).collect()
     } else {
-        return Err(PySilverScriptError::new_err(
+        Err(PySilverScriptError::new_err(
             "arguments must be a list or tuple",
-        ));
-    };
-    items.iter().map(py_to_value).collect()
+        ))
+    }
 }
 
 /// A single input parameter of a contract entrypoint.
@@ -205,6 +207,19 @@ impl PyFunctionAbiEntry {
     }
 }
 
+// Holds the contract source and lowered constructor args alongside the native
+// `CompiledContract` that borrows them. `CompiledContract<'i>` borrows the source
+// (its AST spans point into it) and has no owned form, so this self-referential
+// cell lets us compile once in `py_compile` and reuse the artifact for every
+// `build_sig_script*` call instead of recompiling the whole contract per call.
+self_cell!(
+    struct CompiledCell {
+        owner: (String, Vec<Expr<'static>>),
+        #[covariant]
+        dependent: CompiledContract,
+    }
+);
+
 /// A compiled SilverScript contract: the locking script plus the metadata
 /// needed to build unlocking (signature) scripts for its entrypoints.
 #[gen_stub_pyclass]
@@ -220,11 +235,9 @@ pub struct PyCompiledContract {
     script: Vec<u8>,
     abi: Vec<PyFunctionAbiEntry>,
     state_layout: (usize, usize),
-    // Retained so `build_sig_script*` can recompile (the native
-    // `CompiledContract` borrows the source string and can't be stored).
-    source: String,
-    constructor_args: Vec<Value>,
-    options: CompileOptions,
+    // The native `CompiledContract` (plus the source and constructor args it
+    // borrows), compiled once at construction and reused by `build_sig_script*`.
+    compiled: CompiledCell,
 }
 
 impl PyCompiledContract {
@@ -234,9 +247,8 @@ impl PyCompiledContract {
         args: Vec<Value>,
         covenant: Option<bool>,
     ) -> PyResult<Vec<u8>> {
-        let ctor: Vec<Expr<'static>> = self.constructor_args.iter().map(value_to_expr).collect();
-        let compiled = compile_contract(&self.source, &ctor, self.options).map_err(map_err)?;
         let call_args: Vec<Expr<'static>> = args.iter().map(value_to_expr).collect();
+        let compiled = self.compiled.borrow_dependent();
         let bytes = match covenant {
             None => compiled.build_sig_script(function_name, call_args),
             Some(is_leader) => compiled.build_sig_script_for_covenant_decl(
@@ -392,12 +404,17 @@ pub fn py_compile(
         record_debug_infos,
     };
 
-    // Compile once to extract owned metadata, then drop the borrowing native
-    // artifact before moving `source`/`constructor_args` into the pyclass.
+    // Compile once and keep the native artifact (alongside the source and lowered
+    // constructor args it borrows) so `build_sig_script*` can reuse it rather than
+    // recompiling the whole contract on every call.
+    let ctor: Vec<Expr<'static>> = constructor_args.iter().map(value_to_expr).collect();
+    let compiled = CompiledCell::try_new((source, ctor), |owner| {
+        compile_contract(&owner.0, &owner.1, options).map_err(map_err)
+    })?;
+
     let (contract_name, compiler_version, without_selector, script, abi, state_layout) = {
-        let ctor: Vec<Expr<'static>> = constructor_args.iter().map(value_to_expr).collect();
-        let compiled = compile_contract(&source, &ctor, options).map_err(map_err)?;
-        let abi = compiled
+        let contract = compiled.borrow_dependent();
+        let abi = contract
             .abi
             .iter()
             .map(|entry| PyFunctionAbiEntry {
@@ -413,12 +430,12 @@ pub fn py_compile(
             })
             .collect();
         (
-            compiled.contract_name.clone(),
-            compiled.compiler_version.clone(),
-            compiled.without_selector,
-            compiled.script.clone(),
+            contract.contract_name.clone(),
+            contract.compiler_version.clone(),
+            contract.without_selector,
+            contract.script.clone(),
             abi,
-            (compiled.state_layout.start, compiled.state_layout.len),
+            (contract.state_layout.start, contract.state_layout.len),
         )
     };
 
@@ -429,9 +446,7 @@ pub fn py_compile(
         script,
         abi,
         state_layout,
-        source,
-        constructor_args,
-        options,
+        compiled,
     })
 }
 
