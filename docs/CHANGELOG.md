@@ -7,12 +7,14 @@ search:
 
 ### Added
 - New `kaspa.experimental.silverscript` module — compile [SilverScript](https://github.com/kaspanet/silverscript) script-based smart-contract source and build transaction scripts from Python.
-  
+- New ZK bindings in the `kaspa` module — turn RISC Zero zero-knowledge proofs into Kaspa transaction scripts, mirroring the WASM SDK's `ZkScriptBuilder`. Provides the `ZkScriptBuilder` staged builder (`new_r0`, `commit_to_groth16`, `commit_to_succinct`, `finalize_with_groth16_proof`, `finalize_with_succinct_proof`, plus the fragment methods `add_data`, `push_r0_groth16_proof`/`push_r0_succinct_witness`, and `append_r0_groth16_verifier`/`append_r0_succinct_verifier` with their `*_with_fixed_journal` variants), the `FinalizedR0Script` and `R0SuccinctWitnessParts` result types, and the standalone `prepare_r0_groth16_proof` / `prepare_r0_succinct_witness` functions. A new `ZkError` exception is added to `kaspa.exceptions`. The produced P2SH scripts lock a UTXO behind on-chain verification of a specific proof (by image id, and optionally a fixed journal) via the `OpZkPrecompile` opcode — gated, like covenants, by the Toccata activation. See `examples/zk/groth16_onchain.py` for a fully on-chain commit→redeem round-trip.
+
 ### Fixed
 - `requires-python` upper bound changed from `<=3.14` to `<3.15`. Under PEP 440 version ordering `<=3.14` excludes every 3.14 patch release (`3.14.1` and later).
 
 ### Development
 - The crate is now a Cargo workspace with three members: the core `kaspa` crate, `crates/silverscript` (the SilverScript bindings — a second `cdylib` linking a different rusty-kaspa revision), and `crates/core` (`kaspa-python-sdk-core`, a dependency-light crate sharing the `create_py_exception!` macro between the two). The SilverScript bindings are injected into the wheel under `kaspa/experimental/silverscript/`.
+- Bumped the pinned `rusty-kaspa` dependency for the core `kaspa` module from `cfafeb4c0` to `98a4ccd8d` (master), which adds the `kaspa-txscript-zk-sdk` crate backing the new ZK bindings. The range is four commits: the ZK SDK, a docs update, and an additive RPC fix (the `covenant` field is now populated on RPC-converted transaction outputs). Adds `risc0-zkvm` and `borsh` as direct dependencies for decoding RISC Zero receipts.
 
 ## [2.0.1] - 2026-06-18
 

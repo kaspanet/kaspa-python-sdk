@@ -476,3 +476,11 @@ class WalletWorkflowWasmError(builtins.Exception):
 class WalletXPrvSupportError(builtins.Exception):
     ...
 
+@typing.final
+class ZkError(builtins.Exception):
+    r"""
+    Raised when ZK script construction, RISC Zero receipt decoding, or a
+    builder state-machine transition fails.
+    """
+    ...
+
