@@ -556,7 +556,7 @@ class Generator:
     Handles UTXO selection, fee calculation, change outputs, and transaction
     splitting for large transfers.
     """
-    def __new__(cls, entries: UtxoEntries | UtxoContext, change_address: Address, network_id: typing.Optional[NetworkId] = None, outputs: typing.Optional[Outputs] = None, payload: typing.Optional[Binary] = None, fee_rate: typing.Optional[builtins.float] = None, priority_fee: typing.Optional[builtins.int] = None, priority_entries: typing.Optional[UtxoEntries] = None, sig_op_count: typing.Optional[builtins.int] = None, minimum_signatures: typing.Optional[builtins.int] = None) -> Generator:
+    def __new__(cls, entries: typing.Sequence[UtxoEntryReference] | UtxoContext, change_address: Address, network_id: typing.Optional[NetworkId] = None, outputs: typing.Optional[Outputs] = None, payload: typing.Optional[Binary] = None, fee_rate: typing.Optional[builtins.float] = None, priority_fee: typing.Optional[builtins.int] = None, priority_entries: typing.Optional[typing.Sequence[UtxoEntryReference]] = None, sig_op_count: typing.Optional[builtins.int] = None, minimum_signatures: typing.Optional[builtins.int] = None) -> Generator:
         r"""
         Create a new transaction generator.
         
@@ -3133,27 +3133,6 @@ class UtxoEntries:
         """
 
 @typing.final
-class UtxoEntries:
-    r"""
-    UTXO entries collection for flexible input handling.
-    
-    This type is not intended to be instantiated directly from Python.
-    It serves as a helper type that allows Rust functions to accept a list
-    of UTXO entries in multiple convenient forms.
-    
-    Accepts:
-        list[UtxoEntryReference]: A list of UtxoEntryReference objects.
-        list[dict]: A list of dicts with UtxoEntryReference-compatible keys.
-    """
-    def __repr__(self) -> builtins.str:
-        r"""
-        The detailed string representation.
-        
-        Returns:
-            str: The UtxoEntries as a repr string.
-        """
-
-@typing.final
 class UtxoEntry:
     r"""
     An unspent transaction output (UTXO).
@@ -5215,7 +5194,7 @@ def create_multisig_address(minimum_signatures: builtins.int, keys: typing.Seque
         Exception: If address creation fails.
     """
 
-def create_transaction(utxo_entry_source: UtxoEntries, outputs: Outputs, priority_fee: builtins.int, payload: typing.Optional[Binary] = None, sig_op_count: typing.Optional[builtins.int] = None) -> Transaction:
+def create_transaction(utxo_entry_source: typing.Sequence[UtxoEntryReference], outputs: Outputs, priority_fee: builtins.int, payload: typing.Optional[Binary] = None, sig_op_count: typing.Optional[builtins.int] = None) -> Transaction:
     r"""
     Create a single transaction from UTXOs.
     
@@ -5233,7 +5212,7 @@ def create_transaction(utxo_entry_source: UtxoEntries, outputs: Outputs, priorit
         Exception: If transaction creation fails or fee exceeds input amount.
     """
 
-def create_transactions(entries: UtxoEntries | UtxoContext, change_address: Address, network_id: typing.Optional[NetworkId] = None, outputs: typing.Optional[Outputs] = None, payload: typing.Optional[Binary] = None, fee_rate: typing.Optional[builtins.float] = None, priority_fee: typing.Optional[builtins.int] = None, priority_entries: typing.Optional[UtxoEntries] = None, sig_op_count: typing.Optional[builtins.int] = None, minimum_signatures: typing.Optional[builtins.int] = None) -> dict:
+def create_transactions(entries: typing.Sequence[UtxoEntryReference] | UtxoContext, change_address: Address, network_id: typing.Optional[NetworkId] = None, outputs: typing.Optional[Outputs] = None, payload: typing.Optional[Binary] = None, fee_rate: typing.Optional[builtins.float] = None, priority_fee: typing.Optional[builtins.int] = None, priority_entries: typing.Optional[typing.Sequence[UtxoEntryReference]] = None, sig_op_count: typing.Optional[builtins.int] = None, minimum_signatures: typing.Optional[builtins.int] = None) -> dict:
     r"""
     Create one or more transactions with automatic UTXO selection and change handling.
     
@@ -5258,7 +5237,7 @@ def create_transactions(entries: UtxoEntries | UtxoContext, change_address: Addr
         Exception: If transaction creation fails.
     """
 
-def estimate_transactions(entries: UtxoEntries | UtxoContext, change_address: Address, network_id: typing.Optional[NetworkId] = None, outputs: typing.Optional[Outputs] = None, payload: typing.Optional[Binary] = None, fee_rate: typing.Optional[builtins.float] = None, priority_fee: typing.Optional[builtins.int] = None, priority_entries: typing.Optional[UtxoEntries] = None, sig_op_count: typing.Optional[builtins.int] = None, minimum_signatures: typing.Optional[builtins.int] = None) -> GeneratorSummary:
+def estimate_transactions(entries: typing.Sequence[UtxoEntryReference] | UtxoContext, change_address: Address, network_id: typing.Optional[NetworkId] = None, outputs: typing.Optional[Outputs] = None, payload: typing.Optional[Binary] = None, fee_rate: typing.Optional[builtins.float] = None, priority_fee: typing.Optional[builtins.int] = None, priority_entries: typing.Optional[typing.Sequence[UtxoEntryReference]] = None, sig_op_count: typing.Optional[builtins.int] = None, minimum_signatures: typing.Optional[builtins.int] = None) -> GeneratorSummary:
     r"""
     Estimate transaction fees and count without creating transactions.
     

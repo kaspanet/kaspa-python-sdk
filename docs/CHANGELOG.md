@@ -11,6 +11,7 @@ search:
 
 ### Fixed
 - `requires-python` upper bound changed from `<=3.14` to `<3.15`. Under PEP 440 version ordering `<=3.14` excludes every 3.14 patch release (`3.14.1` and later).
+- The type stubs no longer declare `UtxoEntries` twice. The second, `__repr__`-only declaration came from an internal argument-conversion helper and could shadow the real class for type checkers (last declaration wins), breaking hints for `.amount()`, `.to_dict()`, etc. Parameters that used the helper (`create_transaction`'s `utxo_entry_source`, and `entries`/`priority_entries` on `Generator`, `create_transactions`, `estimate_transactions`) are now annotated `typing.Sequence[UtxoEntryReference]`, matching what those functions actually accept — they take a list (or `UtxoContext` where noted), not a `UtxoEntries` instance.
 
 ### Development
 - The crate is now a Cargo workspace with three members: the core `kaspa` crate, `crates/silverscript` (the SilverScript bindings — a second `cdylib` linking a different rusty-kaspa revision), and `crates/core` (`kaspa-python-sdk-core`, a dependency-light crate sharing the `create_py_exception!` macro between the two). The SilverScript bindings are injected into the wheel under `kaspa/experimental/silverscript/`.
