@@ -4384,7 +4384,7 @@ class ZkScriptBuilder:
     any state, for composing scripts by hand.
     """
     @staticmethod
-    def new_r0(covenants_enabled: builtins.bool = False, sigop_script_units: typing.Optional[builtins.int] = None) -> ZkScriptBuilder:
+    def new_r0(covenants_enabled: builtins.bool = True, sigop_script_units: typing.Optional[builtins.int] = None) -> ZkScriptBuilder:
         r"""
         Construct a new `ZkScriptBuilder` for the RISC Zero proving flow.
         
@@ -4393,9 +4393,10 @@ class ZkScriptBuilder:
         breaking change.
         
         Args:
-            covenants_enabled: Enable covenant opcodes and post-Toccata script
-                limits (default: False). Must be True to emit the zk precompile
-                opcode the verifier fragments rely on.
+            covenants_enabled: Use the post-Toccata script limits (default:
+                True). The zk proof pushes exceed the pre-Toccata 520-byte
+                element limit, so finalizing always fails when this is False;
+                only pass False to build fragments under pre-Toccata rules.
             sigop_script_units: Script units charged per signature operation.
                 Defaults to the native engine default when omitted.
         

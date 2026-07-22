@@ -94,16 +94,17 @@ impl PyZkScriptBuilder {
     /// breaking change.
     ///
     /// Args:
-    ///     covenants_enabled: Enable covenant opcodes and post-Toccata script
-    ///         limits (default: False). Must be True to emit the zk precompile
-    ///         opcode the verifier fragments rely on.
+    ///     covenants_enabled: Use the post-Toccata script limits (default:
+    ///         True). The zk proof pushes exceed the pre-Toccata 520-byte
+    ///         element limit, so finalizing always fails when this is False;
+    ///         only pass False to build fragments under pre-Toccata rules.
     ///     sigop_script_units: Script units charged per signature operation.
     ///         Defaults to the native engine default when omitted.
     ///
     /// Returns:
     ///     ZkScriptBuilder: A new unbounded builder.
     #[staticmethod]
-    #[pyo3(signature = (covenants_enabled=false, sigop_script_units=None))]
+    #[pyo3(signature = (covenants_enabled=true, sigop_script_units=None))]
     pub fn new_r0(covenants_enabled: bool, sigop_script_units: Option<u64>) -> Self {
         let flags = build_engine_flags(covenants_enabled, sigop_script_units);
         Self {
