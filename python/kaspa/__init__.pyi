@@ -4391,7 +4391,10 @@ class ZkScriptBuilder:
         """
     def drain(self) -> builtins.str:
         r"""
-        Drain (empty) the builder and return the script bytes as a hex string.
+        Drain the builder: return the accumulated script bytes and consume the
+        builder. Matching the WASM SDK (and the native builder's move
+        semantics) — and unlike `ScriptBuilder.drain` — the builder is not
+        reusable afterwards: subsequent mutating calls raise `ZkError`.
         
         Returns:
             str: The script bytes, hex-encoded.

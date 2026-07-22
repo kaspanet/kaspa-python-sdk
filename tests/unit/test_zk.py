@@ -211,6 +211,20 @@ def test_failed_finalize_preserves_builder():
     assert "state='groth16'" in repr(b)
 
 
+def test_drain_returns_script_and_consumes_builder():
+    # Matching the WASM SDK (and unlike ScriptBuilder.drain), drain returns
+    # the script bytes and consumes the builder for good.
+    b = ZkScriptBuilder.new_r0(covenants_enabled=True)
+    b.commit_to_groth16(GROTH16_IMAGE_ID)
+    committed = b.script()
+
+    assert b.drain() == committed
+    assert b.script() == ""
+    assert "consumed" in repr(b)
+    with pytest.raises(ZkError):
+        b.add_data("deadbeef")
+
+
 def test_bad_hash_fn_id_raises():
     b = ZkScriptBuilder.new_r0(covenants_enabled=True)
     with pytest.raises(ZkError):
