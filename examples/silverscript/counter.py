@@ -52,6 +52,13 @@ RPC_URL = os.environ.get("KASPA_RPC_URL")
 SUBNETWORK_ID = bytes(20)
 TX_VERSION = 1
 COMPUTE_BUDGET = 10
+# The node's fee check prices consensus compute mass, which charges
+# GRAMS_PER_COMPUTE_BUDGET_UNIT (100) per unit of each input's compute budget —
+# a component `calculate_transaction_mass` (the wallet-side estimator) omits.
+GRAMS_PER_COMPUTE_BUDGET_UNIT = 100
+# Headroom for the other bytes the estimator misses on this shape (covenant
+# serialization, signature size rounding).
+FEE_MASS_SLACK = 200
 
 # Silverscript source
 SOURCE = """
@@ -192,18 +199,32 @@ async def build_counter_tx(
         `value_in` minus the fee.
     """
     spk = lock_script(count)
-
-    # Use a draft tx to measure mass (and as a result fee)
-    draft = Transaction(
-        TX_VERSION, [spend], [TransactionOutput(value_in, spk, covenant)],
-        lock_time=0, subnetwork_id=SUBNETWORK_ID, gas=0, payload=b"", mass=0,
-    )
-    mass = calculate_transaction_mass(NETWORK_ID, draft)
     estimate = await client.get_fee_estimate()
-    fee = mass * int(estimate["estimate"]["priorityBucket"]["feerate"])
+    feerate = int(estimate["estimate"]["priorityBucket"]["feerate"])
+
+    # The mempool prices the *final* transaction: the mass must include the
+    # populated covenant, and the storage-mass component grows as the output
+    # value shrinks. Fee and mass are mutually dependent (fee lowers value_out,
+    # which raises mass, which raises the fee), so iterate to a fixed point.
+    fee = 0
+    for _ in range(5):
+        value_out = value_in - fee
+        draft = Transaction(
+            TX_VERSION, [spend], [TransactionOutput(value_out, spk, covenant)],
+            lock_time=0, subnetwork_id=SUBNETWORK_ID, gas=0, payload=b"", mass=0,
+        )
+        if covenant is None:
+            # Genesis: measure with the covenant populated, as it ships on-chain.
+            draft.populate_genesis_covenants([GenesisCovenantGroup(authorizing_input=0, outputs=[0])])
+        mass = calculate_transaction_mass(NETWORK_ID, draft)
+        fee_mass = mass + GRAMS_PER_COMPUTE_BUDGET_UNIT * COMPUTE_BUDGET + FEE_MASS_SLACK
+        new_fee = fee_mass * feerate
+        if new_fee == fee:
+            break
+        fee = new_fee
     value_out = value_in - fee
 
-    # Rebuild with the fee deducted and the measured mass.
+    # Rebuild with the fee deducted and the measured mass committed.
     tx = Transaction(
         TX_VERSION, [spend], [TransactionOutput(value_out, spk, covenant)],
         lock_time=0, subnetwork_id=SUBNETWORK_ID, gas=0, payload=b"", mass=mass,
@@ -348,12 +369,24 @@ async def main() -> None:
     print(f"Connected\n")
 
     try:
-        # Every run of this script uses a new (random) key
-        keypair = Keypair.random()
-        funder_key = PrivateKey(keypair.private_key)
-        funding_address = keypair.to_address(NETWORK_TYPE)
-        print("Fund this address with testnet KAS (TKAS):")
+        # Every run of this script uses a new (random) key, unless
+        # KASPA_FUNDING_KEY is set (e.g. to a recovery key from a prior run).
+        env_key = os.environ.get("KASPA_FUNDING_KEY")
+        if env_key:
+            funder_key = PrivateKey(env_key)
+            funding_address = funder_key.to_public_key().to_address(NETWORK_TYPE)
+        else:
+            keypair = Keypair.random()
+            funder_key = PrivateKey(keypair.private_key)
+            funding_address = keypair.to_address(NETWORK_TYPE)
+        print("Fund this address with testnet KAS (TKAS) — send at least 1 TKAS")
+        print("(fees are paid from it at the node's relay feerate, and low-value")
+        print("outputs carry extra storage mass):")
         print(f"{funding_address.to_string()}\n")
+        # The key exists only in this process; print it so funds sent to the
+        # address can be recovered (rerun with KASPA_FUNDING_KEY=<key>) if a
+        # later step fails and the run aborts.
+        print(f"(recovery private key for this run: {env_key or keypair.private_key})\n")
         print("Polling for funds (automatically continues within a few seconds of funding)...\n")
         funding_utxos = await wait_for_funds(client, funding_address)
 

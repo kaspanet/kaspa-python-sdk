@@ -130,7 +130,7 @@ fn value_to_expr(value: &Value) -> Expr<'static> {
                     name_span: Default::default(),
                 })
                 .collect();
-            Expr::new(ExprKind::StateObject(entries), Default::default())
+            Expr::new(ExprKind::StructLiteral(entries), Default::default())
         }
     }
 }
@@ -295,6 +295,15 @@ impl PyCompiledContract {
     #[getter]
     pub fn state_layout(&self) -> (usize, usize) {
         self.state_layout
+    }
+
+    /// The canonical length-bound template hash: a 32-byte digest over the
+    /// script's template parts (the prefix before and suffix after the state
+    /// region). Matches the SilverScript `templateHash(prefix, suffix)` builtin,
+    /// so contracts can commit to this value and later reconstruct it on-chain.
+    #[getter]
+    pub fn template_hash<'py>(&self, py: Python<'py>) -> Bound<'py, PyBytes> {
+        PyBytes::new(py, &self.compiled.borrow_dependent().template_hash())
     }
 
     /// Build the signature (unlocking) script for an entrypoint.
