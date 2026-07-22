@@ -40,6 +40,14 @@ class CompiledContract:
         r"""
         `(start, len)`: byte offset and length of the contract state within the script.
         """
+    @property
+    def template_hash(self) -> bytes:
+        r"""
+        The canonical length-bound template hash: a 32-byte digest over the
+        script's template parts (the prefix before and suffix after the state
+        region). Matches the SilverScript `templateHash(prefix, suffix)` builtin,
+        so contracts can commit to this value and later reconstruct it on-chain.
+        """
     def build_sig_script(self, function_name: builtins.str, args: typing.Optional[typing.Any] = None) -> bytes:
         r"""
         Build the signature (unlocking) script for an entrypoint.

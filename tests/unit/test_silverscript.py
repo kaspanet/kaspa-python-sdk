@@ -232,7 +232,7 @@ class TestGoldenSigScript:
 
 
 # ---------------------------------------------------------------------------
-# Parity with silverscript-lang's own compiler tests (pinned rev faaa074)
+# Parity with silverscript-lang's own compiler tests (pinned rev 2a3961c)
 # ---------------------------------------------------------------------------
 
 class TestUpstreamParity:
@@ -457,6 +457,46 @@ class TestStateLayout:
 
 
 # ---------------------------------------------------------------------------
+# Template hash — canonical length-bound digest of the script's template parts
+# ---------------------------------------------------------------------------
+
+class TestTemplateHash:
+    def test_is_32_bytes(self):
+        contract = silverscript.compile(GUARD, [100])
+        assert isinstance(contract.template_hash, bytes)
+        assert len(contract.template_hash) == 32
+
+    def test_guard_golden_digest(self):
+        # Pinned against silverscript-lang's canonical template_hash() at the
+        # pinned rev; a change here means the on-chain templateHash builtin
+        # would no longer reproduce commitments made with this compiler.
+        assert (
+            silverscript.compile(GUARD, [100]).template_hash.hex()
+            == "6c1fde9fea16f306d83ade5184f2db81c3f84c7e594fc41c7cc477df06e975a0"
+        )
+
+    def test_deterministic_across_recompiles(self):
+        a = silverscript.compile(COUNTER, [0]).template_hash
+        b = silverscript.compile(COUNTER, [0]).template_hash
+        assert a == b
+
+    def test_differs_between_templates(self):
+        # Different contracts -> different template parts -> different hashes.
+        assert (
+            silverscript.compile(GUARD, [100]).template_hash
+            != silverscript.compile(COUNTER, [0]).template_hash
+        )
+
+    def test_covenant_state_is_excluded_from_template(self):
+        # The template covers only the prefix/suffix around the state region,
+        # so two instances differing only in initial state share a template.
+        assert (
+            silverscript.compile(COUNTER, [0]).template_hash
+            == silverscript.compile(COUNTER, [5]).template_hash
+        )
+
+
+# ---------------------------------------------------------------------------
 # Cross-module bytes boundary — the central design risk
 # ---------------------------------------------------------------------------
 
@@ -470,7 +510,7 @@ class TestCrossModule:
         return _kaspa.address_from_script_public_key(spk, "testnet").to_string()
 
     def test_compiled_script_wraps_into_p2sh_address(self):
-        # silverscript (@tn12) bytes consumed by the core (@cfafeb4c0) module:
+        # silverscript (@v2.0.1) bytes consumed by the core (@78257f2) module:
         # the whole architecture rests on this handoff working.
         assert self._address(100).startswith("kaspatest:")
 
