@@ -331,7 +331,11 @@ impl PyScriptBuilder {
 // Builds script engine flags from the Python-facing kwargs, mirroring the WASM
 // SDK's `ScriptBuilderOptions { flags: { covenantsEnabled, sigopScriptUnits } }`.
 // `sigop_script_units` falls back to the native engine default when omitted.
-fn build_engine_flags(covenants_enabled: bool, sigop_script_units: Option<u64>) -> EngineFlags {
+// Shared with the zk-sdk builder (`PyZkScriptBuilder::new_r0`).
+pub(crate) fn build_engine_flags(
+    covenants_enabled: bool,
+    sigop_script_units: Option<u64>,
+) -> EngineFlags {
     let mut flags = EngineFlags {
         covenants_enabled,
         ..Default::default()

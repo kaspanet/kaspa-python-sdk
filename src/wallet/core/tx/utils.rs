@@ -116,7 +116,8 @@ pub fn py_create_transaction(
 #[pyo3(signature = (entries, change_address, network_id=None, outputs=None, payload=None, fee_rate=None, priority_fee=None, priority_entries=None, sig_op_count=None, minimum_signatures=None))]
 pub fn py_create_transactions<'a>(
     py: Python<'a>,
-    #[gen_stub(override_type(type_repr = "UtxoEntries | UtxoContext"))] entries: Bound<'_, PyAny>,
+    #[gen_stub(override_type(type_repr = "typing.Sequence[UtxoEntryReference] | UtxoContext"))]
+    entries: Bound<'_, PyAny>,
     change_address: PyAddress,
     network_id: Option<PyNetworkId>,
     outputs: Option<PyOutputs>,
@@ -176,7 +177,8 @@ pub fn py_create_transactions<'a>(
 #[pyo3(name = "estimate_transactions")]
 #[pyo3(signature = (entries, change_address, network_id=None, outputs=None, payload=None, fee_rate=None, priority_fee=None, priority_entries=None, sig_op_count=None, minimum_signatures=None))]
 pub fn py_estimate_transactions(
-    #[gen_stub(override_type(type_repr = "UtxoEntries | UtxoContext"))] entries: Bound<'_, PyAny>,
+    #[gen_stub(override_type(type_repr = "typing.Sequence[UtxoEntryReference] | UtxoContext"))]
+    entries: Bound<'_, PyAny>,
     change_address: PyAddress,
     network_id: Option<PyNetworkId>,
     outputs: Option<PyOutputs>,

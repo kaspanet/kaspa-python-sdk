@@ -13,6 +13,7 @@ The Learn section on this site is grouped into the following main categories:
 - **[Wallet SDK](wallet-sdk/overview.md)** — primitives the `Wallet` is built on.
 - **[Transactions](transactions/overview.md)** — on-chain primitives.
 - **[SilverScript](silverscript/overview.md)** — compile smart contracts to scripts (experimental).
+- **[ZK Scripts](zk/overview.md)** — lock funds behind RISC Zero proofs, verified on-chain.
 
 ---
 

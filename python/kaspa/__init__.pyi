@@ -516,6 +516,39 @@ class Fees:
         """
 
 @typing.final
+class FinalizedR0Script:
+    r"""
+    The result of finalizing a `ZkScriptBuilder`.
+    
+    `sig_script` is the spending script — set it on the transaction input.
+    `redeem_script` is the inner commit script — hash it with
+    `pay_to_script_hash_script` to derive the P2SH script-public-key.
+    """
+    @property
+    def sig_script(self) -> builtins.str:
+        r"""
+        The spending (signature) script, hex-encoded.
+        
+        Returns:
+            str: The sig script bytes as a hex string.
+        """
+    @property
+    def redeem_script(self) -> builtins.str:
+        r"""
+        The inner redeem (commit) script, hex-encoded.
+        
+        Returns:
+            str: The redeem script bytes as a hex string.
+        """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The FinalizedR0Script as a repr string.
+        """
+
+@typing.final
 class Generator:
     r"""
     Transaction generator for building and signing transactions.
@@ -523,7 +556,7 @@ class Generator:
     Handles UTXO selection, fee calculation, change outputs, and transaction
     splitting for large transfers.
     """
-    def __new__(cls, entries: UtxoEntries | UtxoContext, change_address: Address, network_id: typing.Optional[NetworkId] = None, outputs: typing.Optional[Outputs] = None, payload: typing.Optional[Binary] = None, fee_rate: typing.Optional[builtins.float] = None, priority_fee: typing.Optional[builtins.int] = None, priority_entries: typing.Optional[UtxoEntries] = None, sig_op_count: typing.Optional[builtins.int] = None, minimum_signatures: typing.Optional[builtins.int] = None) -> Generator:
+    def __new__(cls, entries: typing.Sequence[UtxoEntryReference] | UtxoContext, change_address: Address, network_id: typing.Optional[NetworkId] = None, outputs: typing.Optional[Outputs] = None, payload: typing.Optional[Binary] = None, fee_rate: typing.Optional[builtins.float] = None, priority_fee: typing.Optional[builtins.int] = None, priority_entries: typing.Optional[typing.Sequence[UtxoEntryReference]] = None, sig_op_count: typing.Optional[builtins.int] = None, minimum_signatures: typing.Optional[builtins.int] = None) -> Generator:
         r"""
         Create a new transaction generator.
         
@@ -1838,6 +1871,40 @@ class PublicKeyGenerator:
         """
 
 @typing.final
+class R0SuccinctWitnessParts:
+    r"""
+    The receipt-derived succinct witness items, hex-encoded, in the order the
+    verifier consumes them (the journal is caller-owned and excluded).
+    """
+    @property
+    def claim(self) -> builtins.str:
+        r"""
+        The SHA-256 digest of the receipt claim, hex-encoded.
+        """
+    @property
+    def control_index(self) -> builtins.str:
+        r"""
+        The control inclusion-proof leaf index (u32 little-endian), hex-encoded.
+        """
+    @property
+    def control_digests(self) -> builtins.str:
+        r"""
+        The flattened control inclusion-proof sibling digests, hex-encoded.
+        """
+    @property
+    def seal(self) -> builtins.str:
+        r"""
+        The flattened STARK seal (u32 little-endian words), hex-encoded.
+        """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The R0SuccinctWitnessParts as a repr string.
+        """
+
+@typing.final
 class Resolver:
     r"""
     A resolver for discovering Kaspa RPC node endpoints.
@@ -3006,27 +3073,6 @@ class UtxoContext:
         
         Returns:
             str: The UtxoContext as a repr string.
-        """
-
-@typing.final
-class UtxoEntries:
-    r"""
-    UTXO entries collection for flexible input handling.
-    
-    This type is not intended to be instantiated directly from Python.
-    It serves as a helper type that allows Rust functions to accept a list
-    of UTXO entries in multiple convenient forms.
-    
-    Accepts:
-        list[UtxoEntryReference]: A list of UtxoEntryReference objects.
-        list[dict]: A list of dicts with UtxoEntryReference-compatible keys.
-    """
-    def __repr__(self) -> builtins.str:
-        r"""
-        The detailed string representation.
-        
-        Returns:
-            str: The UtxoEntries as a repr string.
         """
 
 @typing.final
@@ -4301,6 +4347,233 @@ class XPub:
         """
 
 @typing.final
+class ZkScriptBuilder:
+    r"""
+    A staged builder for RISC Zero zk-to-script locking scripts.
+    
+    Build flow:
+        1. `ZkScriptBuilder.new_r0(...)` — unbounded.
+        2. `commit_to_groth16(image_id)` *or*
+           `commit_to_succinct(image_id, control_id, hash_fn_id=None)` — bounded.
+        3. `finalize_with_groth16_proof(receipt, journal_hash)` *or*
+           `finalize_with_succinct_proof(receipt, journal)` — a FinalizedR0Script.
+    
+    Calling a method in the wrong state raises `ZkError`. The lower-level
+    fragment methods (`add_data`, `push_*`, `append_*`) operate on the builder in
+    any state, for composing scripts by hand.
+    """
+    @staticmethod
+    def new_r0(covenants_enabled: builtins.bool = True, sigop_script_units: typing.Optional[builtins.int] = None) -> ZkScriptBuilder:
+        r"""
+        Construct a new `ZkScriptBuilder` for the RISC Zero proving flow.
+        
+        Exposed as a static factory (not a constructor) — matching the WASM SDK
+        — so future non-R0 backends can add their own factories without a
+        breaking change.
+        
+        Args:
+            covenants_enabled: Use the post-Toccata script limits (default:
+                True). The zk proof pushes exceed the pre-Toccata 520-byte
+                element limit, so finalizing always fails when this is False;
+                only pass False to build fragments under pre-Toccata rules.
+            sigop_script_units: Script units charged per signature operation.
+                Defaults to the native engine default when omitted.
+        
+        Returns:
+            ZkScriptBuilder: A new unbounded builder.
+        """
+    def script(self) -> builtins.str:
+        r"""
+        The current script bytes as a hex string.
+        
+        Returns:
+            str: The script built so far, hex-encoded.
+        """
+    def drain(self) -> builtins.str:
+        r"""
+        Drain the builder: return the accumulated script bytes and consume the
+        builder. Matching the WASM SDK (and the native builder's move
+        semantics) — and unlike `ScriptBuilder.drain` — the builder is not
+        reusable afterwards: subsequent mutating calls raise `ZkError`.
+        
+        Returns:
+            str: The script bytes, hex-encoded.
+        """
+    def add_data(self, data: Binary) -> None:
+        r"""
+        Push raw data (canonical encoding) onto the builder.
+        
+        Use this to push the caller-owned journal / journal hash or a redeem
+        script when composing a script from fragments.
+        
+        Args:
+            data: Data bytes as hex, bytes, or list of ints.
+        
+        Raises:
+            ZkError: If the data cannot be added (or the builder is consumed).
+        """
+    def commit_to_groth16(self, image_id: Binary) -> None:
+        r"""
+        Commit the script to unlocking only on a valid Groth16 proof for the
+        given 32-byte image id. Transitions an unbounded builder into the
+        Groth16-bounded state.
+        
+        Args:
+            image_id: The 32-byte RISC Zero image id, as hex, bytes, or list.
+        
+        Raises:
+            ZkError: If the builder is not unbounded or `image_id` is malformed.
+        """
+    def commit_to_succinct(self, image_id: Binary, control_id: Binary, hash_fn_id: typing.Optional[builtins.str] = None) -> None:
+        r"""
+        Commit the script to unlocking only on a valid succinct proof for the
+        given image id and control id. Transitions an unbounded builder into the
+        succinct-bounded state.
+        
+        Args:
+            image_id: The 32-byte RISC Zero image id, as hex, bytes, or list.
+            control_id: The 32-byte control id, as hex, bytes, or list.
+            hash_fn_id: The hash function id; currently only "poseidon2" (also
+                the default when omitted).
+        
+        Raises:
+            ZkError: If the builder is not unbounded, an id is malformed, or the
+                hash function id is unsupported.
+        """
+    def push_r0_groth16_proof(self, receipt: Binary) -> None:
+        r"""
+        Decode a Groth16 receipt and push the compressed proof bytes onto the
+        builder.
+        
+        Typically called while building a signature script; the script that
+        invokes `append_r0_groth16_verifier` is responsible for placing
+        `journal_hash` under this proof so the verifier sees
+        `[..., journal_hash, compressed_proof]`.
+        
+        Args:
+            receipt: A borsh-encoded `Groth16Receipt<ReceiptClaim>`, as hex,
+                bytes, or list.
+        
+        Raises:
+            ZkError: If the receipt cannot be decoded or the proof cannot be added.
+        """
+    def append_r0_groth16_verifier(self, image_id: Binary) -> None:
+        r"""
+        Append the r0-over-groth16 verifier fragment for the given 32-byte image
+        id. Expects `[..., journal_hash, compressed_proof]` on the stack.
+        
+        Args:
+            image_id: The 32-byte RISC Zero image id, as hex, bytes, or list.
+        
+        Raises:
+            ZkError: If `image_id` is malformed or the fragment cannot be appended.
+        """
+    def append_r0_groth16_verifier_with_fixed_journal(self, image_id: Binary, journal_hash: Binary) -> None:
+        r"""
+        Append a fixed-journal r0-over-groth16 verifier fragment, binding
+        verification to `journal_hash` baked into the script. Expects only
+        `[..., compressed_proof]` on the stack.
+        
+        Args:
+            image_id: The 32-byte RISC Zero image id, as hex, bytes, or list.
+            journal_hash: The 32-byte journal hash, as hex, bytes, or list.
+        
+        Raises:
+            ZkError: If an argument is malformed or the fragment cannot be appended.
+        """
+    def push_r0_succinct_witness(self, receipt: Binary) -> None:
+        r"""
+        Decode a succinct receipt and push its witness material (claim, control
+        index, control digests, seal) onto the builder.
+        
+        The caller-owned `journal` is pushed afterwards (on top) to form the
+        verifier's pre-stack.
+        
+        Args:
+            receipt: A borsh-encoded `SuccinctReceipt<ReceiptClaim>`, as hex,
+                bytes, or list.
+        
+        Raises:
+            ZkError: If the receipt cannot be decoded or the witness cannot be added.
+        """
+    def append_r0_succinct_verifier(self, image_id: Binary, control_id: Binary, hash_fn_id: typing.Optional[builtins.str] = None) -> None:
+        r"""
+        Append the r0 succinct verifier fragment for the given image id, control
+        id and hash function. Expects
+        `[..., claim, control_index, control_digests, seal, journal]`.
+        
+        Args:
+            image_id: The 32-byte RISC Zero image id, as hex, bytes, or list.
+            control_id: The 32-byte control id, as hex, bytes, or list.
+            hash_fn_id: The hash function id; currently only "poseidon2" (also
+                the default when omitted).
+        
+        Raises:
+            ZkError: If an argument is malformed or the fragment cannot be appended.
+        """
+    def append_r0_succinct_verifier_with_fixed_journal(self, image_id: Binary, control_id: Binary, hash_fn_id: typing.Optional[builtins.str] = None, *, journal: Binary) -> None:
+        r"""
+        Append a fixed-journal r0 succinct verifier fragment, binding
+        verification to `journal` baked into the script. Expects only
+        `[..., claim, control_index, control_digests, seal]`.
+        
+        Args:
+            image_id: The 32-byte RISC Zero image id, as hex, bytes, or list.
+            control_id: The 32-byte control id, as hex, bytes, or list.
+            hash_fn_id: The hash function id; currently only "poseidon2" (also
+                the default when omitted).
+            journal: The 32-byte journal, as hex, bytes, or list.
+        
+        Raises:
+            ZkError: If an argument is malformed or the fragment cannot be appended.
+        """
+    def finalize_with_groth16_proof(self, receipt: Binary, journal_hash: Binary) -> FinalizedR0Script:
+        r"""
+        Finalize a Groth16-bounded builder with a receipt and journal hash.
+        
+        Consumes the builder and returns the spending script and inner redeem
+        script, ready to unlock a zk-locked UTXO.
+        
+        Args:
+            receipt: A borsh-encoded `Groth16Receipt<ReceiptClaim>`, as hex,
+                bytes, or list.
+            journal_hash: The 32-byte journal hash, as hex, bytes, or list.
+        
+        Returns:
+            FinalizedR0Script: The sig script and redeem script.
+        
+        Raises:
+            ZkError: If the builder is not Groth16-bounded, the receipt cannot be
+                decoded, or `journal_hash` is malformed.
+        """
+    def finalize_with_succinct_proof(self, receipt: Binary, journal: Binary) -> FinalizedR0Script:
+        r"""
+        Finalize a succinct-bounded builder with a receipt and journal digest.
+        
+        Consumes the builder and returns the spending script and inner redeem
+        script, ready to unlock a zk-locked UTXO.
+        
+        Args:
+            receipt: A borsh-encoded `SuccinctReceipt<ReceiptClaim>`, as hex,
+                bytes, or list.
+            journal: The 32-byte journal digest, as hex, bytes, or list.
+        
+        Returns:
+            FinalizedR0Script: The sig script and redeem script.
+        
+        Raises:
+            ZkError: If the builder is not succinct-bounded, the receipt cannot
+                be decoded, or `journal` is malformed.
+        """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The ZkScriptBuilder as a repr string.
+        """
+
+@typing.final
 class NotificationEvent(enum.Enum):
     r"""
     Notification event types for RPC client subscriptions.
@@ -4924,7 +5197,7 @@ def create_multisig_address(minimum_signatures: builtins.int, keys: typing.Seque
         Exception: If address creation fails.
     """
 
-def create_transaction(utxo_entry_source: UtxoEntries, outputs: Outputs, priority_fee: builtins.int, payload: typing.Optional[Binary] = None, sig_op_count: typing.Optional[builtins.int] = None) -> Transaction:
+def create_transaction(utxo_entry_source: typing.Sequence[UtxoEntryReference], outputs: Outputs, priority_fee: builtins.int, payload: typing.Optional[Binary] = None, sig_op_count: typing.Optional[builtins.int] = None) -> Transaction:
     r"""
     Create a single transaction from UTXOs.
     
@@ -4942,7 +5215,7 @@ def create_transaction(utxo_entry_source: UtxoEntries, outputs: Outputs, priorit
         Exception: If transaction creation fails or fee exceeds input amount.
     """
 
-def create_transactions(entries: UtxoEntries | UtxoContext, change_address: Address, network_id: typing.Optional[NetworkId] = None, outputs: typing.Optional[Outputs] = None, payload: typing.Optional[Binary] = None, fee_rate: typing.Optional[builtins.float] = None, priority_fee: typing.Optional[builtins.int] = None, priority_entries: typing.Optional[UtxoEntries] = None, sig_op_count: typing.Optional[builtins.int] = None, minimum_signatures: typing.Optional[builtins.int] = None) -> dict:
+def create_transactions(entries: typing.Sequence[UtxoEntryReference] | UtxoContext, change_address: Address, network_id: typing.Optional[NetworkId] = None, outputs: typing.Optional[Outputs] = None, payload: typing.Optional[Binary] = None, fee_rate: typing.Optional[builtins.float] = None, priority_fee: typing.Optional[builtins.int] = None, priority_entries: typing.Optional[typing.Sequence[UtxoEntryReference]] = None, sig_op_count: typing.Optional[builtins.int] = None, minimum_signatures: typing.Optional[builtins.int] = None) -> dict:
     r"""
     Create one or more transactions with automatic UTXO selection and change handling.
     
@@ -4967,7 +5240,7 @@ def create_transactions(entries: UtxoEntries | UtxoContext, change_address: Addr
         Exception: If transaction creation fails.
     """
 
-def estimate_transactions(entries: UtxoEntries | UtxoContext, change_address: Address, network_id: typing.Optional[NetworkId] = None, outputs: typing.Optional[Outputs] = None, payload: typing.Optional[Binary] = None, fee_rate: typing.Optional[builtins.float] = None, priority_fee: typing.Optional[builtins.int] = None, priority_entries: typing.Optional[UtxoEntries] = None, sig_op_count: typing.Optional[builtins.int] = None, minimum_signatures: typing.Optional[builtins.int] = None) -> GeneratorSummary:
+def estimate_transactions(entries: typing.Sequence[UtxoEntryReference] | UtxoContext, change_address: Address, network_id: typing.Optional[NetworkId] = None, outputs: typing.Optional[Outputs] = None, payload: typing.Optional[Binary] = None, fee_rate: typing.Optional[builtins.float] = None, priority_fee: typing.Optional[builtins.int] = None, priority_entries: typing.Optional[typing.Sequence[UtxoEntryReference]] = None, sig_op_count: typing.Optional[builtins.int] = None, minimum_signatures: typing.Optional[builtins.int] = None) -> GeneratorSummary:
     r"""
     Estimate transaction fees and count without creating transactions.
     
@@ -5077,6 +5350,38 @@ def pay_to_script_hash_signature_script(redeem_script: Binary, signature: Binary
     
     Raises:
         Exception: If script creation fails.
+    """
+
+def prepare_r0_groth16_proof(receipt: Binary) -> builtins.str:
+    r"""
+    Convert a borsh-encoded `Groth16Receipt<ReceiptClaim>` to the compressed
+    ark-groth16 proof bytes (hex), without a builder.
+    
+    Args:
+        receipt: A borsh-encoded `Groth16Receipt<ReceiptClaim>`, as hex, bytes,
+            or list of ints.
+    
+    Returns:
+        str: The compressed proof bytes, hex-encoded.
+    
+    Raises:
+        ZkError: If the receipt cannot be decoded or the proof cannot be prepared.
+    """
+
+def prepare_r0_succinct_witness(receipt: Binary) -> R0SuccinctWitnessParts:
+    r"""
+    Convert a borsh-encoded `SuccinctReceipt<ReceiptClaim>` to its four on-stack
+    witness byte vectors (hex), without a builder.
+    
+    Args:
+        receipt: A borsh-encoded `SuccinctReceipt<ReceiptClaim>`, as hex, bytes,
+            or list of ints.
+    
+    Returns:
+        R0SuccinctWitnessParts: The claim, control index, control digests, and seal.
+    
+    Raises:
+        ZkError: If the receipt cannot be decoded or the witness cannot be prepared.
     """
 
 def sign_message(message: builtins.str, private_key: PrivateKey, no_aux_rand: builtins.bool = False) -> builtins.str:

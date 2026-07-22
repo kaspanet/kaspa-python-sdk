@@ -17,20 +17,24 @@ use workflow_core::prelude::Abortable;
 
 /// UTXO entries collection for flexible input handling.
 ///
-/// This type is not intended to be instantiated directly from Python.
-/// It serves as a helper type that allows Rust functions to accept a list
-/// of UTXO entries in multiple convenient forms.
+/// This is an argument-conversion helper, not a Python-visible class: it lets
+/// Rust functions accept a list of UTXO entries in multiple convenient forms.
+/// It is deliberately not registered in the module and carries no stub class —
+/// a stub class here would collide with the exported `UtxoEntries`
+/// (`consensus::client::utxo::PyUtxoEntries`) and shadow it for type checkers.
+/// In stubs it renders as `typing.Sequence[UtxoEntryReference]` via the
+/// `impl_stub_type!` below.
 ///
 /// Accepts:
 ///     list[UtxoEntryReference]: A list of UtxoEntryReference objects.
 ///     list[dict]: A list of dicts with UtxoEntryReference-compatible keys.
-#[gen_stub_pyclass]
 #[pyclass(name = "UtxoEntries")]
 pub struct PyUtxoEntries {
     pub entries: Vec<UtxoEntryReference>,
 }
 
-#[gen_stub_pymethods]
+pyo3_stub_gen::impl_stub_type!(PyUtxoEntries = Vec<PyUtxoEntryReference>);
+
 #[pymethods]
 impl PyUtxoEntries {
     /// The detailed string representation.
@@ -166,10 +170,10 @@ impl PyGenerator {
     #[new]
     #[pyo3(signature = (entries, change_address, network_id=None, outputs=None, payload=None, fee_rate=None, priority_fee=None, priority_entries=None, sig_op_count=None, minimum_signatures=None))]
     pub fn ctor(
-        #[gen_stub(override_type(type_repr = "UtxoEntries | UtxoContext"))] entries: Bound<
-            '_,
-            PyAny,
-        >,
+        #[gen_stub(override_type(
+            type_repr = "typing.Sequence[UtxoEntryReference] | UtxoContext"
+        ))]
+        entries: Bound<'_, PyAny>,
         change_address: PyAddress,
         network_id: Option<PyNetworkId>,
         outputs: Option<PyOutputs>,

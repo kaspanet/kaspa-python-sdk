@@ -21,6 +21,12 @@ script is self-contained and demonstrates one feature end-to-end.
 - **[`transactions/`](https://github.com/kaspanet/kaspa-python-sdk/tree/main/examples/transactions)**
   — building transactions with the `Generator`, `UtxoContext`,
   multisig, and KRC-20 deploys.
+- **[`silverscript/`](https://github.com/kaspanet/kaspa-python-sdk/tree/main/examples/silverscript)**
+  — a stateful Counter covenant compiled from SilverScript, run live
+  through genesis and transitions.
+- **[`zk/`](https://github.com/kaspanet/kaspa-python-sdk/tree/main/examples/zk)**
+  — locking and redeeming a UTXO behind a RISC Zero Groth16 proof,
+  verified on-chain.
 - **[`derivation.py`](https://github.com/kaspanet/kaspa-python-sdk/blob/main/examples/derivation.py)**
   — BIP-32 / BIP-44 key derivation.
 - **[`mnemonic.py`](https://github.com/kaspanet/kaspa-python-sdk/blob/main/examples/mnemonic.py)**

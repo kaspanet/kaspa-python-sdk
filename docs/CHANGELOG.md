@@ -7,12 +7,22 @@ search:
 
 ### Added
 - New `kaspa.experimental.silverscript` module — compile [SilverScript](https://github.com/kaspanet/silverscript) script-based smart-contract source and build transaction scripts from Python.
-  
+- Class `ZkScriptBuilder` exposed to Python. Staged builder that turns RISC Zero zero-knowledge proofs into Kaspa transaction scripts, mirroring the WASM SDK: `new_r0()`, `commit_to_groth16()` / `commit_to_succinct()`, and `finalize_with_groth16_proof()` / `finalize_with_succinct_proof()`, plus fragment methods for composing scripts by hand (`add_data`, `push_r0_groth16_proof`, `push_r0_succinct_witness`, and `append_r0_groth16_verifier` / `append_r0_succinct_verifier` with their `*_with_fixed_journal` variants). The produced P2SH scripts lock a UTXO behind on-chain verification of a specific proof (by image id, and optionally a fixed journal) via the `OpZkPrecompile` opcode — gated, like covenants, by the Toccata activation.
+- Class `FinalizedR0Script` exposed to Python. The result of finalizing a `ZkScriptBuilder`, with `sig_script` and `redeem_script` properties.
+- Class `R0SuccinctWitnessParts` exposed to Python. The receipt-derived succinct witness items (`claim`, `control_index`, `control_digests`, `seal`) in verifier order.
+- Functions `prepare_r0_groth16_proof()` and `prepare_r0_succinct_witness()` exposed to Python. Convert a RISC Zero receipt into the proof / witness pushes for composing sig scripts by hand.
+- Exception `ZkError` added to `kaspa.exceptions`, raised by the ZK bindings.
+- Example under `examples/zk/` demonstrating a fully on-chain Groth16 commit→redeem round-trip.
+
 ### Fixed
 - `requires-python` upper bound changed from `<=3.14` to `<3.15`. Under PEP 440 version ordering `<=3.14` excludes every 3.14 patch release (`3.14.1` and later).
+- The type stubs no longer declare `UtxoEntries` twice. Previously an internal argument-conversion helper emitted a second, `__repr__`-only declaration that could shadow the real class for type checkers (last declaration wins), hiding every method except `__repr__`. Parameters that took the helper (`utxo_entry_source` on `create_transaction`; `entries` / `priority_entries` on `Generator`, `create_transactions`, and `estimate_transactions`) are now annotated `typing.Sequence[UtxoEntryReference]`, matching what they actually accept — a list, not a `UtxoEntries` instance.
 
 ### Development
+*Internal SDK changes — not visible through the Python package API.*
+
 - The crate is now a Cargo workspace with three members: the core `kaspa` crate, `crates/silverscript` (the SilverScript bindings — a second `cdylib` linking a different rusty-kaspa revision), and `crates/core` (`kaspa-python-sdk-core`, a dependency-light crate sharing the `create_py_exception!` macro between the two). The SilverScript bindings are injected into the wheel under `kaspa/experimental/silverscript/`.
+- Bumped the pinned `rusty-kaspa` dependency for the core `kaspa` module from `cfafeb4c0` to `98a4ccd8d` (master), which adds the `kaspa-txscript-zk-sdk` crate backing the new ZK bindings. Adds `risc0-zkvm` and `borsh` as direct dependencies for decoding RISC Zero receipts. The four-commit range also includes a docs update, a Windows build fix, and an upstream RPC conversion fix (the `covenant` field on transaction outputs converted via `TryFrom<RpcOptionalTransactionOutput>`) with no Python-visible effect — the SDK never invokes that conversion path.
 
 ## [2.0.1] - 2026-06-18
 
