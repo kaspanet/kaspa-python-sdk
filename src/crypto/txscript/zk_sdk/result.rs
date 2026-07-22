@@ -1,4 +1,3 @@
-use kaspa_txscript_zk_sdk::FinalizedR0Script as NativeFinalizedR0Script;
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
 use workflow_core::hex::ToHex;
@@ -49,11 +48,11 @@ impl PyFinalizedR0Script {
     }
 }
 
-impl From<NativeFinalizedR0Script> for PyFinalizedR0Script {
-    fn from(value: NativeFinalizedR0Script) -> Self {
+impl PyFinalizedR0Script {
+    pub(crate) fn new(sig_script: Vec<u8>, redeem_script: Vec<u8>) -> Self {
         Self {
-            sig_script: value.sig_script,
-            redeem_script: value.redeem_script,
+            sig_script,
+            redeem_script,
         }
     }
 }

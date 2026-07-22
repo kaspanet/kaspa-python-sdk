@@ -5,13 +5,12 @@ use crate::crypto::txscript::zk_sdk::utils::{
     zk_err,
 };
 use crate::types::PyBinary;
+use kaspa_txscript::EngineFlags;
 use kaspa_txscript::script_builder::ScriptBuilder;
 use kaspa_txscript_zk_sdk::{
-    BoundedR0Groth16Script, BoundedR0SuccinctScript, UnboundedR0Script,
-    ZkScriptBuilder as NativeZkScriptBuilder, append_r0_groth16_verifier,
-    append_r0_groth16_verifier_with_fixed_journal, append_r0_succinct_verifier,
-    append_r0_succinct_verifier_with_fixed_journal, push_r0_groth16_proof,
-    push_r0_succinct_witness,
+    append_r0_groth16_verifier, append_r0_groth16_verifier_with_fixed_journal,
+    append_r0_succinct_verifier, append_r0_succinct_verifier_with_fixed_journal,
+    push_r0_groth16_proof, push_r0_succinct_witness,
 };
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
@@ -21,43 +20,13 @@ use workflow_core::hex::ToHex;
 /// Runtime mirror of the native compile-time type-state. FFI cannot carry the
 /// native crate's `PhantomData` type-state, so the `Unbounded` →
 /// `BoundedGroth16` / `BoundedSuccinct` → finalized transitions are checked at
-/// runtime and the wrong call raises `ZkError`. `Taken` is a transient sentinel
-/// held while ownership of the inner native builder is moved across a state
-/// transition.
-enum InnerState {
-    Unbounded(NativeZkScriptBuilder<UnboundedR0Script>),
-    BoundedGroth16(NativeZkScriptBuilder<BoundedR0Groth16Script>),
-    BoundedSuccinct(NativeZkScriptBuilder<BoundedR0SuccinctScript>),
-    Taken,
-}
-
-impl InnerState {
-    fn script(&self) -> &[u8] {
-        match self {
-            InnerState::Unbounded(b) => b.script(),
-            InnerState::BoundedGroth16(b) => b.script(),
-            InnerState::BoundedSuccinct(b) => b.script(),
-            InnerState::Taken => &[],
-        }
-    }
-
-    fn drain(&mut self) -> Vec<u8> {
-        match std::mem::replace(self, InnerState::Taken) {
-            InnerState::Unbounded(b) => b.drain(),
-            InnerState::BoundedGroth16(b) => b.drain(),
-            InnerState::BoundedSuccinct(b) => b.drain(),
-            InnerState::Taken => Vec::new(),
-        }
-    }
-
-    fn builder_mut(&mut self) -> PyResult<&mut ScriptBuilder> {
-        match self {
-            InnerState::Unbounded(b) => Ok(b.builder_mut()),
-            InnerState::BoundedGroth16(b) => Ok(b.builder_mut()),
-            InnerState::BoundedSuccinct(b) => Ok(b.builder_mut()),
-            InnerState::Taken => Err(PyZkError::new_err("builder has been consumed")),
-        }
-    }
+/// runtime and the wrong call raises `ZkError`.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum ZkState {
+    Unbounded,
+    BoundedGroth16,
+    BoundedSuccinct,
+    Consumed,
 }
 
 /// A staged builder for RISC Zero zk-to-script locking scripts.
@@ -75,12 +44,33 @@ impl InnerState {
 #[gen_stub_pyclass]
 #[pyclass(name = "ZkScriptBuilder")]
 pub struct PyZkScriptBuilder {
-    inner: InnerState,
+    state: ZkState,
+    // `ScriptBuilder` has no flags getter, and finalize needs a scratch
+    // builder with the same flags — so keep our own copy.
+    flags: EngineFlags,
+    builder: ScriptBuilder,
 }
 
+// The state transitions and finalize recipes below mirror the native
+// type-state `ZkScriptBuilder`'s methods, but call the same public fragment
+// functions on the inner `ScriptBuilder` in place, flipping `state` only on
+// success. The native methods consume the builder and errors do not return it,
+// so going through them would destroy the builder on any failure; this way a
+// failed call leaves the state and script untouched.
 impl PyZkScriptBuilder {
-    fn take(&mut self) -> InnerState {
-        std::mem::replace(&mut self.inner, InnerState::Taken)
+    fn expect_state(&self, expected: ZkState, message: &str) -> PyResult<()> {
+        if self.state == expected {
+            Ok(())
+        } else {
+            Err(PyZkError::new_err(message.to_string()))
+        }
+    }
+
+    fn builder_mut(&mut self) -> PyResult<&mut ScriptBuilder> {
+        match self.state {
+            ZkState::Consumed => Err(PyZkError::new_err("builder has been consumed")),
+            _ => Ok(&mut self.builder),
+        }
     }
 }
 
@@ -108,7 +98,9 @@ impl PyZkScriptBuilder {
     pub fn new_r0(covenants_enabled: bool, sigop_script_units: Option<u64>) -> Self {
         let flags = build_engine_flags(covenants_enabled, sigop_script_units);
         Self {
-            inner: InnerState::Unbounded(NativeZkScriptBuilder::new_r0_with_flags(flags)),
+            state: ZkState::Unbounded,
+            flags,
+            builder: ScriptBuilder::with_flags(flags),
         }
     }
 
@@ -117,7 +109,7 @@ impl PyZkScriptBuilder {
     /// Returns:
     ///     str: The script built so far, hex-encoded.
     pub fn script(&self) -> String {
-        self.inner.script().to_hex()
+        self.builder.script().to_hex()
     }
 
     /// Drain (empty) the builder and return the script bytes as a hex string.
@@ -125,7 +117,8 @@ impl PyZkScriptBuilder {
     /// Returns:
     ///     str: The script bytes, hex-encoded.
     pub fn drain(&mut self) -> String {
-        self.inner.drain().to_hex()
+        self.state = ZkState::Consumed;
+        self.builder.drain().to_hex()
     }
 
     /// Push raw data (canonical encoding) onto the builder.
@@ -139,10 +132,7 @@ impl PyZkScriptBuilder {
     /// Raises:
     ///     ZkError: If the data cannot be added (or the builder is consumed).
     pub fn add_data(&mut self, data: PyBinary) -> PyResult<()> {
-        self.inner
-            .builder_mut()?
-            .add_data(data.as_ref())
-            .map_err(zk_err)?;
+        self.builder_mut()?.add_data(data.as_ref()).map_err(zk_err)?;
         Ok(())
     }
 
@@ -157,19 +147,17 @@ impl PyZkScriptBuilder {
     ///     ZkError: If the builder is not unbounded or `image_id` is malformed.
     pub fn commit_to_groth16(&mut self, image_id: PyBinary) -> PyResult<()> {
         let image_id = into_array_32(image_id.into(), "image_id")?;
-        match self.take() {
-            InnerState::Unbounded(b) => {
-                let bounded = b.commit_to_groth16(image_id).map_err(zk_err)?;
-                self.inner = InnerState::BoundedGroth16(bounded);
-                Ok(())
-            }
-            other => {
-                self.inner = other;
-                Err(PyZkError::new_err(
-                    "commit_to_groth16 requires an unbounded builder",
-                ))
-            }
+        self.expect_state(
+            ZkState::Unbounded,
+            "commit_to_groth16 requires an unbounded builder",
+        )?;
+        let snapshot = self.builder.script().to_vec();
+        if let Err(e) = append_r0_groth16_verifier(&mut self.builder, image_id) {
+            *self.builder.script_mut() = snapshot;
+            return Err(zk_err(e));
         }
+        self.state = ZkState::BoundedGroth16;
+        Ok(())
     }
 
     /// Commit the script to unlocking only on a valid succinct proof for the
@@ -195,21 +183,18 @@ impl PyZkScriptBuilder {
         let image_id = into_array_32(image_id.into(), "image_id")?;
         let control_id = into_array_32(control_id.into(), "control_id")?;
         let hash_fn = decode_hash_fn_id(hash_fn_id)?;
-        match self.take() {
-            InnerState::Unbounded(b) => {
-                let bounded = b
-                    .commit_to_succinct(image_id, control_id, hash_fn)
-                    .map_err(zk_err)?;
-                self.inner = InnerState::BoundedSuccinct(bounded);
-                Ok(())
-            }
-            other => {
-                self.inner = other;
-                Err(PyZkError::new_err(
-                    "commit_to_succinct requires an unbounded builder",
-                ))
-            }
+        self.expect_state(
+            ZkState::Unbounded,
+            "commit_to_succinct requires an unbounded builder",
+        )?;
+        let snapshot = self.builder.script().to_vec();
+        if let Err(e) = append_r0_succinct_verifier(&mut self.builder, image_id, control_id, hash_fn)
+        {
+            *self.builder.script_mut() = snapshot;
+            return Err(zk_err(e));
         }
+        self.state = ZkState::BoundedSuccinct;
+        Ok(())
     }
 
     /// Decode a Groth16 receipt and push the compressed proof bytes onto the
@@ -228,7 +213,7 @@ impl PyZkScriptBuilder {
     ///     ZkError: If the receipt cannot be decoded or the proof cannot be added.
     pub fn push_r0_groth16_proof(&mut self, receipt: PyBinary) -> PyResult<()> {
         let receipt = decode_groth16_receipt(&receipt)?;
-        push_r0_groth16_proof(self.inner.builder_mut()?, receipt).map_err(zk_err)?;
+        push_r0_groth16_proof(self.builder_mut()?, receipt).map_err(zk_err)?;
         Ok(())
     }
 
@@ -242,7 +227,7 @@ impl PyZkScriptBuilder {
     ///     ZkError: If `image_id` is malformed or the fragment cannot be appended.
     pub fn append_r0_groth16_verifier(&mut self, image_id: PyBinary) -> PyResult<()> {
         let image_id = into_array_32(image_id.into(), "image_id")?;
-        append_r0_groth16_verifier(self.inner.builder_mut()?, image_id).map_err(zk_err)?;
+        append_r0_groth16_verifier(self.builder_mut()?, image_id).map_err(zk_err)?;
         Ok(())
     }
 
@@ -264,7 +249,7 @@ impl PyZkScriptBuilder {
         let image_id = into_array_32(image_id.into(), "image_id")?;
         let journal_hash = into_array_32(journal_hash.into(), "journal_hash")?;
         append_r0_groth16_verifier_with_fixed_journal(
-            self.inner.builder_mut()?,
+            self.builder_mut()?,
             image_id,
             journal_hash,
         )
@@ -286,7 +271,7 @@ impl PyZkScriptBuilder {
     ///     ZkError: If the receipt cannot be decoded or the witness cannot be added.
     pub fn push_r0_succinct_witness(&mut self, receipt: PyBinary) -> PyResult<()> {
         let receipt = decode_succinct_receipt(&receipt)?;
-        push_r0_succinct_witness(self.inner.builder_mut()?, receipt).map_err(zk_err)?;
+        push_r0_succinct_witness(self.builder_mut()?, receipt).map_err(zk_err)?;
         Ok(())
     }
 
@@ -312,7 +297,7 @@ impl PyZkScriptBuilder {
         let image_id = into_array_32(image_id.into(), "image_id")?;
         let control_id = into_array_32(control_id.into(), "control_id")?;
         let hash_fn_id = decode_hash_fn_id(hash_fn_id)?;
-        append_r0_succinct_verifier(self.inner.builder_mut()?, image_id, control_id, hash_fn_id)
+        append_r0_succinct_verifier(self.builder_mut()?, image_id, control_id, hash_fn_id)
             .map_err(zk_err)?;
         Ok(())
     }
@@ -343,7 +328,7 @@ impl PyZkScriptBuilder {
         let hash_fn_id = decode_hash_fn_id(hash_fn_id)?;
         let journal = into_array_32(journal.into(), "journal")?;
         append_r0_succinct_verifier_with_fixed_journal(
-            self.inner.builder_mut()?,
+            self.builder_mut()?,
             image_id,
             control_id,
             hash_fn_id,
@@ -376,20 +361,21 @@ impl PyZkScriptBuilder {
     ) -> PyResult<PyFinalizedR0Script> {
         let receipt = decode_groth16_receipt(&receipt)?;
         let journal_hash = into_array_32(journal_hash.into(), "journal_hash")?;
-        match self.take() {
-            InnerState::BoundedGroth16(b) => {
-                let finalized = b
-                    .finalize_with_proof(receipt, journal_hash)
-                    .map_err(zk_err)?;
-                Ok(finalized.into())
-            }
-            other => {
-                self.inner = other;
-                Err(PyZkError::new_err(
-                    "finalize_with_groth16_proof requires a Groth16-bounded builder",
-                ))
-            }
-        }
+        self.expect_state(
+            ZkState::BoundedGroth16,
+            "finalize_with_groth16_proof requires a Groth16-bounded builder",
+        )?;
+        // Same recipe as the native `finalize_with_proof`: journal hash, then
+        // the compressed proof, then the redeem script — built in a scratch
+        // builder so a failure leaves this builder intact.
+        let redeem_script = self.builder.script().to_vec();
+        let mut sig = ScriptBuilder::with_flags(self.flags);
+        sig.add_data(&journal_hash).map_err(zk_err)?;
+        push_r0_groth16_proof(&mut sig, receipt).map_err(zk_err)?;
+        sig.add_data(&redeem_script).map_err(zk_err)?;
+        self.state = ZkState::Consumed;
+        self.builder.drain();
+        Ok(PyFinalizedR0Script::new(sig.drain(), redeem_script))
     }
 
     /// Finalize a succinct-bounded builder with a receipt and journal digest.
@@ -419,20 +405,21 @@ impl PyZkScriptBuilder {
             .as_slice()
             .try_into()
             .map_err(|_| PyZkError::new_err("journal must be 32 bytes"))?;
-        match self.take() {
-            InnerState::BoundedSuccinct(b) => {
-                let finalized = b
-                    .finalize_with_proof(receipt, journal_digest)
-                    .map_err(zk_err)?;
-                Ok(finalized.into())
-            }
-            other => {
-                self.inner = other;
-                Err(PyZkError::new_err(
-                    "finalize_with_succinct_proof requires a succinct-bounded builder",
-                ))
-            }
-        }
+        self.expect_state(
+            ZkState::BoundedSuccinct,
+            "finalize_with_succinct_proof requires a succinct-bounded builder",
+        )?;
+        // Same recipe as the native `finalize_with_proof`: the witness items,
+        // then the caller-owned journal on top, then the redeem script — built
+        // in a scratch builder so a failure leaves this builder intact.
+        let redeem_script = self.builder.script().to_vec();
+        let mut sig = ScriptBuilder::with_flags(self.flags);
+        push_r0_succinct_witness(&mut sig, receipt).map_err(zk_err)?;
+        sig.add_data(journal_digest.as_bytes()).map_err(zk_err)?;
+        sig.add_data(&redeem_script).map_err(zk_err)?;
+        self.state = ZkState::Consumed;
+        self.builder.drain();
+        Ok(PyFinalizedR0Script::new(sig.drain(), redeem_script))
     }
 
     /// The detailed string representation.
@@ -440,16 +427,16 @@ impl PyZkScriptBuilder {
     /// Returns:
     ///     str: The ZkScriptBuilder as a repr string.
     fn __repr__(&self) -> String {
-        let state = match self.inner {
-            InnerState::Unbounded(_) => "unbounded",
-            InnerState::BoundedGroth16(_) => "groth16",
-            InnerState::BoundedSuccinct(_) => "succinct",
-            InnerState::Taken => "consumed",
+        let state = match self.state {
+            ZkState::Unbounded => "unbounded",
+            ZkState::BoundedGroth16 => "groth16",
+            ZkState::BoundedSuccinct => "succinct",
+            ZkState::Consumed => "consumed",
         };
         format!(
             "ZkScriptBuilder(state='{}', script={} bytes)",
             state,
-            self.inner.script().len()
+            self.builder.script().len()
         )
     }
 }

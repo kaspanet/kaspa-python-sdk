@@ -198,6 +198,19 @@ def test_bad_receipt_raises():
         b.finalize_with_groth16_proof("deadbeef", GROTH16_JOURNAL_HASH)
 
 
+def test_failed_finalize_preserves_builder():
+    # Pre-Toccata limits reject the oversized proof push, so finalize fails —
+    # the builder must survive with its state and committed script intact
+    # instead of being consumed.
+    b = ZkScriptBuilder.new_r0(covenants_enabled=False)
+    b.commit_to_groth16(GROTH16_IMAGE_ID)
+    script_before = b.script()
+    with pytest.raises(ZkError):
+        b.finalize_with_groth16_proof(groth_receipt(), GROTH16_JOURNAL_HASH)
+    assert b.script() == script_before
+    assert "state='groth16'" in repr(b)
+
+
 def test_bad_hash_fn_id_raises():
     b = ZkScriptBuilder.new_r0(covenants_enabled=True)
     with pytest.raises(ZkError):
