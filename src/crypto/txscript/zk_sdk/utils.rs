@@ -47,16 +47,19 @@ pub(crate) fn decode_hash_fn_id(hash_fn_id: Option<String>) -> PyResult<Option<H
     hash_fn_id.as_deref().map(parse_hash_fn_id).transpose()
 }
 
-pub(crate) fn decode_groth16_receipt(receipt: &PyBinary) -> PyResult<Groth16Receipt<ReceiptClaim>> {
+fn decode_receipt<T: borsh::BorshDeserialize>(receipt: &PyBinary, what: &str) -> PyResult<T> {
     borsh::from_slice(receipt.as_ref())
-        .map_err(|e| PyZkError::new_err(format!("failed to decode Groth16 receipt: {e}")))
+        .map_err(|e| PyZkError::new_err(format!("failed to decode {what} receipt: {e}")))
+}
+
+pub(crate) fn decode_groth16_receipt(receipt: &PyBinary) -> PyResult<Groth16Receipt<ReceiptClaim>> {
+    decode_receipt(receipt, "Groth16")
 }
 
 pub(crate) fn decode_succinct_receipt(
     receipt: &PyBinary,
 ) -> PyResult<SuccinctReceipt<ReceiptClaim>> {
-    borsh::from_slice(receipt.as_ref())
-        .map_err(|e| PyZkError::new_err(format!("failed to decode succinct receipt: {e}")))
+    decode_receipt(receipt, "succinct")
 }
 
 /// Convert a borsh-encoded `Groth16Receipt<ReceiptClaim>` to the compressed

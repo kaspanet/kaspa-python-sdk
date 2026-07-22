@@ -135,7 +135,9 @@ impl PyZkScriptBuilder {
     /// Raises:
     ///     ZkError: If the data cannot be added (or the builder is consumed).
     pub fn add_data(&mut self, data: PyBinary) -> PyResult<()> {
-        self.builder_mut()?.add_data(data.as_ref()).map_err(zk_err)?;
+        self.builder_mut()?
+            .add_data(data.as_ref())
+            .map_err(zk_err)?;
         Ok(())
     }
 
@@ -191,7 +193,8 @@ impl PyZkScriptBuilder {
             "commit_to_succinct requires an unbounded builder",
         )?;
         let snapshot = self.builder.script().to_vec();
-        if let Err(e) = append_r0_succinct_verifier(&mut self.builder, image_id, control_id, hash_fn)
+        if let Err(e) =
+            append_r0_succinct_verifier(&mut self.builder, image_id, control_id, hash_fn)
         {
             *self.builder.script_mut() = snapshot;
             return Err(zk_err(e));
@@ -251,12 +254,8 @@ impl PyZkScriptBuilder {
     ) -> PyResult<()> {
         let image_id = into_array_32(image_id.into(), "image_id")?;
         let journal_hash = into_array_32(journal_hash.into(), "journal_hash")?;
-        append_r0_groth16_verifier_with_fixed_journal(
-            self.builder_mut()?,
-            image_id,
-            journal_hash,
-        )
-        .map_err(zk_err)?;
+        append_r0_groth16_verifier_with_fixed_journal(self.builder_mut()?, image_id, journal_hash)
+            .map_err(zk_err)?;
         Ok(())
     }
 
@@ -403,11 +402,7 @@ impl PyZkScriptBuilder {
         journal: PyBinary,
     ) -> PyResult<PyFinalizedR0Script> {
         let receipt = decode_succinct_receipt(&receipt)?;
-        let journal_bytes: Vec<u8> = journal.into();
-        let journal_digest: Digest = journal_bytes
-            .as_slice()
-            .try_into()
-            .map_err(|_| PyZkError::new_err("journal must be 32 bytes"))?;
+        let journal_digest: Digest = into_array_32(journal.into(), "journal")?.into();
         self.expect_state(
             ZkState::BoundedSuccinct,
             "finalize_with_succinct_proof requires a succinct-bounded builder",
