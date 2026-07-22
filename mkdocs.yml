@@ -162,6 +162,10 @@ nav:
           - Compiling Contracts: learn/silverscript/compiling.md
           - Unlocking Scripts: learn/silverscript/unlocking-scripts.md
           - Covenants: learn/silverscript/covenants.md
+      - ZK Scripts:
+          - Overview: learn/zk/overview.md
+          - Locking & Redeeming: learn/zk/locking-and-redeeming.md
+          - Fragments & Helpers: learn/zk/fragments.md
   - Examples: examples.md
   - API Reference: reference/
   - Contributing:
