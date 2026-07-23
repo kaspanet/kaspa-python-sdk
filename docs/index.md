@@ -6,6 +6,8 @@ Kaspa network from Python. This SDK provides features in the following main cate
 - [RPC Client](learn/rpc/overview.md) — RPC API for the Kaspa node using WebSockets.
 - [Wallet SDK](learn/wallet-sdk/overview.md) — Bindings for wallet-related primitives such as key management, derivation, and transactions.
 - [Managed Wallet](learn/wallet/overview.md) — A high-level, single Python class interface to the Rusty Kaspa Wallet API. This provides full wallet functionality in the single Python class: `Wallet`.
+- [SilverScript](learn/silverscript/overview.md) — Experimental SilverScript contract compilation, locking scripts, and unlocking scripts.
+- [ZK Scripts](learn/zk/overview.md) — Experimental builder that turns RISC Zero zero-knowledge proofs into Kaspa locking and unlocking scripts, verified on-chain.
 
 This project closely mirrors
 [Kaspa's WASM SDK](https://kaspa.aspectron.org/docs/), while trying to
@@ -48,11 +50,13 @@ if __name__ == "__main__":
 
 - **[Learn](learn/index.md)**  
   How the SDK is shaped, taught topic by topic. Connections, wallets,
-  derivation, transactions, the Kaspa concepts behind them.
+  derivation, transactions, SilverScript contracts, ZK scripts, and
+  the Kaspa concepts behind them.
 
 - **[Examples](examples.md)**  
   Runnable scripts on GitHub covering RPC, wallet, transactions,
-  derivation, mnemonics, message signing, and addresses.
+  SilverScript, ZK scripts, derivation, mnemonics, message signing,
+  and addresses.
 
 - **[API Reference](reference/index.md)**  
   Every public class, method, and signature. Auto-generated.
