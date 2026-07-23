@@ -5,6 +5,8 @@ search:
 
 ## [Unreleased]
 
+*Target: 2.0.2*
+
 ### Added
 - New `kaspa.experimental.silverscript` module — compile [SilverScript](https://github.com/kaspanet/silverscript) script-based smart-contract source and build transaction scripts from Python. `compile()` returns a `CompiledContract` exposing the locking script, ABI, state layout, and `template_hash` (the canonical 32-byte length-bound hash over the script's template parts around the covenant state region, matching the SilverScript `templateHash(prefix, suffix)` builtin), plus `build_sig_script()` / `build_sig_script_for_covenant_decl()` for unlocking scripts.
 - Example under `examples/silverscript/` — a Counter covenant run live on testnet-10, one transaction at a time: genesis, then permissionless `add`/`subtract` state transitions.
