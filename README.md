@@ -14,15 +14,15 @@ A native extension module, `kaspa`, is built from these bindings using [PyO3](ht
 
 ## Features
 
-This SDK provides features in two primary categories:
+This SDK provides features across the following categories:
 
 - RPC Client — RPC API for the Kaspa node using WebSockets.
 - Wallet SDK — Bindings for wallet-related primitives such as key management, derivation, and transactions.
-- Managed Wallet — a fully managed interface for the Rusty Kaspa Wallet API bundled into one Python class.
+- Managed Wallet — A fully managed interface for the Rusty Kaspa Wallet API bundled into one Python class.
+- SilverScript — Experimental SilverScript contract compilation, locking scripts, and unlocking scripts.
+- ZK Scripts — Experimental builder that turns RISC Zero zero-knowledge proofs into Kaspa locking and unlocking scripts, verified on-chain.
 
 This package strives to mirror the [Kaspa WASM32 SDK](https://kaspa.aspectron.org/docs/) from a feature and API perspective, while respecting Python conventions.
-
-Most feature gaps with WASM32 SDK exist around Wallet functionality. Over time, features will be added to the Python SDK to bring it as close as possible.
 
 ## Documentation
 
@@ -42,7 +42,7 @@ Documentation is not available for versions prior to 1.1.0. However, the API is 
 
 ## Quick Install
 
-The Kaspa Python SDK is available on PyPi ([link](https://pypi.org/project/kaspa/)). As such, it can be installed from PyPi via:
+The Kaspa Python SDK is available on PyPI ([link](https://pypi.org/project/kaspa/)). As such, it can be installed from PyPI via:
 
 ```bash
 pip install kaspa
