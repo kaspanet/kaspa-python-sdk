@@ -13782,6 +13782,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#kaspa.experimental.silverscript.CompiledContract.template_hash" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;template_hash
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#kaspa.experimental.silverscript.CompiledContract.without_selector" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -14501,6 +14512,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#kaspa.experimental.silverscript.CompiledContract.template_hash" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;template_hash
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#kaspa.experimental.silverscript.CompiledContract.without_selector" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -14784,6 +14806,33 @@ needed to build unlocking (signature) scripts for its entrypoints.</p>
     <div class="doc doc-contents ">
 
         <p><code>(start, len)</code>: byte offset and length of the contract state within the script.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h2 id="kaspa.experimental.silverscript.CompiledContract.template_hash" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">template_hash</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#kaspa.experimental.silverscript.CompiledContract.template_hash" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">template_hash</span><span class="p">:</span> <span class="n"><span title="bytes">bytes</span></span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>The canonical length-bound template hash: a 32-byte digest over the
+script's template parts (the prefix before and suffix after the state
+region). Matches the SilverScript <code>templateHash(prefix, suffix)</code> builtin,
+so contracts can commit to this value and later reconstruct it on-chain.</p>
 
     </div>
 
