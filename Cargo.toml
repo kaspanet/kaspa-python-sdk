@@ -9,7 +9,7 @@ resolver = "3"
 # Single source of truth for version/edition across the workspace; members
 # inherit via `version.workspace = true` / `edition.workspace = true`.
 [workspace.package]
-version = "2.0.1"
+version = "2.0.2-rc.1"
 edition = "2024"
 
 [package]

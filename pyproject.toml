@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "kaspa"
-version = "2.0.1"
+version = "2.0.2rc1"
 description = "Kaspa Python SDK"
 requires-python = ">=3.10,<3.15"
 readme = "README.md"
