@@ -14962,6 +14962,7 @@
   <h1>Changelog</h1>
 
 <h2 id="unreleased">[Unreleased]<a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
+<p><em>Target: 2.0.2</em></p>
 <h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
 <ul>
 <li>New <code>kaspa.experimental.silverscript</code> module — compile <a href="https://github.com/kaspanet/silverscript">SilverScript</a> script-based smart-contract source and build transaction scripts from Python. <code>compile()</code> returns a <code>CompiledContract</code> exposing the locking script, ABI, state layout, and <code>template_hash</code> (the canonical 32-byte length-bound hash over the script's template parts around the covenant state region, matching the SilverScript <code>templateHash(prefix, suffix)</code> builtin), plus <code>build_sig_script()</code> / <code>build_sig_script_for_covenant_decl()</code> for unlocking scripts.</li>
