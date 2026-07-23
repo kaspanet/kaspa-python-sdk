@@ -16,6 +16,7 @@ search:
 - Functions `prepare_r0_groth16_proof()` and `prepare_r0_succinct_witness()` exposed to Python. Convert a RISC Zero receipt into the proof / witness pushes for composing sig scripts by hand.
 - Exception `ZkError` added to `kaspa.exceptions`, raised by the ZK bindings.
 - Example under `examples/zk/` demonstrating a fully on-chain Groth16 commit→redeem round-trip.
+- Function `compute_sighash()` exposed to Python. Computes the signature hash (sighash) for a transaction input.
 
 ### Fixed
 - `requires-python` upper bound changed from `<=3.14` to `<3.15`. Under PEP 440 version ordering `<=3.14` excludes every 3.14 patch release (`3.14.1` and later).

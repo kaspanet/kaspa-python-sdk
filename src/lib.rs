@@ -98,6 +98,10 @@ fn kaspa(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
         m
     )?)?;
     m.add_function(wrap_pyfunction!(
+        wallet::core::tx::signer::py_compute_sighash,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
         wallet::core::tx::signer::py_sign_script_hash,
         m
     )?)?;
