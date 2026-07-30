@@ -5153,8 +5153,13 @@ def compute_sighash(tx: Transaction, input_index: builtins.int, sighash_type: st
     
     This mirrors the digest the node computes when validating a signature for
     the input, without signing it. Useful for external/HSM signers, multisig
-    assembly, or verifying a signature against a precomputed digest. The
-    resulting hash can be signed with `sign_script_hash`.
+    assembly, or verifying a signature against a precomputed digest. With the
+    defaults (Schnorr, `SighashType.All`) the resulting hash can be signed
+    with `sign_script_hash`. For any other `sighash_type`, or with
+    `ecdsa=True`, sign the digest externally and assemble the signature
+    script yourself — the signature followed by the hashtype byte matching
+    the digest — because `sign_script_hash` always signs Schnorr and appends
+    the All hashtype byte.
     
     Every transaction input must have an attached UTXO entry, as the sighash
     commits to each input's script public key and amount.
