@@ -114,7 +114,7 @@ version = "1.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "40c48f72fd53cd289104fc64099abca73db4166ad86ea0b4341abe65af83dadc"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -125,7 +125,7 @@ checksum = "291e6a250ff86cd4a820112fb8898808a366d8f9f58ce16d1f538353ad55747d"
 dependencies = [
  "anstyle",
  "once_cell_polyfill",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -1418,6 +1418,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a4ae5f15dda3c708c0ade84bfee31ccab44a3da4f88015ed22f63732abe300c8"
 
 [[package]]
+name = "debugger-session"
+version = "0.1.0"
+source = "git+https://github.com/kaspanet/silverscript.git?rev=2a3961cadc76bb16a425042172ffe32481da89b5#2a3961cadc76bb16a425042172ffe32481da89b5"
+dependencies = [
+ "faster-hex 0.10.0",
+ "kaspa-consensus-core 2.0.1 (git+https://github.com/kaspanet/rusty-kaspa?tag=v2.0.1)",
+ "kaspa-txscript 2.0.1 (git+https://github.com/kaspanet/rusty-kaspa?tag=v2.0.1)",
+ "kaspa-txscript-errors 2.0.1 (git+https://github.com/kaspanet/rusty-kaspa?tag=v2.0.1)",
+ "serde",
+ "serde_json",
+ "silverscript-lang",
+]
+
+[[package]]
 name = "delegate-display"
 version = "2.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1686,7 +1700,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -3093,7 +3107,10 @@ version = "2.0.2-rc.1"
 name = "kaspa-python-sdk-silverscript"
 version = "2.0.2-rc.1"
 dependencies = [
+ "debugger-session",
+ "kaspa-consensus-core 2.0.1 (git+https://github.com/kaspanet/rusty-kaspa?tag=v2.0.1)",
  "kaspa-python-sdk-core",
+ "kaspa-txscript 2.0.1 (git+https://github.com/kaspanet/rusty-kaspa?tag=v2.0.1)",
  "pyo3",
  "pyo3-stub-gen",
  "self_cell",
@@ -3988,7 +4005,7 @@ version = "0.50.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -5255,7 +5272,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -5741,7 +5758,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3a766e1110788c36f4fa1c2b71b387a7815aa65f88ce0229841826633d93723e"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -5869,7 +5886,7 @@ dependencies = [
  "getrandom 0.4.2",
  "once_cell",
  "rustix",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -6788,7 +6805,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]

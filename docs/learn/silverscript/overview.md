@@ -18,6 +18,10 @@ script the node accepts.
 - **Build the unlocking script** for an entrypoint call
   ([`build_sig_script`](../../reference/SilverScript/Classes/CompiledContract.md) /
   [`build_sig_script_for_covenant_decl`](../../reference/SilverScript/Classes/CompiledContract.md)).
+- **Debug a call locally** — simulate the spend and get a source-level
+  failure report with decoded variables
+  ([`debug_call`](../../reference/SilverScript/Functions/debug_call.md);
+  see [Debugging](debugging.md)).
 
 Everything else (wrapping the locking script in a P2SH address,
 building & signing the transaction, submitting) is

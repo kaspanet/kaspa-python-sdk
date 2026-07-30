@@ -114,6 +114,11 @@ and build the covenant call. Transaction building, fee sizing, covenant
 binding, and submission are all core `kaspa` — see
 [Transactions](../transactions/overview.md).
 
+Before going on-chain, transitions can be simulated locally —
+previous state in, expected next state out — with
+[`debug_call`](../../reference/SilverScript/Functions/debug_call.md);
+see [Debugging](debugging.md).
+
 !!! warning "Experimental"
     Covenants are the newest and least-settled part of SilverScript.
     Treat the contract above as a teaching example, not a template for
