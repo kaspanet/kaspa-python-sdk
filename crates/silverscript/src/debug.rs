@@ -1205,8 +1205,8 @@ fn convert_report(report: &FailureReport) -> PyFailureReport {
 }
 
 /// What the CLI debugger prints at a `step` pause, as one trace entry.
-fn snapshot_trace_step(session: &DebugSession<'_, '_>) -> PyResult<PyTraceStep> {
-    Ok(PyTraceStep {
+fn snapshot_trace_step(session: &DebugSession<'_, '_>) -> PyTraceStep {
+    PyTraceStep {
         line: session.current_span().map(|span| span.line),
         function_name: session.current_function_name(),
         statement: session.source_context().and_then(|context| {
@@ -1216,14 +1216,15 @@ fn snapshot_trace_step(session: &DebugSession<'_, '_>) -> PyResult<PyTraceStep> 
                 .find(|line| line.is_active)
                 .map(|line| line.text.trim().to_string())
         }),
-        variables: match session.list_variables() {
-            Ok(variables) => variables.iter().map(convert_variable).collect(),
-            // Outside any mapped function (e.g. generated dispatch code)
-            // there is no scope to list — empty is accurate, not an error.
-            Err(_) if session.current_function_name().is_none() => Vec::new(),
-            Err(e) => return Err(err(format!("failed to decode trace variables: {e}"))),
-        },
-    })
+        // Best-effort: outside any mapped function there is no scope to list,
+        // and a decode failure must degrade to an empty list rather than abort
+        // the run — `trace=True` must never make `debug_call` fail where
+        // `trace=False` would return a result.
+        variables: session
+            .list_variables()
+            .map(|variables| variables.iter().map(convert_variable).collect())
+            .unwrap_or_default(),
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -1632,7 +1633,7 @@ fn run_harness(
     let run_result = if let Some(steps) = trace_steps.as_mut() {
         loop {
             match session.step_into() {
-                Ok(Some(_)) => steps.push(snapshot_trace_step(&session)?),
+                Ok(Some(_)) => steps.push(snapshot_trace_step(&session)),
                 Ok(None) => break Ok(()),
                 Err(e) => break Err(e),
             }

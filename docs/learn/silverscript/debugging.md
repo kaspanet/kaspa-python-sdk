@@ -157,6 +157,9 @@ overrides `signature_script` / `utxo_script`. On the active input,
 `signature_script` only replaces the bytes carried by the synthetic
 transaction (what sighash and introspection see) — the debug session
 still executes the entrypoint call built from `function_name`/`args`.
+Likewise, `utxo_script` on the active input replaces the UTXO's
+script public key as sighash and introspection see it, while the
+debug session still executes the contract compiled from `source`.
 
 Each **output** accepts: `value` (required), `covenant_id`,
 `authorizing_input`, `state` (the post-transition contract state),
