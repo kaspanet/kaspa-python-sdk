@@ -1988,6 +1988,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#compute-a-sighash-without-signing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compute a sighash without signing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#multisig-and-sig_op_count" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4659,6 +4670,8 @@
       
         
       
+        
+      
     
     
     
@@ -4803,6 +4816,34 @@
     
   
     calculate_transaction_mass
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/Functions/compute_sighash/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    compute_sighash
   
 
     
@@ -14425,6 +14466,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#compute-a-sighash-without-signing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compute a sighash without signing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#multisig-and-sig_op_count" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -14572,6 +14624,31 @@ aggregation — use <a href="../../../reference/Functions/create_input_signature
 <p>The same method exists on <a href="../../../reference/Classes/PendingTransaction/"><code>PendingTransaction</code></a>
 (<a href="../../../reference/Classes/PendingTransaction/"><code>pending.create_input_signature(...)</code></a>); write the resulting script
 back with <a href="../../../reference/Classes/PendingTransaction/"><code>pending.fill_input(...)</code></a>.</p>
+<h2 id="compute-a-sighash-without-signing">Compute a sighash without signing<a class="headerlink" href="#compute-a-sighash-without-signing" title="Permanent link">&para;</a></h2>
+<p>When the key isn't available in-process — an external or hardware
+signer, multisig digest distribution, or verifying a signature
+against the exact digest the node checks — use
+<a href="../../../reference/Functions/compute_sighash/"><code>compute_sighash</code></a> to
+get the signature hash for an input without signing it:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">kaspa</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_sighash</span><span class="p">,</span> <span class="n">sign_script_hash</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">digest</span> <span class="o">=</span> <span class="n">compute_sighash</span><span class="p">(</span><span class="n">tx</span><span class="p">,</span> <span class="n">input_index</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>   <span class="c1"># Hash, SighashType.All</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">sig_hex</span> <span class="o">=</span> <span class="n">sign_script_hash</span><span class="p">(</span><span class="n">digest</span><span class="o">.</span><span class="n">to_hex</span><span class="p">(),</span> <span class="n">private_key</span><span class="p">)</span>
+</span></code></pre></div>
+<p>Every input must carry its UTXO entry — the sighash commits to each
+input's script public key and amount. Schnorr is the default; pass
+<code>ecdsa=True</code> for inputs locked to ECDSA addresses (an extra hash
+round over the Schnorr digest).</p>
+<p><a href="../../../reference/Functions/sign_script_hash/"><code>sign_script_hash</code></a>
+always signs Schnorr and appends the <code>SighashType.All</code> hashtype
+byte, so it only composes with digests computed with the defaults
+shown above. For any other <code>sighash_type</code>, or for a digest computed
+with <code>ecdsa=True</code>, sign the digest with your external signer and
+assemble the signature script yourself: the signature followed by
+the hashtype byte matching the digest. The blob from
+<code>sign_script_hash</code> is a complete signature script for a single-key
+(P2PK) input; for script-hash lockups, wrap it with
+<code>pay_to_script_hash_signature_script</code>.</p>
 <h2 id="multisig-and-sig_op_count">Multisig and sig_op_count<a class="headerlink" href="#multisig-and-sig_op_count" title="Permanent link">&para;</a></h2>
 <p>Two fields interact with mass when you sign:</p>
 <ul>
