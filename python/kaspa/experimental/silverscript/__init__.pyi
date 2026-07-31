@@ -120,6 +120,14 @@ class DebugCallResult:
         The entrypoint that was called (resolved to the first ABI entry when
         `function_name` was omitted).
         """
+    @property
+    def trace(self) -> typing.Optional[builtins.list[TraceStep]]:
+        r"""
+        The per-statement execution trace, in execution order; None unless
+        `debug_call` was invoked with `trace=True`. On failure the trace covers
+        the statements up to and including the failing one: the last entry is
+        the failing statement, snapshotted when it was reached.
+        """
     def __repr__(self) -> builtins.str: ...
 
 @typing.final
@@ -239,6 +247,38 @@ class SilverScriptError(builtins.Exception):
     """
     ...
 
+@typing.final
+class TraceStep:
+    r"""
+    One pause of a traced execution: an executed source statement, with the
+    variables that were in scope when it was reached. What the CLI debugger
+    shows on each `step`, recorded instead of printed.
+    """
+    @property
+    def line(self) -> typing.Optional[builtins.int]:
+        r"""
+        1-based source line of the statement. None when no source mapping
+        exists (e.g. generated dispatch code).
+        """
+    @property
+    def function_name(self) -> typing.Optional[builtins.str]:
+        r"""
+        The function the statement belongs to (after inlining); None outside
+        any mapped function.
+        """
+    @property
+    def statement(self) -> typing.Optional[builtins.str]:
+        r"""
+        The statement's source text (the active line, trimmed).
+        """
+    @property
+    def variables(self) -> builtins.list[DebugVariable]:
+        r"""
+        The variables in scope when the statement was reached — before it
+        executes, so a local it defines appears from the following step on.
+        """
+    def __repr__(self) -> builtins.str: ...
+
 def compile(source: builtins.str, constructor_args: typing.Optional[typing.Any] = None, *, allow_entrypoint_return: builtins.bool = False, record_debug_infos: builtins.bool = False) -> CompiledContract:
     r"""
     Compile SilverScript `source` into a `CompiledContract`.
@@ -265,7 +305,7 @@ def compile(source: builtins.str, constructor_args: typing.Optional[typing.Any] 
             incompatible pragma).
     """
 
-def debug_call(source: builtins.str, function_name: typing.Optional[builtins.str] = None, args: typing.Optional[typing.Any] = None, constructor_args: typing.Optional[typing.Any] = None, tx: typing.Optional[typing.Any] = None) -> DebugCallResult:
+def debug_call(source: builtins.str, function_name: typing.Optional[builtins.str] = None, args: typing.Optional[typing.Any] = None, constructor_args: typing.Optional[typing.Any] = None, tx: typing.Optional[typing.Any] = None, trace: builtins.bool = False) -> DebugCallResult:
     r"""
     Debug a SilverScript contract call by simulating the full spend locally.
     
@@ -306,6 +346,13 @@ def debug_call(source: builtins.str, function_name: typing.Optional[builtins.str
             `covenant_id`, `authorizing_input`, `state` (the post-transition
             contract state to verify), `constructor_args`, `script`, and
             `p2pk_pubkey`.
+        trace: When True, record a per-statement execution trace on
+            `result.trace`: each executed statement with its source line,
+            enclosing function, and the variables in scope when it was
+            reached. Tracing changes what is recorded, not what executes.
+            Covenant transition calls record no per-statement pauses (the
+            engine verifies their bodies as a whole, as in the CLI debugger);
+            the failure report still decodes them on failure.
     
     Returns:
         DebugCallResult: The simulation outcome. Script failures are reported

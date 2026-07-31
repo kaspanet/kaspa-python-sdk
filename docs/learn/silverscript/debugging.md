@@ -13,9 +13,11 @@ that spends the contract's P2SH UTXO, executes the spend, and reports
 the outcome in *source* terms: which statement failed, the call stack,
 and the value of every variable in scope — not raw stack bytes.
 
-There is no stepping or breakpoint interface: a Python script isn't an
-IDE, so the session always runs to completion and hands you the full
-story afterwards.
+There is no interactive stepping or breakpoint interface: a Python
+script isn't an IDE, so the session always runs to completion and
+hands you the full story afterwards — including, with `trace=True`,
+a recording of every step along the way
+(see [Tracing execution](#tracing-execution)).
 
 ```python
 import kaspa.experimental.silverscript as silverscript
@@ -92,6 +94,39 @@ result = silverscript.debug_call(LOGGER, "go", args=[7])
 result.console   # ['x is 7']
 ```
 
+## Tracing execution
+
+Pass `trace=True` to record what an interactive debugger would show at
+every step. `result.trace` is a list of
+[`TraceStep`](../../reference/SilverScript/Classes/TraceStep.md)s, one
+per executed statement in execution order: its source `line`, the
+`statement` text, the enclosing `function_name`, and the `variables`
+in scope when the statement was *reached* — so a local appears from
+the step after the one that defines it:
+
+```python
+result = silverscript.debug_call(
+    GUARD, "check", args=[150], constructor_args=[100], trace=True
+)
+for step in result.trace:
+    values = {v.name: v.value for v in step.variables}
+    print(step.line, step.statement, values)
+# 5 int margin = amount - threshold; {'amount': 150, 'threshold': 100}
+# 6 require(margin > 0); {'amount': 150, 'margin': 50, 'threshold': 100}
+```
+
+On failure the trace covers everything that executed up to and
+including the failing statement, alongside the failure report — the
+whole history, not just the crash site. Calls into helper functions
+are traced through, statement by statement, like the frames of the
+failure report. Tracing changes what is recorded, not what executes.
+
+One limitation, shared with the upstream CLI debugger: covenant
+transition calls record no per-statement pauses — the engine verifies
+their bodies as a whole, so the trace of a transition is empty. The
+[failure report](#the-failure-report) still decodes the transition's
+variables (`prev_state`, arguments) when it fails.
+
 ## The transaction scenario
 
 Contracts that introspect the spending transaction (`tx.outputs`,
@@ -127,6 +162,13 @@ Each **output** accepts: `value` (required), `covenant_id`,
 `authorizing_input`, `state` (the post-transition contract state),
 `constructor_args`, and raw-bytes overrides `script` / `p2pk_pubkey`.
 
+Explicit `state` dicts are always validated against the contract's
+declared fields — an unknown, missing, or mistyped field raises
+`SilverScriptError`, even when a raw `utxo_script`/`script` override
+is also present. Values are converted following the field's declared
+type: byte-array fields accept `bytes`, a list of ints, or a hex
+string interchangeably.
+
 ## Debugging covenant transitions
 
 For covenant contracts (see [Covenants](covenants.md)) the scenario is
@@ -134,7 +176,10 @@ where you express the state transition: the input carries the previous
 state, the output carries the expected next state, and both bind the
 same covenant id. Call the transition by its source-level name and
 pass only the source-level arguments — the hidden verified-state
-parameter is synthesized from the scenario's output states:
+parameter is synthesized from the scenario's output states. Only
+outputs that carry a covenant binding count toward that synthesis, so
+scenarios with additional plain outputs (change, payments) behave as
+they would on-chain:
 
 ```python
 COVENANT_ID = "11" * 32

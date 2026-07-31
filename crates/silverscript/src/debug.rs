@@ -4,8 +4,10 @@
 //! the engine behind the upstream CLI debugger — and reports the outcome as a
 //! plain result object: pass/fail, a source-level failure report with decoded
 //! variables per frame, and captured `console.log` output. Unlike the upstream
-//! interactive debugger there is no stepping or breakpoint surface: a Python
-//! script is not an IDE, so the session always runs to completion.
+//! interactive debugger there is no interactive stepping or breakpoint
+//! surface: a Python script is not an IDE, so the session always runs to
+//! completion — with `trace=True` it records what the CLI debugger would show
+//! at each step along the way.
 //!
 //! The transaction harness is a port of the upstream CLI debugger's scenario
 //! builder (`debugger/cli/src/main.rs`), adapted to native Python values in
@@ -218,6 +220,67 @@ impl PyFailureReport {
     }
 }
 
+/// One pause of a traced execution: an executed source statement, with the
+/// variables that were in scope when it was reached. What the CLI debugger
+/// shows on each `step`, recorded instead of printed.
+#[gen_stub_pyclass]
+#[pyclass(name = "TraceStep", module = "kaspa.experimental.silverscript", frozen)]
+#[derive(Clone)]
+pub struct PyTraceStep {
+    line: Option<u32>,
+    function_name: Option<String>,
+    statement: Option<String>,
+    variables: Vec<PyDebugVariable>,
+}
+
+#[gen_stub_pymethods]
+#[pymethods]
+impl PyTraceStep {
+    /// 1-based source line of the statement. None when no source mapping
+    /// exists (e.g. generated dispatch code).
+    #[getter]
+    pub fn line(&self) -> Option<u32> {
+        self.line
+    }
+
+    /// The function the statement belongs to (after inlining); None outside
+    /// any mapped function.
+    #[getter]
+    pub fn function_name(&self) -> Option<String> {
+        self.function_name.clone()
+    }
+
+    /// The statement's source text (the active line, trimmed).
+    #[getter]
+    pub fn statement(&self) -> Option<String> {
+        self.statement.clone()
+    }
+
+    /// The variables in scope when the statement was reached — before it
+    /// executes, so a local it defines appears from the following step on.
+    #[getter]
+    pub fn variables(&self) -> Vec<PyDebugVariable> {
+        self.variables.clone()
+    }
+
+    pub fn __repr__(&self) -> String {
+        format!(
+            "TraceStep(line={}, function_name={}, statement={}, {} variable(s))",
+            self.line
+                .map_or_else(|| "None".to_string(), |line| line.to_string()),
+            match &self.function_name {
+                Some(name) => format!("{name:?}"),
+                None => "None".to_string(),
+            },
+            match &self.statement {
+                Some(statement) => format!("{statement:?}"),
+                None => "None".to_string(),
+            },
+            self.variables.len()
+        )
+    }
+}
+
 /// The outcome of a `debug_call` simulation.
 #[gen_stub_pyclass]
 #[pyclass(
@@ -231,6 +294,7 @@ pub struct PyDebugCallResult {
     failure: Option<PyFailureReport>,
     console: Vec<String>,
     function_name: String,
+    trace: Option<Vec<PyTraceStep>>,
 }
 
 #[gen_stub_pymethods]
@@ -270,6 +334,15 @@ impl PyDebugCallResult {
         &self.function_name
     }
 
+    /// The per-statement execution trace, in execution order; None unless
+    /// `debug_call` was invoked with `trace=True`. On failure the trace covers
+    /// the statements up to and including the failing one: the last entry is
+    /// the failing statement, snapshotted when it was reached.
+    #[getter]
+    pub fn trace(&self) -> Option<Vec<PyTraceStep>> {
+        self.trace.clone()
+    }
+
     pub fn __repr__(&self) -> String {
         format!(
             "DebugCallResult(function_name={:?}, success={}, error={})",
@@ -283,13 +356,16 @@ impl PyDebugCallResult {
     }
 }
 
-fn failed_result(function_name: String, error: String) -> PyDebugCallResult {
+/// A failure from before the lockscript debug session ran: no report, and an
+/// empty trace when one was requested (nothing source-mapped executed).
+fn failed_result(function_name: String, error: String, trace: bool) -> PyDebugCallResult {
     PyDebugCallResult {
         success: false,
         error: Some(error),
         failure: None,
         console: Vec::new(),
         function_name,
+        trace: trace.then(Vec::new),
     }
 }
 
@@ -321,20 +397,26 @@ fn debug_value_to_py<'py>(py: Python<'py>, value: &DebugValue) -> PyResult<Bound
     })
 }
 
-fn value_to_debug_value(value: &Value) -> DebugValue {
-    match value {
-        Value::Int(value) => DebugValue::Int(*value),
-        Value::Bool(value) => DebugValue::Bool(*value),
-        Value::Str(value) => DebugValue::String(value.clone()),
-        Value::Bytes(bytes) => DebugValue::Bytes(bytes.clone()),
-        Value::List(items) => DebugValue::Array(items.iter().map(value_to_debug_value).collect()),
-        Value::Struct(fields) => DebugValue::Object(
+fn debug_value_to_value(value: &DebugValue) -> Option<Value> {
+    Some(match value {
+        DebugValue::Int(value) => Value::Int(*value),
+        DebugValue::Bool(value) => Value::Bool(*value),
+        DebugValue::Bytes(bytes) => Value::Bytes(bytes.clone()),
+        DebugValue::String(value) => Value::Str(value.clone()),
+        DebugValue::Array(items) => Value::List(
+            items
+                .iter()
+                .map(debug_value_to_value)
+                .collect::<Option<Vec<_>>>()?,
+        ),
+        DebugValue::Object(fields) => Value::Struct(
             fields
                 .iter()
-                .map(|(name, value)| (name.clone(), value_to_debug_value(value)))
-                .collect(),
+                .map(|(name, value)| Some((name.clone(), debug_value_to_value(value)?)))
+                .collect::<Option<Vec<_>>>()?,
         ),
-    }
+        DebugValue::Unknown(_) => return None,
+    })
 }
 
 fn expr_to_debug_value(expr: &Expr<'_>) -> PyResult<DebugValue> {
@@ -378,46 +460,192 @@ fn expr_to_debug_value(expr: &Expr<'_>) -> PyResult<DebugValue> {
 }
 
 fn debug_value_to_expr(value: &DebugValue) -> Option<Expr<'static>> {
-    Some(match value {
-        DebugValue::Int(value) => Expr::int(*value),
-        DebugValue::Bool(value) => Expr::new(ExprKind::Bool(*value), Default::default()),
-        DebugValue::Bytes(bytes) => Expr::new(
+    debug_value_to_value(value).map(|value| value_to_expr(&value))
+}
+
+// ---------------------------------------------------------------------------
+// Type-directed state conversion
+// ---------------------------------------------------------------------------
+
+/// Field shapes for type-directed state conversion: the contract's `State`
+/// plus its declared structs (the upstream CLI's `StructShapeRegistry`).
+type StateShapes = HashMap<String, Vec<(String, TypeRef)>>;
+
+fn state_shapes(contract: &ContractAst<'_>) -> StateShapes {
+    let mut shapes = HashMap::new();
+    shapes.insert(
+        "State".to_string(),
+        contract
+            .fields
+            .iter()
+            .map(|field| (field.name.clone(), field.type_ref.clone()))
+            .collect(),
+    );
+    for item in &contract.structs {
+        shapes.insert(
+            item.name.clone(),
+            item.fields
+                .iter()
+                .map(|field| (field.name.clone(), field.type_ref.clone()))
+                .collect(),
+        );
+    }
+    shapes
+}
+
+fn typed_bytes(value: &Value, what: &str, type_name: &str) -> PyResult<Vec<u8>> {
+    match value {
+        Value::Bytes(bytes) => Ok(bytes.clone()),
+        Value::Str(raw) => parse_hex_bytes(raw).map_err(|e| err(format!("invalid {what}: {e}"))),
+        Value::List(items) => items
+            .iter()
+            .map(|item| match item {
+                Value::Int(value) if (0..=255).contains(value) => Ok(*value as u8),
+                _ => Err(err(format!("{what} expects {type_name}"))),
+            })
+            .collect(),
+        _ => Err(err(format!("{what} expects {type_name}"))),
+    }
+}
+
+/// Convert a state field value to a typed literal expr, mirroring the upstream
+/// CLI's JSON state parsing (`parse_state_value`): byte positions accept ints,
+/// bytes, hex strings, and int lists, and every value is validated against the
+/// field's declared type.
+fn typed_value_to_expr(
+    value: &Value,
+    type_ref: &TypeRef,
+    shapes: &StateShapes,
+    what: &str,
+) -> PyResult<Expr<'static>> {
+    let type_name = type_ref.type_name();
+    let mismatch = || err(format!("{what} expects {type_name}"));
+
+    if type_ref.is_array() {
+        if matches!(type_ref.base, TypeBase::Byte) && type_ref.array_dims.len() == 1 {
+            let bytes = typed_bytes(value, what, &type_name)?;
+            if let Some(ArrayDim::Fixed(size)) = type_ref.array_size()
+                && bytes.len() != *size
+            {
+                return Err(err(format!(
+                    "{what} expects {size} bytes, got {}",
+                    bytes.len()
+                )));
+            }
+            return Ok(Expr::bytes(bytes));
+        }
+        let Value::List(items) = value else {
+            return Err(mismatch());
+        };
+        if let Some(ArrayDim::Fixed(size)) = type_ref.array_size()
+            && items.len() != *size
+        {
+            return Err(err(format!(
+                "{what} expects {size} elements, got {}",
+                items.len()
+            )));
+        }
+        let element_type = type_ref.array_element_type().ok_or_else(mismatch)?;
+        return Ok(Expr::new(
             ExprKind::Array(
-                bytes
+                items
                     .iter()
-                    .map(|byte| Expr::new(ExprKind::Byte(*byte), Default::default()))
-                    .collect(),
+                    .map(|item| typed_value_to_expr(item, &element_type, shapes, what))
+                    .collect::<PyResult<Vec<_>>>()?,
             ),
             Default::default(),
-        ),
-        DebugValue::String(value) => Expr::new(ExprKind::String(value.clone()), Default::default()),
-        DebugValue::Array(values) => Expr::new(
-            ExprKind::Array(
-                values
-                    .iter()
-                    .map(debug_value_to_expr)
-                    .collect::<Option<Vec<_>>>()?,
-            ),
-            Default::default(),
-        ),
-        DebugValue::Object(fields) => Expr::new(
-            ExprKind::StructLiteral(
-                fields
-                    .iter()
-                    .map(|(name, value)| {
-                        Some(StateFieldExpr {
-                            name: name.clone(),
-                            expr: debug_value_to_expr(value)?,
-                            span: Default::default(),
-                            name_span: Default::default(),
-                        })
-                    })
-                    .collect::<Option<Vec<_>>>()?,
-            ),
-            Default::default(),
-        ),
-        DebugValue::Unknown(_) => return None,
-    })
+        ));
+    }
+
+    if let TypeBase::Custom(name) = &type_ref.base
+        && let Some(fields) = shapes.get(name)
+    {
+        let Value::Struct(entries) = value else {
+            return Err(mismatch());
+        };
+        return typed_struct_to_expr(entries, fields, shapes, "struct field");
+    }
+
+    match (&type_ref.base, value) {
+        (TypeBase::Int, Value::Int(value)) => Ok(Expr::int(*value)),
+        (TypeBase::Bool, Value::Bool(value)) => Ok(Expr::bool(*value)),
+        (TypeBase::String, Value::Str(value)) => Ok(Expr::string(value.clone())),
+        (TypeBase::Byte, Value::Int(value)) if (0..=255).contains(value) => {
+            Ok(Expr::byte(*value as u8))
+        }
+        (TypeBase::Byte, _) => {
+            let bytes = typed_bytes(value, what, &type_name)?;
+            if bytes.len() != 1 {
+                return Err(err(format!("{what} expects 1 byte, got {}", bytes.len())));
+            }
+            Ok(Expr::byte(bytes[0]))
+        }
+        (TypeBase::Pubkey | TypeBase::Sig | TypeBase::Datasig, _) => {
+            let bytes = typed_bytes(value, what, &type_name)?;
+            let expected = type_ref
+                .base
+                .fixed_byte_sequence_len()
+                .expect("pubkey/sig/datasig have a fixed byte length");
+            if bytes.len() != expected {
+                return Err(err(format!(
+                    "{what} expects {expected} bytes, got {}",
+                    bytes.len()
+                )));
+            }
+            Ok(Expr::bytes(bytes))
+        }
+        _ => Err(mismatch()),
+    }
+}
+
+fn typed_struct_to_expr(
+    entries: &[(String, Value)],
+    fields: &[(String, TypeRef)],
+    shapes: &StateShapes,
+    field_kind: &str,
+) -> PyResult<Expr<'static>> {
+    // Unknown keys first: a misspelled field would otherwise surface as
+    // "missing" the field it failed to name.
+    if let Some((name, _)) = entries
+        .iter()
+        .find(|(name, _)| !fields.iter().any(|(field, _)| field == name))
+    {
+        return Err(err(format!("unknown {field_kind} '{name}'")));
+    }
+    let out = fields
+        .iter()
+        .map(|(field_name, field_type)| {
+            let value = entries
+                .iter()
+                .find(|(name, _)| name == field_name)
+                .map(|(_, value)| value)
+                .ok_or_else(|| err(format!("missing {field_kind} '{field_name}'")))?;
+            Ok(StateFieldExpr {
+                name: field_name.clone(),
+                expr: typed_value_to_expr(
+                    value,
+                    field_type,
+                    shapes,
+                    &format!("{field_kind} '{field_name}'"),
+                )?,
+                span: Default::default(),
+                name_span: Default::default(),
+            })
+        })
+        .collect::<PyResult<Vec<_>>>()?;
+    Ok(Expr::new(ExprKind::StructLiteral(out), Default::default()))
+}
+
+/// Validate and convert an explicit `state` dict against the contract's
+/// declared fields. Runs for every explicit state — including inputs/outputs
+/// that also carry a raw script override — so a typo'd or mistyped field
+/// always raises instead of silently producing an unusable state.
+fn state_value_to_expr(state: &Value, shapes: &StateShapes) -> PyResult<Expr<'static>> {
+    let Value::Struct(entries) = state else {
+        return Err(err("state value must be a dict of state fields"));
+    };
+    let fields = shapes.get("State").expect("State shape always present");
+    typed_struct_to_expr(entries, fields, shapes, "state field")
 }
 
 // ---------------------------------------------------------------------------
@@ -594,14 +822,7 @@ fn parse_input_spec(obj: &Bound<'_, PyAny>, index: usize) -> PyResult<InputSpec>
         &what,
     )?;
     Ok(InputSpec {
-        prev_txid: get_bytes(dict, "prev_txid", &what)?
-            .map(|bytes| {
-                let bytes: [u8; 32] = bytes
-                    .try_into()
-                    .map_err(|_| err(format!("'prev_txid' in {what} must be 32 bytes")))?;
-                Ok::<_, PyErr>(TransactionId::from_bytes(bytes))
-            })
-            .transpose()?,
+        prev_txid: get_hash32(dict, "prev_txid", &what)?,
         prev_index: get_extract(dict, "prev_index", &what)?.unwrap_or(0),
         sequence: get_extract(dict, "sequence", &what)?.unwrap_or(0),
         sig_op_count: get_extract(dict, "sig_op_count", &what)?.unwrap_or(100),
@@ -707,19 +928,31 @@ fn ctor_exprs(ctor: &[Value]) -> Vec<Expr<'static>> {
     ctor.iter().map(value_to_expr).collect()
 }
 
-fn compile_script_for_ctor_args(
-    source: &str,
-    ctor: &[Value],
-    cache: &mut HashMap<Vec<Value>, Vec<u8>>,
-) -> PyResult<Vec<u8>> {
-    if let Some(script) = cache.get(ctor) {
-        return Ok(script.clone());
+/// Per-`debug_call` compile memoization (upstream CLI parity): scenarios reuse
+/// the same constructor args across inputs and outputs, so each distinct
+/// ctor-args vector is compiled exactly once and shared everywhere the
+/// compiled contract is needed.
+struct CtorCompileCache<'i> {
+    source: &'i str,
+    compiled: HashMap<Vec<Value>, CompiledContract<'i>>,
+}
+
+impl<'i> CtorCompileCache<'i> {
+    fn new(source: &'i str) -> Self {
+        Self {
+            source,
+            compiled: HashMap::new(),
+        }
     }
-    let script = compile_contract(source, &ctor_exprs(ctor), DEBUG_OPTS)
-        .map_err(map_err)?
-        .script;
-    cache.insert(ctor.to_vec(), script.clone());
-    Ok(script)
+
+    fn get(&mut self, ctor: &[Value]) -> PyResult<&CompiledContract<'i>> {
+        if !self.compiled.contains_key(ctor) {
+            let compiled =
+                compile_contract(self.source, &ctor_exprs(ctor), DEBUG_OPTS).map_err(map_err)?;
+            self.compiled.insert(ctor.to_vec(), compiled);
+        }
+        Ok(&self.compiled[ctor])
+    }
 }
 
 fn resolve_state_for_ctor_args(
@@ -775,16 +1008,14 @@ fn contract_with_explicit_state<'i>(
 
 /// Splice an explicit state into the compiled script's state region, verifying
 /// the surrounding template bytes are unchanged.
-fn materialize_script_for_explicit_state(
-    source: &str,
-    contract: &ContractAst<'_>,
+fn materialize_script_for_explicit_state<'i>(
+    base_compiled: &CompiledContract<'_>,
+    contract: &ContractAst<'i>,
     ctor: &[Value],
-    state: &Value,
+    state: &Expr<'i>,
 ) -> PyResult<Vec<u8>> {
     let instance_args = ctor_exprs(ctor);
-    let state_expr = value_to_expr(state);
-    let base_compiled = compile_contract(source, &instance_args, DEBUG_OPTS).map_err(map_err)?;
-    let materialized_contract = contract_with_explicit_state(contract, &state_expr)?;
+    let materialized_contract = contract_with_explicit_state(contract, state)?;
     let materialized = compile_contract_ast(&materialized_contract, &instance_args, DEBUG_OPTS)
         .map_err(map_err)?;
 
@@ -808,7 +1039,7 @@ fn materialize_script_for_explicit_state(
         ));
     }
 
-    let mut script = base_compiled.script;
+    let mut script = base_compiled.script.clone();
     script[base_start..base_end]
         .copy_from_slice(&materialized.script[materialized_start..materialized_end]);
     Ok(script)
@@ -973,6 +1204,28 @@ fn convert_report(report: &FailureReport) -> PyFailureReport {
     }
 }
 
+/// What the CLI debugger prints at a `step` pause, as one trace entry.
+fn snapshot_trace_step(session: &DebugSession<'_, '_>) -> PyResult<PyTraceStep> {
+    Ok(PyTraceStep {
+        line: session.current_span().map(|span| span.line),
+        function_name: session.current_function_name(),
+        statement: session.source_context().and_then(|context| {
+            context
+                .lines
+                .into_iter()
+                .find(|line| line.is_active)
+                .map(|line| line.text.trim().to_string())
+        }),
+        variables: match session.list_variables() {
+            Ok(variables) => variables.iter().map(convert_variable).collect(),
+            // Outside any mapped function (e.g. generated dispatch code)
+            // there is no scope to list — empty is accurate, not an error.
+            Err(_) if session.current_function_name().is_none() => Vec::new(),
+            Err(e) => return Err(err(format!("failed to decode trace variables: {e}"))),
+        },
+    })
+}
+
 // ---------------------------------------------------------------------------
 // The harness
 // ---------------------------------------------------------------------------
@@ -983,6 +1236,7 @@ fn run_harness(
     call_args: &[Value],
     ctor_args: &[Value],
     tx: &TxSpec,
+    trace: bool,
 ) -> PyResult<PyDebugCallResult> {
     let parsed_contract = parse_contract_ast(source).map_err(map_err)?;
 
@@ -997,34 +1251,31 @@ fn run_harness(
         ctor_args.to_vec()
     };
 
-    let root_ctor_exprs = ctor_exprs(&root_ctor);
-    let compiled = compile_contract(source, &root_ctor_exprs, DEBUG_OPTS).map_err(map_err)?;
-    let debug_info = compiled.debug_info.clone();
+    let mut compile_cache = CtorCompileCache::new(source);
+    let shapes = state_shapes(&parsed_contract);
+    let root_compiled = compile_cache.get(&root_ctor)?;
+    let debug_info = root_compiled.debug_info.clone();
 
     let selected_name = match function_name {
         Some(name) => name.to_string(),
-        None => compiled
+        None => root_compiled
             .abi
             .first()
             .map(|entry| entry.name.clone())
             .ok_or_else(|| err("contract has no entrypoints"))?,
     };
 
-    let covenant_target = resolve_covenant_call_target(&parsed_contract, &compiled, &selected_name);
+    let covenant_target =
+        resolve_covenant_call_target(&parsed_contract, root_compiled, &selected_name);
 
-    // Memoize per-constructor-args work (upstream CLI parity): scenarios reuse
-    // the same ctor args across inputs and outputs, so compile/resolve once.
-    let mut ctor_script_cache: HashMap<Vec<Value>, Vec<u8>> = HashMap::new();
+    // Memoize per-constructor-args state resolution alongside the compiles.
     let mut ctor_state_cache: HashMap<Vec<Value>, DebugValue> = HashMap::new();
-    ctor_script_cache.insert(root_ctor.clone(), compiled.script.clone());
 
     // --- Resolve inputs: redeem scripts, UTXO script public keys, covenant state ---
+    // Only genuinely derived data goes into these parallel vecs; anything
+    // already on `tx.inputs` is read from there at the use sites.
     let mut input_prev_outpoints = Vec::with_capacity(tx.inputs.len());
-    let mut input_sequences = Vec::with_capacity(tx.inputs.len());
-    let mut input_sig_op_counts = Vec::with_capacity(tx.inputs.len());
-    let mut explicit_input_sigs = Vec::with_capacity(tx.inputs.len());
-    let mut utxo_specs = Vec::with_capacity(tx.inputs.len());
-    let mut input_covenant_ids = Vec::with_capacity(tx.inputs.len());
+    let mut input_utxo_spks = Vec::with_capacity(tx.inputs.len());
     let mut input_covenant_states = Vec::with_capacity(tx.inputs.len());
     let mut input_redeem_scripts = Vec::with_capacity(tx.inputs.len());
     for (input_idx, input) in tx.inputs.iter().enumerate() {
@@ -1036,8 +1287,13 @@ fn run_harness(
             .constructor_args
             .clone()
             .unwrap_or_else(|| root_ctor.clone());
-        let input_covenant_state = if let Some(state) = &input.state {
-            Some(value_to_debug_value(state))
+        let input_state_expr = input
+            .state
+            .as_ref()
+            .map(|state| state_value_to_expr(state, &shapes))
+            .transpose()?;
+        let input_covenant_state = if let Some(state_expr) = &input_state_expr {
+            Some(expr_to_debug_value(state_expr)?)
         } else if input.utxo_script.is_none() || input.constructor_args.is_some() {
             Some(resolve_state_for_ctor_args(
                 &parsed_contract,
@@ -1048,19 +1304,15 @@ fn run_harness(
             None
         };
         let redeem_script = if input.utxo_script.is_none() {
-            if let Some(state) = &input.state {
+            if let Some(state_expr) = &input_state_expr {
                 Some(materialize_script_for_explicit_state(
-                    source,
+                    compile_cache.get(&input_ctor)?,
                     &parsed_contract,
                     &input_ctor,
-                    state,
+                    state_expr,
                 )?)
             } else {
-                Some(compile_script_for_ctor_args(
-                    source,
-                    &input_ctor,
-                    &mut ctor_script_cache,
-                )?)
+                Some(compile_cache.get(&input_ctor)?.script.clone())
             }
         } else {
             None
@@ -1079,11 +1331,7 @@ fn run_harness(
             transaction_id: prev_txid,
             index: input.prev_index,
         });
-        input_sequences.push(input.sequence);
-        input_sig_op_counts.push(input.sig_op_count);
-        explicit_input_sigs.push(input.signature_script.clone());
-        utxo_specs.push((input.utxo_value, utxo_spk, input.covenant_id));
-        input_covenant_ids.push(input.covenant_id);
+        input_utxo_spks.push(utxo_spk);
         input_covenant_states.push(input_covenant_state);
         input_redeem_scripts.push(redeem_script);
     }
@@ -1097,8 +1345,13 @@ fn run_harness(
             .constructor_args
             .clone()
             .unwrap_or_else(|| root_ctor.clone());
-        let output_state = if let Some(state) = &output.state {
-            Some(value_to_debug_value(state))
+        let output_state_expr = output
+            .state
+            .as_ref()
+            .map(|state| state_value_to_expr(state, &shapes))
+            .transpose()?;
+        let output_state = if let Some(state_expr) = &output_state_expr {
+            Some(expr_to_debug_value(state_expr)?)
         } else if output.script.is_none() || output.constructor_args.is_some() {
             Some(resolve_state_for_ctor_args(
                 &parsed_contract,
@@ -1113,15 +1366,15 @@ fn run_harness(
         } else if let Some(raw_pubkey) = &output.p2pk_pubkey {
             ScriptPublicKey::new(0, build_p2pk_script(raw_pubkey)?.into())
         } else {
-            let output_script = if let Some(state) = &output.state {
+            let output_script = if let Some(state_expr) = &output_state_expr {
                 materialize_script_for_explicit_state(
-                    source,
+                    compile_cache.get(&output_ctor)?,
                     &parsed_contract,
                     &output_ctor,
-                    state,
+                    state_expr,
                 )?
             } else {
-                compile_script_for_ctor_args(source, &output_ctor, &mut ctor_script_cache)?
+                compile_cache.get(&output_ctor)?.script.clone()
             };
             pay_to_script_hash_script(&output_script)
         };
@@ -1144,30 +1397,34 @@ fn run_harness(
     }
 
     // --- Covenant group bookkeeping (leader election, verified output states) ---
-    let active_covenant_id = input_covenant_ids
-        .get(tx.active_input_index)
-        .copied()
-        .flatten();
+    let active_covenant_id = tx.inputs[tx.active_input_index].covenant_id;
     let companion_leader_index = if covenant_target
         .as_ref()
         .is_some_and(|target| target.binding == DebugCovenantBinding::Cov)
     {
         active_covenant_id.and_then(|covenant_id| {
-            input_covenant_ids
+            tx.inputs
                 .iter()
                 .enumerate()
-                .filter_map(|(index, input_covenant_id)| {
-                    (*input_covenant_id == Some(covenant_id)).then_some(index)
+                .filter_map(|(index, input)| {
+                    (input.covenant_id == Some(covenant_id)).then_some(index)
                 })
                 .min()
         })
     } else {
         None
     };
+    // Only outputs carrying a covenant binding count as authorized outputs —
+    // a plain change/p2pk output has no binding on-chain (`covenant` is None
+    // without a `covenant_id`) and must not inflate the synthesized State
+    // argument count. The upstream CLI debugger counts unbound outputs here;
+    // that port is corrected to match consensus so realistic scenarios with
+    // change outputs stay expressible.
     let active_authorized_output_states = tx
         .outputs
         .iter()
         .zip(output_covenant_states.iter())
+        .filter(|(output, _)| output.covenant_id.is_some())
         .filter_map(|(output, output_state)| {
             (output
                 .authorizing_input
@@ -1191,15 +1448,7 @@ fn run_harness(
         .constructor_args
         .clone()
         .unwrap_or_else(|| root_ctor.clone());
-    // Without a per-input ctor override the active input is the root compile.
-    let active_compiled_storage;
-    let active_compiled = if active_ctor == root_ctor {
-        &compiled
-    } else {
-        active_compiled_storage =
-            compile_contract(source, &ctor_exprs(&active_ctor), DEBUG_OPTS).map_err(map_err)?;
-        &active_compiled_storage
-    };
+    let active_compiled = compile_cache.get(&active_ctor)?;
     let active_is_cov_leader = companion_leader_index
         .map(|index| index == tx.active_input_index)
         .unwrap_or(true);
@@ -1228,61 +1477,51 @@ fn run_harness(
 
     // --- Assemble the transaction ---
     let mut tx_inputs = Vec::with_capacity(tx.inputs.len());
-    for input_idx in 0..tx.inputs.len() {
-        let signature_script =
-            if let Some(signature_script) = explicit_input_sigs[input_idx].clone() {
-                signature_script
-            } else if input_idx == tx.active_input_index {
-                if let Some(redeem) = input_redeem_scripts[input_idx].as_ref() {
-                    combine_action_and_redeem(&active_sigscript, redeem)?
-                } else {
-                    active_sigscript.clone()
-                }
-            } else if let Some(target) = covenant_target.as_ref()
-                && target.binding == DebugCovenantBinding::Cov
-                && input_covenant_ids[input_idx] == active_covenant_id
-                && input_redeem_scripts[input_idx].is_some()
-            {
-                // Companion input of the same covenant group: auto-build its
-                // leader/delegate call so the group verifies as a whole.
-                let is_leader = Some(input_idx) == companion_leader_index;
-                let input_ctor = tx.inputs[input_idx]
-                    .constructor_args
-                    .clone()
-                    .unwrap_or_else(|| root_ctor.clone());
-                let input_compiled_storage;
-                let input_compiled = if input_ctor == root_ctor {
-                    &compiled
-                } else {
-                    input_compiled_storage =
-                        compile_contract(source, &ctor_exprs(&input_ctor), DEBUG_OPTS)
-                            .map_err(map_err)?;
-                    &input_compiled_storage
-                };
-                let auto_action = build_covenant_input_sigscript(
-                    input_compiled,
-                    target,
-                    is_leader,
-                    call_args,
-                    covenant_group_output_states.as_deref(),
-                )?;
-                combine_action_and_redeem(
-                    &auto_action,
-                    input_redeem_scripts[input_idx]
-                        .as_ref()
-                        .expect("checked is_some above"),
-                )?
-            } else if let Some(redeem) = input_redeem_scripts[input_idx].as_ref() {
-                sigscript_push_script(redeem)?
+    for (input_idx, input) in tx.inputs.iter().enumerate() {
+        let signature_script = if let Some(signature_script) = input.signature_script.clone() {
+            signature_script
+        } else if input_idx == tx.active_input_index {
+            if let Some(redeem) = input_redeem_scripts[input_idx].as_ref() {
+                combine_action_and_redeem(&active_sigscript, redeem)?
             } else {
-                vec![]
-            };
+                active_sigscript.clone()
+            }
+        } else if let Some(target) = covenant_target.as_ref()
+            && target.binding == DebugCovenantBinding::Cov
+            && input.covenant_id == active_covenant_id
+            && input_redeem_scripts[input_idx].is_some()
+        {
+            // Companion input of the same covenant group: auto-build its
+            // leader/delegate call so the group verifies as a whole.
+            let is_leader = Some(input_idx) == companion_leader_index;
+            let input_ctor = input
+                .constructor_args
+                .clone()
+                .unwrap_or_else(|| root_ctor.clone());
+            let auto_action = build_covenant_input_sigscript(
+                compile_cache.get(&input_ctor)?,
+                target,
+                is_leader,
+                call_args,
+                covenant_group_output_states.as_deref(),
+            )?;
+            combine_action_and_redeem(
+                &auto_action,
+                input_redeem_scripts[input_idx]
+                    .as_ref()
+                    .expect("checked is_some above"),
+            )?
+        } else if let Some(redeem) = input_redeem_scripts[input_idx].as_ref() {
+            sigscript_push_script(redeem)?
+        } else {
+            vec![]
+        };
 
         tx_inputs.push(TransactionInput {
             previous_outpoint: input_prev_outpoints[input_idx],
             signature_script,
-            sequence: input_sequences[input_idx],
-            compute_commit: SigopCount(input_sig_op_counts[input_idx]).into(),
+            sequence: input.sequence,
+            compute_commit: SigopCount(input.sig_op_count).into(),
         });
     }
 
@@ -1300,10 +1539,17 @@ fn run_harness(
     let sig_cache = Cache::new(10_000);
     let reused_values = SigHashReusedValuesUnsync::new();
 
-    let utxos = utxo_specs
+    let utxos = input_utxo_spks
         .into_iter()
-        .map(|(value, spk, covenant_id)| {
-            UtxoEntry::new(value, spk, 0, kas_tx.is_coinbase(), covenant_id)
+        .zip(tx.inputs.iter())
+        .map(|(spk, input)| {
+            UtxoEntry::new(
+                input.utxo_value,
+                spk,
+                0,
+                kas_tx.is_coinbase(),
+                input.covenant_id,
+            )
         })
         .collect::<Vec<_>>();
     let populated_tx = PopulatedTransaction::new(&kas_tx, utxos);
@@ -1313,6 +1559,7 @@ fn run_harness(
             return Ok(failed_result(
                 selected_name,
                 format!("Covenant structure error: {e}"),
+                trace,
             ));
         }
     };
@@ -1323,15 +1570,14 @@ fn run_harness(
     let active_utxo = populated_tx
         .utxo(tx.active_input_index)
         .ok_or_else(|| err("missing utxo entry for active input"))?;
-    let active_lockscript = input_redeem_scripts[tx.active_input_index]
-        .clone()
-        .unwrap_or_else(|| compiled.script.clone());
+    let active_lockscript = match input_redeem_scripts[tx.active_input_index].clone() {
+        Some(script) => script,
+        None => compile_cache.get(&root_ctor)?.script.clone(),
+    };
     let covenant_input_states = active_utxo.covenant_id.and_then(|covenant_id| {
         let mut values = Vec::new();
-        for (input_covenant_id, covenant_input_state) in
-            input_covenant_ids.iter().zip(input_covenant_states.iter())
-        {
-            if *input_covenant_id != Some(covenant_id) {
+        for (input, covenant_input_state) in tx.inputs.iter().zip(input_covenant_states.iter()) {
+            if input.covenant_id != Some(covenant_id) {
                 continue;
             }
             values.push(covenant_input_state.clone()?);
@@ -1370,19 +1616,39 @@ fn run_harness(
         Ok(session) => session,
         // Failed before lockscript debugging began (e.g. in the signature
         // script) — no session to build a source-level report from.
-        Err(e) => return Ok(failed_result(selected_name, e.to_string())),
+        Err(e) => return Ok(failed_result(selected_name, e.to_string(), trace)),
     };
     session = session
         .with_shadow_tx_context(shadow_tx_context)
         .with_covenant_mode(covenant_param_value, covenant_target);
 
-    match session.run_to_completion() {
+    // With tracing, run_to_completion's own loop (`while step_into()`) with a
+    // snapshot of what the CLI debugger would print at each pause; execution
+    // is identical either way. Covenant transition calls record no pauses:
+    // the engine verifies their bodies as a whole (shadow evaluation), so
+    // `step_into` never lands inside them — the CLI debugger steps them the
+    // same way.
+    let mut trace_steps = trace.then(Vec::new);
+    let run_result = if let Some(steps) = trace_steps.as_mut() {
+        loop {
+            match session.step_into() {
+                Ok(Some(_)) => steps.push(snapshot_trace_step(&session)?),
+                Ok(None) => break Ok(()),
+                Err(e) => break Err(e),
+            }
+        }
+    } else {
+        session.run_to_completion()
+    };
+
+    match run_result {
         Ok(()) => Ok(PyDebugCallResult {
             success: true,
             error: None,
             failure: None,
             console: session.take_console_output(),
             function_name: selected_name,
+            trace: trace_steps,
         }),
         Err(e) => {
             let report = session.build_failure_report(&e);
@@ -1392,6 +1658,7 @@ fn run_harness(
                 failure: Some(convert_report(&report)),
                 console: session.take_console_output(),
                 function_name: selected_name,
+                trace: trace_steps,
             })
         }
     }
@@ -1436,6 +1703,13 @@ fn run_harness(
 ///         `covenant_id`, `authorizing_input`, `state` (the post-transition
 ///         contract state to verify), `constructor_args`, `script`, and
 ///         `p2pk_pubkey`.
+///     trace: When True, record a per-statement execution trace on
+///         `result.trace`: each executed statement with its source line,
+///         enclosing function, and the variables in scope when it was
+///         reached. Tracing changes what is recorded, not what executes.
+///         Covenant transition calls record no per-statement pauses (the
+///         engine verifies their bodies as a whole, as in the CLI debugger);
+///         the failure report still decodes them on failure.
 ///
 /// Returns:
 ///     DebugCallResult: The simulation outcome. Script failures are reported
@@ -1447,13 +1721,14 @@ fn run_harness(
 #[gen_stub_pyfunction(module = "kaspa.experimental.silverscript")]
 #[pyfunction]
 #[pyo3(name = "debug_call")]
-#[pyo3(signature = (source, function_name=None, args=None, constructor_args=None, tx=None))]
+#[pyo3(signature = (source, function_name=None, args=None, constructor_args=None, tx=None, trace=false))]
 pub fn py_debug_call(
     source: String,
     function_name: Option<String>,
     args: Option<Bound<'_, PyAny>>,
     constructor_args: Option<Bound<'_, PyAny>>,
     tx: Option<Bound<'_, PyAny>>,
+    trace: bool,
 ) -> PyResult<PyDebugCallResult> {
     let call_args = collect_args(args.as_ref())?;
     let ctor_args = collect_args(constructor_args.as_ref())?;
@@ -1464,5 +1739,6 @@ pub fn py_debug_call(
         &call_args,
         &ctor_args,
         &tx_spec,
+        trace,
     )
 }

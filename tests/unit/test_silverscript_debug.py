@@ -84,6 +84,19 @@ contract Counter(int init_count) {
 }
 """
 
+# A covenant whose state is a byte array — exercises type-directed state
+# conversion (ints, int lists, and hex strings in byte positions).
+TAGGED = """
+pragma silverscript ^0.1.0;
+contract Tagged(byte[4] init_tag) {
+    byte[4] tag = init_tag;
+    #[covenant(binding = auth, from = 1, to = 1, mode = transition)]
+    function retag(State prev_state, byte[4] next) : (State) {
+        return({ tag: next });
+    }
+}
+"""
+
 COVENANT_ID = "11" * 32
 
 
@@ -228,6 +241,74 @@ class TestConsole:
 
 
 # ---------------------------------------------------------------------------
+# Execution tracing
+# ---------------------------------------------------------------------------
+
+class TestTrace:
+    def test_trace_off_by_default(self):
+        assert silverscript.debug_call(GUARD, "check", [150], [100]).trace is None
+
+    def test_trace_records_statements_in_order(self):
+        result = silverscript.debug_call(GUARD, "check", [150], [100], trace=True)
+        assert result.success is True
+        assert [(s.line, s.statement) for s in result.trace] == [
+            (5, "int margin = amount - threshold;"),
+            (6, "require(margin > 0);"),
+        ]
+        assert result.trace[0].function_name == "check"
+
+    def test_trace_variables_snapshot_when_statement_reached(self):
+        result = silverscript.debug_call(GUARD, "check", [150], [100], trace=True)
+        first, second = result.trace
+        # margin is defined by the first statement, so it appears from the
+        # second step on.
+        assert "margin" not in {v.name for v in first.variables}
+        assert {v.name: v.value for v in second.variables} == {
+            "amount": 150,
+            "margin": 50,
+            "threshold": 100,
+        }
+
+    def test_trace_on_failure_ends_at_failing_statement(self):
+        result = silverscript.debug_call(GUARD, "check", [50], [100], trace=True)
+        assert result.success is False
+        assert result.failure is not None
+        assert result.trace[-1].line == 6
+        assert result.trace[-1].statement == "require(margin > 0);"
+
+    def test_trace_covers_inlined_helper(self):
+        result = silverscript.debug_call(HELPER, "go", [30], trace=True)
+        assert result.success is True
+        helper_steps = [s for s in result.trace if s.statement == "require(v > 10);"]
+        assert len(helper_steps) == 1
+        assert helper_steps[0].function_name == "checkPositive"
+        assert {v.name: v.value for v in helper_steps[0].variables}["v"] == 30
+
+    def test_trace_covenant_transition_records_no_pauses(self):
+        # Covenant transition bodies are verified as a whole by the engine
+        # (shadow evaluation), not stepped statement-by-statement — the
+        # upstream CLI debugger steps them the same way. The trace is
+        # present but empty; the failure report still decodes them.
+        result = silverscript.debug_call(
+            COUNTER, "add", [5], [0], tx=counter_scenario(10, 15), trace=True
+        )
+        assert result.success is True
+        assert result.trace == []
+
+    def test_trace_alongside_console(self):
+        result = silverscript.debug_call(LOGGER, "go", [7], trace=True)
+        assert result.console == ["x is 7"]
+        assert any(s.statement == 'console.log("x is", x);' for s in result.trace)
+
+    def test_trace_step_repr(self):
+        result = silverscript.debug_call(GUARD, "check", [150], [100], trace=True)
+        assert repr(result.trace[1]) == (
+            'TraceStep(line=6, function_name="check",'
+            ' statement="require(margin > 0);", 3 variable(s))'
+        )
+
+
+# ---------------------------------------------------------------------------
 # The tx scenario: introspection and covenant transitions
 # ---------------------------------------------------------------------------
 
@@ -272,6 +353,44 @@ class TestTxScenario:
         tx["inputs"][0]["covenant_id"] = bytes.fromhex(COVENANT_ID)
         tx["outputs"][0]["covenant_id"] = bytes.fromhex(COVENANT_ID)
         assert silverscript.debug_call(COUNTER, "add", [5], [0], tx=tx).success is True
+
+    def test_covenant_transition_with_change_output(self):
+        # A plain change output has no covenant binding, so it must not count
+        # toward the synthesized output State argument.
+        tx = counter_scenario(10, 15)
+        tx["outputs"].append({"value": 1000})
+        assert silverscript.debug_call(COUNTER, "add", [5], [0], tx=tx).success is True
+
+    def test_covenant_transition_with_raw_script_change_output(self):
+        tx = counter_scenario(10, 15)
+        tx["outputs"].append({"value": 1000, "p2pk_pubkey": b"\x02" * 32})
+        assert silverscript.debug_call(COUNTER, "add", [5], [0], tx=tx).success is True
+
+    def test_byte_array_state_spellings_are_equivalent(self):
+        # bytes, int lists, and hex strings are all accepted in byte-array
+        # state fields and produce the same simulation.
+        for prev, next_ in [
+            (b"\x01\x02\x03\x04", b"\xaa\xbb\xcc\xdd"),
+            ([1, 2, 3, 4], [0xAA, 0xBB, 0xCC, 0xDD]),
+            ("0x01020304", "0xaabbccdd"),
+        ]:
+            tx = {
+                "inputs": [{
+                    "utxo_value": 5000,
+                    "covenant_id": COVENANT_ID,
+                    "state": {"tag": prev},
+                }],
+                "outputs": [{
+                    "value": 5000,
+                    "covenant_id": COVENANT_ID,
+                    "authorizing_input": 0,
+                    "state": {"tag": next_},
+                }],
+            }
+            result = silverscript.debug_call(
+                TAGGED, "retag", [b"\xaa\xbb\xcc\xdd"], [b"\x01\x02\x03\x04"], tx=tx
+            )
+            assert result.success is True, f"spelling {prev!r} -> {next_!r}"
 
 
 # ---------------------------------------------------------------------------
@@ -366,6 +485,57 @@ class TestErrors:
                         "covenant_id": COVENANT_ID,
                         "state": {},
                     }],
+                },
+            )
+
+    def test_state_validated_even_with_raw_utxo_script(self):
+        # A raw utxo_script override must not bypass state validation.
+        with pytest.raises(silverscript.SilverScriptError, match="unknown state field 'cuont'"):
+            silverscript.debug_call(
+                COUNTER, "add", [5], [0], tx=counter_scenario(10, 15) | {
+                    "inputs": [{
+                        "utxo_value": 5000,
+                        "covenant_id": COVENANT_ID,
+                        "utxo_script": b"\x51",
+                        "state": {"cuont": 10},
+                    }],
+                },
+            )
+
+    def test_output_state_validated_even_with_raw_script(self):
+        tx = counter_scenario(10, 15)
+        tx["outputs"][0]["script"] = b"\x51"
+        tx["outputs"][0]["state"] = {"cuont": 15}
+        with pytest.raises(silverscript.SilverScriptError, match="unknown state field 'cuont'"):
+            silverscript.debug_call(COUNTER, "add", [5], [0], tx=tx)
+
+    def test_state_field_type_mismatch_raises(self):
+        with pytest.raises(
+            silverscript.SilverScriptError, match="state field 'count' expects int"
+        ):
+            silverscript.debug_call(
+                COUNTER, "add", [5], [0], tx=counter_scenario(10, 15) | {
+                    "inputs": [{
+                        "utxo_value": 5000,
+                        "covenant_id": COVENANT_ID,
+                        "state": {"count": "not an int"},
+                    }],
+                },
+            )
+
+    def test_byte_array_state_wrong_length_raises(self):
+        with pytest.raises(
+            silverscript.SilverScriptError, match="state field 'tag' expects 4 bytes, got 3"
+        ):
+            silverscript.debug_call(
+                TAGGED, "retag", [b"\xaa\xbb\xcc\xdd"], [b"\x01\x02\x03\x04"],
+                tx={
+                    "inputs": [{
+                        "utxo_value": 5000,
+                        "covenant_id": COVENANT_ID,
+                        "state": {"tag": [1, 2, 3]},
+                    }],
+                    "outputs": [],
                 },
             )
 

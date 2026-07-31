@@ -470,6 +470,7 @@ fn silverscript(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<debug::PyFailureReport>()?;
     m.add_class::<debug::PyFailureFrame>()?;
     m.add_class::<debug::PyDebugVariable>()?;
+    m.add_class::<debug::PyTraceStep>()?;
     m.add_class::<PySilverScriptError>()?;
     Ok(())
 }
