@@ -18,8 +18,11 @@ from kaspa import (
     Generator,
     PaymentOutput,
     Hash,
+    pay_to_address_script,
     sign_transaction,
+    compute_sighash,
     create_input_signature,
+    sign_script_hash,
     create_transaction,
     create_transactions,
     estimate_transactions,
@@ -234,6 +237,118 @@ class TestSighashType:
     def test_sighash_type_exists(self):
         """Test SighashType exists."""
         assert SighashType is not None
+
+
+class TestComputeSighash:
+    """Tests for compute_sighash."""
+
+    PRIVATE_KEY_HEX = "b7e151628aed2a6abf7158809cf4f3c762e7160f38b4da56a784d9045190cfef"
+    PREV_TX_ID = "880eb9819a31821d9d2399e2f35e2433b72637e393d71ecc9b8d0250f49153c3"
+
+    def _build_tx(self, signature_script=b"", with_utxo=True, amount=100_000_000):
+        """Build a single-input P2PK transaction spending a synthetic UTXO."""
+        private_key = PrivateKey(self.PRIVATE_KEY_HEX)
+        address = private_key.to_address("mainnet")
+        spk = pay_to_address_script(address)
+
+        outpoint = TransactionOutpoint(Hash(self.PREV_TX_ID), 0)
+        if with_utxo:
+            from kaspa import UtxoEntryReference
+
+            utxo_ref = UtxoEntryReference.from_dict({
+                "address": address.to_string(),
+                "outpoint": {"transactionId": self.PREV_TX_ID, "index": 0},
+                "utxoEntry": {
+                    "amount": amount,
+                    "scriptPublicKey": {"version": 0, "script": spk.script},
+                    "blockDaaScore": 0,
+                    "isCoinbase": False,
+                    "covenantId": None,
+                },
+            })
+            input = TransactionInput(outpoint, signature_script, 0, 1, utxo=utxo_ref)
+        else:
+            input = TransactionInput(outpoint, signature_script, 0, 1)
+        output = TransactionOutput(amount - 10_000, spk)
+        return Transaction(0, [input], [output], 0, "0" * 40, 0, "", 0)
+
+    def test_compute_sighash_deterministic(self):
+        """Test compute_sighash returns a deterministic 32-byte Hash."""
+        tx = self._build_tx()
+        sighash = compute_sighash(tx, 0)
+
+        assert isinstance(sighash, Hash)
+        assert len(sighash.to_hex()) == 64
+        assert sighash.to_hex() == compute_sighash(tx, 0).to_hex()
+
+    def test_compute_sighash_default_type_is_all(self):
+        """Test the default sighash type is All, accepting enum or string."""
+        tx = self._build_tx()
+        default = compute_sighash(tx, 0).to_hex()
+
+        assert compute_sighash(tx, 0, SighashType.All).to_hex() == default
+        assert compute_sighash(tx, 0, "all").to_hex() == default
+
+    def test_compute_sighash_types_differ(self):
+        """Test different sighash types produce different digests."""
+        tx = self._build_tx()
+        digests = {
+            compute_sighash(tx, 0, sighash_type).to_hex()
+            for sighash_type in ["all", "none", "single"]
+        }
+        assert len(digests) == 3
+
+    def test_compute_sighash_ecdsa_differs(self):
+        """Test the ECDSA digest differs from the Schnorr digest."""
+        tx = self._build_tx()
+        schnorr = compute_sighash(tx, 0).to_hex()
+        ecdsa = compute_sighash(tx, 0, ecdsa=True).to_hex()
+        assert schnorr != ecdsa
+
+    def test_compute_sighash_input_index_out_of_bounds(self):
+        """Test out-of-bounds input index raises."""
+        tx = self._build_tx()
+        with pytest.raises(Exception, match="out of bounds"):
+            compute_sighash(tx, 1)
+
+    def test_compute_sighash_missing_utxo_entry(self):
+        """Test a transaction without UTXO entries raises."""
+        tx = self._build_tx(with_utxo=False)
+        with pytest.raises(Exception):
+            compute_sighash(tx, 0)
+
+    def test_compute_sighash_matches_node_verification(self):
+        """Test the digest is the one the node verifies signatures against.
+
+        Sign the computed sighash externally with sign_script_hash, splice the
+        resulting signature blob into the input's signature script, and let
+        sign_transaction(verify_sig=True) run consensus-side verification
+        (which recomputes the sighash and checks the Schnorr signature).
+        """
+        private_key = PrivateKey(self.PRIVATE_KEY_HEX)
+        tx_unsigned = self._build_tx()
+
+        sighash = compute_sighash(tx_unsigned, 0)
+        sig_blob = sign_script_hash(sighash.to_hex(), private_key)
+
+        tx_signed = self._build_tx(signature_script=bytes.fromhex(sig_blob))
+        # Raises if consensus-side signature verification fails
+        sign_transaction(tx_signed, [], True)
+
+    def test_compute_sighash_commits_to_amount(self):
+        """Test a signature over a digest from different tx data fails verification."""
+        private_key = PrivateKey(self.PRIVATE_KEY_HEX)
+        tx_unsigned = self._build_tx()
+
+        sighash = compute_sighash(tx_unsigned, 0)
+        sig_blob = sign_script_hash(sighash.to_hex(), private_key)
+
+        # Same signature spliced into a tx with a different amount must not verify
+        tx_tampered = self._build_tx(
+            signature_script=bytes.fromhex(sig_blob), amount=200_000_000
+        )
+        with pytest.raises(Exception):
+            sign_transaction(tx_tampered, [], True)
 
 
 class TestCreateTransaction:

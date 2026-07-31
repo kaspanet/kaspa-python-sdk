@@ -98,6 +98,37 @@ The same method exists on [`PendingTransaction`](../../reference/Classes/Pending
 ([`pending.create_input_signature(...)`](../../reference/Classes/PendingTransaction.md)); write the resulting script
 back with [`pending.fill_input(...)`](../../reference/Classes/PendingTransaction.md).
 
+## Compute a sighash without signing
+
+When the key isn't available in-process — an external or hardware
+signer, multisig digest distribution, or verifying a signature
+against the exact digest the node checks — use
+[`compute_sighash`](../../reference/Functions/compute_sighash.md) to
+get the signature hash for an input without signing it:
+
+```python
+from kaspa import compute_sighash, sign_script_hash
+
+digest = compute_sighash(tx, input_index=0)   # Hash, SighashType.All
+sig_hex = sign_script_hash(digest.to_hex(), private_key)
+```
+
+Every input must carry its UTXO entry — the sighash commits to each
+input's script public key and amount. Schnorr is the default; pass
+`ecdsa=True` for inputs locked to ECDSA addresses (an extra hash
+round over the Schnorr digest).
+
+[`sign_script_hash`](../../reference/Functions/sign_script_hash.md)
+always signs Schnorr and appends the `SighashType.All` hashtype
+byte, so it only composes with digests computed with the defaults
+shown above. For any other `sighash_type`, or for a digest computed
+with `ecdsa=True`, sign the digest with your external signer and
+assemble the signature script yourself: the signature followed by
+the hashtype byte matching the digest. The blob from
+`sign_script_hash` is a complete signature script for a single-key
+(P2PK) input; for script-hash lockups, wrap it with
+`pay_to_script_hash_signature_script`.
+
 ## Multisig and sig_op_count
 
 Two fields interact with mass when you sign:

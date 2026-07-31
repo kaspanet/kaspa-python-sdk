@@ -5,7 +5,13 @@ use crate::{
 };
 use kaspa_consensus_client::{Transaction, sign_with_multiple_v3};
 use kaspa_consensus_core::{
-    hashing::{sighash_type::SIG_HASH_ALL, wasm::SighashType},
+    hashing::{
+        sighash::{
+            SigHashReusedValuesUnsync, calc_ecdsa_signature_hash, calc_schnorr_signature_hash,
+        },
+        sighash_type::SIG_HASH_ALL,
+        wasm::SighashType,
+    },
     sign::{sign_input, verify},
     tx::PopulatedTransaction,
 };
@@ -90,6 +96,78 @@ pub fn py_create_input_signature(
     key_bytes.zeroize();
 
     Ok(signature.to_hex())
+}
+
+/// Compute the signature hash (sighash) for a specific transaction input.
+///
+/// This mirrors the digest the node computes when validating a signature for
+/// the input, without signing it. Useful for external/HSM signers, multisig
+/// assembly, or verifying a signature against a precomputed digest. With the
+/// defaults (Schnorr, `SighashType.All`) the resulting hash can be signed
+/// with `sign_script_hash`. For any other `sighash_type`, or with
+/// `ecdsa=True`, sign the digest externally and assemble the signature
+/// script yourself — the signature followed by the hashtype byte matching
+/// the digest — because `sign_script_hash` always signs Schnorr and appends
+/// the All hashtype byte.
+///
+/// Every transaction input must have an attached UTXO entry, as the sighash
+/// commits to each input's script public key and amount.
+///
+/// Args:
+///     tx: The transaction containing the input.
+///     input_index: The index of the input to compute the sighash for.
+///     sighash_type: The signature hash type (default: All).
+///     ecdsa: Compute the ECDSA variant of the sighash instead of Schnorr
+///         (an additional hash round over the Schnorr digest).
+///
+/// Returns:
+///     Hash: The signature hash for the input.
+///
+/// Raises:
+///     Exception: If the input index is out of bounds or the transaction's
+///         inputs are missing UTXO entries.
+#[gen_stub_pyfunction]
+#[pyfunction]
+#[pyo3(name = "compute_sighash")]
+#[pyo3(signature = (tx, input_index, sighash_type=None, ecdsa=false))]
+pub fn py_compute_sighash(
+    tx: &PyTransaction,
+    input_index: usize,
+    #[gen_stub(override_type(type_repr = "str | SighashType | None = SighashType.All"))]
+    sighash_type: Option<PySighashType>,
+    ecdsa: bool,
+) -> PyResult<PyHash> {
+    let (cctx, utxos) = tx
+        .inner()
+        .tx_and_utxos()
+        .map_err(|err| PyException::new_err(err.to_string()))?;
+    if input_index >= cctx.inputs.len() {
+        return Err(PyException::new_err(format!(
+            "Input index {input_index} out of bounds for transaction with {} inputs",
+            cctx.inputs.len()
+        )));
+    }
+    let populated_transaction = PopulatedTransaction::new(&cctx, utxos);
+
+    let sighash_type: SighashType = sighash_type.unwrap_or(PySighashType::All).into();
+    let reused_values = SigHashReusedValuesUnsync::new();
+
+    let hash = if ecdsa {
+        calc_ecdsa_signature_hash(
+            &populated_transaction,
+            input_index,
+            sighash_type.into(),
+            &reused_values,
+        )
+    } else {
+        calc_schnorr_signature_hash(
+            &populated_transaction,
+            input_index,
+            sighash_type.into(),
+            &reused_values,
+        )
+    };
+    Ok(hash.into())
 }
 
 /// Sign a script hash with a private key.

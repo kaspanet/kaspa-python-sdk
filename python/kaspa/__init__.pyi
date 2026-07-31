@@ -5147,6 +5147,38 @@ def calculate_transaction_mass(network_id: NetworkId, tx: Transaction, minimum_s
         Exception: If mass calculation fails.
     """
 
+def compute_sighash(tx: Transaction, input_index: builtins.int, sighash_type: str | SighashType | None = SighashType.All, ecdsa: builtins.bool = False) -> Hash:
+    r"""
+    Compute the signature hash (sighash) for a specific transaction input.
+    
+    This mirrors the digest the node computes when validating a signature for
+    the input, without signing it. Useful for external/HSM signers, multisig
+    assembly, or verifying a signature against a precomputed digest. With the
+    defaults (Schnorr, `SighashType.All`) the resulting hash can be signed
+    with `sign_script_hash`. For any other `sighash_type`, or with
+    `ecdsa=True`, sign the digest externally and assemble the signature
+    script yourself — the signature followed by the hashtype byte matching
+    the digest — because `sign_script_hash` always signs Schnorr and appends
+    the All hashtype byte.
+    
+    Every transaction input must have an attached UTXO entry, as the sighash
+    commits to each input's script public key and amount.
+    
+    Args:
+        tx: The transaction containing the input.
+        input_index: The index of the input to compute the sighash for.
+        sighash_type: The signature hash type (default: All).
+        ecdsa: Compute the ECDSA variant of the sighash instead of Schnorr
+            (an additional hash round over the Schnorr digest).
+    
+    Returns:
+        Hash: The signature hash for the input.
+    
+    Raises:
+        Exception: If the input index is out of bounds or the transaction's
+            inputs are missing UTXO entries.
+    """
+
 def covenant_id(outpoint: TransactionOutpoint, auth_outputs: typing.Sequence[TransactionOutput]) -> Hash:
     r"""
     Compute the covenant id for a set of authorizing outputs.
