@@ -16,6 +16,8 @@ use silverscript_lang::compiler::{
 };
 use silverscript_lang::errors::CompilerError;
 
+pub mod debug;
+
 create_py_exception!(
     /// Raised when SilverScript compilation or signature-script construction fails.
     PySilverScriptError,
@@ -23,7 +25,7 @@ create_py_exception!(
     "kaspa.experimental.silverscript"
 );
 
-fn map_err(err: CompilerError) -> PyErr {
+pub(crate) fn map_err(err: CompilerError) -> PyErr {
     match err.span() {
         Some(span) => {
             PySilverScriptError::new_err(format!("{err} (at bytes {}..{})", span.start, span.end))
@@ -34,8 +36,9 @@ fn map_err(err: CompilerError) -> PyErr {
 
 /// Owned, `'static` form of a Python argument. Converted once, then rebuilt into
 /// `Expr`s on demand — sidesteps `CompiledContract<'i>` borrowing the source.
-#[derive(Clone)]
-enum Value {
+/// `Eq`/`Hash` let the debug harness memoize per-constructor-args work.
+#[derive(Clone, PartialEq, Eq, Hash)]
+pub(crate) enum Value {
     Int(i64),
     Bool(bool),
     Str(String),
@@ -48,7 +51,7 @@ enum Value {
 /// value raises `SilverScriptError` instead of overflowing the native stack.
 const MAX_ARG_DEPTH: usize = 128;
 
-fn py_to_value(obj: &Bound<'_, PyAny>) -> PyResult<Value> {
+pub(crate) fn py_to_value(obj: &Bound<'_, PyAny>) -> PyResult<Value> {
     py_to_value_at(obj, 0)
 }
 
@@ -110,7 +113,7 @@ fn py_to_value_at(obj: &Bound<'_, PyAny>, depth: usize) -> PyResult<Value> {
 }
 
 /// Build an owned (`'static`) literal `Expr` from a `Value` — no source borrows.
-fn value_to_expr(value: &Value) -> Expr<'static> {
+pub(crate) fn value_to_expr(value: &Value) -> Expr<'static> {
     match value {
         Value::Int(i) => Expr::int(*i),
         Value::Bool(b) => Expr::bool(*b),
@@ -136,7 +139,7 @@ fn value_to_expr(value: &Value) -> Expr<'static> {
 }
 
 /// Convert an optional Python `list`/`tuple` of argument values into `Value`s.
-fn collect_args(obj: Option<&Bound<'_, PyAny>>) -> PyResult<Vec<Value>> {
+pub(crate) fn collect_args(obj: Option<&Bound<'_, PyAny>>) -> PyResult<Vec<Value>> {
     let Some(obj) = obj else {
         return Ok(Vec::new());
     };
@@ -462,6 +465,12 @@ fn silverscript(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyCompiledContract>()?;
     m.add_class::<PyFunctionAbiEntry>()?;
     m.add_class::<PyFunctionInputAbi>()?;
+    m.add_function(wrap_pyfunction!(debug::py_debug_call, m)?)?;
+    m.add_class::<debug::PyDebugCallResult>()?;
+    m.add_class::<debug::PyFailureReport>()?;
+    m.add_class::<debug::PyFailureFrame>()?;
+    m.add_class::<debug::PyDebugVariable>()?;
+    m.add_class::<debug::PyTraceStep>()?;
     m.add_class::<PySilverScriptError>()?;
     Ok(())
 }

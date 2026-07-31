@@ -1418,6 +1418,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a4ae5f15dda3c708c0ade84bfee31ccab44a3da4f88015ed22f63732abe300c8"
 
 [[package]]
+name = "debugger-session"
+version = "0.1.0"
+source = "git+https://github.com/kaspanet/silverscript.git?rev=2a3961cadc76bb16a425042172ffe32481da89b5#2a3961cadc76bb16a425042172ffe32481da89b5"
+dependencies = [
+ "faster-hex 0.10.0",
+ "kaspa-consensus-core 2.0.1 (git+https://github.com/kaspanet/rusty-kaspa?tag=v2.0.1)",
+ "kaspa-txscript 2.0.1 (git+https://github.com/kaspanet/rusty-kaspa?tag=v2.0.1)",
+ "kaspa-txscript-errors 2.0.1 (git+https://github.com/kaspanet/rusty-kaspa?tag=v2.0.1)",
+ "serde",
+ "serde_json",
+ "silverscript-lang",
+]
+
+[[package]]
 name = "delegate-display"
 version = "2.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3093,7 +3107,10 @@ version = "2.0.2-rc.1"
 name = "kaspa-python-sdk-silverscript"
 version = "2.0.2-rc.1"
 dependencies = [
+ "debugger-session",
+ "kaspa-consensus-core 2.0.1 (git+https://github.com/kaspanet/rusty-kaspa?tag=v2.0.1)",
  "kaspa-python-sdk-core",
+ "kaspa-txscript 2.0.1 (git+https://github.com/kaspanet/rusty-kaspa?tag=v2.0.1)",
  "pyo3",
  "pyo3-stub-gen",
  "self_cell",

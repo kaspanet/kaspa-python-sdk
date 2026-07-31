@@ -162,6 +162,7 @@ nav:
           - Compiling Contracts: learn/silverscript/compiling.md
           - Unlocking Scripts: learn/silverscript/unlocking-scripts.md
           - Covenants: learn/silverscript/covenants.md
+          - Debugging: learn/silverscript/debugging.md
       - ZK Scripts:
           - Overview: learn/zk/overview.md
           - Locking & Redeeming: learn/zk/locking-and-redeeming.md
