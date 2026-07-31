@@ -19,7 +19,6 @@ search:
 - Function `compute_sighash()` exposed to Python. Computes the signature hash (sighash) for a transaction input.
 
 ### Fixed
-- The `compute_sighash()` docs no longer claim every digest can be signed with `sign_script_hash()`. That function always signs Schnorr and appends the `SighashType.All` hashtype byte, so it only composes with digests computed with the defaults; the docs now say to sign non-default digests (`sighash_type` other than All, or `ecdsa=True`) externally and assemble the signature script with the matching hashtype byte.
 - `requires-python` upper bound changed from `<=3.14` to `<3.15`. Under PEP 440 version ordering `<=3.14` excludes every 3.14 patch release (`3.14.1` and later).
 - The type stubs no longer declare `UtxoEntries` twice. Previously an internal argument-conversion helper emitted a second, `__repr__`-only declaration that could shadow the real class for type checkers (last declaration wins), hiding every method except `__repr__`. Parameters that took the helper (`utxo_entry_source` on `create_transaction`; `entries` / `priority_entries` on `Generator`, `create_transactions`, and `estimate_transactions`) are now annotated `typing.Sequence[UtxoEntryReference]`, matching what they actually accept — a list, not a `UtxoEntries` instance.
 
