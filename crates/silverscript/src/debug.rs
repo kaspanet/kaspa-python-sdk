@@ -1714,11 +1714,11 @@ fn run_harness(
 ///
 /// Returns:
 ///     DebugCallResult: The simulation outcome. Script failures are reported
-///     in the result, not raised.
+///         in the result, not raised.
 ///
 /// Raises:
 ///     SilverScriptError: If compilation fails, the entrypoint or an argument
-///     is invalid, or the `tx` scenario is malformed.
+///         is invalid, or the `tx` scenario is malformed.
 #[gen_stub_pyfunction(module = "kaspa.experimental.silverscript")]
 #[pyfunction]
 #[pyo3(name = "debug_call")]

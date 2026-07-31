@@ -356,10 +356,10 @@ def debug_call(source: builtins.str, function_name: typing.Optional[builtins.str
     
     Returns:
         DebugCallResult: The simulation outcome. Script failures are reported
-        in the result, not raised.
+            in the result, not raised.
     
     Raises:
         SilverScriptError: If compilation fails, the entrypoint or an argument
-        is invalid, or the `tx` scenario is malformed.
+            is invalid, or the `tx` scenario is malformed.
     """
 
