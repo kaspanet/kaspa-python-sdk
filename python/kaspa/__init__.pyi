@@ -2809,7 +2809,8 @@ class TransactionInput:
         Note that this creates a second separate object on the Python heap.
         
         Returns:
-            dict: the TransactionInput in dictionary form.
+            dict: keys `previousOutpoint`, `signatureScript`, `sequence`,
+            `sigOpCount`, `computeBudget`, and `utxo`.
         """
     @classmethod
     def from_dict(cls, dict: dict) -> TransactionInput:

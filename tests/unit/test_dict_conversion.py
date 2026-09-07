@@ -166,6 +166,24 @@ class TestTransactionDict:
         assert "mass" in d
         assert "storageMass" in d
         assert d["mass"] == d["storageMass"]
+        assert d["inputs"][0]["computeBudget"] == 0
+
+    def test_transaction_to_dict_preserves_v1_input_compute_budget(self):
+        """The submit_transaction dict path must keep a non-zero input computeBudget."""
+        tx_hash = Hash("0" * 64)
+        outpoint = TransactionOutpoint(tx_hash, 0)
+        tx_input = TransactionInput(outpoint, "", 0, 1, compute_budget=10)
+        spk = ScriptPublicKey(0, "51")
+        output = TransactionOutput(1000000, spk)
+        original = Transaction(1, [tx_input], [output], 100, "0" * 40, 0, "", 0)
+
+        d = original.to_dict()
+        assert d["version"] == 1
+        assert d["inputs"][0]["computeBudget"] == 10
+        restored = Transaction.from_dict(d)
+        assert restored.version == 1
+        assert restored.inputs[0].compute_budget == 10
+        assert original == restored
 
     def test_transaction_storage_mass_alias(self):
         """`storage_mass` mirrors `mass` (kept as an alias for WASM & back-compat)."""

@@ -147,7 +147,8 @@ impl PyTransactionInput {
     /// Note that this creates a second separate object on the Python heap.
     ///
     /// Returns:
-    ///     dict: the TransactionInput in dictionary form.
+    ///     dict: keys `previousOutpoint`, `signatureScript`, `sequence`,
+    ///     `sigOpCount`, `computeBudget`, and `utxo`.
     fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
         self.0.try_to_pydict(py)
     }
