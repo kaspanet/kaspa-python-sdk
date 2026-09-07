@@ -112,6 +112,9 @@ impl TryToPyDict for TransactionInput {
         // Set `sigOpCount` key
         dict.set_item("sigOpCount", self.get_sig_op_count())?;
 
+        // Set `computeBudget` key
+        dict.set_item("computeBudget", self.get_compute_budget())?;
+
         // Set `utxo` key
         let utxo_dict = self
             .get_utxo()

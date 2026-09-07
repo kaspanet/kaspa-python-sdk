@@ -81,7 +81,9 @@ class TestTransactionInputDict:
         assert "signatureScript" in d
         assert "sequence" in d
         assert "sigOpCount" in d
+        assert "computeBudget" in d
         assert "utxo" in d
+        assert d["computeBudget"] == 0
 
     def test_input_from_dict_roundtrip(self):
         """Test TransactionInput to_dict/from_dict round-trip."""
@@ -123,6 +125,18 @@ class TestTransactionInputDict:
         }
         restored = TransactionInput.from_dict(d)
         assert restored.compute_budget == 7
+
+    def test_input_to_dict_roundtrip_preserves_nonzero_compute_budget(self):
+        """to_dict must emit computeBudget so v1 submit paths do not silently use budget 0."""
+        tx_hash = Hash("a" * 64)
+        outpoint = TransactionOutpoint(tx_hash, 5)
+        original = TransactionInput(outpoint, "deadbeef", 0xFFFFFFFF, 1, compute_budget=10)
+
+        d = original.to_dict()
+        assert d["computeBudget"] == 10
+        restored = TransactionInput.from_dict(d)
+        assert restored.compute_budget == 10
+        assert original == restored
 
 
 class TestTransactionDict:
