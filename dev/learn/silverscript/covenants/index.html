@@ -14715,7 +14715,7 @@ not
 <a href="../unlocking-scripts/"><code>build_sig_script</code></a>. It finds the covenant's
 declaration entrypoint and builds the unlocking script for it:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">contract</span> <span class="o">=</span> <span class="n">silverscript</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">SOURCE</span><span class="p">,</span> <span class="p">[</span><span class="n">current_count</span><span class="p">])</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">call</span> <span class="o">=</span> <span class="n">contract</span><span class="o">.</span><span class="n">build_sig_script_for_covenant_decl</span><span class="p">(</span><span class="s2">&quot;add&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">amount</span><span class="p">])</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">call</span> <span class="o">=</span> <span class="n">contract</span><span class="o">.</span><span class="n">build_sig_script_for_covenant_decl</span><span class="p">(</span><span class="s2">"add"</span><span class="p">,</span> <span class="p">[</span><span class="n">amount</span><span class="p">])</span>
 </span></code></pre></div>
 <p>The <code>is_leader</code> keyword (default <code>False</code>) matters only for covenants that
 spend several UTXOs of the same covenant in one transition and pick one

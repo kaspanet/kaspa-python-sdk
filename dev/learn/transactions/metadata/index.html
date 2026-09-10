@@ -14777,9 +14777,9 @@ and what to set deliberately.</p>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">inputs</span><span class="o">=...</span><span class="p">,</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">outputs</span><span class="o">=...</span><span class="p">,</span>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">lock_time</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">subnetwork_id</span><span class="o">=</span><span class="s2">&quot;0000000000000000000000000000000000000000&quot;</span><span class="p">,</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">subnetwork_id</span><span class="o">=</span><span class="s2">"0000000000000000000000000000000000000000"</span><span class="p">,</span>
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">gas</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">payload</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">payload</span><span class="o">=</span><span class="s2">""</span><span class="p">,</span>
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">mass</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="p">)</span>
 </span></code></pre></div>
@@ -14793,7 +14793,7 @@ building a time-locked construct (e.g. a refund branch).</p>
 <h2 id="subnetwork_id"><code>subnetwork_id</code><a class="headerlink" href="#subnetwork_id" title="Permanent link">&para;</a></h2>
 <p>The subnetwork the transaction belongs to. Most transactions live on
 the default subnetwork — id all zeros:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">subnetwork_id</span><span class="o">=</span><span class="s2">&quot;0000000000000000000000000000000000000000&quot;</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">subnetwork_id</span><span class="o">=</span><span class="s2">"0000000000000000000000000000000000000000"</span>
 </span></code></pre></div>
 <p>Non-default IDs are reserved for protocol-level transaction kinds
 (coinbase, etc.) that you generally don't construct from the SDK.</p>
@@ -14805,8 +14805,8 @@ with a compute-cost component.</p>
 Bitcoin terms is <code>OP_RETURN</code>-style data, but <code>payload</code> lives at the
 transaction level, not inside a script. The SDK accepts a hex
 string, raw bytes, or a list of byte values:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">Transaction</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">payload</span><span class="o">=</span><span class="s2">&quot;68656c6c6f&quot;</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>        <span class="c1"># hex string</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">Transaction</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">payload</span><span class="o">=</span><span class="sa">b</span><span class="s2">&quot;hello&quot;</span><span class="p">,</span>     <span class="o">...</span><span class="p">)</span>        <span class="c1"># raw bytes</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">Transaction</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">payload</span><span class="o">=</span><span class="s2">"68656c6c6f"</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>        <span class="c1"># hex string</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">Transaction</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">payload</span><span class="o">=</span><span class="sa">b</span><span class="s2">"hello"</span><span class="p">,</span>     <span class="o">...</span><span class="p">)</span>        <span class="c1"># raw bytes</span>
 </span></code></pre></div>
 <p>Use cases:</p>
 <ul>
@@ -14819,7 +14819,7 @@ string, raw bytes, or a list of byte values:</p>
 but they don't bind the transaction to anything off-chain on their
 own.</p>
 <p>The <a href="../../../reference/Classes/Generator/"><code>Generator</code></a> (see <a href="../../wallet-sdk/tx-generator/">Transaction Generator</a>) accepts <code>payload=</code> directly:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">Generator</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">payload</span><span class="o">=</span><span class="sa">b</span><span class="s2">&quot;invoice-12345&quot;</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">Generator</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">payload</span><span class="o">=</span><span class="sa">b</span><span class="s2">"invoice-12345"</span><span class="p">)</span>
 </span></code></pre></div>
 <h2 id="mass"><code>mass</code><a class="headerlink" href="#mass" title="Permanent link">&para;</a></h2>
 <p>The transaction's mass. <code>0</code> at construction; populate with

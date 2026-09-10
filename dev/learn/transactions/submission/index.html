@@ -14739,15 +14739,16 @@ for <a href="../../../reference/Classes/Generator/"><code>Generator</code></a>-b
 <a href="../../../reference/Classes/Generator/"><code>Generator</code></a>.</p>
 <h2 id="manual-submission">Manual submission<a class="headerlink" href="#manual-submission" title="Permanent link">&para;</a></h2>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">submit_transaction</span><span class="p">({</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="s2">&quot;transaction&quot;</span><span class="p">:</span> <span class="n">signed_tx</span><span class="p">,</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="s2">&quot;allowOrphan&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="s2">"transaction"</span><span class="p">:</span> <span class="n">signed_tx</span><span class="p">,</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="s2">"allowOrphan"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="p">})</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;transactionId&quot;</span><span class="p">])</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">"transactionId"</span><span class="p">])</span>
 </span></code></pre></div>
 <p>The request takes:</p>
 <ul>
-<li><strong><code>transaction</code></strong> — a signed <a href="../../../reference/Classes/Transaction/"><code>Transaction</code></a> (or its dict form via
-  <a href="../../../reference/Classes/Transaction/"><code>Transaction.to_dict()</code></a> when shipping through another system; see
+<li><strong><code>transaction</code></strong> — a signed <a href="../../../reference/Classes/Transaction/"><code>Transaction</code></a> instance.
+  If it was serialized elsewhere, rebuild it with
+  <a href="../../../reference/Classes/Transaction/"><code>Transaction.from_dict()</code></a> first; a dict is not accepted here (see
   <a href="../serialization/">Serialization</a>).</li>
 <li><strong><code>allowOrphan</code></strong> — whether to keep the transaction in the mempool
   when an input hasn't been seen yet (e.g. submitting a chain out of

@@ -14774,8 +14774,8 @@
 </div>
 <h2 id="the-newtype-pattern">The Newtype Pattern<a class="headerlink" href="#the-newtype-pattern" title="Permanent link">&para;</a></h2>
 <p>The SDK uses the <a href="https://doc.rust-lang.org/rust-by-example/generics/new_types.html">newtype pattern</a> extensively. Most Python-exposed structs wrap a rusty-kaspa native type:</p>
-<div class="language-rust highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">// A wrapper around rusty-kaspa&#39;s Address type</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="cp">#[pyclass(name = </span><span class="s">&quot;Address&quot;</span><span class="cp">)]</span>
+<div class="language-rust highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">// A wrapper around rusty-kaspa's Address type</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="cp">#[pyclass(name = </span><span class="s">"Address"</span><span class="cp">)]</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="k">pub</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">PyAddress</span><span class="p">(</span><span class="n">Address</span><span class="p">);</span>
 </span></code></pre></div>
 <p>The wrapper then implements methods that delegate to the inner type:</p>
