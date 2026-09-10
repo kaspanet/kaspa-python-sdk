@@ -36,8 +36,9 @@ print(result["transactionId"])
 
 The request takes:
 
-- **`transaction`** — a signed [`Transaction`](../../reference/Classes/Transaction.md) (or its dict form via
-  [`Transaction.to_dict()`](../../reference/Classes/Transaction.md) when shipping through another system; see
+- **`transaction`** — a signed [`Transaction`](../../reference/Classes/Transaction.md) instance.
+  If it was serialized elsewhere, rebuild it with
+  [`Transaction.from_dict()`](../../reference/Classes/Transaction.md) first; a dict is not accepted here (see
   [Serialization](serialization.md)).
 - **`allowOrphan`** — whether to keep the transaction in the mempool
   when an input hasn't been seen yet (e.g. submitting a chain out of
