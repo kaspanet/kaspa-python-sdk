@@ -59,7 +59,7 @@ objects around. The dict form earns its place at process boundaries:
 - **Persistence** — saving a pending transaction to disk or a queue.
   Store the dict (as JSON), not the typed object.
 
-For submission itself you can pass either a [`Transaction`](../../reference/Classes/Transaction.md) or a dict
-to [`client.submit_transaction({"transaction": ...})`](../../reference/Classes/RpcClient.md#kaspa.RpcClient.submit_transaction); the dict form
-is only required when the transaction has already been serialized
-elsewhere. See [Submission](submission.md).
+For submission itself, [`client.submit_transaction({"transaction": ...})`](../../reference/Classes/RpcClient.md#kaspa.RpcClient.submit_transaction)
+requires a [`Transaction`](../../reference/Classes/Transaction.md) instance; passing a dict raises.
+If the transaction arrives as a dict (from another process, a queue, or disk), rebuild it with
+[`Transaction.from_dict()`](../../reference/Classes/Transaction.md) first. See [Submission](submission.md).

@@ -129,7 +129,7 @@ class TestTransactionInputDict:
         assert restored.compute_budget == 7
 
     def test_input_to_dict_roundtrip_preserves_nonzero_compute_budget(self):
-        """to_dict must emit computeBudget so v1 submit paths do not silently use budget 0."""
+        """to_dict must emit computeBudget so a from_dict round-trip does not silently reset a v1 budget to 0."""
         tx_hash = Hash("a" * 64)
         outpoint = TransactionOutpoint(tx_hash, 5)
         original = TransactionInput(outpoint, "deadbeef", 0xFFFFFFFF, 0, compute_budget=10)
@@ -171,7 +171,7 @@ class TestTransactionDict:
         assert d["inputs"][0]["computeBudget"] == 0
 
     def test_transaction_to_dict_preserves_v1_input_compute_budget(self):
-        """The submit_transaction dict path must keep a non-zero input computeBudget."""
+        """Transaction.to_dict() then from_dict() must keep a non-zero input computeBudget on a v1 transaction."""
         tx_hash = Hash("0" * 64)
         outpoint = TransactionOutpoint(tx_hash, 0)
         tx_input = TransactionInput(outpoint, "", 0, 0, compute_budget=10)
