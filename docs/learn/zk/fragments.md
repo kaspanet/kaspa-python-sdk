@@ -33,6 +33,12 @@ documents the stack it expects the sig script to have set up:
 
 - **[`append_r0_groth16_verifier(image_id)`](../../reference/Classes/ZkScriptBuilder.md)**
   — expects `[..., journal_hash, compressed_proof]` on the stack.
+- **[`append_r0_groth16_verifier_dynamic_image_id()`](../../reference/Classes/ZkScriptBuilder.md)**
+  — the same verifier, but the image id is taken from the stack rather
+  than baked into the script: expects
+  `[..., journal_hash, compressed_proof, image_id]`.
+  `append_r0_groth16_verifier(image_id)` is exactly `add_data(image_id)`
+  followed by this.
 - **[`append_r0_succinct_verifier(image_id, control_id, hash_fn_id=None)`](../../reference/Classes/ZkScriptBuilder.md)**
   — expects `[..., claim, control_index, control_digests, seal, journal]`.
 
@@ -52,7 +58,7 @@ one specific output — a smaller, more rigid lock:
 from kaspa import ZkScriptBuilder
 
 # A redeem script bound to one program AND one specific output.
-builder = ZkScriptBuilder.new_r0(covenants_enabled=True)
+builder = ZkScriptBuilder.new_r0()
 builder.append_r0_groth16_verifier_with_fixed_journal(image_id, journal_hash)
 redeem = builder.script()
 ```

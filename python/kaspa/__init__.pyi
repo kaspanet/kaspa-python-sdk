@@ -2234,10 +2234,12 @@ class ScriptBuilder:
     @property
     def covenants_enabled(self) -> builtins.bool:
         r"""
-        Whether covenant opcodes and post-Toccata script limits are enabled.
+        Deprecated. Covenant opcodes and their script limits are always
+        enabled, so this is always True. Reading it emits a DeprecationWarning;
+        the property will be removed in a future major version.
         
         Returns:
-            bool: True if covenants are enabled for this builder.
+            bool: Always True.
         """
     @property
     def sigop_script_units(self) -> builtins.int:
@@ -2247,13 +2249,15 @@ class ScriptBuilder:
         Returns:
             int: The configured sigop script units.
         """
-    def __new__(cls, covenants_enabled: builtins.bool = False, sigop_script_units: typing.Optional[builtins.int] = None) -> ScriptBuilder:
+    def __new__(cls, covenants_enabled: typing.Optional[builtins.bool] = None, sigop_script_units: typing.Optional[builtins.int] = None) -> ScriptBuilder:
         r"""
         Create a new empty script builder.
         
         Args:
-            covenants_enabled: Enable covenant opcodes and post-Toccata script
-                limits (default: False).
+            covenants_enabled: Deprecated and ignored. Covenant opcodes and
+                their script limits are always enabled. Passing a value emits
+                a DeprecationWarning; the parameter will be removed in a
+                future major version.
             sigop_script_units: Script units charged per signature operation.
                 Defaults to the native engine default when omitted.
         
@@ -2261,14 +2265,16 @@ class ScriptBuilder:
             ScriptBuilder: A new empty ScriptBuilder instance.
         """
     @staticmethod
-    def from_script(script: Binary, covenants_enabled: builtins.bool = False, sigop_script_units: typing.Optional[builtins.int] = None) -> ScriptBuilder:
+    def from_script(script: Binary, covenants_enabled: typing.Optional[builtins.bool] = None, sigop_script_units: typing.Optional[builtins.int] = None) -> ScriptBuilder:
         r"""
         Create a script builder from an existing script.
         
         Args:
             script: Existing script bytes as hex, bytes, or list.
-            covenants_enabled: Enable covenant opcodes and post-Toccata script
-                limits (default: False).
+            covenants_enabled: Deprecated and ignored. Covenant opcodes and
+                their script limits are always enabled. Passing a value emits
+                a DeprecationWarning; the parameter will be removed in a
+                future major version.
             sigop_script_units: Script units charged per signature operation.
                 Defaults to the native engine default when omitted.
         
@@ -4364,7 +4370,7 @@ class ZkScriptBuilder:
     any state, for composing scripts by hand.
     """
     @staticmethod
-    def new_r0(covenants_enabled: builtins.bool = True, sigop_script_units: typing.Optional[builtins.int] = None) -> ZkScriptBuilder:
+    def new_r0(covenants_enabled: typing.Optional[builtins.bool] = None, sigop_script_units: typing.Optional[builtins.int] = None) -> ZkScriptBuilder:
         r"""
         Construct a new `ZkScriptBuilder` for the RISC Zero proving flow.
         
@@ -4373,10 +4379,10 @@ class ZkScriptBuilder:
         breaking change.
         
         Args:
-            covenants_enabled: Use the post-Toccata script limits (default:
-                True). The zk proof pushes exceed the pre-Toccata 520-byte
-                element limit, so finalizing always fails when this is False;
-                only pass False to build fragments under pre-Toccata rules.
+            covenants_enabled: Deprecated and ignored. Covenant opcodes and
+                their script limits are always enabled. Passing a value emits
+                a DeprecationWarning; the parameter will be removed in a
+                future major version.
             sigop_script_units: Script units charged per signature operation.
                 Defaults to the native engine default when omitted.
         
@@ -4468,6 +4474,18 @@ class ZkScriptBuilder:
         
         Raises:
             ZkError: If `image_id` is malformed or the fragment cannot be appended.
+        """
+    def append_r0_groth16_verifier_dynamic_image_id(self) -> None:
+        r"""
+        Append the r0-over-groth16 verifier fragment that takes the image id
+        from the stack instead of baking it into the script. Expects
+        `[..., journal_hash, compressed_proof, image_id]` on the stack.
+        
+        `append_r0_groth16_verifier(image_id)` is equivalent to pushing
+        `image_id` with `add_data` and then calling this.
+        
+        Raises:
+            ZkError: If the fragment cannot be appended (or the builder is consumed).
         """
     def append_r0_groth16_verifier_with_fixed_journal(self, image_id: Binary, journal_hash: Binary) -> None:
         r"""

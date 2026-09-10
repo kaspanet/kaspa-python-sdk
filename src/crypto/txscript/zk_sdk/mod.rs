@@ -9,9 +9,9 @@
 //! Everything here is registered on the top-level `kaspa` module; the `ZkError`
 //! exception lives in `kaspa.exceptions`.
 //!
-//! The on-chain `OpZkPrecompile` opcode emitted by these scripts is gated by the
-//! same Toccata activation as the covenant opcodes, so build with
-//! `covenants_enabled=True` and spend on a network where Toccata is active.
+//! The on-chain `OpZkPrecompile` opcode emitted by these scripts arrived with
+//! the Toccata hardfork alongside the covenant opcodes; both are now
+//! unconditionally active on every network.
 
 pub mod builder;
 pub mod result;

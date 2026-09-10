@@ -41,16 +41,15 @@ future non-RISC-Zero backends can add their own factories):
 ```python
 from kaspa import ZkScriptBuilder
 
-builder = ZkScriptBuilder.new_r0(covenants_enabled=True)
+builder = ZkScriptBuilder.new_r0()
 ```
 
-- **`covenants_enabled`** (default `True`) selects the post-Toccata
-  script limits. The sig script's pushes — the redeem script itself,
-  and for succinct proofs the witness — exceed the pre-Toccata 520-byte
-  element limit, so finalizing always fails when this is `False`; only
-  pass `False` to build fragments under pre-Toccata rules.
 - **`sigop_script_units`** overrides the script units charged per
   signature operation; omit it for the engine default.
+- **`covenants_enabled`** is deprecated and ignored: covenant opcodes and
+  their script limits are always enabled, so the proof-sized pushes the
+  sig script needs are always allowed. Passing it emits a
+  `DeprecationWarning`; it will be removed in a future major version.
 
 ## Committing: the lock side
 
@@ -137,9 +136,6 @@ spend = TransactionInput(
   script opcodes — so the redeem input needs a `compute_budget` with
   headroom (the example uses 1600 for Groth16). Too low and the redeem
   fails.
-- **Activation.** `OpZkPrecompile` only runs where Toccata is active —
-  pre-check the virtual DAA score against the activation score before
-  submitting.
 
 Everything else — sizing the fee from
 [`calculate_transaction_mass`](../../reference/Functions/calculate_transaction_mass.md),

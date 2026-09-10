@@ -504,13 +504,11 @@ class TestTemplateHash:
 class TestCrossModule:
     def _address(self, count):
         redeem = silverscript.compile(GUARD, [count]).script
-        spk = _kaspa.ScriptBuilder.from_script(
-            redeem, covenants_enabled=True
-        ).create_pay_to_script_hash_script()
+        spk = _kaspa.ScriptBuilder.from_script(redeem).create_pay_to_script_hash_script()
         return _kaspa.address_from_script_public_key(spk, "testnet").to_string()
 
     def test_compiled_script_wraps_into_p2sh_address(self):
-        # silverscript (@v2.0.1) bytes consumed by the core (@78257f2) module:
+        # silverscript (@v2.0.1) bytes consumed by the core (@c338d49) module:
         # the whole architecture rests on this handoff working.
         assert self._address(100).startswith("kaspatest:")
 

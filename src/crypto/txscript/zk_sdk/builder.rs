@@ -1,4 +1,4 @@
-use crate::crypto::txscript::builder::build_engine_flags;
+use crate::crypto::txscript::builder::{build_engine_flags, warn_if_covenants_enabled_passed};
 use crate::crypto::txscript::zk_sdk::result::PyFinalizedR0Script;
 use crate::crypto::txscript::zk_sdk::utils::{
     PyZkError, decode_groth16_receipt, decode_hash_fn_id, decode_succinct_receipt, into_array_32,
@@ -8,9 +8,10 @@ use crate::types::PyBinary;
 use kaspa_txscript::EngineFlags;
 use kaspa_txscript::script_builder::ScriptBuilder;
 use kaspa_txscript_zk_sdk::{
-    append_r0_groth16_verifier, append_r0_groth16_verifier_with_fixed_journal,
-    append_r0_succinct_verifier, append_r0_succinct_verifier_with_fixed_journal,
-    push_r0_groth16_proof, push_r0_succinct_witness,
+    append_r0_groth16_verifier, append_r0_groth16_verifier_dynamic_image_id,
+    append_r0_groth16_verifier_with_fixed_journal, append_r0_succinct_verifier,
+    append_r0_succinct_verifier_with_fixed_journal, push_r0_groth16_proof,
+    push_r0_succinct_witness,
 };
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
@@ -84,24 +85,29 @@ impl PyZkScriptBuilder {
     /// breaking change.
     ///
     /// Args:
-    ///     covenants_enabled: Use the post-Toccata script limits (default:
-    ///         True). The zk proof pushes exceed the pre-Toccata 520-byte
-    ///         element limit, so finalizing always fails when this is False;
-    ///         only pass False to build fragments under pre-Toccata rules.
+    ///     covenants_enabled: Deprecated and ignored. Covenant opcodes and
+    ///         their script limits are always enabled. Passing a value emits
+    ///         a DeprecationWarning; the parameter will be removed in a
+    ///         future major version.
     ///     sigop_script_units: Script units charged per signature operation.
     ///         Defaults to the native engine default when omitted.
     ///
     /// Returns:
     ///     ZkScriptBuilder: A new unbounded builder.
     #[staticmethod]
-    #[pyo3(signature = (covenants_enabled=true, sigop_script_units=None))]
-    pub fn new_r0(covenants_enabled: bool, sigop_script_units: Option<u64>) -> Self {
-        let flags = build_engine_flags(covenants_enabled, sigop_script_units);
-        Self {
+    #[pyo3(signature = (covenants_enabled=None, sigop_script_units=None))]
+    pub fn new_r0(
+        py: Python<'_>,
+        covenants_enabled: Option<bool>,
+        sigop_script_units: Option<u64>,
+    ) -> PyResult<Self> {
+        warn_if_covenants_enabled_passed(py, covenants_enabled)?;
+        let flags = build_engine_flags(sigop_script_units);
+        Ok(Self {
             state: ZkState::Unbounded,
             flags,
             builder: ScriptBuilder::with_flags(flags),
-        }
+        })
     }
 
     /// The current script bytes as a hex string.
@@ -234,6 +240,20 @@ impl PyZkScriptBuilder {
     pub fn append_r0_groth16_verifier(&mut self, image_id: PyBinary) -> PyResult<()> {
         let image_id = into_array_32(image_id.into(), "image_id")?;
         append_r0_groth16_verifier(self.builder_mut()?, image_id).map_err(zk_err)?;
+        Ok(())
+    }
+
+    /// Append the r0-over-groth16 verifier fragment that takes the image id
+    /// from the stack instead of baking it into the script. Expects
+    /// `[..., journal_hash, compressed_proof, image_id]` on the stack.
+    ///
+    /// `append_r0_groth16_verifier(image_id)` is equivalent to pushing
+    /// `image_id` with `add_data` and then calling this.
+    ///
+    /// Raises:
+    ///     ZkError: If the fragment cannot be appended (or the builder is consumed).
+    pub fn append_r0_groth16_verifier_dynamic_image_id(&mut self) -> PyResult<()> {
+        append_r0_groth16_verifier_dynamic_image_id(self.builder_mut()?).map_err(zk_err)?;
         Ok(())
     }
 

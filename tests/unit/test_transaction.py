@@ -298,6 +298,34 @@ class TestComputeSighash:
         }
         assert len(digests) == 3
 
+    def test_sighash_type_hashtype_bytes(self):
+        """Test every SighashType maps to the consensus hashtype byte.
+
+        The AnyOneCanPay variants must carry the All/None/Single bit as well as
+        the AnyOneCanPay bit (0x80): a bare 0x80 is not a valid hashtype and
+        the script engine rejects such a signature.
+        """
+        tx = self._build_tx()
+        private_key = PrivateKey(self.PRIVATE_KEY_HEX)
+        # Kaspa hashtype bits: All 0x01, None 0x02, Single 0x04 (not Bitcoin's
+        # 0x03), AnyOneCanPay 0x80.
+        expected = {
+            "All": "01",
+            "None": "02",
+            "Single": "04",
+            "AllAnyOneCanPay": "81",
+            "NoneAnyOneCanPay": "82",
+            "SingleAnyOneCanPay": "84",
+        }
+        for name, hashtype_byte in expected.items():
+            # OpData65 (0x41) + 64-byte Schnorr signature + hashtype byte.
+            signature = create_input_signature(tx, 0, private_key, getattr(SighashType, name))
+            assert len(signature) == (1 + 64 + 1) * 2
+            assert signature[-2:] == hashtype_byte, name
+        # Each type commits to a different digest, via enum or string.
+        digests = {compute_sighash(tx, 0, name).to_hex() for name in expected}
+        assert len(digests) == len(expected)
+
     def test_compute_sighash_ecdsa_differs(self):
         """Test the ECDSA digest differs from the Schnorr digest."""
         tx = self._build_tx()

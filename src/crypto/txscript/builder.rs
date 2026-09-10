@@ -4,7 +4,10 @@ use crate::{
 };
 use kaspa_consensus_core::mass::ScriptUnits;
 use kaspa_txscript::{EngineFlags, script_builder as native, standard};
-use pyo3::{exceptions::PyException, prelude::*};
+use pyo3::{
+    exceptions::{PyDeprecationWarning, PyException},
+    prelude::*,
+};
 use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
 use std::sync::{Arc, Mutex, MutexGuard};
 use workflow_core::hex::ToHex;
@@ -38,19 +41,26 @@ impl PyScriptBuilder {
     /// Create a new empty script builder.
     ///
     /// Args:
-    ///     covenants_enabled: Enable covenant opcodes and post-Toccata script
-    ///         limits (default: False).
+    ///     covenants_enabled: Deprecated and ignored. Covenant opcodes and
+    ///         their script limits are always enabled. Passing a value emits
+    ///         a DeprecationWarning; the parameter will be removed in a
+    ///         future major version.
     ///     sigop_script_units: Script units charged per signature operation.
     ///         Defaults to the native engine default when omitted.
     ///
     /// Returns:
     ///     ScriptBuilder: A new empty ScriptBuilder instance.
     #[new]
-    #[pyo3(signature = (covenants_enabled=false, sigop_script_units=None))]
-    pub fn new(covenants_enabled: bool, sigop_script_units: Option<u64>) -> Self {
-        let flags = build_engine_flags(covenants_enabled, sigop_script_units);
-        Self(Arc::new(Mutex::new(native::ScriptBuilder::with_flags(
-            flags,
+    #[pyo3(signature = (covenants_enabled=None, sigop_script_units=None))]
+    pub fn new(
+        py: Python<'_>,
+        covenants_enabled: Option<bool>,
+        sigop_script_units: Option<u64>,
+    ) -> PyResult<Self> {
+        warn_if_covenants_enabled_passed(py, covenants_enabled)?;
+        let flags = build_engine_flags(sigop_script_units);
+        Ok(Self(Arc::new(Mutex::new(
+            native::ScriptBuilder::with_flags(flags),
         ))))
     }
 
@@ -58,21 +68,25 @@ impl PyScriptBuilder {
     ///
     /// Args:
     ///     script: Existing script bytes as hex, bytes, or list.
-    ///     covenants_enabled: Enable covenant opcodes and post-Toccata script
-    ///         limits (default: False).
+    ///     covenants_enabled: Deprecated and ignored. Covenant opcodes and
+    ///         their script limits are always enabled. Passing a value emits
+    ///         a DeprecationWarning; the parameter will be removed in a
+    ///         future major version.
     ///     sigop_script_units: Script units charged per signature operation.
     ///         Defaults to the native engine default when omitted.
     ///
     /// Returns:
     ///     ScriptBuilder: A new ScriptBuilder initialized with the script.
     #[staticmethod]
-    #[pyo3(signature = (script, covenants_enabled=false, sigop_script_units=None))]
+    #[pyo3(signature = (script, covenants_enabled=None, sigop_script_units=None))]
     pub fn from_script(
+        py: Python<'_>,
         script: PyBinary,
-        covenants_enabled: bool,
+        covenants_enabled: Option<bool>,
         sigop_script_units: Option<u64>,
     ) -> PyResult<Self> {
-        let flags = build_engine_flags(covenants_enabled, sigop_script_units);
+        warn_if_covenants_enabled_passed(py, covenants_enabled)?;
+        let flags = build_engine_flags(sigop_script_units);
         let builder = Self(Arc::new(Mutex::new(native::ScriptBuilder::with_flags(
             flags,
         ))));
@@ -82,13 +96,21 @@ impl PyScriptBuilder {
         Ok(builder)
     }
 
-    /// Whether covenant opcodes and post-Toccata script limits are enabled.
+    /// Deprecated. Covenant opcodes and their script limits are always
+    /// enabled, so this is always True. Reading it emits a DeprecationWarning;
+    /// the property will be removed in a future major version.
     ///
     /// Returns:
-    ///     bool: True if covenants are enabled for this builder.
+    ///     bool: Always True.
     #[getter]
-    pub fn get_covenants_enabled(&self) -> bool {
-        self.inner().flags().covenants_enabled
+    pub fn get_covenants_enabled(&self, py: Python<'_>) -> PyResult<bool> {
+        PyErr::warn(
+            py,
+            &py.get_type::<PyDeprecationWarning>(),
+            c"ScriptBuilder.covenants_enabled is deprecated and always True: covenant opcodes and their script limits are always enabled. It will be removed in a future major version.",
+            1,
+        )?;
+        Ok(true)
     }
 
     /// Script units charged for each signature operation.
@@ -329,21 +351,36 @@ impl PyScriptBuilder {
 }
 
 // Builds script engine flags from the Python-facing kwargs, mirroring the WASM
-// SDK's `ScriptBuilderOptions { flags: { covenantsEnabled, sigopScriptUnits } }`.
+// SDK's `ScriptBuilderOptions { flags: { sigopScriptUnits } }`.
 // `sigop_script_units` falls back to the native engine default when omitted.
 // Shared with the zk-sdk builder (`PyZkScriptBuilder::new_r0`).
-pub(crate) fn build_engine_flags(
-    covenants_enabled: bool,
-    sigop_script_units: Option<u64>,
-) -> EngineFlags {
-    let mut flags = EngineFlags {
-        covenants_enabled,
-        ..Default::default()
-    };
+pub(crate) fn build_engine_flags(sigop_script_units: Option<u64>) -> EngineFlags {
+    let mut flags = EngineFlags::default();
     if let Some(units) = sigop_script_units {
         flags.sigop_script_units = ScriptUnits(units);
     }
     flags
+}
+
+// `covenants_enabled` is a deprecated no-op kwarg kept for source compatibility,
+// mirroring the WASM SDK's deprecated `covenantsEnabled` option: upstream removed
+// the flag, and covenant opcodes and their script limits are always enabled.
+// Either value is accepted and ignored; passing one emits a DeprecationWarning
+// so the argument can be removed in a future major version. Shared with the
+// zk-sdk builder (`PyZkScriptBuilder::new_r0`).
+pub(crate) fn warn_if_covenants_enabled_passed(
+    py: Python<'_>,
+    covenants_enabled: Option<bool>,
+) -> PyResult<()> {
+    if covenants_enabled.is_some() {
+        PyErr::warn(
+            py,
+            &py.get_type::<PyDeprecationWarning>(),
+            c"The covenants_enabled argument is deprecated and ignored: covenant opcodes and their script limits are always enabled. It will be removed in a future major version.",
+            1,
+        )?;
+    }
+    Ok(())
 }
 
 // TODO change to PyOpcode struct and handle similar to PyBinary?

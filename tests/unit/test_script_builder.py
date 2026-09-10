@@ -2,6 +2,8 @@
 Unit tests for ScriptBuilder and Opcodes classes.
 """
 
+import warnings
+
 import pytest
 
 from kaspa import (
@@ -32,9 +34,9 @@ class TestScriptBuilderCreation:
         assert isinstance(builder, ScriptBuilder)
 
 
-class TestScriptBuilderCovenantFlags:
-    """covenants_enabled / sigop_script_units round-trip through both
-    ScriptBuilder(...) and ScriptBuilder.from_script(...)."""
+class TestScriptBuilderFlags:
+    """sigop_script_units round-trips through both ScriptBuilder(...) and
+    ScriptBuilder.from_script(...); covenants_enabled is a deprecated no-op."""
 
     # EngineFlags::default() sets sigop_script_units to Gram(1000), i.e.
     # 1000 * SCRIPT_UNITS_PER_GRAM (100) = 100_000. Pinned so an upstream change
@@ -43,16 +45,57 @@ class TestScriptBuilderCovenantFlags:
 
     def test_defaults(self):
         for builder in (ScriptBuilder(), ScriptBuilder.from_script("51")):
-            assert builder.covenants_enabled is False
             assert builder.sigop_script_units == self.DEFAULT_SIGOP_SCRIPT_UNITS
 
-    def test_flags_round_trip(self):
+    def test_sigop_script_units_round_trip(self):
         for builder in (
-            ScriptBuilder(covenants_enabled=True, sigop_script_units=250),
-            ScriptBuilder.from_script("51", covenants_enabled=True, sigop_script_units=250),
+            ScriptBuilder(sigop_script_units=250),
+            ScriptBuilder.from_script("51", sigop_script_units=250),
         ):
-            assert builder.covenants_enabled is True
             assert builder.sigop_script_units == 250
+
+    def test_no_deprecation_warning_when_covenants_enabled_omitted(self):
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", DeprecationWarning)
+            ScriptBuilder()
+            ScriptBuilder(sigop_script_units=250)
+            ScriptBuilder.from_script("51")
+            ScriptBuilder.from_script("51", sigop_script_units=250)
+
+    @pytest.mark.parametrize("value", [True, False])
+    def test_covenants_enabled_kwarg_is_deprecated_no_op(self, value):
+        # Mirrors the WASM SDK's deprecated `covenantsEnabled` option: either
+        # value is accepted but ignored, since rusty-kaspa removed the flag and
+        # covenant opcodes / their script limits are always enabled.
+        with pytest.warns(DeprecationWarning, match="covenants_enabled"):
+            builder = ScriptBuilder(covenants_enabled=value)
+        with pytest.warns(DeprecationWarning, match="covenants_enabled"):
+            from_script = ScriptBuilder.from_script("51", covenants_enabled=value)
+        # The post-Toccata limits apply regardless of the value passed: a
+        # 521-byte push exceeded the pre-Toccata 520-byte element limit.
+        builder.add_data(bytes(521))
+        from_script.add_data(bytes(521))
+
+    def test_covenants_enabled_property_is_deprecated_and_always_true(self):
+        with pytest.warns(DeprecationWarning, match="covenants_enabled"):
+            assert ScriptBuilder().covenants_enabled is True
+
+
+class TestScriptBuilderLimits:
+    """Script limits are the post-Toccata ones on every builder — there is no
+    pre-Toccata mode any more."""
+
+    def test_default_builder_accepts_pushes_over_520_bytes(self):
+        # 520 bytes was the pre-Toccata element limit; the limit is now 1 MB.
+        script = ScriptBuilder().add_data(bytes(521)).to_string()
+        # OpPushData2 (0x4d) + little-endian 16-bit length 521 (0x0209) + data.
+        assert script.startswith("4d0902")
+        assert len(script) == (1 + 2 + 521) * 2
+
+    def test_script_size_limit_is_one_megabyte(self):
+        # A single push may not exceed the 1_000_000-byte script size.
+        with pytest.raises(Exception):
+            ScriptBuilder().add_data(bytes(1_000_001))
 
 
 class TestScriptBuilderOperations:
