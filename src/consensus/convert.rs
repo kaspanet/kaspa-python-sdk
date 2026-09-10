@@ -1,4 +1,3 @@
-use crate::crypto::hashes::PyHash;
 use crate::traits::TryToPyDict;
 use kaspa_consensus_client::{
     CovenantBinding, Transaction, TransactionInput, TransactionOutpoint, TransactionOutput,
@@ -51,7 +50,7 @@ impl TryToPyDict for UtxoEntryReference {
         )?;
         dict.set_item("blockDaaScore", self.block_daa_score())?;
         dict.set_item("isCoinbase", self.is_coinbase())?;
-        dict.set_item("covenantId", self.utxo.covenant_id.map(PyHash::from))?;
+        dict.set_item("covenantId", self.utxo.covenant_id.map(|h| h.to_string()))?;
 
         Ok(dict)
     }
@@ -87,7 +86,7 @@ impl TryToPyDict for UtxoEntry {
         dict.set_item("isCoinbase", self.is_coinbase())?;
 
         // Set `covenantId` key
-        dict.set_item("covenantId", self.covenant_id.map(PyHash::from))?;
+        dict.set_item("covenantId", self.covenant_id.map(|h| h.to_string()))?;
 
         Ok(dict)
     }

@@ -2,6 +2,8 @@
 Unit tests for to_dict/from_dict conversion methods on consensus client types.
 """
 
+import json
+
 import pytest
 
 from kaspa import (
@@ -184,6 +186,32 @@ class TestTransactionDict:
         assert restored.version == 1
         assert restored.inputs[0].compute_budget == 10
         assert original == restored
+
+    def test_transaction_to_dict_with_covenant_utxo_is_json_serializable(self):
+        """covenantId inside a nested utxo must be a hex str so the dict survives json.dumps."""
+        covenant_id = "ab" * 32
+        utxo = UtxoEntryReference.from_dict({
+            "address": None,
+            "outpoint": {"transactionId": "a" * 64, "index": 0},
+            "amount": 1000,
+            "scriptPublicKey": {"version": 0, "script": "51"},
+            "blockDaaScore": 1,
+            "isCoinbase": False,
+            "covenantId": covenant_id,
+        })
+        outpoint = TransactionOutpoint(Hash("a" * 64), 0)
+        tx_input = TransactionInput(outpoint, "", 0, 0, compute_budget=10, utxo=utxo)
+        output = TransactionOutput(1000, ScriptPublicKey(0, "51"))
+        original = Transaction(1, [tx_input], [output], 0, "0" * 40, 0, "", 0)
+
+        d = original.to_dict()
+        assert isinstance(d["inputs"][0]["utxo"]["covenantId"], str)
+        assert d["inputs"][0]["utxo"]["covenantId"] == covenant_id
+
+        restored = Transaction.from_dict(json.loads(json.dumps(d)))
+        assert restored == original
+        assert restored.inputs[0].compute_budget == 10
+        assert str(restored.inputs[0].utxo.to_dict()["covenantId"]) == covenant_id
 
     def test_transaction_storage_mass_alias(self):
         """`storage_mass` mirrors `mass` (kept as an alias for WASM & back-compat)."""
@@ -371,3 +399,22 @@ class TestUtxoEntryReferenceDict:
         restored = UtxoEntryReference.from_dict(d)
 
         assert original == restored
+
+    def test_utxo_entry_reference_to_dict_covenant_id_is_hex_str(self):
+        """A set covenantId is emitted as a hex string, not a Hash object."""
+        covenant_id = "cd" * 32
+        entry_ref = UtxoEntryReference.from_dict({
+            "address": None,
+            "outpoint": {"transactionId": "a" * 64, "index": 0},
+            "amount": 1000,
+            "scriptPublicKey": {"version": 0, "script": "51"},
+            "blockDaaScore": 1,
+            "isCoinbase": False,
+            "covenantId": covenant_id,
+        })
+
+        d = entry_ref.to_dict()
+        assert isinstance(d["covenantId"], str)
+        assert d["covenantId"] == covenant_id
+        assert json.loads(json.dumps(d))["covenantId"] == covenant_id
+        assert UtxoEntryReference.from_dict(d).to_dict()["covenantId"] == covenant_id
