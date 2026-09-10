@@ -108,8 +108,8 @@ Two properties worth knowing:
 
 ## Spending the locked UTXO
 
-The redeem transaction differs from an ordinary P2SH spend in three
-ways, all visible in
+The redeem transaction differs from an ordinary P2SH spend in two
+ways, both visible in
 [`examples/zk/groth16_onchain.py`](https://github.com/kaspanet/kaspa-python-sdk/blob/main/examples/zk/groth16_onchain.py):
 
 ```python
