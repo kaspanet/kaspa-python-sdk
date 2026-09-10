@@ -148,7 +148,7 @@ impl PyTransactionInput {
     ///
     /// Returns:
     ///     dict: keys `previousOutpoint`, `signatureScript`, `sequence`,
-    ///     `sigOpCount`, `computeBudget`, and `utxo`.
+    ///         `sigOpCount`, `computeBudget`, and `utxo`.
     fn to_dict<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
         self.0.try_to_pydict(py)
     }

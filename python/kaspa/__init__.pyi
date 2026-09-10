@@ -2810,7 +2810,7 @@ class TransactionInput:
         
         Returns:
             dict: keys `previousOutpoint`, `signatureScript`, `sequence`,
-            `sigOpCount`, `computeBudget`, and `utxo`.
+                `sigOpCount`, `computeBudget`, and `utxo`.
         """
     @classmethod
     def from_dict(cls, dict: dict) -> TransactionInput:
