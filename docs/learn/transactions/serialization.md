@@ -32,7 +32,8 @@ mutate the source object. [`from_dict()`](../../reference/Classes/Transaction.md
 {
   "id":           "ab12...",          # transaction id, hex
   "version":      0,
-  "inputs":       [{ "previousOutpoint": {...}, "signatureScript": "...", "sequence": 0, "sigOpCount": 1, "computeBudget": 10 }, ...],
+  "inputs":       [{ "previousOutpoint": {...}, "signatureScript": "...", "sequence": 0, "sigOpCount": 1, "computeBudget": 0 }, ...],
+                  # computeBudget is non-zero only on version-1 (covenant) transactions, where sigOpCount must be 0
   "outputs":      [{ "value": 500000000, "scriptPublicKey": {"version": 0, "script": "..."} }, ...],
   "lockTime":     0,
   "subnetworkId": "0000000000000000000000000000000000000000",

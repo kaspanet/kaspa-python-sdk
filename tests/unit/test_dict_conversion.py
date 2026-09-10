@@ -132,7 +132,7 @@ class TestTransactionInputDict:
         """to_dict must emit computeBudget so v1 submit paths do not silently use budget 0."""
         tx_hash = Hash("a" * 64)
         outpoint = TransactionOutpoint(tx_hash, 5)
-        original = TransactionInput(outpoint, "deadbeef", 0xFFFFFFFF, 1, compute_budget=10)
+        original = TransactionInput(outpoint, "deadbeef", 0xFFFFFFFF, 0, compute_budget=10)
 
         d = original.to_dict()
         assert d["computeBudget"] == 10
@@ -174,7 +174,7 @@ class TestTransactionDict:
         """The submit_transaction dict path must keep a non-zero input computeBudget."""
         tx_hash = Hash("0" * 64)
         outpoint = TransactionOutpoint(tx_hash, 0)
-        tx_input = TransactionInput(outpoint, "", 0, 1, compute_budget=10)
+        tx_input = TransactionInput(outpoint, "", 0, 0, compute_budget=10)
         spk = ScriptPublicKey(0, "51")
         output = TransactionOutput(1000000, spk)
         original = Transaction(1, [tx_input], [output], 100, "0" * 40, 0, "", 0)
