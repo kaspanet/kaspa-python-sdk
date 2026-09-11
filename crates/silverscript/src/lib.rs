@@ -168,18 +168,41 @@ fn byte_artifact(value: &Value) -> PyResult<ArtifactValue> {
 pub(crate) struct ArgTypes<'a> {
     artifact: &'a SilAbiArtifact,
     contract: &'a SilContractArtifact,
+    contract_name: &'a str,
 }
 
 impl<'a> ArgTypes<'a> {
     /// Resolve `contract_name`'s declared types within an artifact.
-    pub(crate) fn new(artifact: &'a SilAbiArtifact, contract_name: &str) -> Option<Self> {
-        artifact
-            .contract(contract_name)
-            .map(|contract| Self { artifact, contract })
+    pub(crate) fn new(artifact: &'a SilAbiArtifact, contract_name: &'a str) -> Option<Self> {
+        artifact.contract(contract_name).map(|contract| Self {
+            artifact,
+            contract,
+            contract_name,
+        })
     }
 
     pub(crate) fn contract(&self) -> &'a SilContractArtifact {
         self.contract
+    }
+
+    /// Resolve a covenant declaration to the entry the codec encodes it as.
+    ///
+    /// On the cov-bound follower path the codec returns `delegate_entry_abi`
+    /// without consulting `cov_decl_to_abi` (`silverscript-abi/src/lib.rs:470`),
+    /// so an unknown name would encode a well-formed delegate script instead of
+    /// failing. Check it here, with the error the leader path already raises.
+    pub(crate) fn covenant_decl_entry(
+        &self,
+        name: &str,
+        is_leader: bool,
+    ) -> PyResult<Option<&'a SilEntryArtifact>> {
+        if !self.contract.cov_decl_to_abi.contains_key(name) {
+            return Err(map_codec_err(CodecError::UnknownEntry {
+                contract: self.contract_name.to_string(),
+                entry: name.to_string(),
+            }));
+        }
+        Ok(self.contract.covenant_decl_entry(name, is_leader))
     }
 
     /// Narrow a call's arguments against the entry the codec encodes them
@@ -474,9 +497,7 @@ impl PyCompiledContract {
             Some(types) => {
                 let entry = match covenant {
                     None => types.contract().entry(function_name),
-                    Some(is_leader) => types
-                        .contract()
-                        .covenant_decl_entry(function_name, is_leader),
+                    Some(is_leader) => types.covenant_decl_entry(function_name, is_leader)?,
                 };
                 types.lower_call(&args, entry)?
             }

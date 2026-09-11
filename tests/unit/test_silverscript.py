@@ -142,6 +142,20 @@ contract Counter(int init_count) {
 }
 """
 
+# A cov-bound covenant, unlike COUNTER's auth binding: it compiles to a leader
+# entrypoint *and* a delegate, so the follower path resolves to __delegate
+# rather than to the named declaration.
+COV_PAIR = """
+pragma silverscript ^0.1.0;
+contract Pair(int init_value) {
+    int value = init_value;
+    #[covenant(binding = cov, from = 2, to = 2, mode = transition)]
+    function carry_forward(State[] prev_states) : (State[]) {
+        return(prev_states);
+    }
+}
+"""
+
 I64_MAX = 2**63 - 1
 I64_MIN = -(2**63)
 
@@ -528,6 +542,18 @@ class TestCovenantSigScript:
         contract = silverscript.compile(COUNTER, [0])
         with pytest.raises(silverscript.SilverScriptError):
             contract.build_sig_script_for_covenant_decl("nope", [1])
+
+    def test_cov_bound_decl_rejects_unknown_entrypoint_on_both_paths(self):
+        # The follower path resolves straight to __delegate without consulting
+        # the declaration name, so a typo used to build a well-formed script for
+        # the wrong call. COUNTER can't catch that: being auth-bound, it always
+        # takes the leader path.
+        contract = silverscript.compile(COV_PAIR, [0])
+        for is_leader in (False, True):
+            assert contract.build_sig_script_for_covenant_decl("carry_forward", is_leader=is_leader)
+            with pytest.raises(silverscript.SilverScriptError) as exc:
+                contract.build_sig_script_for_covenant_decl("bogus", is_leader=is_leader)
+            assert "unknown entry" in str(exc.value)
 
 
 # ---------------------------------------------------------------------------
