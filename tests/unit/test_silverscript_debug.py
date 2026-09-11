@@ -91,6 +91,13 @@ contract ByteBox(byte tag) {
 }
 """
 
+BLOB = """
+pragma silverscript ^0.1.0;
+contract Blob(byte[] tag) {
+    entry go(byte[] data) { require(data == tag); }
+}
+"""
+
 # A covenant whose state and argument are scalar `byte`s — the synthesized
 # output State argument has to narrow to a `byte` too.
 MARKER = """
@@ -452,6 +459,13 @@ class TestByteValues:
     def test_byte_arg_out_of_range_raises(self):
         with pytest.raises(silverscript.SilverScriptError):
             silverscript.debug_call(BYTE_BOX, "f", [256], [1])
+
+    def test_byte_array_type_name_matches_the_abi(self):
+        # Both surfaces name the parameter `byte[]`; they used to disagree.
+        result = silverscript.debug_call(BLOB, "go", [b"\xcc"], [b"\xaa\xbb"])
+        variables = {v.name: v for v in result.failure.frames[0].variables}
+        abi_name = silverscript.compile(BLOB, [b"\xaa\xbb"]).abi[0].inputs[0].type_name
+        assert variables["data"].type_name == abi_name == "byte[]"
 
     def test_byte_variable_decodes_in_source_terms(self):
         variables = {

@@ -57,6 +57,7 @@ SilverScript types (the `type_name`s you can read off the
 | `int` | `int` (must fit in a signed 64-bit integer) |
 | `bool` | `bool` (a real bool — not `0`/`1`) |
 | `byte` | `int` in `0..=255` (a one-byte `bytes` also works) |
+| `byte[]` | `bytes` / `bytearray` (not a `list`) |
 | `byte[N]` | `bytes` / `bytearray` of length `N` |
 | `pubkey` | `bytes` (an x-only public key) |
 | `sig` | `bytes` (a signature) |

@@ -63,6 +63,13 @@ contract H(byte[4] tag) {
 }
 """
 
+BLOB = """
+pragma silverscript ^0.1.0;
+contract Blob(byte[] tag) {
+    entry go(byte[] data) { require(data == tag); }
+}
+"""
+
 # A `byte` scalar in every position it can appear: constructor param,
 # entrypoint param, and a struct field.
 BYTE_BOX = """
@@ -479,6 +486,11 @@ class TestAbi:
     def test_byte_array_input_type_name(self):
         contract = silverscript.compile(BYTES4, [b"\x01\x02\x03\x04"])
         assert [(i.name, i.type_name) for e in contract.abi for i in e.inputs] == [("x", "byte[4]")]
+
+    def test_dynamic_byte_array_input_type_name(self):
+        # `byte[]` is the SilverScript spelling; `bytes` is not a type here.
+        contract = silverscript.compile(BLOB, [b"\xaa\xbb"])
+        assert [(i.name, i.type_name) for e in contract.abi for i in e.inputs] == [("data", "byte[]")]
 
     def test_without_selector_property_is_gone(self):
         # SilverScript 1.0 gives every entry an unconditional dispatch tag, so

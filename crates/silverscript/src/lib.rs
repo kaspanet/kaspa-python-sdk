@@ -336,16 +336,13 @@ pub(crate) fn ctor_exprs_for<'i>(
 }
 
 /// Render a portable ABI type as the SilverScript type name.
-///
-/// Upstream's equivalent helper is private, and the spelling is Python-visible
-/// through `FunctionInputAbi.type_name`, so it is reproduced here.
 pub(crate) fn artifact_type_name(ty: &TypeArtifact) -> String {
     match ty {
         TypeArtifact::Int => "int".to_string(),
         TypeArtifact::Temporal => "temporal".to_string(),
         TypeArtifact::Bool => "bool".to_string(),
         TypeArtifact::Byte => "byte".to_string(),
-        TypeArtifact::Bytes => "bytes".to_string(),
+        TypeArtifact::Bytes => "byte[]".to_string(),
         TypeArtifact::Text => "string".to_string(),
         TypeArtifact::Pubkey => "pubkey".to_string(),
         TypeArtifact::Sig => "sig".to_string(),
