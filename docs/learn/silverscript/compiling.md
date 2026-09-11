@@ -40,7 +40,7 @@ different argument sets produce two different scripts, and so two
 different P2SH addresses:
 
 ```python
-silverscript.compile(SOURCE, [100]).script != silverscript.compile(SOURCE, [101]).script
+silverscript.compile(SOURCE, [100]).bytecode != silverscript.compile(SOURCE, [101]).bytecode
 ```
 
 This is a key mental model for SilverScript. A `Counter` at `count = 0` and the
@@ -56,11 +56,12 @@ is read-only. Its properties:
 
 | Property | What it is |
 | --- | --- |
-| [`script`](../../reference/SilverScript/Classes/CompiledContract.md) | The locking (redeem) script `bytes`. |
+| [`bytecode`](../../reference/SilverScript/Classes/CompiledContract.md) | The locking (redeem) script `bytes`. |
 | [`contract_name`](../../reference/SilverScript/Classes/CompiledContract.md) | The contract name from the source. |
 | [`compiler_version`](../../reference/SilverScript/Classes/CompiledContract.md) | The compiler version that produced it. |
-| [`abi`](../../reference/SilverScript/Classes/CompiledContract.md) | One [`FunctionAbiEntry`](../../reference/SilverScript/Classes/FunctionAbiEntry.md) per callable entrypoint. |
+| [`abi`](../../reference/SilverScript/Classes/CompiledContract.md) | One [`EntryAbi`](../../reference/SilverScript/Classes/EntryAbi.md) per callable entrypoint, in source order. |
 | [`state_layout`](../../reference/SilverScript/Classes/CompiledContract.md) | `(start, len)`: the byte offset and length of the contract state within the script. |
+| [`template_hash`](../../reference/SilverScript/Classes/CompiledContract.md) | 32-byte digest over the script's template parts, matching the `templateHash()` builtin. |
 
 ## Reading the ABI
 
@@ -68,20 +69,26 @@ The [`abi`](../../reference/SilverScript/Classes/CompiledContract.md) tells
 you which entrypoints a contract exposes and what arguments each one
 takes.
 
-Each [`FunctionAbiEntry`](../../reference/SilverScript/Classes/FunctionAbiEntry.md)
-has a `name` and a list of `inputs`. Each
-[`FunctionInputAbi`](../../reference/SilverScript/Classes/FunctionInputAbi.md)
-has a `name` and a `type_name` — the SilverScript type, e.g. `"int"`,
-`"byte[32]"`, `"pubkey"`, `"sig"`.
+Each [`EntryAbi`](../../reference/SilverScript/Classes/EntryAbi.md) has a
+`name`, a list of `params`, and a `dispatch_tag`. Each
+[`ParamAbi`](../../reference/SilverScript/Classes/ParamAbi.md) has a `name`
+and a `type_name` — the SilverScript type, e.g. `"int"`, `"byte[32]"`,
+`"pubkey"`, `"sig"`.
 
 ```python
 contract = silverscript.compile(SOURCE, [100])
 
 for entry in contract.abi:
-    args = ", ".join(f"{i.type_name} {i.name}" for i in entry.inputs)
+    args = ", ".join(f"{p.type_name} {p.name}" for p in entry.params)
     print(f"{entry.name}({args})")
 # check(int amount)
 ```
+
+`dispatch_tag` is the entrypoint's four-byte identity —
+`blake3("name(type,type)")[:4]`. It is content-addressed, so it depends only
+on the entrypoint's name and parameter types, never on constructor arguments:
+every instance of a contract shares the same tags. It is also the final data
+push of every signature script built for that entrypoint.
 
 Next: turn one of these entrypoints into an unlocking script in
 [Unlocking Scripts](unlocking-scripts.md).

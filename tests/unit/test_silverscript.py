@@ -187,8 +187,8 @@ class TestCompile:
         contract = silverscript.compile(GUARD, [100])
         assert contract.contract_name == "Guard"
         assert contract.compiler_version
-        assert isinstance(contract.script, bytes)
-        assert len(contract.script) > 0
+        assert isinstance(contract.bytecode, bytes)
+        assert len(contract.bytecode) > 0
 
     def test_state_layout_is_pair(self):
         contract = silverscript.compile(GUARD, [100])
@@ -200,7 +200,7 @@ class TestCompile:
         assert len(contract.abi) == 1
         entry = contract.abi[0]
         assert entry.name == "check"
-        assert [(i.name, i.type_name) for i in entry.inputs] == [("amount", "int")]
+        assert [(i.name, i.type_name) for i in entry.params] == [("amount", "int")]
 
     def test_constructor_args_default_to_empty(self):
         # A no-arg constructor must be callable without passing constructor_args.
@@ -215,11 +215,11 @@ class TestCompile:
 class TestGoldenScript:
     def test_guard_locking_script(self):
         # Pinned: the redeem script defines the P2SH address holding the funds.
-        assert silverscript.compile(GUARD, [100]).script.hex() == "7604b08239998763757682599f6975760164a0697551676a68"
+        assert silverscript.compile(GUARD, [100]).bytecode.hex() == "7604b08239998763757682599f6975760164a0697551676a68"
 
     def test_bytes_contract_locking_script(self):
         contract = silverscript.compile(BYTES4, [b"\x01\x02\x03\x04"])
-        assert contract.script.hex() == "760405d685098763757682549d7576040102030487697551676a68"
+        assert contract.bytecode.hex() == "760405d685098763757682549d7576040102030487697551676a68"
 
 
 # ---------------------------------------------------------------------------
@@ -288,7 +288,7 @@ class TestUpstreamParity:
         recipient = bytes([4]) * 32
         timeout = 1_640_000_000_000
         contract = silverscript.compile(TRANSFER_WITH_TIMEOUT, [sender, recipient, timeout])
-        assert [(i.name, i.type_name) for e in contract.abi for i in e.inputs] == [
+        assert [(i.name, i.type_name) for e in contract.abi for i in e.params] == [
             ("recipientSig", "sig"),
             ("senderSig", "sig"),
         ]
@@ -340,7 +340,7 @@ class TestDeterminism:
     def test_compile_is_deterministic(self):
         # The covenant flow re-derives a state's P2SH address to find/spend its
         # own UTXO; non-deterministic bytes would orphan funds.
-        assert silverscript.compile(GUARD, [100]).script == silverscript.compile(GUARD, [100]).script
+        assert silverscript.compile(GUARD, [100]).bytecode == silverscript.compile(GUARD, [100]).bytecode
 
     def test_sig_script_is_deterministic(self):
         a = silverscript.compile(GUARD, [100]).build_sig_script("check", [150])
@@ -353,7 +353,7 @@ class TestDeterminism:
         # The recompiled locking script must equal the one we first returned.
         contract = silverscript.compile(GUARD, [100])
         again = silverscript.compile(GUARD, [100])
-        assert contract.script == again.script
+        assert contract.bytecode == again.bytecode
 
 
 # ---------------------------------------------------------------------------
@@ -364,10 +364,10 @@ class TestConstructorState:
     def test_constructor_args_change_script(self):
         # Each constructor value is baked into the locking script (and thus the
         # address). Different args MUST produce different scripts.
-        assert silverscript.compile(GUARD, [100]).script != silverscript.compile(GUARD, [101]).script
+        assert silverscript.compile(GUARD, [100]).bytecode != silverscript.compile(GUARD, [101]).bytecode
 
     def test_covenant_constructor_args_change_script(self):
-        assert silverscript.compile(COUNTER, [0]).script != silverscript.compile(COUNTER, [5]).script
+        assert silverscript.compile(COUNTER, [0]).bytecode != silverscript.compile(COUNTER, [5]).bytecode
 
 
 # ---------------------------------------------------------------------------
@@ -381,8 +381,8 @@ class TestArgConversion:
 
     def test_bytes_equivalent_to_bytearray(self):
         # Two conversion paths (PyBytes / PyByteArray) must converge.
-        from_bytes = silverscript.compile(BYTES4, [b"\x01\x02\x03\x04"]).script
-        from_bytearray = silverscript.compile(BYTES4, [bytearray(b"\x01\x02\x03\x04")]).script
+        from_bytes = silverscript.compile(BYTES4, [b"\x01\x02\x03\x04"]).bytecode
+        from_bytearray = silverscript.compile(BYTES4, [bytearray(b"\x01\x02\x03\x04")]).bytecode
         assert from_bytes == from_bytearray
 
     def test_bool_is_not_silently_coerced_to_int(self):
@@ -408,7 +408,7 @@ class TestArgConversion:
 class TestByteArguments:
     def test_abi_type_name(self):
         contract = silverscript.compile(BYTE_BOX, [1])
-        assert [(i.name, i.type_name) for i in contract.abi[0].inputs] == [("b", "byte")]
+        assert [(i.name, i.type_name) for i in contract.abi[0].params] == [("b", "byte")]
 
     def test_arg_from_int(self):
         # One-byte data push, canonically encoded (OP_2), then the dispatch tag.
@@ -446,15 +446,15 @@ class TestByteArguments:
             contract.build_sig_script("f", [True])
 
     def test_constructor_arg(self):
-        assert silverscript.compile(BYTE_BOX, [1]).script.hex() == (
+        assert silverscript.compile(BYTE_BOX, [1]).bytecode.hex() == (
             "76044358458f8763757682519d7576010187697551676a68"
         )
 
     def test_constructor_arg_single_byte_bytes_equivalent_to_int(self):
-        assert silverscript.compile(BYTE_BOX, [1]).script == silverscript.compile(BYTE_BOX, [b"\x01"]).script
+        assert silverscript.compile(BYTE_BOX, [1]).bytecode == silverscript.compile(BYTE_BOX, [b"\x01"]).bytecode
 
     def test_constructor_arg_is_baked_into_the_script(self):
-        assert silverscript.compile(BYTE_BOX, [1]).script != silverscript.compile(BYTE_BOX, [2]).script
+        assert silverscript.compile(BYTE_BOX, [1]).bytecode != silverscript.compile(BYTE_BOX, [2]).bytecode
 
     def test_constructor_arg_out_of_range_raises(self):
         with pytest.raises(silverscript.SilverScriptError):
@@ -481,7 +481,7 @@ class TestByteArguments:
         assert contract.build_sig_script("check", [255]).hex() == "02ff0004b0823999"
 
     def test_int_constructor_arg_is_not_narrowed_to_byte(self):
-        assert silverscript.compile(GUARD, [255]).script.hex() == (
+        assert silverscript.compile(GUARD, [255]).bytecode.hex() == (
             "7604b08239998763757682599f69757602ff00a0697551676a68"
         )
 
@@ -495,22 +495,53 @@ class TestAbi:
         contract = silverscript.compile(MULTI, [10])
         assert [e.name for e in contract.abi] == ["add", "sub"]
         for entry in contract.abi:
-            assert [(i.name, i.type_name) for i in entry.inputs] == [("amount", "int")]
+            assert [(i.name, i.type_name) for i in entry.params] == [("amount", "int")]
 
     def test_byte_array_input_type_name(self):
         contract = silverscript.compile(BYTES4, [b"\x01\x02\x03\x04"])
-        assert [(i.name, i.type_name) for e in contract.abi for i in e.inputs] == [("x", "byte[4]")]
+        assert [(i.name, i.type_name) for e in contract.abi for i in e.params] == [("x", "byte[4]")]
 
     def test_dynamic_byte_array_input_type_name(self):
         # `byte[]` is the SilverScript spelling; `bytes` is not a type here.
         contract = silverscript.compile(BLOB, [b"\xaa\xbb"])
-        assert [(i.name, i.type_name) for e in contract.abi for i in e.inputs] == [("data", "byte[]")]
+        assert [(i.name, i.type_name) for e in contract.abi for i in e.params] == [("data", "byte[]")]
 
     def test_without_selector_property_is_gone(self):
         # SilverScript 1.0 gives every entry an unconditional dispatch tag, so
         # the "single entrypoint has no selector" case it described no longer
         # exists and the property was removed.
         assert not hasattr(silverscript.compile(ANNOUNCEMENT), "without_selector")
+
+    def test_script_property_is_gone(self):
+        # Renamed to `bytecode`, matching SilverScript 1.0.
+        assert not hasattr(silverscript.compile(ANNOUNCEMENT), "script")
+
+    def test_dispatch_tag_is_four_bytes(self):
+        entry = silverscript.compile(GUARD, [100]).abi[0]
+        assert isinstance(entry.dispatch_tag, bytes)
+        assert len(entry.dispatch_tag) == 4
+        assert entry.dispatch_tag.hex() == "b0823999"
+
+    def test_dispatch_tag_terminates_the_sig_script(self):
+        # Every signature script ends with the entry's tag as its final data
+        # push, which is how the script dispatches to the right entrypoint.
+        contract = silverscript.compile(MULTI, [10])
+        for entry in contract.abi:
+            sig = contract.build_sig_script(entry.name, [7])
+            assert sig.endswith(b"\x04" + entry.dispatch_tag)
+
+    def test_dispatch_tag_is_content_addressed(self):
+        # The tag is blake3("name(type,type)")[:4], so it depends only on the
+        # entry's name and parameter types — never on constructor arguments.
+        a = silverscript.compile(GUARD, [100])
+        b = silverscript.compile(GUARD, [101])
+        assert a.bytecode != b.bytecode
+        assert a.abi[0].dispatch_tag == b.abi[0].dispatch_tag
+
+    def test_dispatch_tags_are_distinct_per_entry(self):
+        contract = silverscript.compile(MULTI, [10])
+        tags = {e.name: e.dispatch_tag for e in contract.abi}
+        assert len(set(tags.values())) == len(tags)
 
 
 # ---------------------------------------------------------------------------
@@ -574,7 +605,7 @@ class TestCompileOptions:
         # (that would change the address).
         plain = silverscript.compile(GUARD, [100])
         debug = silverscript.compile(GUARD, [100], record_debug_infos=True)
-        assert plain.script == debug.script
+        assert plain.bytecode == debug.bytecode
         assert plain.build_sig_script("check", [150]) == debug.build_sig_script("check", [150])
 
 
@@ -594,7 +625,7 @@ class TestStateLayout:
         start, length = contract.state_layout
         assert length > 0
         assert 0 <= start
-        assert start + length <= len(contract.script)
+        assert start + length <= len(contract.bytecode)
 
 
 # ---------------------------------------------------------------------------
@@ -644,7 +675,7 @@ class TestTemplateHash:
 @pytest.mark.skipif(not _HAVE_CORE_SCRIPT_API, reason="core kaspa script API unavailable")
 class TestCrossModule:
     def _address(self, count):
-        redeem = silverscript.compile(GUARD, [count]).script
+        redeem = silverscript.compile(GUARD, [count]).bytecode
         spk = _kaspa.ScriptBuilder.from_script(redeem).create_pay_to_script_hash_script()
         return _kaspa.address_from_script_public_key(spk, "testnet").to_string()
 
@@ -735,9 +766,9 @@ class TestObjectSemantics:
 
     def test_reprs(self):
         contract = silverscript.compile(GUARD, [100])
-        assert repr(contract) == 'CompiledContract(name="Guard", script=25 bytes, entrypoints=1)'
-        assert repr(contract.abi[0]) == 'FunctionAbiEntry(name="check", inputs=1 input(s))'
-        assert repr(contract.abi[0].inputs[0]) == 'FunctionInputAbi(name="amount", type_name="int")'
+        assert repr(contract) == 'CompiledContract(name="Guard", bytecode=25 bytes, entries=1)'
+        assert repr(contract.abi[0]) == 'EntryAbi(name="check", params=1, dispatch_tag="b0823999")'
+        assert repr(contract.abi[0].params[0]) == 'ParamAbi(name="amount", type_name="int")'
 
 
 # ---------------------------------------------------------------------------

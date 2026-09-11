@@ -52,6 +52,13 @@ jobs:
           export SILVERSCRIPT_PY_VERSION="${{ env.PYTHON_VERSION }}"
           bash ci/build-and-inject-silverscript.sh release
 
+      - name: Check SilverScript stubs are up to date
+        run: |
+          cargo run -p kaspa-python-sdk-silverscript --bin stub-gen \
+            --no-default-features --target-dir target/silverscript-stubgen
+          git diff --exit-code -- python/kaspa/experimental/silverscript/__init__.pyi \
+            || { echo "::error::__init__.pyi is stale — run ./build-dev and commit it"; exit 1; }
+
       - name: Build wheel
         uses: PyO3/maturin-action@v1
         with:

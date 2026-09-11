@@ -464,7 +464,7 @@ class TestByteValues:
         # Both surfaces name the parameter `byte[]`; they used to disagree.
         result = silverscript.debug_call(BLOB, "go", [b"\xcc"], [b"\xaa\xbb"])
         variables = {v.name: v for v in result.failure.frames[0].variables}
-        abi_name = silverscript.compile(BLOB, [b"\xaa\xbb"]).abi[0].inputs[0].type_name
+        abi_name = silverscript.compile(BLOB, [b"\xaa\xbb"]).abi[0].params[0].type_name
         assert variables["data"].type_name == abi_name == "byte[]"
 
     def test_byte_variable_decodes_in_source_terms(self):

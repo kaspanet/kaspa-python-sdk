@@ -44,7 +44,7 @@ its own. The Silverscript compiler takes plain Python values (`int`, `bool`, `st
 [`ScriptBuilder`](../../reference/Classes/ScriptBuilder.md), and it hands
 back script `bytes`. Those `bytes` are the whole interface to core
 `kaspa` SDK: compile, read
-[`contract.script`](../../reference/SilverScript/Classes/CompiledContract.md),
+[`contract.bytecode`](../../reference/SilverScript/Classes/CompiledContract.md),
 then build the transaction with core as usual.
 
 ```python
@@ -85,7 +85,7 @@ contract Guard(int threshold) {
 contract = silverscript.compile(SOURCE, [100])
 
 # The redeem script
-redeem = contract.script
+redeem = contract.bytecode
 
 # Wrap it in a P2SH lock and turn that into a fundable address.
 spk = ScriptBuilder.from_script(redeem).create_pay_to_script_hash_script()

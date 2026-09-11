@@ -14,7 +14,7 @@ use self_cell::self_cell;
 use kaspa_python_sdk_core::create_py_exception;
 use silverscript_abi::{
     ArtifactValue, CodecError, SilAbiArtifact, SilContractArtifact, SilEntryArtifact, TypeArtifact,
-    encode_contract_covenant_decl_sig_script, encode_contract_entry_sig_script,
+    encode_contract_covenant_decl_sig_script, encode_contract_entry_sig_script, encode_hex,
 };
 use silverscript_lang::ast::{
     ContractAst, Expr, STATE_TYPE_NAME, TypeBase, TypeRef, parse_contract_ast,
@@ -393,15 +393,11 @@ pub(crate) fn collect_args(obj: Option<&Bound<'_, PyAny>>) -> PyResult<Vec<Value
     }
 }
 
-/// A single input parameter of a contract entrypoint.
+/// A single parameter of a contract entrypoint.
 #[gen_stub_pyclass]
-#[pyclass(
-    name = "FunctionInputAbi",
-    module = "kaspa.experimental.silverscript",
-    frozen
-)]
+#[pyclass(name = "ParamAbi", module = "kaspa.experimental.silverscript", frozen)]
 #[derive(Clone)]
-pub struct PyFunctionInputAbi {
+pub struct PyParamAbi {
     #[pyo3(get)]
     name: String,
     #[pyo3(get)]
@@ -410,10 +406,10 @@ pub struct PyFunctionInputAbi {
 
 #[gen_stub_pymethods]
 #[pymethods]
-impl PyFunctionInputAbi {
+impl PyParamAbi {
     pub fn __repr__(&self) -> String {
         format!(
-            "FunctionInputAbi(name={:?}, type_name={:?})",
+            "ParamAbi(name={:?}, type_name={:?})",
             self.name, self.type_name
         )
     }
@@ -421,27 +417,37 @@ impl PyFunctionInputAbi {
 
 /// A single callable entrypoint in a compiled contract's ABI.
 #[gen_stub_pyclass]
-#[pyclass(
-    name = "FunctionAbiEntry",
-    module = "kaspa.experimental.silverscript",
-    frozen
-)]
+#[pyclass(name = "EntryAbi", module = "kaspa.experimental.silverscript", frozen)]
 #[derive(Clone)]
-pub struct PyFunctionAbiEntry {
+pub struct PyEntryAbi {
     #[pyo3(get)]
     name: String,
     #[pyo3(get)]
-    inputs: Vec<PyFunctionInputAbi>,
+    params: Vec<PyParamAbi>,
+    // Not `#[pyo3(get)]`: a `[u8; 4]` getter would surface as a tuple of ints.
+    dispatch_tag: [u8; 4],
 }
 
 #[gen_stub_pymethods]
 #[pymethods]
-impl PyFunctionAbiEntry {
+impl PyEntryAbi {
+    /// The entrypoint's four-byte dispatch tag.
+    ///
+    /// `blake3("name(type,type)")[:4]` — content-addressed, so it depends only
+    /// on the entrypoint's name and parameter types, never on constructor
+    /// arguments. Every signature script built for this entrypoint ends with
+    /// this value as its final data push.
+    #[getter]
+    pub fn dispatch_tag<'py>(&self, py: Python<'py>) -> Bound<'py, PyBytes> {
+        PyBytes::new(py, &self.dispatch_tag)
+    }
+
     pub fn __repr__(&self) -> String {
         format!(
-            "FunctionAbiEntry(name={:?}, inputs={} input(s))",
+            "EntryAbi(name={:?}, params={}, dispatch_tag={:?})",
             self.name,
-            self.inputs.len()
+            self.params.len(),
+            encode_hex(&self.dispatch_tag)
         )
     }
 }
@@ -478,8 +484,7 @@ self_cell!(
 pub struct PyCompiledContract {
     contract_name: String,
     compiler_version: String,
-    script: Vec<u8>,
-    abi: Vec<PyFunctionAbiEntry>,
+    abi: Vec<PyEntryAbi>,
     state_layout: (usize, usize),
     // The native `CompiledContract` compiled once at construction and reused.
     compiled: CompiledCell,
@@ -539,13 +544,13 @@ impl PyCompiledContract {
 
     /// The compiled locking script (redeem script) bytes.
     #[getter]
-    pub fn script<'py>(&self, py: Python<'py>) -> Bound<'py, PyBytes> {
-        PyBytes::new(py, &self.script)
+    pub fn bytecode<'py>(&self, py: Python<'py>) -> Bound<'py, PyBytes> {
+        PyBytes::new(py, &self.compiled.borrow_dependent().contract.bytecode)
     }
 
-    /// The contract ABI: one entry per callable entrypoint.
+    /// The contract ABI: one entry per callable entrypoint, in source order.
     #[getter]
-    pub fn abi(&self) -> Vec<PyFunctionAbiEntry> {
+    pub fn abi(&self) -> Vec<PyEntryAbi> {
         self.abi.clone()
     }
 
@@ -624,9 +629,9 @@ impl PyCompiledContract {
 
     pub fn __repr__(&self) -> String {
         format!(
-            "CompiledContract(name={:?}, script={} bytes, entrypoints={})",
+            "CompiledContract(name={:?}, bytecode={} bytes, entries={})",
             self.contract_name,
-            self.script.len(),
+            self.compiled.borrow_dependent().contract.bytecode.len(),
             self.abi.len()
         )
     }
@@ -637,25 +642,26 @@ fn abi_entries(
     artifact: &SilAbiArtifact,
     contract_name: &str,
     ast: &ContractAst<'_>,
-) -> Vec<PyFunctionAbiEntry> {
+) -> Vec<PyEntryAbi> {
     let Some(contract) = artifact.contract(contract_name) else {
         return Vec::new();
     };
     let build = |name: &str| {
-        contract.entries.get(name).map(|entry| PyFunctionAbiEntry {
+        contract.entries.get(name).map(|entry| PyEntryAbi {
             name: name.to_string(),
-            inputs: entry
+            params: entry
                 .params
                 .iter()
-                .map(|param| PyFunctionInputAbi {
+                .map(|param| PyParamAbi {
                     name: param.name.clone(),
                     type_name: artifact_type_name(&param.ty),
                 })
                 .collect(),
+            dispatch_tag: entry.dispatch_tag.into_bytes(),
         })
     };
 
-    let mut out: Vec<PyFunctionAbiEntry> = Vec::with_capacity(contract.entries.len());
+    let mut out: Vec<PyEntryAbi> = Vec::with_capacity(contract.entries.len());
     for function in &ast.functions {
         if let Some(entry) = build(&function.name) {
             out.push(entry);
@@ -720,14 +726,13 @@ pub fn py_compile(
         Ok(CompiledParts { contract, artifact })
     })?;
 
-    let (contract_name, compiler_version, script, abi, state_layout) = {
+    let (contract_name, compiler_version, abi, state_layout) = {
         let parts = compiled.borrow_dependent();
         let contract = &parts.contract;
         let contract_name = contract.contract_name.clone();
         (
             contract_name.clone(),
             contract.compiler_version.clone(),
-            contract.bytecode.clone(),
             abi_entries(&parts.artifact, &contract_name, &contract.ast),
             (contract.state_layout.start, contract.state_layout.len),
         )
@@ -736,7 +741,6 @@ pub fn py_compile(
     Ok(PyCompiledContract {
         contract_name,
         compiler_version,
-        script,
         abi,
         state_layout,
         compiled,
@@ -748,8 +752,8 @@ pub fn py_compile(
 fn silverscript(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(py_compile, m)?)?;
     m.add_class::<PyCompiledContract>()?;
-    m.add_class::<PyFunctionAbiEntry>()?;
-    m.add_class::<PyFunctionInputAbi>()?;
+    m.add_class::<PyEntryAbi>()?;
+    m.add_class::<PyParamAbi>()?;
     m.add_function(wrap_pyfunction!(debug::py_debug_call, m)?)?;
     m.add_class::<debug::PyDebugCallResult>()?;
     m.add_class::<debug::PyFailureReport>()?;

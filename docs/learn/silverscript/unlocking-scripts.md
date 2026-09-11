@@ -99,7 +99,7 @@ call = contract.build_sig_script("check", [150])
 
 # Push the redeem script so it rides along in the same signature_script.
 redeem = bytes.fromhex(
-    ScriptBuilder().add_data(contract.script).to_string()
+    ScriptBuilder().add_data(contract.bytecode).to_string()
 )
 signature_script = call + redeem
 ```
@@ -110,17 +110,20 @@ spends the locked UTXO. The full P2SH mechanics — wrapping the lock,
 building the address, the spend side — are in
 [Transactions → Scripts](../transactions/scripts.md).
 
-## Building twice recompiles
+## Compile once, build many
 
-A [`CompiledContract`](../../reference/SilverScript/Classes/CompiledContract.md)
-stores its source and constructor args, not a borrowed parse tree. So
-each call to
+[`compile`](../../reference/SilverScript/Functions/compile.md) does all
+the expensive work up front: it parses the source, compiles the contract,
+and builds its portable ABI artifact once, then keeps them on the
+[`CompiledContract`](../../reference/SilverScript/Classes/CompiledContract.md).
+
+Each later call to
 [`build_sig_script`](../../reference/SilverScript/Classes/CompiledContract.md)
-recompiles the contract from scratch before assembling the script. It's
-deterministic — the same call always yields the same bytes — but each
-call pays the full compile cost. That matters only if you build many
-unlocking scripts in a hot loop; for one spend per transaction, it's
-irrelevant.
+works from that stored artifact — it converts your arguments to the
+declared parameter types, pushes them, and appends the entrypoint's
+four-byte dispatch tag. Nothing is recompiled. Building many unlocking
+scripts from one contract is cheap, and it's deterministic: the same call
+always yields the same bytes.
 
 Next: stateful contracts that carry state from one UTXO to the next —
 [Covenants](covenants.md).

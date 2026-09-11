@@ -93,7 +93,7 @@ def lock_script(count: int) -> ScriptPublicKey:
     Returns:
         The P2SH (pay-to-script-hash) locking script.
     """
-    redeem = silverscript.compile(SOURCE, [count]).script
+    redeem = silverscript.compile(SOURCE, [count]).bytecode
     return ScriptBuilder.from_script(redeem).create_pay_to_script_hash_script()
 
 
@@ -128,7 +128,7 @@ def unlock_script(count: int, function: str, amount: int) -> bytes:
 
     # Push the redeem script (hex -> bytes so it concatenates with the call).
     redeem = bytes.fromhex(
-        ScriptBuilder().add_data(contract.script).to_string()
+        ScriptBuilder().add_data(contract.bytecode).to_string()
     )
     return call + redeem
 

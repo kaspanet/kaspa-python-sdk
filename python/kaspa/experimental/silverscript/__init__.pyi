@@ -21,14 +21,14 @@ class CompiledContract:
         The compiler version that produced this contract.
         """
     @property
-    def script(self) -> bytes:
+    def bytecode(self) -> bytes:
         r"""
         The compiled locking script (redeem script) bytes.
         """
     @property
-    def abi(self) -> builtins.list[FunctionAbiEntry]:
+    def abi(self) -> builtins.list[EntryAbi]:
         r"""
-        The contract ABI: one entry per callable entrypoint.
+        The contract ABI: one entry per callable entrypoint, in source order.
         """
     @property
     def state_layout(self) -> tuple[builtins.int, builtins.int]:
@@ -162,6 +162,27 @@ class DebugVariable:
     def __repr__(self) -> builtins.str: ...
 
 @typing.final
+class EntryAbi:
+    r"""
+    A single callable entrypoint in a compiled contract's ABI.
+    """
+    @property
+    def name(self) -> builtins.str: ...
+    @property
+    def params(self) -> builtins.list[ParamAbi]: ...
+    @property
+    def dispatch_tag(self) -> bytes:
+        r"""
+        The entrypoint's four-byte dispatch tag.
+        
+        `blake3("name(type,type)")[:4]` — content-addressed, so it depends only
+        on the entrypoint's name and parameter types, never on constructor
+        arguments. Every signature script built for this entrypoint ends with
+        this value as its final data push.
+        """
+    def __repr__(self) -> builtins.str: ...
+
+@typing.final
 class FailureFrame:
     r"""
     One frame of a failure report: a function on the (inlined) call stack at
@@ -214,20 +235,9 @@ class FailureReport:
     def __repr__(self) -> builtins.str: ...
 
 @typing.final
-class FunctionAbiEntry:
+class ParamAbi:
     r"""
-    A single callable entrypoint in a compiled contract's ABI.
-    """
-    @property
-    def name(self) -> builtins.str: ...
-    @property
-    def inputs(self) -> builtins.list[FunctionInputAbi]: ...
-    def __repr__(self) -> builtins.str: ...
-
-@typing.final
-class FunctionInputAbi:
-    r"""
-    A single input parameter of a contract entrypoint.
+    A single parameter of a contract entrypoint.
     """
     @property
     def name(self) -> builtins.str: ...
