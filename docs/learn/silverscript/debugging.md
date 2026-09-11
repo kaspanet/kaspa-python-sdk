@@ -52,7 +52,8 @@ A failing script is reported in the
 [`DebugCallResult`](../../reference/SilverScript/Classes/DebugCallResult.md),
 not raised; only usage errors (bad source, unknown entrypoint, a
 malformed `tx` scenario) raise `SilverScriptError`. When
-`function_name` is omitted the contract's first entrypoint is called.
+`function_name` is omitted the contract's first entrypoint *in source
+order* is called — not `abi[0]`, which is ordered by name.
 
 ## The failure report
 

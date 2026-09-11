@@ -214,8 +214,12 @@ impl PyContractArtifact {
 
     /// Serialize the artifact back to JSON.
     ///
-    /// Byte-for-byte what it was loaded from, so an artifact survives a
-    /// load/serialize round trip unchanged.
+    /// The canonical form upstream writes: pretty-printed, fields in the
+    /// artifact's own order. That form round trips byte-for-byte, so JSON
+    /// from this method or from `CompiledContract.artifact_json` survives
+    /// load/serialize unchanged. Merely equivalent JSON — compact, with keys
+    /// reordered, or carrying unknown fields — comes back canonicalized
+    /// rather than verbatim.
     ///
     /// Returns:
     ///     str: The portable artifact as pretty-printed JSON.

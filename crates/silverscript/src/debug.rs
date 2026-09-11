@@ -355,8 +355,9 @@ impl PyDebugCallResult {
         self.console.clone()
     }
 
-    /// The entrypoint that was called (resolved to the first ABI entry when
-    /// `function_name` was omitted).
+    /// The entrypoint that was called. When `function_name` was omitted this
+    /// is the contract's first entrypoint in *source* order, which need not be
+    /// `abi[0]`: the ABI is ordered by name.
     #[getter]
     pub fn function_name(&self) -> &str {
         &self.function_name
@@ -1815,8 +1816,9 @@ fn run_harness(
 /// Args:
 ///     source: The SilverScript contract source.
 ///     function_name: The entrypoint to call. Defaults to the contract's
-///         first entrypoint. For covenant functions, use the source-level
-///         name (e.g. `"add"`).
+///         first entrypoint in *source* order, which need not be `abi[0]`:
+///         the ABI is ordered by name. For covenant functions, use the
+///         source-level name (e.g. `"add"`).
 ///     args: Native Python values matching the entrypoint's parameters. For
 ///         covenant transition functions the leading `State` parameter is
 ///         synthesized from the scenario's output states, so pass only the

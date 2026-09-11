@@ -699,6 +699,25 @@ class TestContractArtifact:
         artifact = silverscript.load_artifact(contract.artifact_json())
         assert artifact.to_json() == contract.artifact_json()
 
+    def test_to_json_canonicalizes_rather_than_echoing_the_input(self):
+        # The round trip above holds for the canonical form; it is not a
+        # promise to hand back whatever JSON was loaded. Equivalent input in a
+        # different shape comes back canonicalized, which is the more useful
+        # guarantee anyway: two artifacts agree iff their `to_json` agree.
+        canonical = silverscript.compile(GUARD, [100]).artifact_json()
+        parsed = json.loads(canonical)
+
+        compact = json.dumps(parsed, separators=(",", ":"))
+        assert silverscript.load_artifact(compact).to_json() == canonical
+
+        reordered = json.dumps({k: parsed[k] for k in reversed(list(parsed))}, indent=2)
+        assert silverscript.load_artifact(reordered).to_json() == canonical
+
+        # Unknown top-level fields are dropped (serde default, matching
+        # upstream), not carried through.
+        extra = json.dumps({**parsed, "__unknown__": {"x": 1}})
+        assert silverscript.load_artifact(extra).to_json() == canonical
+
     def test_golden_sig_script_survives_the_artifact_route(self):
         # Pinned against TestGoldenSigScript: the route must not change bytes
         # that land on-chain.

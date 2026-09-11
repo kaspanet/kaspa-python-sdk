@@ -262,8 +262,12 @@ class ContractArtifact:
         r"""
         Serialize the artifact back to JSON.
         
-        Byte-for-byte what it was loaded from, so an artifact survives a
-        load/serialize round trip unchanged.
+        The canonical form upstream writes: pretty-printed, fields in the
+        artifact's own order. That form round trips byte-for-byte, so JSON
+        from this method or from `CompiledContract.artifact_json` survives
+        load/serialize unchanged. Merely equivalent JSON — compact, with keys
+        reordered, or carrying unknown fields — comes back canonicalized
+        rather than verbatim.
         
         Returns:
             str: The portable artifact as pretty-printed JSON.
@@ -310,8 +314,9 @@ class DebugCallResult:
     @property
     def function_name(self) -> builtins.str:
         r"""
-        The entrypoint that was called (resolved to the first ABI entry when
-        `function_name` was omitted).
+        The entrypoint that was called. When `function_name` was omitted this
+        is the contract's first entrypoint in *source* order, which need not be
+        `abi[0]`: the ABI is ordered by name.
         """
     @property
     def trace(self) -> typing.Optional[builtins.list[TraceStep]]:
@@ -609,8 +614,9 @@ def debug_call(source: builtins.str, function_name: typing.Optional[builtins.str
     Args:
         source: The SilverScript contract source.
         function_name: The entrypoint to call. Defaults to the contract's
-            first entrypoint. For covenant functions, use the source-level
-            name (e.g. `"add"`).
+            first entrypoint in *source* order, which need not be `abi[0]`:
+            the ABI is ordered by name. For covenant functions, use the
+            source-level name (e.g. `"add"`).
         args: Native Python values matching the entrypoint's parameters. For
             covenant transition functions the leading `State` parameter is
             synthesized from the scenario's output states, so pass only the
