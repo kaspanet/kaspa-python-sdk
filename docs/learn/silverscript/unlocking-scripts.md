@@ -56,11 +56,14 @@ SilverScript types (the `type_name`s you can read off the
 | --- | --- |
 | `int` | `int` (must fit in a signed 64-bit integer) |
 | `bool` | `bool` (a real bool — not `0`/`1`) |
+| `temporal` | `int` (a time value in milliseconds) |
 | `byte` | `int` in `0..=255` (a one-byte `bytes` also works) |
 | `byte[]` | `bytes` / `bytearray` (not a `list`) |
 | `byte[N]` | `bytes` / `bytearray` of length `N` |
-| `pubkey` | `bytes` (an x-only public key) |
-| `sig` | `bytes` (a signature) |
+| `string` | `str` (encoded as UTF-8) |
+| `pubkey` | `bytes` (a 32-byte x-only public key) |
+| `sig` | `bytes` (a 65-byte signature — 64 plus the sighash type byte) |
+| `datasig` | `bytes` (a 64-byte signature over a message, for `checkMsgSig`) |
 | `T[]` | `list` or `tuple` of `T` |
 | struct / `State` | `dict` |
 

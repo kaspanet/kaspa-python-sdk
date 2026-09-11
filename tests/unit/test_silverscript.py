@@ -47,7 +47,7 @@ contract Announcement() {
 }
 """
 
-# Two entrypoints -> a function selector is appended to the sig script.
+# Two entrypoints -> two distinct dispatch tags.
 MULTI = """
 pragma silverscript ^0.1.0;
 contract Multi(int base) {
@@ -229,8 +229,8 @@ class TestGoldenScript:
 class TestGoldenSigScript:
     def test_int_arg_encoding(self):
         contract = silverscript.compile(GUARD, [100])
-        # 150 pushed as a minimally-encoded script number; single entrypoint so
-        # no function selector is appended.
+        # 150 pushed as a minimally-encoded script number, then the entry's
+        # 4-byte dispatch tag.
         assert contract.build_sig_script("check", [150]).hex() == "02960004b0823999"
 
     def test_zero_arg_encoding(self):
@@ -277,8 +277,8 @@ class TestGoldenSigScript:
 class TestUpstreamParity:
     def test_multi_arg_sig_script_matches_upstream_vector(self):
         # Mirrors compiler_tests.rs :: build_sig_script_builds_expected_script.
-        # Upstream builds: push byte[4] {01,02,03,04}, then i64(7); single
-        # entrypoint -> no selector. We assert the exact resulting bytes.
+        # Upstream builds: push byte[4] {01,02,03,04}, then i64(7), then the
+        # entry's 4-byte dispatch tag. We assert the exact resulting bytes.
         contract = silverscript.compile(BOUNDED_BYTES)
         assert contract.build_sig_script("spend", [b"\x01\x02\x03\x04", 7]).hex() == "0401020304570433cd8f70"
 
@@ -299,7 +299,7 @@ class TestUpstreamParity:
         # 0x41 = 65-byte data push, followed by the signature bytes verbatim.
         assert transfer[0] == 0x41
         assert transfer[1:66] == sig
-        # Same arg, different entrypoint -> different selector -> different bytes.
+        # Same arg, different entrypoint -> different dispatch tag -> different bytes.
         assert transfer != reclaim
 
 
@@ -487,7 +487,7 @@ class TestByteArguments:
 
 
 # ---------------------------------------------------------------------------
-# ABI / selector metadata
+# ABI / dispatch-tag metadata
 # ---------------------------------------------------------------------------
 
 class TestAbi:

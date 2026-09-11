@@ -633,12 +633,6 @@ impl PyCompiledContract {
 }
 
 /// Build the Python-facing ABI for `contract_name` from a portable ABI artifact.
-///
-/// The artifact keys entries in a `BTreeMap` (alphabetical), but the ABI is
-/// ordered — `debug_call` picks `abi[0]` as the default entrypoint, and callers
-/// read it as the contract's entrypoints in the order they were written. So
-/// entries are emitted in source order, with any generated entrypoint that has
-/// no source function (covenant lowering adds these) appended afterwards.
 fn abi_entries(
     artifact: &SilAbiArtifact,
     contract_name: &str,
