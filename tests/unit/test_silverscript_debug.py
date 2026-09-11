@@ -901,6 +901,98 @@ class TestTemporalExplicitState:
 
 
 # ---------------------------------------------------------------------------
+# The active input's compile is what gets debugged
+# ---------------------------------------------------------------------------
+
+# Any raw `utxo_script` stands in for an already-deployed UTXO: it suppresses
+# redeem-script derivation for that input, which is the precondition for the
+# lockscript fallback. The debug session is handed the redeem script directly,
+# so this SPK's bytes never participate in the run.
+DEPLOYED_UTXO_SCRIPT = b"\x51"
+
+
+def guard_input(threshold, deployed=False):
+    """A `Guard` input pinned to its own constructor args."""
+    utxo = {"utxo_value": 5000, "constructor_args": [threshold]}
+    if deployed:
+        utxo["utxo_script"] = DEPLOYED_UTXO_SCRIPT
+    return utxo
+
+
+def guard_call(amount, root_threshold, input_threshold, deployed=False):
+    """`check(amount)` where the root and the active input disagree on the threshold."""
+    return silverscript.debug_call(
+        GUARD,
+        "check",
+        [amount],
+        [root_threshold],
+        tx={
+            "inputs": [guard_input(input_threshold, deployed)],
+            "outputs": [{"value": 5000}],
+        },
+    )
+
+
+class TestActiveInputCompile:
+    @pytest.mark.parametrize("deployed", [False, True], ids=["derived", "deployed"])
+    def test_active_constructor_args_win_over_the_root(self, deployed):
+        # The root says 5 and the active input says 100; 50 clears only the
+        # root's. The input's own args are what the spend is against.
+        assert guard_call(50, 5, 100, deployed).success is False
+        # And reversed, so neither answer can be right by accident.
+        assert guard_call(50, 100, 5, deployed).success is True
+
+    @pytest.mark.parametrize("deployed", [False, True], ids=["derived", "deployed"])
+    def test_the_active_threshold_is_exactly_the_boundary(self, deployed):
+        # Not merely "fails" — it fails at 100 and passes at 101, which pins
+        # the value actually compiled into the script.
+        assert guard_call(100, 5, 100, deployed).success is False
+        assert guard_call(101, 5, 100, deployed).success is True
+
+    @pytest.mark.parametrize("deployed", [False, True], ids=["derived", "deployed"])
+    def test_reported_variables_agree_with_the_script_that_ran(self, deployed):
+        # A debugger that runs one contract instance and reports another is
+        # worse than no debugger. `threshold` is read straight out of the
+        # debug info's recorded constructor args, and `margin` is evaluated
+        # from it, so both move if the wrong compile is consulted.
+        result = guard_call(50, 5, 100, deployed)
+        assert result.success is False
+        variables = {v.name: v for v in result.failure.frames[0].variables}
+        assert variables["threshold"].value == 100
+        assert variables["threshold"].origin == "ctor"
+        assert variables["margin"].value == -50
+        assert "margin = -50" in str(result.failure)
+
+    @pytest.mark.parametrize("deployed", [False, True], ids=["derived", "deployed"])
+    def test_root_args_still_apply_when_the_input_names_none(self, deployed):
+        # The fallback chain is input args -> root args; an input that names
+        # none must still pick up the root's.
+        utxo = {"utxo_value": 5000}
+        if deployed:
+            utxo["utxo_script"] = DEPLOYED_UTXO_SCRIPT
+        tx = {"inputs": [utxo], "outputs": [{"value": 5000}]}
+        assert silverscript.debug_call(GUARD, "check", [50], [100], tx=tx).success is False
+        assert silverscript.debug_call(GUARD, "check", [101], [100], tx=tx).success is True
+
+    @pytest.mark.parametrize("deployed", [False, True], ids=["derived", "deployed"])
+    def test_active_means_the_selected_index_not_input_zero(self, deployed):
+        # Two inputs disagreeing, with index 1 active: the answer must follow
+        # index 1, and flip when the active index moves to 0.
+        tx = {
+            "inputs": [guard_input(5, deployed), guard_input(100, deployed)],
+            "outputs": [{"value": 5000}],
+            "active_input_index": 1,
+        }
+        result = silverscript.debug_call(GUARD, "check", [50], [5], tx=tx)
+        assert result.success is False
+        variables = {v.name: v.value for v in result.failure.frames[0].variables}
+        assert variables["threshold"] == 100
+
+        tx["active_input_index"] = 0
+        assert silverscript.debug_call(GUARD, "check", [50], [5], tx=tx).success is True
+
+
+# ---------------------------------------------------------------------------
 # Usage errors raise; script failures don't
 # ---------------------------------------------------------------------------
 

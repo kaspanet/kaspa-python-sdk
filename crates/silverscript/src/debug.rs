@@ -1368,7 +1368,6 @@ fn run_harness(
     let mut compile_cache = CtorCompileCache::new(source, &parsed_contract);
     let shapes = state_shapes(&parsed_contract);
     let root_compiled = compile_cache.get(&root_ctor)?;
-    let debug_info = root_compiled.contract.debug_info.clone();
 
     let selected_name = match function_name {
         Some(name) => name.to_string(),
@@ -1564,6 +1563,11 @@ fn run_harness(
         .clone()
         .unwrap_or_else(|| root_ctor.clone());
     let active_compiled = compile_cache.get(&active_ctor)?;
+    // The session debugs the active input's contract instance, so its source
+    // mapping and recorded constructor args have to come from that compile —
+    // the root compile's would report the wrong values for the script that
+    // actually runs.
+    let debug_info = active_compiled.contract.debug_info.clone();
     let active_is_cov_leader = companion_leader_index
         .map(|index| index == tx.active_input_index)
         .unwrap_or(true);
@@ -1672,7 +1676,7 @@ fn run_harness(
         .ok_or_else(|| err("missing utxo entry for active input"))?;
     let active_lockscript = match input_redeem_scripts[tx.active_input_index].clone() {
         Some(script) => script,
-        None => compile_cache.get_contract(&root_ctor)?.bytecode.clone(),
+        None => compile_cache.get_contract(&active_ctor)?.bytecode.clone(),
     };
     let covenant_input_states = active_utxo.covenant_id.and_then(|covenant_id| {
         let mut values = Vec::new();
@@ -1790,7 +1794,9 @@ fn run_harness(
 ///     - 'utxo_value' (int): Required. The spent UTXO value in sompi.
 ///     - 'covenant_id' (bytes | str): 32 bytes or hex.
 ///     - 'state' (dict): Contract state fields carried by the spent UTXO.
-///     - 'constructor_args' (list): Constructor arguments for this input.
+///     - 'constructor_args' (list): Constructor arguments for this input,
+///       overriding the top-level 'constructor_args'. The active input's are
+///       the ones the debugged call runs against.
 ///     - 'prev_txid' (bytes | str), 'prev_index' (int), 'sequence' (int),
 ///       'sig_op_count' (int): Outpoint and input metadata.
 ///     - 'signature_script' (bytes | str), 'utxo_script' (bytes | str): Raw
@@ -1801,7 +1807,8 @@ fn run_harness(
 ///     - 'covenant_id' (bytes | str): 32 bytes or hex.
 ///     - 'authorizing_input' (int): Index of the authorizing input.
 ///     - 'state' (dict): The post-transition contract state to verify.
-///     - 'constructor_args' (list): Constructor arguments for this output.
+///     - 'constructor_args' (list): Constructor arguments for this output,
+///       overriding the top-level 'constructor_args'.
 ///     - 'script' (bytes | str), 'p2pk_pubkey' (bytes | str): Raw script
 ///       overrides.
 ///
@@ -1815,7 +1822,8 @@ fn run_harness(
 ///         synthesized from the scenario's output states, so pass only the
 ///         source-level arguments after it.
 ///     constructor_args: Native Python values for the contract's constructor
-///         parameters.
+///         parameters, used for inputs and outputs that do not name their
+///         own. Defaults to the active input's 'constructor_args'.
 ///     tx: Transaction scenario dict (see above). Defaults to a single-input,
 ///         single-output spend of the contract.
 ///     trace: When True, record a per-statement execution trace on

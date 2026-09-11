@@ -588,7 +588,9 @@ def debug_call(source: builtins.str, function_name: typing.Optional[builtins.str
         - 'utxo_value' (int): Required. The spent UTXO value in sompi.
         - 'covenant_id' (bytes | str): 32 bytes or hex.
         - 'state' (dict): Contract state fields carried by the spent UTXO.
-        - 'constructor_args' (list): Constructor arguments for this input.
+        - 'constructor_args' (list): Constructor arguments for this input,
+          overriding the top-level 'constructor_args'. The active input's are
+          the ones the debugged call runs against.
         - 'prev_txid' (bytes | str), 'prev_index' (int), 'sequence' (int),
           'sig_op_count' (int): Outpoint and input metadata.
         - 'signature_script' (bytes | str), 'utxo_script' (bytes | str): Raw
@@ -599,7 +601,8 @@ def debug_call(source: builtins.str, function_name: typing.Optional[builtins.str
         - 'covenant_id' (bytes | str): 32 bytes or hex.
         - 'authorizing_input' (int): Index of the authorizing input.
         - 'state' (dict): The post-transition contract state to verify.
-        - 'constructor_args' (list): Constructor arguments for this output.
+        - 'constructor_args' (list): Constructor arguments for this output,
+          overriding the top-level 'constructor_args'.
         - 'script' (bytes | str), 'p2pk_pubkey' (bytes | str): Raw script
           overrides.
     
@@ -613,7 +616,8 @@ def debug_call(source: builtins.str, function_name: typing.Optional[builtins.str
             synthesized from the scenario's output states, so pass only the
             source-level arguments after it.
         constructor_args: Native Python values for the contract's constructor
-            parameters.
+            parameters, used for inputs and outputs that do not name their
+            own. Defaults to the active input's 'constructor_args'.
         tx: Transaction scenario dict (see above). Defaults to a single-input,
             single-output spend of the contract.
         trace: When True, record a per-statement execution trace on
