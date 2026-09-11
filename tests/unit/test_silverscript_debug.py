@@ -125,6 +125,36 @@ contract Tagged(byte[4] init_tag) {
 }
 """
 
+# Every shape a resolved state initializer can take beyond a bare literal:
+# a temporal constructor parameter, a `date(...)` literal, a unit-suffixed
+# literal, and the `temporal`/`int`/`string`/`byte` cast calls. The compiler's
+# constant folder leaves each of these in the AST, so the debugger has to
+# decode them all.
+TEMPORAL_FORMS = """
+pragma silverscript ^0.1.0;
+contract Forms(temporal init_deadline) {
+    temporal from_param = init_deadline;
+    temporal from_date = date("2030-01-01T00:00:00");
+    temporal from_cast = temporal(1700000000);
+    temporal from_units = 3 days;
+    int from_int_cast = int(init_deadline);
+    string from_string_cast = string("tagged");
+    byte from_byte_cast = byte(0x07);
+    entry check(int a) { require(a > 0); }
+}
+"""
+
+# The minimal timelock shape: a temporal state field compared against a
+# temporal argument, so the decoded state value is observable as pass/fail and
+# not only as a reported variable.
+DEADLINE = """
+pragma silverscript ^0.1.0;
+contract Deadline(temporal init_deadline) {
+    temporal deadline = init_deadline;
+    entry after(temporal t) { require(t >= deadline); }
+}
+"""
+
 # A cov-bound covenant group: every input of the group is spent in one
 # transaction, the lowest-index input is the leader and runs the declaration
 # body, the rest defer to the shared delegate entrypoint. Ported from
@@ -641,6 +671,77 @@ class TestByteValues:
     def test_covenant_byte_arg_out_of_range_raises(self):
         with pytest.raises(silverscript.SilverScriptError):
             silverscript.debug_call(MARKER, "retag", [256], [1], tx=marker_scenario(1, 2))
+
+
+# ---------------------------------------------------------------------------
+# `temporal` state
+# ---------------------------------------------------------------------------
+
+class TestTemporalState:
+    def test_every_initializer_form_decodes(self):
+        # `debug_call` used to abort outright on each of these, so a contract
+        # with any temporal state -- every timelock -- was undebuggable.
+        result = silverscript.debug_call(
+            TEMPORAL_FORMS, "check", [0], [1700000000]
+        )
+        variables = {v.name: v for v in result.failure.frames[0].variables}
+        decoded = {name: (v.type_name, v.value) for name, v in variables.items()}
+        assert decoded == {
+            "a": ("int", 0),
+            "init_deadline": ("temporal", 1700000000),
+            "from_param": ("temporal", 1700000000),
+            "from_date": ("temporal", 1893456000000),
+            "from_cast": ("temporal", 1700000000),
+            "from_units": ("temporal", 259200000),
+            "from_int_cast": ("int", 1700000000),
+            "from_string_cast": ("string", "tagged"),
+            "from_byte_cast": ("byte", b"\x07"),
+        }
+
+    def test_int_cast_retags_a_temporal_as_int(self):
+        # `int(t)` and `temporal(n)` carry the same number; only the reported
+        # type distinguishes them.
+        variables = {
+            v.name: v
+            for v in silverscript.debug_call(
+                TEMPORAL_FORMS, "check", [0], [1700000000]
+            ).failure.frames[0].variables
+        }
+        assert variables["from_int_cast"].value == variables["from_param"].value
+        assert variables["from_int_cast"].type_name == "int"
+        assert variables["from_param"].type_name == "temporal"
+
+    def test_deadline_reached_passes(self):
+        assert silverscript.debug_call(
+            DEADLINE, "after", [1700000000], [1700000000]
+        ).success is True
+
+    def test_deadline_not_reached_fails(self):
+        result = silverscript.debug_call(
+            DEADLINE, "after", [1699999999], [1700000000]
+        )
+        assert result.success is False
+        assert "verification failed" in result.error
+
+    def test_temporal_state_is_the_compiled_value_not_the_argument(self):
+        # The deadline the script enforces comes from the constructor, so
+        # moving it past the argument flips the outcome.
+        assert silverscript.debug_call(
+            DEADLINE, "after", [1700000000], [1700000001]
+        ).success is False
+
+    def test_constant_folded_initializer_is_still_unsupported(self):
+        # A shared gap with the upstream CLI debugger: `is_const_expr` admits
+        # constant integer arithmetic, but neither debugger decodes it. Pinned
+        # so that closing it upstream is a visible change here.
+        source = TEMPORAL_FORMS.replace(
+            "temporal from_cast = temporal(1700000000);",
+            "temporal from_cast = temporal(1700000000 + 1);",
+        )
+        with pytest.raises(
+            silverscript.SilverScriptError, match="unsupported resolved state expression"
+        ):
+            silverscript.debug_call(source, "check", [0], [1700000000])
 
 
 # ---------------------------------------------------------------------------

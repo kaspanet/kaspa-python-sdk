@@ -39,6 +39,7 @@ use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pyfunction, gen_stub_pyme
 use silverscript_abi::{ArtifactValue, SilAbiArtifact, encode_contract_entry_sig_script};
 use silverscript_lang::ast::{
     ArrayDim, ContractAst, Expr, ExprKind, StateFieldExpr, TypeBase, TypeRef, parse_contract_ast,
+    parse_type_ref,
 };
 use silverscript_lang::compiler::{
     CompileOptions, CompiledContract, compile_contract, compile_contract_ast,
@@ -453,6 +454,9 @@ fn debug_value_to_value(value: &DebugValue) -> Option<Value> {
 fn expr_to_debug_value(expr: &Expr<'_>) -> PyResult<DebugValue> {
     match &expr.kind {
         ExprKind::Int(value) => Ok(DebugValue::Int(*value)),
+        ExprKind::Temporal(value) | ExprKind::DateLiteral(value) => {
+            Ok(DebugValue::Temporal(*value))
+        }
         ExprKind::Bool(value) => Ok(DebugValue::Bool(*value)),
         ExprKind::Byte(value) => Ok(DebugValue::Bytes(vec![*value])),
         ExprKind::String(value) => Ok(DebugValue::String(value.clone())),
@@ -484,6 +488,27 @@ fn expr_to_debug_value(expr: &Expr<'_>) -> PyResult<DebugValue> {
                 .map(|field| Ok((field.name.clone(), expr_to_debug_value(&field.expr)?)))
                 .collect::<PyResult<Vec<_>>>()?,
         )),
+        // Cast calls: `is_const_expr` admits a single-argument call whose name
+        // is a type, so a resolved initializer can still be wrapped in one.
+        // `temporal(...)` and `int(...)` retag the value; any other cast is
+        // representationally a no-op here.
+        ExprKind::Call { name, args, .. } if name == "temporal" && args.len() == 1 => {
+            match expr_to_debug_value(&args[0])? {
+                DebugValue::Int(value) | DebugValue::Temporal(value) => {
+                    Ok(DebugValue::Temporal(value))
+                }
+                value => Ok(value),
+            }
+        }
+        ExprKind::Call { name, args, .. } if name == "int" && args.len() == 1 => {
+            match expr_to_debug_value(&args[0])? {
+                DebugValue::Int(value) | DebugValue::Temporal(value) => Ok(DebugValue::Int(value)),
+                value => Ok(value),
+            }
+        }
+        ExprKind::Call { name, args, .. } if parse_type_ref(name).is_ok() && args.len() == 1 => {
+            expr_to_debug_value(&args[0])
+        }
         other => Err(err(format!(
             "unsupported resolved state expression in debugger: {other:?}"
         ))),
