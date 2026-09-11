@@ -126,6 +126,16 @@ contract BoundedBytes() {
 }
 """
 
+# Entrypoints declared out of alphabetical order, so source order and the
+# artifact's BTreeMap order are visibly different.
+ORDER = """
+contract Order() {
+    entry zebra(int a) { require(a > 0); }
+    entry alpha(int a) { require(a > 0); }
+    entry middle(int a) { require(a > 0); }
+}
+"""
+
 # A real covenant contract (the Counter from examples/silverscript/counter.py):
 # state is carried in covenant State, spent via build_sig_script_for_covenant_decl.
 COUNTER = """
@@ -636,6 +646,173 @@ class TestPortableArtifact:
         ]
         assert counts[:-1] == [64] * (len(counts) - 1)
         assert sum(counts) == len(contract.bytecode)
+
+
+# ---------------------------------------------------------------------------
+# Loading an artifact back — spend with no source and no compiler
+# ---------------------------------------------------------------------------
+
+class TestContractArtifact:
+    def test_loaded_artifact_builds_identical_sig_scripts(self):
+        # The capability the whole class exists for: compile in CI, ship the
+        # JSON, build the same spending bytes at runtime from the artifact
+        # alone.
+        contract = silverscript.compile(GUARD, [100])
+        artifact = silverscript.load_artifact(contract.artifact_json())
+        assert artifact.build_sig_script("check", [150]) == contract.build_sig_script(
+            "check", [150]
+        )
+
+    def test_to_json_round_trips_losslessly(self):
+        # load -> serialize returns the identical string, so an artifact can be
+        # passed through this module without drifting from silverc's output.
+        contract = silverscript.compile(GUARD, [100])
+        artifact = silverscript.load_artifact(contract.artifact_json())
+        assert artifact.to_json() == contract.artifact_json()
+
+    def test_golden_sig_script_survives_the_artifact_route(self):
+        # Pinned against TestGoldenSigScript: the route must not change bytes
+        # that land on-chain.
+        artifact = silverscript.load_artifact(silverscript.compile(GUARD, [100]).artifact_json())
+        assert artifact.build_sig_script("check", [150]).hex() == "02960004b0823999"
+
+    def test_properties_match_the_compiled_contract(self):
+        contract = silverscript.compile(COUNTER, [7])
+        artifact = silverscript.load_artifact(contract.artifact_json())
+        assert artifact.contract_name == contract.contract_name
+        assert artifact.compiler_version == contract.compiler_version
+        assert artifact.bytecode == contract.bytecode
+        assert artifact.template_hash == contract.template_hash
+        # state_span is the artifact's spelling of state_layout.
+        assert artifact.state_span == contract.state_layout
+        assert artifact.schema_version == 1
+
+    def test_abi_is_alphabetical_not_source_order(self):
+        # The one real difference between the two routes. CompiledContract.abi
+        # keeps source order from the AST; a loaded artifact has no AST, only
+        # the artifact's sorted map. Index accordingly — or select by name.
+        contract = silverscript.compile(ORDER)
+        artifact = silverscript.load_artifact(contract.artifact_json())
+        assert [e.name for e in contract.abi] == ["zebra", "alpha", "middle"]
+        assert [e.name for e in artifact.abi] == ["alpha", "middle", "zebra"]
+
+    def test_abi_entries_carry_the_same_dispatch_tags(self):
+        contract = silverscript.compile(ORDER)
+        artifact = silverscript.load_artifact(contract.artifact_json())
+        by_name = {e.name: e.dispatch_tag for e in artifact.abi}
+        assert by_name == {e.name: e.dispatch_tag for e in contract.abi}
+        assert all(len(tag) == 4 for tag in by_name.values())
+
+    def test_covenant_sig_script_round_trips(self):
+        contract = silverscript.compile(COUNTER, [0])
+        artifact = silverscript.load_artifact(contract.artifact_json())
+        assert artifact.build_sig_script_for_covenant_decl(
+            "add", [5]
+        ) == contract.build_sig_script_for_covenant_decl("add", [5])
+
+    def test_cov_bound_decl_rejects_unknown_entrypoint_on_both_paths(self):
+        # The covenant_decl_entry guard is shared with CompiledContract rather
+        # than reimplemented, so the follower path can't silently encode a
+        # delegate call for a name the contract never declared.
+        artifact = silverscript.load_artifact(silverscript.compile(COV_PAIR, [0]).artifact_json())
+        for is_leader in (False, True):
+            assert artifact.build_sig_script_for_covenant_decl(
+                "carry_forward", is_leader=is_leader
+            )
+            with pytest.raises(silverscript.SilverScriptError) as exc:
+                artifact.build_sig_script_for_covenant_decl("bogus", is_leader=is_leader)
+            assert "unknown entry" in str(exc.value)
+
+    def test_byte_narrowing_needs_only_the_artifact(self):
+        # `byte` args are narrowed against the declared type, which the codec
+        # requires — this proves that narrowing reads the artifact, not the
+        # source, so it survives the round trip.
+        contract = silverscript.compile(BYTE_BOX, [1])
+        artifact = silverscript.load_artifact(contract.artifact_json())
+        assert artifact.build_sig_script("f", [2]) == contract.build_sig_script("f", [2])
+        assert artifact.build_sig_script("f", [2]).hex() == "52044358458f"
+        with pytest.raises(silverscript.SilverScriptError) as exc:
+            artifact.build_sig_script("f", [256])
+        assert "0..=255" in str(exc.value)
+
+    def test_unknown_entrypoint_raises(self):
+        artifact = silverscript.load_artifact(silverscript.compile(GUARD, [100]).artifact_json())
+        with pytest.raises(silverscript.SilverScriptError):
+            artifact.build_sig_script("does_not_exist", [1])
+
+    def test_check_consistency_passes_on_a_fresh_artifact(self):
+        artifact = silverscript.load_artifact(silverscript.compile(COUNTER, [3]).artifact_json())
+        assert artifact.check_consistency() is None
+
+    def test_check_consistency_rejects_a_tampered_template_hash(self):
+        # The reason the method exists: an artifact arriving from elsewhere may
+        # not describe the bytecode it ships with.
+        doc = json.loads(silverscript.compile(GUARD, [100]).artifact_json())
+        doc["contracts"]["Guard"]["compiled"]["template_hash"][0] ^= 0xFF
+        artifact = silverscript.load_artifact(json.dumps(doc))
+        with pytest.raises(silverscript.SilverScriptError) as exc:
+            artifact.check_consistency()
+        assert "template hash mismatch" in str(exc.value)
+
+    @pytest.mark.parametrize("bad", ["", "{not json", '{"schema_version": 1}'])
+    def test_malformed_json_raises_silverscript_error(self, bad):
+        # Not a json.JSONDecodeError: callers catch one exception type for
+        # everything this module can refuse.
+        with pytest.raises(silverscript.SilverScriptError):
+            silverscript.load_artifact(bad)
+
+    def test_unsupported_schema_version_raises(self):
+        doc = json.loads(silverscript.compile(GUARD, [100]).artifact_json())
+        doc["schema_version"] = 2
+        with pytest.raises(silverscript.SilverScriptError) as exc:
+            silverscript.load_artifact(json.dumps(doc))
+        assert "schema version" in str(exc.value)
+
+    def test_unknown_contract_name_raises_and_names_what_is_there(self):
+        with pytest.raises(silverscript.SilverScriptError) as exc:
+            silverscript.load_artifact(
+                silverscript.compile(GUARD, [100]).artifact_json(), "Nope"
+            )
+        assert "Guard" in str(exc.value)
+
+    def test_empty_artifact_raises(self):
+        doc = json.loads(silverscript.compile(GUARD, [100]).artifact_json())
+        doc["contracts"] = {}
+        with pytest.raises(silverscript.SilverScriptError):
+            silverscript.load_artifact(json.dumps(doc))
+
+    def _two_contract_artifact(self):
+        # compile() always emits exactly one contract, so a multi-contract
+        # artifact has to be assembled by hand.
+        doc = json.loads(silverscript.compile(GUARD, [100]).artifact_json())
+        doc["contracts"].update(
+            json.loads(silverscript.compile(ORDER).artifact_json())["contracts"]
+        )
+        return json.dumps(doc)
+
+    def test_multi_contract_artifact_requires_a_name(self):
+        with pytest.raises(silverscript.SilverScriptError) as exc:
+            silverscript.load_artifact(self._two_contract_artifact())
+        assert "contract_name" in str(exc.value)
+
+    def test_multi_contract_artifact_selects_by_name(self):
+        doc = self._two_contract_artifact()
+        assert silverscript.load_artifact(doc, "Guard").contract_name == "Guard"
+        assert silverscript.load_artifact(doc, "Order").contract_name == "Order"
+
+    def test_multi_contract_selection_scopes_the_abi(self):
+        # Selecting a contract must not leak the other contract's entries.
+        artifact = silverscript.load_artifact(self._two_contract_artifact(), "Guard")
+        assert [e.name for e in artifact.abi] == ["check"]
+
+    def test_artifact_is_frozen(self):
+        artifact = silverscript.load_artifact(silverscript.compile(GUARD, [100]).artifact_json())
+        with pytest.raises(AttributeError):
+            artifact.contract_name = "mutated"
+
+    def test_repr(self):
+        artifact = silverscript.load_artifact(silverscript.compile(GUARD, [100]).artifact_json())
+        assert repr(artifact) == 'ContractArtifact(name="Guard", bytecode=25 bytes, entries=1)'
 
 
 # ---------------------------------------------------------------------------

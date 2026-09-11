@@ -126,5 +126,11 @@ four-byte dispatch tag. Nothing is recompiled. Building many unlocking
 scripts from one contract is cheap, and it's deterministic: the same call
 always yields the same bytes.
 
+Because the artifact is all `build_sig_script` reads, you don't even need
+the contract: [`load_artifact`](../../reference/SilverScript/Functions/load_artifact.md)
+restores one from JSON and builds the same bytes with no source and no
+compiler — see
+[Loading an artifact back](compiling.md#loading-an-artifact-back).
+
 Next: stateful contracts that carry state from one UTXO to the next —
 [Covenants](covenants.md).

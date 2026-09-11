@@ -98,6 +98,136 @@ class CompiledContract:
     def __repr__(self) -> builtins.str: ...
 
 @typing.final
+class ContractArtifact:
+    r"""
+    A portable ABI artifact: everything needed to build unlocking scripts for a
+    contract, without its source.
+    
+    Obtained from
+    [`load_artifact`][kaspa.experimental.silverscript.load_artifact], never
+    constructed directly.
+    """
+    @property
+    def contract_name(self) -> builtins.str:
+        r"""
+        The contract name this artifact was loaded for.
+        """
+    @property
+    def compiler_version(self) -> builtins.str:
+        r"""
+        The compiler version that produced the artifact.
+        """
+    @property
+    def schema_version(self) -> builtins.int:
+        r"""
+        The artifact schema version. Checked by `load_artifact`.
+        """
+    @property
+    def bytecode(self) -> bytes:
+        r"""
+        The compiled locking script (redeem script) bytes.
+        """
+    @property
+    def template_hash(self) -> bytes:
+        r"""
+        The 32-byte template hash recorded in the artifact.
+        
+        Recorded, not recomputed — `check_consistency` is what verifies it
+        against the bytecode.
+        """
+    @property
+    def state_span(self) -> tuple[builtins.int, builtins.int]:
+        r"""
+        `(offset, len)`: byte offset and length of the contract state within the
+        script.
+        
+        The artifact's spelling of
+        [`CompiledContract.state_layout`][kaspa.experimental.silverscript.CompiledContract.state_layout],
+        which names the same two numbers `(start, len)`.
+        """
+    @property
+    def abi(self) -> builtins.list[EntryAbi]:
+        r"""
+        The contract ABI: one entry per callable entrypoint, **alphabetically**.
+        
+        Unlike
+        [`CompiledContract.abi`][kaspa.experimental.silverscript.CompiledContract.abi],
+        which is in source order. An artifact stores its entries in a sorted map
+        and doesn't carry the source, so source order cannot be recovered here.
+        Select entries by `name`, not by index.
+        """
+    def build_sig_script(self, function_name: builtins.str, args: typing.Optional[typing.Any] = None) -> bytes:
+        r"""
+        Build the signature (unlocking) script for an entrypoint.
+        
+        Identical bytes to
+        [`CompiledContract.build_sig_script`][kaspa.experimental.silverscript.CompiledContract.build_sig_script]
+        for the same call — both encode against this same artifact.
+        
+        Args:
+            function_name: The entrypoint to call.
+            args: Native Python values (int, bool, str, bytes, list/tuple, or
+                dict) matching the entrypoint's ABI input types. Omit or pass
+                None for an entrypoint that takes no arguments.
+        
+        Returns:
+            bytes: The signature (unlocking) script.
+        
+        Raises:
+            SilverScriptError: If the entrypoint is unknown or an argument is
+                invalid (wrong type, out of range, or too deeply nested).
+        """
+    def build_sig_script_for_covenant_decl(self, function_name: builtins.str, args: typing.Optional[typing.Any] = None, *, is_leader: builtins.bool = False) -> bytes:
+        r"""
+        Build the signature (unlocking) script for a covenant declaration entrypoint.
+        
+        Args:
+            function_name: The covenant entrypoint to call.
+            args: Native Python values matching the entrypoint's ABI input
+                types. Omit or pass None for an entrypoint that takes no
+                arguments.
+            is_leader: Select the leader path for covenants that distinguish a
+                leader from delegates (default: False).
+        
+        Returns:
+            bytes: The signature (unlocking) script.
+        
+        Raises:
+            SilverScriptError: If the entrypoint is unknown or an argument is
+                invalid (wrong type, out of range, or too deeply nested).
+        """
+    def check_consistency(self) -> None:
+        r"""
+        Verify the artifact's internal consistency, raising if it fails.
+        
+        Checks the recorded template hash against the bytecode, the state span
+        against the script, and the entries' dispatch tags for collisions —
+        across every contract in the loaded artifact, not only the selected one.
+        
+        This detects a corrupted or edited artifact. It does **not** prove the
+        bytecode was compiled from any particular source, so it does not make an
+        untrusted artifact trustworthy: take artifacts from a build you trust,
+        or compare `template_hash` against a value you already trust.
+        
+        Raises:
+            SilverScriptError: If the artifact is inconsistent.
+        """
+    def to_json(self) -> builtins.str:
+        r"""
+        Serialize the artifact back to JSON.
+        
+        Byte-for-byte what it was loaded from, so an artifact survives a
+        load/serialize round trip unchanged.
+        
+        Returns:
+            str: The portable artifact as pretty-printed JSON.
+        
+        Raises:
+            SilverScriptError: If the artifact cannot be serialized.
+        """
+    def __repr__(self) -> builtins.str: ...
+
+@typing.final
 class DebugCallResult:
     r"""
     The outcome of a `debug_call` simulation.
@@ -382,5 +512,36 @@ def debug_call(source: builtins.str, function_name: typing.Optional[builtins.str
     Raises:
         SilverScriptError: If compilation fails, the entrypoint or an argument
             is invalid, or the `tx` scenario is malformed.
+    """
+
+def load_artifact(json: builtins.str, contract_name: typing.Optional[builtins.str] = None) -> ContractArtifact:
+    r"""
+    Load a portable ABI artifact from JSON.
+    
+    **Experimental:** SilverScript and these bindings are under active
+    development; the API and the artifact schema may change in breaking ways
+    between releases. See the `kaspa.experimental.silverscript` module docs.
+    
+    Takes what
+    [`CompiledContract.artifact_json`][kaspa.experimental.silverscript.CompiledContract.artifact_json]
+    returns, or what upstream `silverc -c` writes. Compile once and ship the
+    artifact; derive addresses and build unlocking scripts from it at runtime
+    with no source and no compiler.
+    
+    `debug_call` and compiling with different constructor arguments need the
+    source and are not available from an artifact — an artifact describes one
+    already-compiled contract.
+    
+    Args:
+        json: The artifact JSON.
+        contract_name: Which contract to select. Omit for an artifact that
+            holds exactly one (what `compile` produces).
+    
+    Returns:
+        ContractArtifact: The loaded artifact.
+    
+    Raises:
+        SilverScriptError: If the JSON is malformed, its schema version is
+            unsupported, or `contract_name` is absent or ambiguous.
     """
 

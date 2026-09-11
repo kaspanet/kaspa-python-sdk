@@ -26,6 +26,7 @@ use silverscript_lang::compiler::{
 };
 use silverscript_lang::errors::CompilerError;
 
+pub mod artifact;
 pub mod debug;
 
 create_py_exception!(
@@ -45,6 +46,12 @@ pub(crate) fn map_err(err: CompilerError) -> PyErr {
 }
 
 pub(crate) fn map_codec_err(err: CodecError) -> PyErr {
+    PySilverScriptError::new_err(err.to_string())
+}
+
+/// Serializing a portable ABI artifact can only fail on a serializer error,
+/// never on the artifact's own shape — but the error type is still fallible.
+pub(crate) fn to_json_err(err: serde_json::Error) -> PyErr {
     PySilverScriptError::new_err(err.to_string())
 }
 
@@ -491,6 +498,44 @@ pub struct PyCompiledContract {
     compiled: CompiledCell,
 }
 
+/// Build a signature (unlocking) script from a portable ABI artifact.
+///
+/// `covenant` selects the encoding: `None` for a plain entrypoint, `Some(
+/// is_leader)` for a covenant declaration. Shared by `CompiledContract` and
+/// `ContractArtifact` so the argument narrowing, the `covenant_decl_entry`
+/// guard and every error message are identical on both, by construction.
+pub(crate) fn sig_script(
+    artifact: &SilAbiArtifact,
+    contract_name: &str,
+    function_name: &str,
+    args: &[Value],
+    covenant: Option<bool>,
+) -> PyResult<Vec<u8>> {
+    let call_args = match ArgTypes::new(artifact, contract_name) {
+        Some(types) => {
+            let entry = match covenant {
+                None => types.contract().entry(function_name),
+                Some(is_leader) => types.covenant_decl_entry(function_name, is_leader)?,
+            };
+            types.lower_call(args, entry)?
+        }
+        None => untyped_artifacts(args),
+    };
+    match covenant {
+        None => {
+            encode_contract_entry_sig_script(artifact, contract_name, function_name, &call_args)
+        }
+        Some(is_leader) => encode_contract_covenant_decl_sig_script(
+            artifact,
+            contract_name,
+            function_name,
+            is_leader,
+            &call_args,
+        ),
+    }
+    .map_err(map_codec_err)
+}
+
 impl PyCompiledContract {
     fn sig_script(
         &self,
@@ -498,33 +543,13 @@ impl PyCompiledContract {
         args: Vec<Value>,
         covenant: Option<bool>,
     ) -> PyResult<Vec<u8>> {
-        let artifact = &self.compiled.borrow_dependent().artifact;
-        let call_args = match ArgTypes::new(artifact, &self.contract_name) {
-            Some(types) => {
-                let entry = match covenant {
-                    None => types.contract().entry(function_name),
-                    Some(is_leader) => types.covenant_decl_entry(function_name, is_leader)?,
-                };
-                types.lower_call(&args, entry)?
-            }
-            None => untyped_artifacts(&args),
-        };
-        match covenant {
-            None => encode_contract_entry_sig_script(
-                artifact,
-                &self.contract_name,
-                function_name,
-                &call_args,
-            ),
-            Some(is_leader) => encode_contract_covenant_decl_sig_script(
-                artifact,
-                &self.contract_name,
-                function_name,
-                is_leader,
-                &call_args,
-            ),
-        }
-        .map_err(map_codec_err)
+        sig_script(
+            &self.compiled.borrow_dependent().artifact,
+            &self.contract_name,
+            function_name,
+            &args,
+            covenant,
+        )
     }
 }
 
@@ -587,8 +612,7 @@ impl PyCompiledContract {
     /// Raises:
     ///     SilverScriptError: If the artifact cannot be serialized.
     pub fn artifact_json(&self) -> PyResult<String> {
-        to_pretty_json(&self.compiled.borrow_dependent().artifact)
-            .map_err(|err| PySilverScriptError::new_err(err.to_string()))
+        to_pretty_json(&self.compiled.borrow_dependent().artifact).map_err(to_json_err)
     }
 
     /// Build the signature (unlocking) script for an entrypoint.
@@ -656,7 +680,26 @@ impl PyCompiledContract {
     }
 }
 
+/// Build one Python-facing ABI entry, if the contract declares it.
+fn entry_abi(contract: &SilContractArtifact, name: &str) -> Option<PyEntryAbi> {
+    contract.entries.get(name).map(|entry| PyEntryAbi {
+        name: name.to_string(),
+        params: entry
+            .params
+            .iter()
+            .map(|param| PyParamAbi {
+                name: param.name.clone(),
+                type_name: artifact_type_name(&param.ty),
+            })
+            .collect(),
+        dispatch_tag: entry.dispatch_tag.into_bytes(),
+    })
+}
+
 /// Build the Python-facing ABI for `contract_name` from a portable ABI artifact.
+///
+/// Source-ordered: the AST is walked first, and anything it doesn't name (a
+/// compiler-generated covenant entry) is appended in the artifact's own order.
 fn abi_entries(
     artifact: &SilAbiArtifact,
     contract_name: &str,
@@ -665,35 +708,34 @@ fn abi_entries(
     let Some(contract) = artifact.contract(contract_name) else {
         return Vec::new();
     };
-    let build = |name: &str| {
-        contract.entries.get(name).map(|entry| PyEntryAbi {
-            name: name.to_string(),
-            params: entry
-                .params
-                .iter()
-                .map(|param| PyParamAbi {
-                    name: param.name.clone(),
-                    type_name: artifact_type_name(&param.ty),
-                })
-                .collect(),
-            dispatch_tag: entry.dispatch_tag.into_bytes(),
-        })
-    };
 
     let mut out: Vec<PyEntryAbi> = Vec::with_capacity(contract.entries.len());
     for function in &ast.functions {
-        if let Some(entry) = build(&function.name) {
+        if let Some(entry) = entry_abi(contract, &function.name) {
             out.push(entry);
         }
     }
     for name in contract.entries.keys() {
         if !out.iter().any(|entry| &entry.name == name)
-            && let Some(entry) = build(name)
+            && let Some(entry) = entry_abi(contract, name)
         {
             out.push(entry);
         }
     }
     out
+}
+
+/// Build the Python-facing ABI for a contract reached through a loaded
+/// artifact, in the artifact's own (alphabetical) `BTreeMap` order.
+///
+/// Source order lives only in the AST, which a loaded artifact doesn't carry —
+/// see `ContractArtifact.abi`.
+pub(crate) fn abi_entries_sorted(contract: &SilContractArtifact) -> Vec<PyEntryAbi> {
+    contract
+        .entries
+        .keys()
+        .filter_map(|name| entry_abi(contract, name))
+        .collect()
 }
 
 /// Compile SilverScript `source` into a `CompiledContract`.
@@ -773,6 +815,8 @@ fn silverscript(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyCompiledContract>()?;
     m.add_class::<PyEntryAbi>()?;
     m.add_class::<PyParamAbi>()?;
+    m.add_function(wrap_pyfunction!(artifact::load_artifact, m)?)?;
+    m.add_class::<artifact::PyContractArtifact>()?;
     m.add_function(wrap_pyfunction!(debug::py_debug_call, m)?)?;
     m.add_class::<debug::PyDebugCallResult>()?;
     m.add_class::<debug::PyFailureReport>()?;

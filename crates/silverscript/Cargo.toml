@@ -21,6 +21,7 @@ kaspa-python-sdk-core = { path = "../core" }
 pyo3 = { version = "0.27.1" }
 pyo3-stub-gen = "0.17.2"
 self_cell = "1"
+serde_json = "1.0.149"
 silverscript-lang = { git = "https://github.com/kaspanet/silverscript.git", rev = "3ed973335b59269293564805cc2c58a14595ec03" }
 silverscript-abi = { git = "https://github.com/kaspanet/silverscript.git", rev = "3ed973335b59269293564805cc2c58a14595ec03" }
 debugger-session = { git = "https://github.com/kaspanet/silverscript.git", rev = "3ed973335b59269293564805cc2c58a14595ec03" }

@@ -22,6 +22,12 @@ script the node accepts.
   failure report with decoded variables
   ([`debug_call`](../../reference/SilverScript/Functions/debug_call.md);
   see [Debugging](debugging.md)).
+- **Ship the compiled contract instead of its source** — compile once,
+  then derive addresses and build unlocking scripts from the portable
+  artifact with no compiler
+  ([`load_artifact`](../../reference/SilverScript/Functions/load_artifact.md) →
+  [`ContractArtifact`](../../reference/SilverScript/Classes/ContractArtifact.md);
+  see [Compiling Contracts](compiling.md#loading-an-artifact-back)).
 
 Everything else (wrapping the locking script in a P2SH address,
 building & signing the transaction, submitting) is
@@ -113,6 +119,6 @@ transitions — each a real on-chain transaction. The
 
 | Page | What it covers |
 | --- | --- |
-| [Compiling Contracts](compiling.md) | [`compile`](../../reference/SilverScript/Functions/compile.md), constructor args, the [`CompiledContract`](../../reference/SilverScript/Classes/CompiledContract.md) surface, reading the ABI. |
+| [Compiling Contracts](compiling.md) | [`compile`](../../reference/SilverScript/Functions/compile.md), constructor args, the [`CompiledContract`](../../reference/SilverScript/Classes/CompiledContract.md) surface, reading the ABI, the portable artifact. |
 | [Unlocking Scripts](unlocking-scripts.md) | Entrypoints, [`build_sig_script`](../../reference/SilverScript/Classes/CompiledContract.md), the Python → SilverScript argument mapping. |
 | [Covenants](covenants.md) | Stateful contracts, [`build_sig_script_for_covenant_decl`](../../reference/SilverScript/Classes/CompiledContract.md), the Counter walkthrough. |

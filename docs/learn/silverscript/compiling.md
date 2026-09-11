@@ -131,5 +131,69 @@ Three things about the encoding are worth knowing before you parse it:
 Note that `state_layout` appears here under the artifact's own spelling,
 `compiled.state_span`, with the keys `offset` and `len`.
 
+## Loading an artifact back
+
+[`load_artifact`](../../reference/SilverScript/Functions/load_artifact.md)
+reads that JSON back into a
+[`ContractArtifact`](../../reference/SilverScript/Classes/ContractArtifact.md):
+a contract you can derive an address from and spend, with no source and no
+compiler.
+
+```python
+from pathlib import Path
+
+# In CI, once:
+Path("guard.json").write_text(silverscript.compile(SOURCE, [100]).artifact_json())
+
+# At runtime, from guard.json alone:
+artifact = silverscript.load_artifact(Path("guard.json").read_text())
+
+artifact.bytecode                           # the same redeem script
+artifact.build_sig_script("check", [150])   # the same unlocking script
+```
+
+The bytes are identical to the ones the
+[`CompiledContract`](../../reference/SilverScript/Classes/CompiledContract.md)
+would have produced. Both encode against this same artifact — it is the only
+thing `build_sig_script` ever reads.
+
+A `ContractArtifact` carries `contract_name`, `compiler_version`,
+`schema_version`, `bytecode`, `template_hash`, `state_span` and `abi`, plus
+both `build_sig_script` methods and `to_json()`. Two things it can't do,
+because they need the source: [`debug_call`](debugging.md), and compiling with
+different constructor arguments — those are a different contract, and so a
+different artifact.
+
+If the JSON holds more than one contract, name the one you want:
+`load_artifact(text, "Guard")`. Omitting the name is fine for anything
+`compile()` produced, which is always a single contract.
+
+!!! warning "`ContractArtifact.abi` is alphabetical"
+    [`CompiledContract.abi`](../../reference/SilverScript/Classes/CompiledContract.md)
+    is in source order, read off the parsed source. An artifact has no parsed
+    source — its entries live in a sorted map — so
+    [`ContractArtifact.abi`](../../reference/SilverScript/Classes/ContractArtifact.md)
+    comes back alphabetically. Select entries by `name` rather than by index
+    and the difference never bites.
+
+### Checking an artifact you didn't build
+
+`load_artifact` checks that the JSON parses and that its schema version is one
+this release understands. It does not check that the artifact describes itself
+consistently — `check_consistency()` does:
+
+```python
+artifact.check_consistency()   # raises SilverScriptError if it doesn't hold together
+```
+
+That verifies the recorded `template_hash` against the bytecode, the state span
+against the script, and the entrypoints' dispatch tags for collisions. It
+catches corruption and casual edits.
+
+It cannot tell you the bytecode was compiled from any particular source —
+nothing inside an artifact can. An artifact is exactly as trustworthy as where
+you got it: take it from a build you control, or compare its `template_hash`
+against a value you already trust.
+
 Next: turn one of these entrypoints into an unlocking script in
 [Unlocking Scripts](unlocking-scripts.md).
