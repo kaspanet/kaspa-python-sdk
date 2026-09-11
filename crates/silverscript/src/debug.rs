@@ -1195,7 +1195,10 @@ fn build_covenant_input_sigscript(
 ) -> PyResult<Vec<u8>> {
     let entrypoint_name = target.generated_entrypoint_name_for(is_leader);
     let args = if target.binding == DebugCovenantBinding::Cov && !is_leader {
-        Vec::new()
+        // A cov-bound delegate call carries the delegate entrypoint's own
+        // arguments, which are unrelated to the leader's — `#[covenant.delegate]`
+        // gives the generated `__delegate` entrypoint that body's parameters.
+        call_args.to_vec()
     } else {
         let function = compiled
             .contract
@@ -1576,32 +1579,13 @@ fn run_harness(
             } else {
                 active_sigscript.clone()
             }
-        } else if let Some(target) = covenant_target.as_ref()
-            && target.binding == DebugCovenantBinding::Cov
-            && input.covenant_id == active_covenant_id
-            && input_redeem_scripts[input_idx].is_some()
-        {
-            // Companion input of the same covenant group: auto-build its
-            // leader/delegate call so the group verifies as a whole.
-            let is_leader = Some(input_idx) == companion_leader_index;
-            let input_ctor = input
-                .constructor_args
-                .clone()
-                .unwrap_or_else(|| root_ctor.clone());
-            let auto_action = build_covenant_input_sigscript(
-                compile_cache.get(&input_ctor)?,
-                target,
-                is_leader,
-                call_args,
-                covenant_group_output_states.as_deref(),
-            )?;
-            combine_action_and_redeem(
-                &auto_action,
-                input_redeem_scripts[input_idx]
-                    .as_ref()
-                    .expect("checked is_some above"),
-            )?
         } else if let Some(redeem) = input_redeem_scripts[input_idx].as_ref() {
+            // Non-active input: only its redeem script matters. The session
+            // evaluates the active input alone, and a cov-bound leader reads
+            // its group companions through `OpTxInputScriptSigLen` /
+            // `OpTxInputScriptSigSubstr`, which take the *tail* of the
+            // signature script — the redeem push — to prove membership. An
+            // action prefix here would never be executed.
             sigscript_push_script(redeem)?
         } else {
             vec![]

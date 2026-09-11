@@ -689,9 +689,12 @@ impl PyCompiledContract {
     ///
     /// Args:
     ///     function_name: The covenant entrypoint to call.
-    ///     args: Native Python values matching the entrypoint's ABI input
-    ///         types. Omit or pass None for an entrypoint that takes no
-    ///         arguments.
+    ///     args: Native Python values matching the ABI input types of the
+    ///         entry this call resolves to — the declaration's leader entry,
+    ///         or the contract's shared delegate entry when `is_leader` is
+    ///         False. A `#[covenant.delegate]` body gives the delegate entry
+    ///         its own parameters, so the two paths take different arguments.
+    ///         Omit or pass None for an entry that takes no arguments.
     ///     is_leader: Select the leader path for covenants that distinguish a
     ///         leader from delegates (default: False).
     ///

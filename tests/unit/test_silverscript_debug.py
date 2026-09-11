@@ -125,6 +125,43 @@ contract Tagged(byte[4] init_tag) {
 }
 """
 
+# A cov-bound covenant group: every input of the group is spent in one
+# transaction, the lowest-index input is the leader and runs the declaration
+# body, the rest defer to the shared delegate entrypoint. Ported from
+# upstream's `cov_debug_demo` CLI fixture.
+COV_GROUP = """
+pragma silverscript ^0.1.0;
+contract CovDebugDemo(int initial_value) {
+    int value = initial_value;
+    #[covenant(binding = cov, from = 2, to = 2, mode = verification)]
+    function rebalance(State[] prev_states, State[] new_states) {
+        require(prev_states.length == 2);
+        require(prev_states[0].value == 10);
+        require(prev_states[1].value == 20);
+        require(new_states.length == 2);
+    }
+}
+"""
+
+# The same shape, but with a `#[covenant.delegate]` body that declares its own
+# parameters: a delegate spend carries the delegate's arguments, not the
+# leader's. Ported from upstream's `cov_distinct_delegate_args` CLI fixture.
+COV_DELEGATE_ARGS = """
+pragma silverscript ^0.1.0;
+contract CovDistinctDelegateArgs() {
+    byte dummy = 0x00;
+    #[covenant(binding = cov, from = 2, to = 2)]
+    function transfer(State[] prev_states, State[] new_states, int amount, bool allowed) {
+        require(amount >= 0);
+        require(allowed);
+    }
+    #[covenant.delegate]
+    function authorizeDelegate(byte[] witness) {
+        require(witness.length > 0);
+    }
+}
+"""
+
 COVENANT_ID = "11" * 32
 
 
@@ -167,6 +204,51 @@ def marker_scenario(prev_tag, next_tag):
                 "state": {"tag": next_tag},
             }
         ],
+    }
+
+
+def cov_group_scenario(active_input_index):
+    """A 2-in/2-out cov-bound group, debugging one of its two inputs."""
+    return {
+        "active_input_index": active_input_index,
+        "inputs": [
+            {
+                "utxo_value": 5000,
+                "covenant_id": COVENANT_ID,
+                "constructor_args": [10],
+            },
+            {
+                "utxo_value": 5000,
+                "covenant_id": COVENANT_ID,
+                "constructor_args": [20],
+            },
+        ],
+        "outputs": [
+            {
+                "value": 5000,
+                "covenant_id": COVENANT_ID,
+                "authorizing_input": 0,
+                "constructor_args": [30],
+            },
+            {
+                "value": 5000,
+                "covenant_id": COVENANT_ID,
+                "authorizing_input": 0,
+                "constructor_args": [40],
+            },
+        ],
+    }
+
+
+def delegate_args_scenario(active_input_index):
+    """A 2-in/0-out cov-bound group whose delegate takes its own arguments."""
+    return {
+        "active_input_index": active_input_index,
+        "inputs": [
+            {"utxo_value": 5000, "covenant_id": COVENANT_ID},
+            {"utxo_value": 5000, "covenant_id": COVENANT_ID},
+        ],
+        "outputs": [],
     }
 
 
@@ -454,6 +536,59 @@ class TestTxScenario:
                 TAGGED, "retag", [b"\xaa\xbb\xcc\xdd"], [b"\x01\x02\x03\x04"], tx=tx
             )
             assert result.success is True, f"spelling {prev!r} -> {next_!r}"
+
+
+# ---------------------------------------------------------------------------
+# `binding = cov` covenant groups: leader and delegate spends
+# ---------------------------------------------------------------------------
+
+class TestCovBinding:
+    def test_group_leader_spend(self):
+        # Input 0 is the lowest-index member, so it runs the declaration body.
+        result = silverscript.debug_call(COV_GROUP, "rebalance", tx=cov_group_scenario(0))
+        assert result.success is True
+
+    def test_group_delegate_spend(self):
+        # Input 1 defers to the shared delegate entrypoint, which takes no
+        # arguments here because the contract declares no delegate body.
+        result = silverscript.debug_call(COV_GROUP, "rebalance", tx=cov_group_scenario(1))
+        assert result.success is True
+
+    def test_group_leader_sees_every_input_state(self):
+        # `prev_states[1].value == 20` comes from the companion input, which
+        # the leader reads out of that input's redeem script.
+        tx = cov_group_scenario(0)
+        tx["inputs"][1]["constructor_args"] = [21]
+        result = silverscript.debug_call(COV_GROUP, "rebalance", tx=tx)
+        assert result.success is False
+
+    def test_delegate_body_args_are_the_delegate_s_own(self):
+        # A parameterised `#[covenant.delegate]` body means a delegate spend
+        # carries that body's arguments, not the leader's.
+        result = silverscript.debug_call(
+            COV_DELEGATE_ARGS, "transfer", [b"\x01"], tx=delegate_args_scenario(1)
+        )
+        assert result.success is True
+
+    def test_leader_args_unaffected_by_parameterised_delegate(self):
+        result = silverscript.debug_call(
+            COV_DELEGATE_ARGS, "transfer", [1, True], tx=delegate_args_scenario(0)
+        )
+        assert result.success is True
+
+    def test_delegate_body_require_can_fail(self):
+        # An empty witness fails the delegate's own `require`, proving the
+        # argument reached the delegate body rather than being dropped.
+        result = silverscript.debug_call(
+            COV_DELEGATE_ARGS, "transfer", [b""], tx=delegate_args_scenario(1)
+        )
+        assert result.success is False
+
+    def test_leader_body_require_can_fail(self):
+        result = silverscript.debug_call(
+            COV_DELEGATE_ARGS, "transfer", [1, False], tx=delegate_args_scenario(0)
+        )
+        assert result.success is False
 
 
 # ---------------------------------------------------------------------------
