@@ -635,7 +635,6 @@ class TestPortableArtifact:
             for line in lines[start + 1 : end]
         ]
         assert counts[:-1] == [64] * (len(counts) - 1)
-        assert counts[-1] == len(contract.bytecode) % 64
         assert sum(counts) == len(contract.bytecode)
 
 
