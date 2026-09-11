@@ -13,8 +13,8 @@ covenant input carries no Schnorr signature (exactly like a covenant transition
 in examples/silverscript/counter.py). Only the normal P2PK funding input of the
 commit transaction is signed.
 
-`OpZkPrecompile` is gated by the same Toccata activation as the covenant
-opcodes, so this needs a network where Toccata is active — testnet-10. The proof
+`OpZkPrecompile` arrived with the Toccata hardfork alongside the covenant
+opcodes and is active on every network; this script targets testnet-10. The proof
 fixtures under examples/zk/data/ are a matching set (image id, journal hash, and
 the borsh-encoded receipt), so the redeem genuinely verifies on-chain.
 
@@ -60,10 +60,6 @@ TX_VERSION = 1
 FUNDING_COMPUTE_BUDGET = 10
 ZK_COMPUTE_BUDGET = 1600
 
-# Toccata activation DAA score for testnet-10. At/above this score, covenants and
-# the zk precompile are active. Below it, the redeem would be rejected.
-TOCCATA_TESTNET10 = 467_579_632
-
 # A matching RISC Zero Groth16 proof set (image id, journal hash, receipt) shipped
 # with rusty-kaspa's zk-sdk. The receipt is read from a file rather than inlined.
 IMAGE_ID = "75641a540ee2ad9ee5902bcdcdb8b55c0bef4a28287309b858f97b1356c6c2e0"
@@ -84,7 +80,7 @@ def build_zk_scripts() -> tuple[str, str]:
     """
     receipt = (DATA / "groth.rcpt.hex").read_text().strip()
 
-    builder = ZkScriptBuilder.new_r0(covenants_enabled=True)
+    builder = ZkScriptBuilder.new_r0()
     builder.commit_to_groth16(IMAGE_ID)
     finalized = builder.finalize_with_groth16_proof(receipt, JOURNAL_HASH)
     return finalized.redeem_script, finalized.sig_script
@@ -256,16 +252,6 @@ async def main() -> None:
     print("Connected\n")
 
     try:
-        # Activation precheck: the zk precompile only runs where Toccata is active.
-        info = await client.get_block_dag_info()
-        daa = int(info["virtualDaaScore"])
-        if daa < TOCCATA_TESTNET10:
-            raise SystemExit(
-                f"Toccata is not active yet on {NETWORK_ID} "
-                f"(virtual DAA {daa:,} < activation {TOCCATA_TESTNET10:,}); "
-                "the zk redeem would be rejected. Try again later."
-            )
-
         # Build the zk scripts up front so we can show the P2SH address.
         redeem_script, sig_script = build_zk_scripts()
         p2sh_spk = pay_to_script_hash_script(redeem_script)

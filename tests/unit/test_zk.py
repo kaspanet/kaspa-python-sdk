@@ -12,6 +12,7 @@ image id / journal hash below are the matching public inputs for `groth.rcpt.hex
 """
 
 import pathlib
+import warnings
 
 import pytest
 
@@ -32,6 +33,9 @@ GROTH16_JOURNAL_HASH = "5df6e0e2761359d30a8275058e299fcc0381534545f55cf43e41983f
 
 # Public inputs matching succinct.rcpt.hex.
 SUCCINCT_JOURNAL = "5df6e0e2761359d30a8275058e299fcc0381534545f55cf43e41983f5d4c9456"
+
+# The post-Toccata script size limit (kaspa_txscript::MAX_SCRIPTS_SIZE).
+MAX_SCRIPT_SIZE = 1_000_000
 
 
 def groth_receipt() -> str:
@@ -58,13 +62,13 @@ def is_hex(s: str) -> bool:
 # -----------------------------------------------------------------------------
 
 def test_new_r0_starts_unbounded_and_empty():
-    b = ZkScriptBuilder.new_r0(covenants_enabled=True)
+    b = ZkScriptBuilder.new_r0()
     assert b.script() == ""
     assert "unbounded" in repr(b)
 
 
 def test_groth16_full_flow():
-    b = ZkScriptBuilder.new_r0(covenants_enabled=True)
+    b = ZkScriptBuilder.new_r0()
     b.commit_to_groth16(GROTH16_IMAGE_ID)
 
     # After commit, script() is the redeem (commit) script.
@@ -84,7 +88,7 @@ def test_groth16_full_flow():
 
 
 def test_finalize_consumes_builder():
-    b = ZkScriptBuilder.new_r0(covenants_enabled=True)
+    b = ZkScriptBuilder.new_r0()
     b.commit_to_groth16(GROTH16_IMAGE_ID)
     b.finalize_with_groth16_proof(groth_receipt(), GROTH16_JOURNAL_HASH)
 
@@ -101,7 +105,7 @@ def test_prepare_r0_groth16_proof_round_trip():
 
     # The standalone prepare output is exactly what finalize pushes into the
     # sig script.
-    b = ZkScriptBuilder.new_r0(covenants_enabled=True)
+    b = ZkScriptBuilder.new_r0()
     b.commit_to_groth16(GROTH16_IMAGE_ID)
     finalized = b.finalize_with_groth16_proof(groth_receipt(), GROTH16_JOURNAL_HASH)
     assert proof in finalized.sig_script
@@ -113,13 +117,13 @@ def test_prepare_r0_groth16_proof_round_trip():
 
 def test_fixed_journal_fragment_builds():
     # Compose a redeem script by hand using the fixed-journal verifier fragment.
-    b = ZkScriptBuilder.new_r0(covenants_enabled=True)
+    b = ZkScriptBuilder.new_r0()
     b.append_r0_groth16_verifier_with_fixed_journal(GROTH16_IMAGE_ID, GROTH16_JOURNAL_HASH)
     assert is_hex(b.script())
 
 
 def test_add_data_appends():
-    b = ZkScriptBuilder.new_r0(covenants_enabled=True)
+    b = ZkScriptBuilder.new_r0()
     b.add_data("deadbeef")
     script = b.script()
     assert is_hex(script)
@@ -149,7 +153,7 @@ def test_accepts_bytes_and_list_inputs():
         bytes.fromhex(GROTH16_IMAGE_ID),
         list(bytes.fromhex(GROTH16_IMAGE_ID)),
     ):
-        b = ZkScriptBuilder.new_r0(covenants_enabled=True)
+        b = ZkScriptBuilder.new_r0()
         b.commit_to_groth16(image_id)
         assert is_hex(b.script())
 
@@ -159,53 +163,77 @@ def test_accepts_bytes_and_list_inputs():
 # -----------------------------------------------------------------------------
 
 def test_finalize_before_commit_raises():
-    b = ZkScriptBuilder.new_r0(covenants_enabled=True)
+    b = ZkScriptBuilder.new_r0()
     with pytest.raises(ZkError):
         b.finalize_with_groth16_proof(groth_receipt(), GROTH16_JOURNAL_HASH)
 
 
 def test_double_commit_raises():
-    b = ZkScriptBuilder.new_r0(covenants_enabled=True)
+    b = ZkScriptBuilder.new_r0()
     b.commit_to_groth16(GROTH16_IMAGE_ID)
     with pytest.raises(ZkError):
         b.commit_to_groth16(GROTH16_IMAGE_ID)
 
 
 def test_succinct_finalize_on_groth16_bounded_raises():
-    b = ZkScriptBuilder.new_r0(covenants_enabled=True)
+    b = ZkScriptBuilder.new_r0()
     b.commit_to_groth16(GROTH16_IMAGE_ID)
     with pytest.raises(ZkError):
         b.finalize_with_succinct_proof(succinct_receipt(), SUCCINCT_JOURNAL)
 
 
 def test_bad_image_id_length_raises():
-    b = ZkScriptBuilder.new_r0(covenants_enabled=True)
+    b = ZkScriptBuilder.new_r0()
     with pytest.raises(ZkError):
         b.commit_to_groth16("00" * 31)  # 31 bytes, must be 32
 
 
 def test_bad_journal_hash_length_raises():
-    b = ZkScriptBuilder.new_r0(covenants_enabled=True)
+    b = ZkScriptBuilder.new_r0()
     b.commit_to_groth16(GROTH16_IMAGE_ID)
     with pytest.raises(ZkError):
         b.finalize_with_groth16_proof(groth_receipt(), "00" * 16)  # 16 bytes
 
 
 def test_bad_receipt_raises():
-    b = ZkScriptBuilder.new_r0(covenants_enabled=True)
+    b = ZkScriptBuilder.new_r0()
     b.commit_to_groth16(GROTH16_IMAGE_ID)
     with pytest.raises(ZkError):
         b.finalize_with_groth16_proof("deadbeef", GROTH16_JOURNAL_HASH)
 
 
-def test_failed_finalize_preserves_builder():
-    # Pre-Toccata limits reject the oversized proof push, so finalize fails —
-    # the builder must survive with its state and committed script intact
-    # instead of being consumed.
-    b = ZkScriptBuilder.new_r0(covenants_enabled=False)
+def test_failed_finalize_on_bad_argument_preserves_builder():
+    # A malformed (31-byte) journal hash is rejected before finalize touches
+    # anything — the builder must survive with its state and committed script
+    # intact instead of being consumed.
+    b = ZkScriptBuilder.new_r0()
     b.commit_to_groth16(GROTH16_IMAGE_ID)
     script_before = b.script()
     with pytest.raises(ZkError):
+        b.finalize_with_groth16_proof(groth_receipt(), GROTH16_JOURNAL_HASH[:-2])
+    assert b.script() == script_before
+    assert "state='groth16'" in repr(b)
+
+
+def test_failed_finalize_mid_build_preserves_builder():
+    # The same guarantee, but failing inside the scratch builder finalize uses
+    # — after the journal hash and proof pushes have landed. Padding the redeem
+    # script to within SLACK of the limit leaves room to commit but not for the
+    # sig script's redeem push.
+    PUSH_HEADER = 5  # OpPushData4 + 4-byte length
+    SLACK = 100  # < the 163 bytes the journal hash and proof pushes take
+
+    probe = ZkScriptBuilder.new_r0()
+    probe.commit_to_groth16(GROTH16_IMAGE_ID)
+    verifier_len = len(probe.script()) // 2
+
+    b = ZkScriptBuilder.new_r0()
+    b.add_data(bytes(MAX_SCRIPT_SIZE - verifier_len - PUSH_HEADER - SLACK))
+    b.commit_to_groth16(GROTH16_IMAGE_ID)
+    assert len(b.script()) // 2 <= MAX_SCRIPT_SIZE
+
+    script_before = b.script()
+    with pytest.raises(ZkError, match="maximum allowed canonical script length"):
         b.finalize_with_groth16_proof(groth_receipt(), GROTH16_JOURNAL_HASH)
     assert b.script() == script_before
     assert "state='groth16'" in repr(b)
@@ -214,7 +242,7 @@ def test_failed_finalize_preserves_builder():
 def test_drain_returns_script_and_consumes_builder():
     # Matching the WASM SDK (and unlike ScriptBuilder.drain), drain returns
     # the script bytes and consumes the builder for good.
-    b = ZkScriptBuilder.new_r0(covenants_enabled=True)
+    b = ZkScriptBuilder.new_r0()
     b.commit_to_groth16(GROTH16_IMAGE_ID)
     committed = b.script()
 
@@ -226,6 +254,63 @@ def test_drain_returns_script_and_consumes_builder():
 
 
 def test_bad_hash_fn_id_raises():
-    b = ZkScriptBuilder.new_r0(covenants_enabled=True)
+    b = ZkScriptBuilder.new_r0()
     with pytest.raises(ZkError):
         b.commit_to_succinct(GROTH16_IMAGE_ID, GROTH16_IMAGE_ID, "blake2b")
+
+
+# -----------------------------------------------------------------------------
+# Builder flags
+# -----------------------------------------------------------------------------
+
+def test_new_r0_covenants_enabled_is_deprecated_no_op():
+    # Mirrors the WASM SDK's deprecated `covenantsEnabled` option: either value
+    # is accepted but ignored — rusty-kaspa removed the flag, so the script
+    # limits are always the post-Toccata ones and finalizing succeeds regardless.
+    for value in (True, False):
+        with pytest.warns(DeprecationWarning, match="covenants_enabled"):
+            b = ZkScriptBuilder.new_r0(covenants_enabled=value)
+        b.commit_to_groth16(GROTH16_IMAGE_ID)
+        finalized = b.finalize_with_groth16_proof(groth_receipt(), GROTH16_JOURNAL_HASH)
+        assert is_hex(finalized.sig_script)
+
+
+def test_new_r0_no_deprecation_warning_when_kwarg_omitted():
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", DeprecationWarning)
+        ZkScriptBuilder.new_r0()
+        ZkScriptBuilder.new_r0(sigop_script_units=250)
+
+
+# -----------------------------------------------------------------------------
+# Dynamic image id fragment
+# -----------------------------------------------------------------------------
+
+def test_append_r0_groth16_verifier_dynamic_image_id_matches_static():
+    # The static-image-id fragment is exactly `add_data(image_id)` followed by
+    # the dynamic one, which consumes the image id from the stack.
+    static = ZkScriptBuilder.new_r0()
+    static.append_r0_groth16_verifier(GROTH16_IMAGE_ID)
+
+    dynamic = ZkScriptBuilder.new_r0()
+    dynamic.add_data(GROTH16_IMAGE_ID)
+    dynamic.append_r0_groth16_verifier_dynamic_image_id()
+
+    assert is_hex(static.script())
+    assert dynamic.script() == static.script()
+
+
+def test_append_r0_groth16_verifier_dynamic_image_id_does_not_advance_state():
+    b = ZkScriptBuilder.new_r0()
+    b.append_r0_groth16_verifier_dynamic_image_id()
+    assert "unbounded" in repr(b)
+    # Still unbounded, so a commit is allowed afterwards.
+    b.commit_to_groth16(GROTH16_IMAGE_ID)
+    assert "state='groth16'" in repr(b)
+
+
+def test_append_r0_groth16_verifier_dynamic_image_id_on_consumed_builder_raises():
+    b = ZkScriptBuilder.new_r0()
+    b.drain()
+    with pytest.raises(ZkError):
+        b.append_r0_groth16_verifier_dynamic_image_id()

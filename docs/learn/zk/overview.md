@@ -79,7 +79,7 @@ from kaspa import ZkScriptBuilder, address_from_script_public_key, pay_to_script
 # From your prover: the guest program's 32-byte image id (hex).
 IMAGE_ID = "75641a540ee2ad9ee5902bcdcdb8b55c0bef4a28287309b858f97b1356c6c2e0"
 
-builder = ZkScriptBuilder.new_r0(covenants_enabled=True)
+builder = ZkScriptBuilder.new_r0()
 builder.commit_to_groth16(IMAGE_ID)
 
 # The redeem script, wrapped in a P2SH lock and turned into a fundable address.
