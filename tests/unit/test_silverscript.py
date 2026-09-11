@@ -346,6 +346,22 @@ class TestTypeSafety:
                 "pragma silverscript ^99.0.0;\ncontract B() { entry m() { require(true); } }"
             )
 
+    def test_argument_count_errors_read_as_caller_mistakes(self):
+        # Upstream wraps the constructor count mismatch in
+        # CompilerError::Unsupported, which would reach Python as
+        # "unsupported feature: constructor argument count mismatch: ...".
+        # Passing the wrong number of arguments is a caller mistake, so the
+        # binding raises the message bare — the same shape the entrypoint's own
+        # count mismatch already has. Pinned so upstream-fidelity work does not
+        # quietly reintroduce the prefix.
+        with pytest.raises(silverscript.SilverScriptError) as exc:
+            silverscript.compile(GUARD, [100, 200])
+        assert str(exc.value) == "constructor argument count mismatch: expected 1, got 2"
+
+        with pytest.raises(silverscript.SilverScriptError) as exc:
+            silverscript.compile(GUARD, [100]).build_sig_script("check", [1, 2])
+        assert str(exc.value) == "entry `Guard::check` expects 1 arguments, got 2"
+
 
 # ---------------------------------------------------------------------------
 # Determinism & the recompile assumption — address stability

@@ -38,8 +38,8 @@ use pyo3::types::{PyByteArray, PyBytes, PyDict, PyList, PyString};
 use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pyfunction, gen_stub_pymethods};
 use silverscript_abi::{ArtifactValue, SilAbiArtifact, encode_contract_entry_sig_script};
 use silverscript_lang::ast::{
-    ArrayDim, ContractAst, Expr, ExprKind, StateFieldExpr, TypeBase, TypeRef, parse_contract_ast,
-    parse_type_ref,
+    ArrayDim, ContractAst, Expr, ExprKind, STATE_TYPE_NAME, StateFieldExpr, TypeBase, TypeRef,
+    parse_contract_ast, parse_type_ref,
 };
 use silverscript_lang::compiler::{
     CompileOptions, CompiledContract, compile_contract, compile_contract_ast,
@@ -48,7 +48,7 @@ use silverscript_lang::compiler::{
 
 use crate::{
     ArgTypes, PySilverScriptError, Value, collect_args, ctor_exprs_for, map_codec_err, map_err,
-    py_to_value, untyped_artifacts,
+    py_to_value, sig_script, untyped_artifacts,
 };
 
 const DEBUG_OPTS: CompileOptions = CompileOptions {
@@ -527,7 +527,7 @@ type StateShapes = HashMap<String, Vec<(String, TypeRef)>>;
 fn state_shapes(contract: &ContractAst<'_>) -> StateShapes {
     let mut shapes = HashMap::new();
     shapes.insert(
-        "State".to_string(),
+        STATE_TYPE_NAME.to_string(),
         contract
             .fields
             .iter()
@@ -704,8 +704,10 @@ fn state_value_to_expr(state: &Value, shapes: &StateShapes) -> PyResult<Expr<'st
     let Value::Struct(entries) = state else {
         return Err(err("state value must be a dict of state fields"));
     };
-    let fields = shapes.get("State").expect("State shape always present");
-    typed_struct_to_expr(entries, fields, shapes, "state field", "State")
+    let fields = shapes
+        .get(STATE_TYPE_NAME)
+        .expect("State shape always present");
+    typed_struct_to_expr(entries, fields, shapes, "state field", STATE_TYPE_NAME)
 }
 
 // ---------------------------------------------------------------------------
@@ -1139,11 +1141,12 @@ fn materialize_script_for_explicit_state<'i>(
 }
 
 fn is_state_type(type_ref: &TypeRef) -> bool {
-    type_ref.is_custom() && matches!(&type_ref.base, TypeBase::Custom(name) if name == "State")
+    type_ref.is_custom()
+        && matches!(&type_ref.base, TypeBase::Custom(name) if name == STATE_TYPE_NAME)
 }
 
 fn is_state_array_type(type_ref: &TypeRef) -> bool {
-    matches!(&type_ref.base, TypeBase::Custom(name) if name == "State")
+    matches!(&type_ref.base, TypeBase::Custom(name) if name == STATE_TYPE_NAME)
         && matches!(type_ref.array_dims.as_slice(), [ArrayDim::Dynamic])
 }
 
@@ -1590,13 +1593,15 @@ fn run_harness(
             )?,
         }
     } else {
-        encode_contract_entry_sig_script(
+        // The same path `CompiledContract.build_sig_script` takes, so a script
+        // debugged here and one built for broadcast cannot drift apart.
+        sig_script(
             &active_compiled.artifact,
             &active_compiled.contract.contract_name,
             &selected_name,
-            &entry_call_artifacts(active_compiled, &selected_name, call_args)?,
-        )
-        .map_err(map_codec_err)?
+            call_args,
+            None,
+        )?
     };
 
     // --- Assemble the transaction ---

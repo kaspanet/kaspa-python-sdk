@@ -343,6 +343,14 @@ fn ctor_artifact_for(
 ///
 /// Mirrors upstream's private `artifact_values_to_constructor_args`, which is
 /// not exported — the per-argument `artifact_value_to_expr` is.
+///
+/// The count check deliberately raises a bare message where upstream wraps the
+/// identical text in `CompilerError::Unsupported`, which would surface in
+/// Python as "unsupported feature: constructor argument count mismatch: …".
+/// Passing the wrong number of arguments is a caller mistake, not an
+/// unsupported feature, and the bare form matches how this module reports every
+/// other argument-shape error it checks itself — including the entrypoint's own
+/// count mismatch, "entry `C::f` expects N arguments, got M".
 pub(crate) fn ctor_exprs_for<'i>(
     values: &[Value],
     contract: &ContractAst<'i>,
