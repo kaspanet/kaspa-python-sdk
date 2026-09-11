@@ -90,5 +90,46 @@ on the entrypoint's name and parameter types, never on constructor arguments:
 every instance of a contract shares the same tags. It is also the final data
 push of every signature script built for that entrypoint.
 
+## The portable artifact
+
+Behind the ABI is a *portable artifact* — the full machine-readable
+description of the compiled contract. `compile()` builds it once, and it is
+what each `build_sig_script` call encodes against.
+[`artifact_json()`](../../reference/SilverScript/Classes/CompiledContract.md)
+hands it to you as JSON:
+
+```python
+import json
+
+contract = silverscript.compile(SOURCE, [100])
+artifact = json.loads(contract.artifact_json())
+
+print(artifact["contracts"]["Guard"]["entries"]["check"]["dispatch_tag"])
+# b0823999
+```
+
+For the same source and constructor arguments this is byte-for-byte what the
+upstream `silverc` compiler writes, so an artifact produced here and one
+produced by `silverc contract.sil` are interchangeable. That makes it a
+portable build output: compile in CI, commit the artifact, and let other
+tooling read it without a compiler.
+
+Three things about the encoding are worth knowing before you parse it:
+
+- **`bytecode` and `template_hash` are JSON arrays of integers, not hex.**
+  Use `bytes(...)` to recover the raw value:
+  `bytes(artifact["contracts"]["Guard"]["compiled"]["bytecode"]) == contract.bytecode`.
+- **`dispatch_tag` *is* hex** — an eight-character string, unlike the two
+  fields above.
+- **Types are tagged objects**, e.g. `{"kind": "int"}`. The matching value
+  form, `{"kind": "int", "value": 100}`, is the *portable* dialect — what
+  `silverc --constructor-args` reads. It is not the type-directed JSON the
+  SilverScript debugger CLI and `.test.json` fixtures use. The two look
+  similar and are not interchangeable; if you are hand-writing JSON for
+  upstream tooling, check which one that tool wants.
+
+Note that `state_layout` appears here under the artifact's own spelling,
+`compiled.state_span`, with the keys `offset` and `len`.
+
 Next: turn one of these entrypoints into an unlocking script in
 [Unlocking Scripts](unlocking-scripts.md).

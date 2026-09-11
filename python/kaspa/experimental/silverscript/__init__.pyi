@@ -43,6 +43,22 @@ class CompiledContract:
         region). Matches the SilverScript `templateHash(prefix, suffix)` builtin,
         so contracts can commit to this value and later reconstruct it on-chain.
         """
+    def artifact_json(self) -> builtins.str:
+        r"""
+        Serialize the contract's portable ABI artifact as JSON.
+        
+        The artifact is built once by `compile` and is what `build_sig_script`
+        encodes against. For the same source and constructor arguments this is
+        identical to what the upstream `silverc` compiler writes, so artifacts
+        are interchangeable between the two.
+        
+        Returns:
+            str: The portable artifact as pretty-printed JSON. Pass it to
+                `json.loads` for a dict.
+        
+        Raises:
+            SilverScriptError: If the artifact cannot be serialized.
+        """
     def build_sig_script(self, function_name: builtins.str, args: typing.Optional[typing.Any] = None) -> bytes:
         r"""
         Build the signature (unlocking) script for an entrypoint.

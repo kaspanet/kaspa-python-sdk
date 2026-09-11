@@ -114,7 +114,8 @@ building the address, the spend side — are in
 
 [`compile`](../../reference/SilverScript/Functions/compile.md) does all
 the expensive work up front: it parses the source, compiles the contract,
-and builds its portable ABI artifact once, then keeps them on the
+and builds its [portable ABI artifact](compiling.md#the-portable-artifact)
+once, then keeps them on the
 [`CompiledContract`](../../reference/SilverScript/Classes/CompiledContract.md).
 
 Each later call to

@@ -15,6 +15,7 @@ use kaspa_python_sdk_core::create_py_exception;
 use silverscript_abi::{
     ArtifactValue, CodecError, SilAbiArtifact, SilContractArtifact, SilEntryArtifact, TypeArtifact,
     encode_contract_covenant_decl_sig_script, encode_contract_entry_sig_script, encode_hex,
+    to_pretty_json,
 };
 use silverscript_lang::ast::{
     ContractAst, Expr, STATE_TYPE_NAME, TypeBase, TypeRef, parse_contract_ast,
@@ -570,6 +571,24 @@ impl PyCompiledContract {
             py,
             &self.compiled.borrow_dependent().contract.template_hash(),
         )
+    }
+
+    /// Serialize the contract's portable ABI artifact as JSON.
+    ///
+    /// The artifact is built once by `compile` and is what `build_sig_script`
+    /// encodes against. For the same source and constructor arguments this is
+    /// identical to what the upstream `silverc` compiler writes, so artifacts
+    /// are interchangeable between the two.
+    ///
+    /// Returns:
+    ///     str: The portable artifact as pretty-printed JSON. Pass it to
+    ///         `json.loads` for a dict.
+    ///
+    /// Raises:
+    ///     SilverScriptError: If the artifact cannot be serialized.
+    pub fn artifact_json(&self) -> PyResult<String> {
+        to_pretty_json(&self.compiled.borrow_dependent().artifact)
+            .map_err(|err| PySilverScriptError::new_err(err.to_string()))
     }
 
     /// Build the signature (unlocking) script for an entrypoint.

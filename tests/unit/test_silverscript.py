@@ -2,6 +2,7 @@
 Unit tests for the kaspa.experimental.silverscript module.
 """
 
+import json
 import os
 import subprocess
 import sys
@@ -542,6 +543,100 @@ class TestAbi:
         contract = silverscript.compile(MULTI, [10])
         tags = {e.name: e.dispatch_tag for e in contract.abi}
         assert len(set(tags.values())) == len(tags)
+
+
+# ---------------------------------------------------------------------------
+# The portable ABI artifact — the same JSON upstream `silverc` emits
+# ---------------------------------------------------------------------------
+
+class TestPortableArtifact:
+    def test_artifact_json_parses(self):
+        artifact = json.loads(silverscript.compile(GUARD, [100]).artifact_json())
+        assert artifact["schema_version"] == 1
+        assert sorted(artifact) == [
+            "compiler_version",
+            "contracts",
+            "schema_version",
+            "structs",
+        ]
+        assert list(artifact["contracts"]) == ["Guard"]
+
+    def test_bytecode_round_trips(self):
+        # `bytecode` is a JSON array of ints, not hex — bytes() recovers it.
+        contract = silverscript.compile(GUARD, [100])
+        compiled = json.loads(contract.artifact_json())["contracts"]["Guard"]["compiled"]
+        assert bytes(compiled["bytecode"]) == contract.bytecode
+
+    def test_template_hash_round_trips(self):
+        contract = silverscript.compile(GUARD, [100])
+        compiled = json.loads(contract.artifact_json())["contracts"]["Guard"]["compiled"]
+        assert bytes(compiled["template_hash"]) == contract.template_hash
+
+    def test_state_span_matches_state_layout(self):
+        # state_span{offset,len} is the artifact's spelling of state_layout.
+        contract = silverscript.compile(COUNTER, [0])
+        span = json.loads(contract.artifact_json())["contracts"]["Counter"]["compiled"][
+            "state_span"
+        ]
+        assert (span["offset"], span["len"]) == contract.state_layout
+        assert span["len"] > 0
+
+    def test_stateless_contract_has_empty_state_span(self):
+        contract = silverscript.compile(GUARD, [100])
+        span = json.loads(contract.artifact_json())["contracts"]["Guard"]["compiled"][
+            "state_span"
+        ]
+        assert span == {"offset": 0, "len": 0}
+
+    def test_dispatch_tag_is_hex_not_bytes(self):
+        # The one field that is hex where the byte fields are int arrays.
+        contract = silverscript.compile(GUARD, [100])
+        entry = json.loads(contract.artifact_json())["contracts"]["Guard"]["entries"][
+            "check"
+        ]
+        assert entry["dispatch_tag"] == contract.abi[0].dispatch_tag.hex()
+        assert entry["dispatch_tag"] == "b0823999"
+
+    def test_params_use_the_portable_kind_dialect(self):
+        # {"kind": ...}, not the type-directed dialect the debugger accepts.
+        contract = silverscript.compile(GUARD, [100])
+        entry = json.loads(contract.artifact_json())["contracts"]["Guard"]["entries"][
+            "check"
+        ]
+        assert entry["params"] == [{"name": "amount", "type": {"kind": "int"}}]
+
+    def test_source_path_is_synthesized_from_contract_name(self):
+        # There is no source file here; upstream synthesizes the same path, so
+        # artifacts stay comparable across compilers.
+        artifact = json.loads(silverscript.compile(GUARD, [100]).artifact_json())
+        assert artifact["contracts"]["Guard"]["source_path"] == "sil/Guard.sil"
+
+    def test_artifact_reflects_constructor_args(self):
+        # Proves this is the contract's own artifact and not a static template.
+        a = silverscript.compile(GUARD, [100]).artifact_json()
+        b = silverscript.compile(GUARD, [101]).artifact_json()
+        assert a != b
+
+    def test_artifact_json_is_deterministic(self):
+        source = silverscript.compile(GUARD, [100]).artifact_json()
+        assert source == silverscript.compile(GUARD, [100]).artifact_json()
+
+    def test_byte_arrays_wrap_at_64_values_per_line(self):
+        # Upstream's formatter wraps byte arrays at exactly 64 values per line
+        # (silverscript-abi/src/json.rs). This is emitted by Rust rather than
+        # rebuilt with json.dumps precisely so the output stays byte-identical
+        # to silverc's; this test fails loudly if anyone reimplements it.
+        contract = silverscript.compile(COUNTER, [0])  # 196 bytes: 64+64+64+4
+        lines = contract.artifact_json().splitlines()
+        start = next(i for i, line in enumerate(lines) if '"bytecode"' in line)
+        end = next(i for i, line in enumerate(lines[start:], start) if line.rstrip().endswith("],"))
+        counts = [
+            len([v for v in line.split(",") if v.strip()])
+            for line in lines[start + 1 : end]
+        ]
+        assert counts[:-1] == [64] * (len(counts) - 1)
+        assert counts[-1] == len(contract.bytecode) % 64
+        assert sum(counts) == len(contract.bytecode)
 
 
 # ---------------------------------------------------------------------------
