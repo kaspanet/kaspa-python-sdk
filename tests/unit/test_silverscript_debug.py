@@ -14,7 +14,7 @@ import kaspa.experimental.silverscript as silverscript
 GUARD = """
 pragma silverscript ^0.1.0;
 contract Guard(int threshold) {
-    entrypoint function check(int amount) {
+    entry check(int amount) {
         int margin = amount - threshold;
         require(margin > 0);
     }
@@ -24,8 +24,8 @@ contract Guard(int threshold) {
 MULTI = """
 pragma silverscript ^0.1.0;
 contract Multi(int base) {
-    entrypoint function add(int amount) { require(amount > base); }
-    entrypoint function sub(int amount) { require(amount < base); }
+    entry add(int amount) { require(amount > base); }
+    entry sub(int amount) { require(amount < base); }
 }
 """
 
@@ -35,7 +35,7 @@ contract C() {
     function checkPositive(int v) {
         require(v > 10);
     }
-    entrypoint function go(int x) {
+    entry go(int x) {
         checkPositive(x);
     }
 }
@@ -44,7 +44,7 @@ contract C() {
 LOGGER = """
 pragma silverscript ^0.1.0;
 contract Logger() {
-    entrypoint function go(int x) {
+    entry go(int x) {
         console.log("x is", x);
         require(x > 0);
     }
@@ -54,7 +54,7 @@ contract Logger() {
 ANNOUNCEMENT = """
 pragma silverscript ^0.1.0;
 contract Announcement() {
-    entrypoint function announce() {
+    entry announce() {
         require(tx.outputs[0].value == 0);
     }
 }
@@ -63,7 +63,7 @@ contract Announcement() {
 BYTES4 = """
 pragma silverscript ^0.1.0;
 contract H(byte[4] tag) {
-    entrypoint function go(byte[4] x) { require(x == tag); }
+    entry go(byte[4] x) { require(x == tag); }
 }
 """
 
@@ -75,11 +75,11 @@ contract Counter(int init_count) {
     int count = init_count;
     #[covenant(binding = auth, from = 1, to = 1, mode = transition)]
     function add(State prev_state, int amount) : (State) {
-        return({ count: prev_state.count + amount });
+        return(State { count: prev_state.count + amount });
     }
     #[covenant(binding = auth, from = 1, to = 1, mode = transition)]
     function subtract(State prev_state, int amount) : (State) {
-        return({ count: prev_state.count - amount });
+        return(State { count: prev_state.count - amount });
     }
 }
 """
@@ -92,7 +92,7 @@ contract Tagged(byte[4] init_tag) {
     byte[4] tag = init_tag;
     #[covenant(binding = auth, from = 1, to = 1, mode = transition)]
     function retag(State prev_state, byte[4] next) : (State) {
-        return({ tag: next });
+        return(State { tag: next });
     }
 }
 """

@@ -26,11 +26,11 @@ instead — see [Covenants](covenants.md).
 
 ## Calling an entrypoint
 
-Only functions marked `entrypoint` are callable from a spend. Pass the
+Only functions declared with `entry` are callable from a spend. Pass the
 entrypoint name and a list of positional arguments, in the order the
 entrypoint declares them; the compiler emits the right unlocking script —
-including any selector it needs to pick the function when a contract has
-several entrypoints. You don't construct or read these bytes yourself —
+including the four-byte dispatch tag that selects the entrypoint. You don't
+construct or read these bytes yourself —
 you put them on the input (see
 [Spending a locked UTXO](#spending-a-locked-utxo)).
 

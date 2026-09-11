@@ -32,7 +32,7 @@ except Exception:  # pragma: no cover - core module should always be present
 GUARD = """
 pragma silverscript ^0.1.0;
 contract Guard(int threshold) {
-    entrypoint function check(int amount) {
+    entry check(int amount) {
         require(amount > threshold);
     }
 }
@@ -41,7 +41,7 @@ contract Guard(int threshold) {
 ANNOUNCEMENT = """
 pragma silverscript ^0.1.0;
 contract Announcement() {
-    entrypoint function announce() {
+    entry announce() {
         require(tx.outputs[0].value == 0);
     }
 }
@@ -51,29 +51,29 @@ contract Announcement() {
 MULTI = """
 pragma silverscript ^0.1.0;
 contract Multi(int base) {
-    entrypoint function add(int amount) { require(amount > base); }
-    entrypoint function sub(int amount) { require(amount < base); }
+    entry add(int amount) { require(amount > base); }
+    entry sub(int amount) { require(amount < base); }
 }
 """
 
 BYTES4 = """
 pragma silverscript ^0.1.0;
 contract H(byte[4] tag) {
-    entrypoint function go(byte[4] x) { require(x == tag); }
+    entry go(byte[4] x) { require(x == tag); }
 }
 """
 
 LIST_ARG = """
 pragma silverscript ^0.1.0;
 contract L() {
-    entrypoint function f(int[] xs) { require(true); }
+    entry f(int[] xs) { require(true); }
 }
 """
 
 ENTRYPOINT_RETURN = """
 pragma silverscript ^0.1.0;
 contract R() {
-    entrypoint function f() : (int) { return(1); }
+    entry f() : (int) { return(1); }
 }
 """
 
@@ -82,11 +82,11 @@ contract R() {
 # pubkey/sig multi-entrypoint contract.
 TRANSFER_WITH_TIMEOUT = """
 pragma silverscript ^0.1.0;
-contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) {
-    entrypoint function transfer(sig recipientSig) {
+contract TransferWithTimeout(pubkey sender, pubkey recipient, temporal timeout) {
+    entry transfer(sig recipientSig) {
         require(checkSig(recipientSig, recipient));
     }
-    entrypoint function reclaim(sig senderSig) {
+    entry reclaim(sig senderSig) {
         require(checkSig(senderSig, sender));
         require(tx.time >= timeout);
     }
@@ -97,7 +97,7 @@ contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) {
 # (a multi-argument entrypoint: byte[4] then int). Note: no pragma, like upstream.
 BOUNDED_BYTES = """
 contract BoundedBytes() {
-    entrypoint function spend(byte[4] b, int i) { require(b == byte[4](i)); }
+    entry spend(byte[4] b, int i) { require(b == i as byte[4]); }
 }
 """
 
@@ -109,11 +109,11 @@ contract Counter(int init_count) {
     int count = init_count;
     #[covenant(binding = auth, from = 1, to = 1, mode = transition)]
     function add(State prev_state, int amount) : (State) {
-        return({ count: prev_state.count + amount });
+        return(State { count: prev_state.count + amount });
     }
     #[covenant(binding = auth, from = 1, to = 1, mode = transition)]
     function subtract(State prev_state, int amount) : (State) {
-        return({ count: prev_state.count - amount });
+        return(State { count: prev_state.count - amount });
     }
 }
 """
@@ -177,11 +177,11 @@ class TestCompile:
 class TestGoldenScript:
     def test_guard_locking_script(self):
         # Pinned: the redeem script defines the P2SH address holding the funds.
-        assert silverscript.compile(GUARD, [100]).script.hex() == "760164a0697551"
+        assert silverscript.compile(GUARD, [100]).script.hex() == "7604b08239998763757682599f6975760164a0697551676a68"
 
     def test_bytes_contract_locking_script(self):
         contract = silverscript.compile(BYTES4, [b"\x01\x02\x03\x04"])
-        assert contract.script.hex() == "76040102030487697551"
+        assert contract.script.hex() == "760405d685098763757682549d7576040102030487697551676a68"
 
 
 # ---------------------------------------------------------------------------
@@ -193,46 +193,47 @@ class TestGoldenSigScript:
         contract = silverscript.compile(GUARD, [100])
         # 150 pushed as a minimally-encoded script number; single entrypoint so
         # no function selector is appended.
-        assert contract.build_sig_script("check", [150]).hex() == "029600"
+        assert contract.build_sig_script("check", [150]).hex() == "02960004b0823999"
 
     def test_zero_arg_encoding(self):
         contract = silverscript.compile(GUARD, [100])
-        assert contract.build_sig_script("check", [0]).hex() == "00"
+        assert contract.build_sig_script("check", [0]).hex() == "0004b0823999"
 
     def test_negative_int_encoding(self):
         contract = silverscript.compile(GUARD, [100])
-        assert contract.build_sig_script("check", [-5]).hex() == "0185"
+        assert contract.build_sig_script("check", [-5]).hex() == "018504b0823999"
 
     def test_bytes_arg_encoding(self):
         contract = silverscript.compile(BYTES4, [b"\x01\x02\x03\x04"])
-        assert contract.build_sig_script("go", [b"\xaa\xbb\xcc\xdd"]).hex() == "04aabbccdd"
+        assert contract.build_sig_script("go", [b"\xaa\xbb\xcc\xdd"]).hex() == "04aabbccdd0405d68509"
 
     def test_list_arg_encoding(self):
         contract = silverscript.compile(LIST_ARG)
         assert (
             contract.build_sig_script("f", [[1, 2, 3]]).hex()
-            == "18010000000000000002000000000000000300000000000000"
+            == "1801000000000000000200000000000000030000000000000004ec1c6966"
         )
 
     def test_empty_list_arg_encoding(self):
         contract = silverscript.compile(LIST_ARG)
-        assert contract.build_sig_script("f", [[]]).hex() == "00"
+        assert contract.build_sig_script("f", [[]]).hex() == "0004ec1c6966"
 
-    def test_single_entrypoint_has_empty_sig_for_no_args(self):
+    def test_single_entrypoint_emits_only_the_dispatch_tag(self):
+        # Every entry carries a 4-byte dispatch tag, including a lone one that
+        # takes no arguments, so this is a 5-byte push rather than b"".
         contract = silverscript.compile(ANNOUNCEMENT)
-        assert contract.without_selector is True
-        assert contract.build_sig_script("announce") == b""
+        sig = contract.build_sig_script("announce")
+        assert sig.hex() == "04c7de89fa"
 
-    def test_multi_entrypoint_appends_selector(self):
+    def test_multi_entrypoint_appends_dispatch_tag(self):
         contract = silverscript.compile(MULTI, [10])
-        assert contract.without_selector is False
-        # Each entrypoint encodes its arg plus a distinct selector.
-        assert contract.build_sig_script("add", [20]).hex() == "011400"
-        assert contract.build_sig_script("sub", [5]).hex() == "5551"
+        # Each entrypoint encodes its arg plus its own distinct dispatch tag.
+        assert contract.build_sig_script("add", [20]).hex() == "011404dc78a211"
+        assert contract.build_sig_script("sub", [5]).hex() == "55048fe86423"
 
 
 # ---------------------------------------------------------------------------
-# Parity with silverscript-lang's own compiler tests (pinned rev 2a3961c)
+# Parity with silverscript-lang's own compiler tests (pinned rev 3ed9733)
 # ---------------------------------------------------------------------------
 
 class TestUpstreamParity:
@@ -241,15 +242,14 @@ class TestUpstreamParity:
         # Upstream builds: push byte[4] {01,02,03,04}, then i64(7); single
         # entrypoint -> no selector. We assert the exact resulting bytes.
         contract = silverscript.compile(BOUNDED_BYTES)
-        assert contract.build_sig_script("spend", [b"\x01\x02\x03\x04", 7]).hex() == "040102030457"
+        assert contract.build_sig_script("spend", [b"\x01\x02\x03\x04", 7]).hex() == "0401020304570433cd8f70"
 
     def test_transfer_with_timeout_multi_entrypoint(self):
         # Mirrors tutorial_rust_build_sigscript_multiple_entrypoints_example.
         sender = bytes([3]) * 32
         recipient = bytes([4]) * 32
-        timeout = 1_640_000_000
+        timeout = 1_640_000_000_000
         contract = silverscript.compile(TRANSFER_WITH_TIMEOUT, [sender, recipient, timeout])
-        assert contract.without_selector is False
         assert [(i.name, i.type_name) for e in contract.abi for i in e.inputs] == [
             ("recipientSig", "sig"),
             ("senderSig", "sig"),
@@ -274,7 +274,7 @@ class TestTypeSafety:
         # Mirrors compiler_tests.rs :: byte_variable_from_out_of_range_int_literal_is_rejected.
         with pytest.raises(silverscript.SilverScriptError):
             silverscript.compile(
-                "contract B() { entrypoint function m() { byte x = 256; require(true); } }"
+                "contract B() { entry m() { byte x = 256; require(true); } }"
             )
 
     def test_byte_addition_is_rejected_with_message(self):
@@ -282,15 +282,15 @@ class TestTypeSafety:
         # error message must survive through the binding.
         with pytest.raises(silverscript.SilverScriptError) as exc:
             silverscript.compile(
-                "contract B() { entrypoint function m() { byte x = 5; byte y = 7; require(x + y > 0); } }"
+                "contract B() { entry m() { byte x = 5; byte y = 7; require(x + y > 0); } }"
             )
-        assert "byte values do not support '+'" in str(exc.value)
+        assert "arithmetic requires matching int or temporal operands" in str(exc.value)
 
     def test_incompatible_pragma_is_rejected(self):
         # Mirrors compiler_tests.rs pragma-compatibility tests.
         with pytest.raises(silverscript.SilverScriptError):
             silverscript.compile(
-                "pragma silverscript ^99.0.0;\ncontract B() { entrypoint function m() { require(true); } }"
+                "pragma silverscript ^99.0.0;\ncontract B() { entry m() { require(true); } }"
             )
 
 
@@ -371,7 +371,6 @@ class TestAbi:
     def test_multi_entrypoint_abi(self):
         contract = silverscript.compile(MULTI, [10])
         assert [e.name for e in contract.abi] == ["add", "sub"]
-        assert contract.without_selector is False
         for entry in contract.abi:
             assert [(i.name, i.type_name) for i in entry.inputs] == [("amount", "int")]
 
@@ -379,8 +378,11 @@ class TestAbi:
         contract = silverscript.compile(BYTES4, [b"\x01\x02\x03\x04"])
         assert [(i.name, i.type_name) for e in contract.abi for i in e.inputs] == [("x", "byte[4]")]
 
-    def test_single_entrypoint_without_selector(self):
-        assert silverscript.compile(ANNOUNCEMENT).without_selector is True
+    def test_without_selector_property_is_gone(self):
+        # SilverScript 1.0 gives every entry an unconditional dispatch tag, so
+        # the "single entrypoint has no selector" case it described no longer
+        # exists and the property was removed.
+        assert not hasattr(silverscript.compile(ANNOUNCEMENT), "without_selector")
 
 
 # ---------------------------------------------------------------------------
@@ -393,7 +395,7 @@ class TestCovenantSigScript:
         # addressed by the friendly entrypoint name ("add"), not the mangled
         # ABI name.
         contract = silverscript.compile(COUNTER, [0])
-        assert contract.build_sig_script_for_covenant_decl("add", [5]).hex() == "5500"
+        assert contract.build_sig_script_for_covenant_decl("add", [5]).hex() == "5504d06ddd4e"
 
     def test_is_leader_flag_is_accepted(self):
         # is_leader is consensus-relevant; both values must build. (For this
@@ -406,7 +408,6 @@ class TestCovenantSigScript:
 
     def test_covenant_abi_exposes_both_entrypoints(self):
         contract = silverscript.compile(COUNTER, [0])
-        assert contract.without_selector is False
         assert len(contract.abi) == 2
 
     def test_covenant_decl_rejects_unknown_entrypoint(self):
@@ -472,7 +473,7 @@ class TestTemplateHash:
         # would no longer reproduce commitments made with this compiler.
         assert (
             silverscript.compile(GUARD, [100]).template_hash.hex()
-            == "6c1fde9fea16f306d83ade5184f2db81c3f84c7e594fc41c7cc477df06e975a0"
+            == "b8fe43cf0bc3a8c29a9278ac2d063177e8d607e073479a949f670064b405e890"
         )
 
     def test_deterministic_across_recompiles(self):
@@ -565,7 +566,7 @@ class TestErrors:
         with pytest.raises(silverscript.SilverScriptError) as exc:
             silverscript.compile(
                 "pragma silverscript ^99.0.0;\n"
-                "contract B() { entrypoint function m() { require(true); } }"
+                "contract B() { entry m() { require(true); } }"
             )
         assert "at bytes" in str(exc.value)
 
@@ -594,7 +595,7 @@ class TestObjectSemantics:
 
     def test_reprs(self):
         contract = silverscript.compile(GUARD, [100])
-        assert repr(contract) == 'CompiledContract(name="Guard", script=7 bytes, entrypoints=1)'
+        assert repr(contract) == 'CompiledContract(name="Guard", script=25 bytes, entrypoints=1)'
         assert repr(contract.abi[0]) == 'FunctionAbiEntry(name="check", inputs=1 input(s))'
         assert repr(contract.abi[0].inputs[0]) == 'FunctionInputAbi(name="amount", type_name="int")'
 
@@ -631,7 +632,7 @@ class TestRobustness:
             """
             import kaspa.experimental.silverscript as ss
             SRC = ("pragma silverscript ^0.1.0;\\n"
-                   "contract D() { entrypoint function f(int[] xs) { require(true); } }")
+                   "contract D() { entry f(int[] xs) { require(true); } }")
             n = []
             for _ in range(20000):
                 n = [n]

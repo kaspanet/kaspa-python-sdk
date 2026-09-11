@@ -85,13 +85,13 @@ contract Counter(int init_count) {
 
     #[covenant(binding = auth, from = 1, to = 1, mode = transition)]
     function add(State prev_state, int amount) : (State) {
-        return({ count: prev_state.count + amount });
+        return(State { count: prev_state.count + amount });
     }
 
     #[covenant(binding = auth, from = 1, to = 1, mode = transition)]
     function subtract(State prev_state, int amount) : (State) {
         require(prev_state.count - amount >= 0);
-        return({ count: prev_state.count - amount });
+        return(State { count: prev_state.count - amount });
     }
 }
 ```

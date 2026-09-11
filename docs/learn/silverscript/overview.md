@@ -75,7 +75,7 @@ from kaspa import ScriptBuilder, address_from_script_public_key
 SOURCE = """
 pragma silverscript ^0.1.0;
 contract Guard(int threshold) {
-    entrypoint function check(int amount) {
+    entry check(int amount) {
         require(amount > threshold);
     }
 }

@@ -21,11 +21,6 @@ class CompiledContract:
         The compiler version that produced this contract.
         """
     @property
-    def without_selector(self) -> builtins.bool:
-        r"""
-        Whether the contract has a single entrypoint (no function selector).
-        """
-    @property
     def script(self) -> bytes:
         r"""
         The compiled locking script (redeem script) bytes.

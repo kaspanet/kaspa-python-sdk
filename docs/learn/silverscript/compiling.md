@@ -28,7 +28,7 @@ The message points to the byte span of the offending source.
 
 ```python
 try:
-    silverscript.compile("contract B() { entrypoint function m() { byte x = 256; } }")
+    silverscript.compile("contract B() { entry m() { byte x = 256; } }")
 except silverscript.SilverScriptError as e:
     print(e)        # ... (at bytes <start>..<end>)
 ```
@@ -59,7 +59,6 @@ is read-only. Its properties:
 | [`script`](../../reference/SilverScript/Classes/CompiledContract.md) | The locking (redeem) script `bytes`. |
 | [`contract_name`](../../reference/SilverScript/Classes/CompiledContract.md) | The contract name from the source. |
 | [`compiler_version`](../../reference/SilverScript/Classes/CompiledContract.md) | The compiler version that produced it. |
-| [`without_selector`](../../reference/SilverScript/Classes/CompiledContract.md) | `True` if the contract has a single entrypoint (no function selector). See [Unlocking Scripts](unlocking-scripts.md). |
 | [`abi`](../../reference/SilverScript/Classes/CompiledContract.md) | One [`FunctionAbiEntry`](../../reference/SilverScript/Classes/FunctionAbiEntry.md) per callable entrypoint. |
 | [`state_layout`](../../reference/SilverScript/Classes/CompiledContract.md) | `(start, len)`: the byte offset and length of the contract state within the script. |
 

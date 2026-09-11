@@ -25,7 +25,7 @@ import kaspa.experimental.silverscript as silverscript
 GUARD = """
 pragma silverscript ^0.1.0;
 contract Guard(int threshold) {
-    entrypoint function check(int amount) {
+    entry check(int amount) {
         int margin = amount - threshold;
         require(margin > 0);
     }

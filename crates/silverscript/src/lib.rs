@@ -10,9 +10,14 @@ use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pyfunction, gen_stub_pyme
 use self_cell::self_cell;
 
 use kaspa_python_sdk_core::create_py_exception;
-use silverscript_lang::ast::{Expr, ExprKind, StateFieldExpr};
+use silverscript_abi::{
+    ArtifactValue, CodecError, SilAbiArtifact, TypeArtifact,
+    encode_contract_covenant_decl_sig_script, encode_contract_entry_sig_script,
+};
+use silverscript_lang::ast::{ContractAst, Expr, parse_contract_ast};
 use silverscript_lang::compiler::{
-    CompileOptions, CompiledContract, CovenantDeclCallOptions, compile_contract,
+    CompileOptions, CompiledContract, artifact_value_to_expr, compile_contract,
+    sil_abi_artifact_from_compiled,
 };
 use silverscript_lang::errors::CompilerError;
 
@@ -34,9 +39,14 @@ pub(crate) fn map_err(err: CompilerError) -> PyErr {
     }
 }
 
-/// Owned, `'static` form of a Python argument. Converted once, then rebuilt into
-/// `Expr`s on demand — sidesteps `CompiledContract<'i>` borrowing the source.
-/// `Eq`/`Hash` let the debug harness memoize per-constructor-args work.
+pub(crate) fn map_codec_err(err: CodecError) -> PyErr {
+    PySilverScriptError::new_err(err.to_string())
+}
+
+/// Owned, `'static` form of a Python argument. Converted once, then lowered on
+/// demand into an `ArtifactValue` (for sig-script encoding) or a typed `Expr`
+/// (for constructor args) — sidesteps `CompiledContract<'i>` borrowing the
+/// source. `Eq`/`Hash` let the debug harness memoize per-constructor-args work.
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub(crate) enum Value {
     Int(i64),
@@ -112,29 +122,67 @@ fn py_to_value_at(obj: &Bound<'_, PyAny>, depth: usize) -> PyResult<Value> {
     ))
 }
 
-/// Build an owned (`'static`) literal `Expr` from a `Value` — no source borrows.
-pub(crate) fn value_to_expr(value: &Value) -> Expr<'static> {
+/// Build a portable ABI value from a `Value`.
+pub(crate) fn value_to_artifact(value: &Value) -> ArtifactValue {
     match value {
-        Value::Int(i) => Expr::int(*i),
-        Value::Bool(b) => Expr::bool(*b),
-        Value::Str(s) => Expr::string(s.clone()),
-        Value::Bytes(b) => Expr::bytes(b.clone()),
-        Value::List(items) => {
-            let exprs: Vec<Expr<'static>> = items.iter().map(value_to_expr).collect();
-            Expr::from(exprs)
-        }
-        Value::Struct(fields) => {
-            let entries = fields
+        Value::Int(i) => ArtifactValue::Int(*i),
+        Value::Bool(b) => ArtifactValue::Bool(*b),
+        Value::Str(s) => ArtifactValue::Text(s.clone()),
+        Value::Bytes(b) => ArtifactValue::Bytes(b.clone()),
+        Value::List(items) => ArtifactValue::Array(items.iter().map(value_to_artifact).collect()),
+        Value::Struct(fields) => ArtifactValue::Object(
+            fields
                 .iter()
-                .map(|(name, value)| StateFieldExpr {
-                    name: name.clone(),
-                    expr: value_to_expr(value),
-                    span: Default::default(),
-                    name_span: Default::default(),
-                })
-                .collect();
-            Expr::new(ExprKind::StructLiteral(entries), Default::default())
-        }
+                .map(|(name, value)| (name.clone(), value_to_artifact(value)))
+                .collect(),
+        ),
+    }
+}
+
+/// Lower constructor arguments against the contract's declared parameter types.
+///
+/// Mirrors upstream's private `artifact_values_to_constructor_args`, which is
+/// not exported — the per-argument `artifact_value_to_expr` is.
+pub(crate) fn ctor_exprs_for<'i>(
+    values: &[Value],
+    contract: &ContractAst<'i>,
+) -> PyResult<Vec<Expr<'i>>> {
+    if values.len() != contract.params.len() {
+        return Err(PySilverScriptError::new_err(format!(
+            "constructor argument count mismatch: expected {}, got {}",
+            contract.params.len(),
+            values.len()
+        )));
+    }
+    values
+        .iter()
+        .zip(&contract.params)
+        .map(|(value, param)| {
+            artifact_value_to_expr(&value_to_artifact(value), &param.type_ref, contract)
+                .map_err(map_err)
+        })
+        .collect()
+}
+
+/// Render a portable ABI type as the SilverScript type name.
+///
+/// Upstream's equivalent helper is private, and the spelling is Python-visible
+/// through `FunctionInputAbi.type_name`, so it is reproduced here.
+pub(crate) fn artifact_type_name(ty: &TypeArtifact) -> String {
+    match ty {
+        TypeArtifact::Int => "int".to_string(),
+        TypeArtifact::Temporal => "temporal".to_string(),
+        TypeArtifact::Bool => "bool".to_string(),
+        TypeArtifact::Byte => "byte".to_string(),
+        TypeArtifact::Bytes => "bytes".to_string(),
+        TypeArtifact::Text => "string".to_string(),
+        TypeArtifact::Pubkey => "pubkey".to_string(),
+        TypeArtifact::Sig => "sig".to_string(),
+        TypeArtifact::Datasig => "datasig".to_string(),
+        TypeArtifact::FixedBytes { len } => format!("byte[{len}]"),
+        TypeArtifact::FixedArray { item, len } => format!("{}[{len}]", artifact_type_name(item)),
+        TypeArtifact::DynamicArray { item } => format!("{}[]", artifact_type_name(item)),
+        TypeArtifact::Struct { name } => name.clone(),
     }
 }
 
@@ -207,16 +255,24 @@ impl PyFunctionAbiEntry {
     }
 }
 
-// Holds the contract source and lowered constructor args alongside the native
-// `CompiledContract` that borrows them. `CompiledContract<'i>` borrows the source
-//  and has no owned form, so this self-referential cell lets us compile once in `py_compile`
-// and reuse the artifact for every `build_sig_script*` call instead of recompiling
-// the whole contract per call.
+/// The native compile products that borrow the contract source.
+///
+/// The portable ABI artifact is built here, next to the contract, because it is
+/// what every `build_sig_script*` call encodes against.
+pub(crate) struct CompiledParts<'i> {
+    pub(crate) contract: CompiledContract<'i>,
+    pub(crate) artifact: SilAbiArtifact,
+}
+
+// Holds the contract source alongside the native compile products that borrow
+// it. `CompiledContract<'i>` borrows the source and has no owned form, so this
+// self-referential cell lets us compile once in `py_compile` and reuse the
+// result for every `build_sig_script*` call instead of recompiling per call.
 self_cell!(
     struct CompiledCell {
-        owner: (String, Vec<Expr<'static>>),
+        owner: String,
         #[covariant]
-        dependent: CompiledContract,
+        dependent: CompiledParts,
     }
 );
 
@@ -231,7 +287,6 @@ self_cell!(
 pub struct PyCompiledContract {
     contract_name: String,
     compiler_version: String,
-    without_selector: bool,
     script: Vec<u8>,
     abi: Vec<PyFunctionAbiEntry>,
     state_layout: (usize, usize),
@@ -246,18 +301,24 @@ impl PyCompiledContract {
         args: Vec<Value>,
         covenant: Option<bool>,
     ) -> PyResult<Vec<u8>> {
-        let call_args: Vec<Expr<'static>> = args.iter().map(value_to_expr).collect();
-        let compiled = self.compiled.borrow_dependent();
-        let bytes = match covenant {
-            None => compiled.build_sig_script(function_name, call_args),
-            Some(is_leader) => compiled.build_sig_script_for_covenant_decl(
+        let call_args: Vec<ArtifactValue> = args.iter().map(value_to_artifact).collect();
+        let artifact = &self.compiled.borrow_dependent().artifact;
+        match covenant {
+            None => encode_contract_entry_sig_script(
+                artifact,
+                &self.contract_name,
                 function_name,
-                call_args,
-                CovenantDeclCallOptions { is_leader },
+                &call_args,
+            ),
+            Some(is_leader) => encode_contract_covenant_decl_sig_script(
+                artifact,
+                &self.contract_name,
+                function_name,
+                is_leader,
+                &call_args,
             ),
         }
-        .map_err(map_err)?;
-        Ok(bytes)
+        .map_err(map_codec_err)
     }
 }
 
@@ -274,12 +335,6 @@ impl PyCompiledContract {
     #[getter]
     pub fn compiler_version(&self) -> &str {
         &self.compiler_version
-    }
-
-    /// Whether the contract has a single entrypoint (no function selector).
-    #[getter]
-    pub fn without_selector(&self) -> bool {
-        self.without_selector
     }
 
     /// The compiled locking script (redeem script) bytes.
@@ -306,7 +361,10 @@ impl PyCompiledContract {
     /// so contracts can commit to this value and later reconstruct it on-chain.
     #[getter]
     pub fn template_hash<'py>(&self, py: Python<'py>) -> Bound<'py, PyBytes> {
-        PyBytes::new(py, &self.compiled.borrow_dependent().template_hash())
+        PyBytes::new(
+            py,
+            &self.compiled.borrow_dependent().contract.template_hash(),
+        )
     }
 
     /// Build the signature (unlocking) script for an entrypoint.
@@ -374,6 +432,51 @@ impl PyCompiledContract {
     }
 }
 
+/// Build the Python-facing ABI for `contract_name` from a portable ABI artifact.
+///
+/// The artifact keys entries in a `BTreeMap` (alphabetical), but the ABI is
+/// ordered — `debug_call` picks `abi[0]` as the default entrypoint, and callers
+/// read it as the contract's entrypoints in the order they were written. So
+/// entries are emitted in source order, with any generated entrypoint that has
+/// no source function (covenant lowering adds these) appended afterwards.
+fn abi_entries(
+    artifact: &SilAbiArtifact,
+    contract_name: &str,
+    ast: &ContractAst<'_>,
+) -> Vec<PyFunctionAbiEntry> {
+    let Some(contract) = artifact.contract(contract_name) else {
+        return Vec::new();
+    };
+    let build = |name: &str| {
+        contract.entries.get(name).map(|entry| PyFunctionAbiEntry {
+            name: name.to_string(),
+            inputs: entry
+                .params
+                .iter()
+                .map(|param| PyFunctionInputAbi {
+                    name: param.name.clone(),
+                    type_name: artifact_type_name(&param.ty),
+                })
+                .collect(),
+        })
+    };
+
+    let mut out: Vec<PyFunctionAbiEntry> = Vec::with_capacity(contract.entries.len());
+    for function in &ast.functions {
+        if let Some(entry) = build(&function.name) {
+            out.push(entry);
+        }
+    }
+    for name in contract.entries.keys() {
+        if !out.iter().any(|entry| &entry.name == name)
+            && let Some(entry) = build(name)
+        {
+            out.push(entry);
+        }
+    }
+    out
+}
+
 /// Compile SilverScript `source` into a `CompiledContract`.
 ///
 /// **Experimental:** SilverScript and these bindings are under active
@@ -412,37 +515,26 @@ pub fn py_compile(
         record_debug_infos,
     };
 
-    // Compile once and keep the native artifact (alongside the source and lowered
-    // constructor args it borrows) so `build_sig_script*` can reuse it rather than
-    // recompiling the whole contract on every call.
-    let ctor: Vec<Expr<'static>> = constructor_args.iter().map(value_to_expr).collect();
-    let compiled = CompiledCell::try_new((source, ctor), |owner| {
-        compile_contract(&owner.0, &owner.1, options).map_err(map_err)
+    // Compile once and keep the native artifact (alongside the source it borrows)
+    // so `build_sig_script*` can reuse it rather than recompiling the whole
+    // contract on every call.
+    let compiled = CompiledCell::try_new(source, |source| -> PyResult<CompiledParts<'_>> {
+        let ast = parse_contract_ast(source).map_err(map_err)?;
+        let ctor = ctor_exprs_for(&constructor_args, &ast)?;
+        let contract = compile_contract(source, &ctor, options).map_err(map_err)?;
+        let artifact = sil_abi_artifact_from_compiled(&contract, &ctor).map_err(map_err)?;
+        Ok(CompiledParts { contract, artifact })
     })?;
 
-    let (contract_name, compiler_version, without_selector, script, abi, state_layout) = {
-        let contract = compiled.borrow_dependent();
-        let abi = contract
-            .abi
-            .iter()
-            .map(|entry| PyFunctionAbiEntry {
-                name: entry.name.clone(),
-                inputs: entry
-                    .inputs
-                    .iter()
-                    .map(|input| PyFunctionInputAbi {
-                        name: input.name.clone(),
-                        type_name: input.type_name.clone(),
-                    })
-                    .collect(),
-            })
-            .collect();
+    let (contract_name, compiler_version, script, abi, state_layout) = {
+        let parts = compiled.borrow_dependent();
+        let contract = &parts.contract;
+        let contract_name = contract.contract_name.clone();
         (
-            contract.contract_name.clone(),
+            contract_name.clone(),
             contract.compiler_version.clone(),
-            contract.without_selector,
-            contract.script.clone(),
-            abi,
+            contract.bytecode.clone(),
+            abi_entries(&parts.artifact, &contract_name, &contract.ast),
             (contract.state_layout.start, contract.state_layout.len),
         )
     };
@@ -450,7 +542,6 @@ pub fn py_compile(
     Ok(PyCompiledContract {
         contract_name,
         compiler_version,
-        without_selector,
         script,
         abi,
         state_layout,
