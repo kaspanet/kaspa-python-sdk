@@ -19,9 +19,7 @@ use crate::{
 /// A portable ABI artifact: everything needed to build unlocking scripts for a
 /// contract, without its source.
 ///
-/// Obtained from
-/// [`load_artifact`][kaspa.experimental.silverscript.load_artifact], never
-/// constructed directly.
+/// Obtained from `load_artifact`, never constructed directly.
 #[gen_stub_pyclass]
 #[pyclass(
     name = "ContractArtifact",
@@ -88,7 +86,7 @@ impl PyContractArtifact {
     /// script.
     ///
     /// The same two numbers, under the same name, as
-    /// [`CompiledContract.state_span`][kaspa.experimental.silverscript.CompiledContract.state_span].
+    /// `CompiledContract.state_span`.
     #[getter]
     pub fn state_span(&self) -> (usize, usize) {
         let span = &self.contract().compiled.state_span;
@@ -98,9 +96,8 @@ impl PyContractArtifact {
     /// The contract ABI: one entry per callable entrypoint, ordered
     /// alphabetically by name.
     ///
-    /// The same order
-    /// [`CompiledContract.abi`][kaspa.experimental.silverscript.CompiledContract.abi]
-    /// reports. To reach one entry, prefer `entry(name)` over indexing.
+    /// The same order `CompiledContract.abi` reports. To reach one entry,
+    /// prefer `entry(name)` over indexing.
     #[getter]
     pub fn abi(&self) -> Vec<PyEntryAbi> {
         self.abi.clone()
@@ -124,9 +121,8 @@ impl PyContractArtifact {
 
     /// Build the signature (unlocking) script for an entrypoint.
     ///
-    /// Identical bytes to
-    /// [`CompiledContract.build_sig_script`][kaspa.experimental.silverscript.CompiledContract.build_sig_script]
-    /// for the same call — both encode against this same artifact.
+    /// Identical bytes to `CompiledContract.build_sig_script` for the same
+    /// call: both encode against this same artifact.
     ///
     /// Args:
     ///     function_name: The entrypoint to call.
@@ -199,13 +195,14 @@ impl PyContractArtifact {
     /// against the script, and the entries' dispatch tags for collisions —
     /// across every contract in the loaded artifact, not only the selected one.
     ///
-    /// This detects a corrupted or edited artifact. It does **not** prove the
-    /// bytecode was compiled from any particular source, so it does not make an
-    /// untrusted artifact trustworthy: take artifacts from a build you trust,
-    /// or compare `template_hash` against a value you already trust.
-    ///
     /// Raises:
     ///     SilverScriptError: If the artifact is inconsistent.
+    ///
+    /// Note:
+    ///     This detects a corrupted or edited artifact. It does not prove the
+    ///     bytecode was compiled from any particular source, so it does not
+    ///     make an untrusted artifact trustworthy: use artifacts from a
+    ///     trusted build, or compare `template_hash` against a known value.
     pub fn check_consistency(&self) -> PyResult<()> {
         self.artifact
             .check_consistency()
@@ -226,6 +223,10 @@ impl PyContractArtifact {
         to_pretty_json(&self.artifact).map_err(to_json_err)
     }
 
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The ContractArtifact as a repr string.
     pub fn __repr__(&self) -> String {
         format!(
             "ContractArtifact(name={:?}, bytecode={} bytes, entries={})",
@@ -273,15 +274,10 @@ fn resolve_contract_name(
 
 /// Load a portable ABI artifact from JSON.
 ///
-/// **Experimental:** SilverScript and these bindings are under active
-/// development; the API and the artifact schema may change in breaking ways
-/// between releases. See the `kaspa.experimental.silverscript` module docs.
-///
-/// Takes what
-/// [`CompiledContract.artifact_json`][kaspa.experimental.silverscript.CompiledContract.artifact_json]
-/// returns, or what upstream `silverc -c` writes. Compile once and ship the
-/// artifact; derive addresses and build unlocking scripts from it at runtime
-/// with no source and no compiler.
+/// Takes what `CompiledContract.artifact_json` returns, or what upstream
+/// `silverc -c` writes. Compile once and ship the artifact; derive addresses
+/// and build unlocking scripts from it at runtime with no source and no
+/// compiler.
 ///
 /// `debug_call` and compiling with different constructor arguments need the
 /// source and are not available from an artifact — an artifact describes one
@@ -298,6 +294,11 @@ fn resolve_contract_name(
 /// Raises:
 ///     SilverScriptError: If the JSON is malformed, its schema version is
 ///         unsupported, or `contract_name` is absent or ambiguous.
+///
+/// Note:
+///     Experimental. SilverScript and these bindings are under active
+///     development; the API and the artifact schema may change in breaking
+///     ways between releases.
 #[gen_stub_pyfunction(module = "kaspa.experimental.silverscript")]
 #[pyfunction]
 #[pyo3(signature = (json, contract_name=None))]

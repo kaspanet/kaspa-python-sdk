@@ -31,9 +31,9 @@ class CompiledContract:
         The contract ABI: one entry per callable entrypoint, ordered
         alphabetically by name.
         
-        The same order a `ContractArtifact` reports, so an entrypoint keeps its
-        position whichever route you reached it by. To reach one entry, prefer
-        `entry(name)` over indexing.
+        The same order a `ContractArtifact` reports, so an entrypoint keeps the
+        same position either way. To reach one entry, prefer `entry(name)` over
+        indexing.
         """
     @property
     def state_span(self) -> tuple[builtins.int, builtins.int]:
@@ -41,10 +41,8 @@ class CompiledContract:
         `(offset, len)`: byte offset and length of the contract state within
         the script.
         
-        Named for the artifact's `compiled.state_span`, which carries the same
-        two numbers and is the spelling you meet when you parse
-        `artifact_json()`. (The compiler's own struct calls the first number
-        `start`; it is the same offset.)
+        The same two numbers, under the same name, as the artifact's
+        `compiled.state_span` in `artifact_json()`.
         """
     @property
     def template_hash(self) -> bytes:
@@ -121,7 +119,13 @@ class CompiledContract:
             SilverScriptError: If the entrypoint is unknown or an argument is
                 invalid (wrong type, out of range, or too deeply nested).
         """
-    def __repr__(self) -> builtins.str: ...
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The CompiledContract as a repr string.
+        """
 
 @typing.final
 class ContractArtifact:
@@ -129,9 +133,7 @@ class ContractArtifact:
     A portable ABI artifact: everything needed to build unlocking scripts for a
     contract, without its source.
     
-    Obtained from
-    [`load_artifact`][kaspa.experimental.silverscript.load_artifact], never
-    constructed directly.
+    Obtained from `load_artifact`, never constructed directly.
     """
     @property
     def contract_name(self) -> builtins.str:
@@ -168,7 +170,7 @@ class ContractArtifact:
         script.
         
         The same two numbers, under the same name, as
-        [`CompiledContract.state_span`][kaspa.experimental.silverscript.CompiledContract.state_span].
+        `CompiledContract.state_span`.
         """
     @property
     def abi(self) -> builtins.list[EntryAbi]:
@@ -176,9 +178,8 @@ class ContractArtifact:
         The contract ABI: one entry per callable entrypoint, ordered
         alphabetically by name.
         
-        The same order
-        [`CompiledContract.abi`][kaspa.experimental.silverscript.CompiledContract.abi]
-        reports. To reach one entry, prefer `entry(name)` over indexing.
+        The same order `CompiledContract.abi` reports. To reach one entry,
+        prefer `entry(name)` over indexing.
         """
     def entry(self, name: builtins.str) -> EntryAbi:
         r"""
@@ -199,9 +200,8 @@ class ContractArtifact:
         r"""
         Build the signature (unlocking) script for an entrypoint.
         
-        Identical bytes to
-        [`CompiledContract.build_sig_script`][kaspa.experimental.silverscript.CompiledContract.build_sig_script]
-        for the same call — both encode against this same artifact.
+        Identical bytes to `CompiledContract.build_sig_script` for the same
+        call: both encode against this same artifact.
         
         Args:
             function_name: The entrypoint to call.
@@ -243,13 +243,14 @@ class ContractArtifact:
         against the script, and the entries' dispatch tags for collisions —
         across every contract in the loaded artifact, not only the selected one.
         
-        This detects a corrupted or edited artifact. It does **not** prove the
-        bytecode was compiled from any particular source, so it does not make an
-        untrusted artifact trustworthy: take artifacts from a build you trust,
-        or compare `template_hash` against a value you already trust.
-        
         Raises:
             SilverScriptError: If the artifact is inconsistent.
+        
+        Note:
+            This detects a corrupted or edited artifact. It does not prove the
+            bytecode was compiled from any particular source, so it does not
+            make an untrusted artifact trustworthy: use artifacts from a
+            trusted build, or compare `template_hash` against a known value.
         """
     def to_json(self) -> builtins.str:
         r"""
@@ -264,7 +265,13 @@ class ContractArtifact:
         Raises:
             SilverScriptError: If the artifact cannot be serialized.
         """
-    def __repr__(self) -> builtins.str: ...
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The ContractArtifact as a repr string.
+        """
 
 @typing.final
 class DebugCallResult:
@@ -308,7 +315,13 @@ class DebugCallResult:
         the statements up to and including the failing one: the last entry is
         the failing statement, snapshotted when it was reached.
         """
-    def __repr__(self) -> builtins.str: ...
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The DebugCallResult as a repr string.
+        """
 
 @typing.final
 class DebugVariable:
@@ -344,7 +357,13 @@ class DebugVariable:
         The decoded value as a native Python object (`int`, `bool`, `bytes`,
         `str`, `list`, or `dict`). None if the value could not be decoded.
         """
-    def __repr__(self) -> builtins.str: ...
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The DebugVariable as a repr string.
+        """
 
 @typing.final
 class EntryAbi:
@@ -365,7 +384,13 @@ class EntryAbi:
         arguments. Every signature script built for this entrypoint ends with
         this value as its final data push.
         """
-    def __repr__(self) -> builtins.str: ...
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The EntryAbi as a repr string.
+        """
 
 @typing.final
 class FailureFrame:
@@ -390,7 +415,13 @@ class FailureFrame:
         The variables in scope in this frame (locals, arguments, contract
         state, and constructor arguments; constants are omitted).
         """
-    def __repr__(self) -> builtins.str: ...
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The FailureFrame as a repr string.
+        """
 
 @typing.final
 class FailureReport:
@@ -415,9 +446,24 @@ class FailureReport:
         r"""
         Format the report for terminal display: failing source lines with
         context, plus each frame's variables.
+        
+        Returns:
+            str: The rendered report.
         """
-    def __str__(self) -> builtins.str: ...
-    def __repr__(self) -> builtins.str: ...
+    def __str__(self) -> builtins.str:
+        r"""
+        The string representation.
+        
+        Returns:
+            str: The rendered failure report.
+        """
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The FailureReport as a repr string.
+        """
 
 @typing.final
 class ParamAbi:
@@ -428,7 +474,13 @@ class ParamAbi:
     def name(self) -> builtins.str: ...
     @property
     def type_name(self) -> builtins.str: ...
-    def __repr__(self) -> builtins.str: ...
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The ParamAbi as a repr string.
+        """
 
 @typing.final
 class SilverScriptError(builtins.Exception):
@@ -467,15 +519,17 @@ class TraceStep:
         The variables in scope when the statement was reached — before it
         executes, so a local it defines appears from the following step on.
         """
-    def __repr__(self) -> builtins.str: ...
+    def __repr__(self) -> builtins.str:
+        r"""
+        The detailed string representation.
+        
+        Returns:
+            str: The TraceStep as a repr string.
+        """
 
 def compile(source: builtins.str, constructor_args: typing.Optional[typing.Any] = None, *, allow_entrypoint_return: builtins.bool = False, record_debug_infos: builtins.bool = False) -> CompiledContract:
     r"""
     Compile SilverScript `source` into a `CompiledContract`.
-    
-    **Experimental:** SilverScript and these bindings are under active
-    development; the API and the compiler's output may change in breaking ways
-    between releases. See the `kaspa.experimental.silverscript` module docs.
     
     Args:
         source: The SilverScript contract source.
@@ -493,14 +547,16 @@ def compile(source: builtins.str, constructor_args: typing.Optional[typing.Any] 
     Raises:
         SilverScriptError: If compilation fails (syntax error, type error, or
             incompatible pragma).
+    
+    Note:
+        Experimental. SilverScript and these bindings are under active
+        development; the API and the compiler's output may change in breaking
+        ways between releases.
     """
 
 def debug_call(source: builtins.str, function_name: typing.Optional[builtins.str] = None, args: typing.Optional[typing.Any] = None, constructor_args: typing.Optional[typing.Any] = None, tx: typing.Optional[typing.Any] = None, trace: builtins.bool = False) -> DebugCallResult:
     r"""
     Debug a SilverScript contract call by simulating the full spend locally.
-    
-    **Experimental:** SilverScript and these bindings are under active
-    development; the API may change in breaking ways between releases.
     
     Compiles `source` with debug info, builds a synthetic transaction that
     spends the contract's P2SH UTXO with a call to the chosen entrypoint, and
@@ -510,8 +566,36 @@ def debug_call(source: builtins.str, function_name: typing.Optional[builtins.str
     arguments, contract state) in each frame. `console.log` output is captured
     either way.
     
-    This simulates script validation on a synthetic transaction — it does not
+    This simulates script validation on a synthetic transaction: it does not
     touch the network and says nothing about fees, mass, or maturity.
+    
+    The `tx` scenario dict takes the following keys:
+    
+    Transaction keys:
+        - 'version' (int): Transaction version (default 1).
+        - 'lock_time' (int): Transaction lock time (default 0).
+        - 'active_input_index' (int): The input being debugged (default 0).
+        - 'inputs' (list[dict]): Required. At least one input.
+        - 'outputs' (list[dict]): The transaction outputs.
+    
+    Input keys:
+        - 'utxo_value' (int): Required. The spent UTXO value in sompi.
+        - 'covenant_id' (bytes | str): 32 bytes or hex.
+        - 'state' (dict): Contract state fields carried by the spent UTXO.
+        - 'constructor_args' (list): Constructor arguments for this input.
+        - 'prev_txid' (bytes | str), 'prev_index' (int), 'sequence' (int),
+          'sig_op_count' (int): Outpoint and input metadata.
+        - 'signature_script' (bytes | str), 'utxo_script' (bytes | str): Raw
+          script overrides.
+    
+    Output keys:
+        - 'value' (int): Required. The output value in sompi.
+        - 'covenant_id' (bytes | str): 32 bytes or hex.
+        - 'authorizing_input' (int): Index of the authorizing input.
+        - 'state' (dict): The post-transition contract state to verify.
+        - 'constructor_args' (list): Constructor arguments for this output.
+        - 'script' (bytes | str), 'p2pk_pubkey' (bytes | str): Raw script
+          overrides.
     
     Args:
         source: The SilverScript contract source.
@@ -520,22 +604,12 @@ def debug_call(source: builtins.str, function_name: typing.Optional[builtins.str
             name (e.g. `"add"`).
         args: Native Python values matching the entrypoint's parameters. For
             covenant transition functions the leading `State` parameter is
-            synthesized from the scenario's output states — pass only the
+            synthesized from the scenario's output states, so pass only the
             source-level arguments after it.
         constructor_args: Native Python values for the contract's constructor
             parameters.
-        tx: Optional transaction scenario dict. Defaults to a single-input,
-            single-output spend of the contract. Keys: `version` (default 1),
-            `lock_time` (default 0), `active_input_index` (default 0; the
-            input being debugged), `inputs`, and `outputs`. Each input dict
-            accepts `utxo_value` (required), `covenant_id` (32 bytes or hex),
-            `state` (dict of contract state fields carried by the spent UTXO),
-            `constructor_args`, `prev_txid`, `prev_index`, `sequence`,
-            `sig_op_count`, `signature_script`, and `utxo_script` (raw bytes
-            overrides). Each output dict accepts `value` (required),
-            `covenant_id`, `authorizing_input`, `state` (the post-transition
-            contract state to verify), `constructor_args`, `script`, and
-            `p2pk_pubkey`.
+        tx: Transaction scenario dict (see above). Defaults to a single-input,
+            single-output spend of the contract.
         trace: When True, record a per-statement execution trace on
             `result.trace`: each executed statement with its source line,
             enclosing function, and the variables in scope when it was
@@ -551,21 +625,20 @@ def debug_call(source: builtins.str, function_name: typing.Optional[builtins.str
     Raises:
         SilverScriptError: If compilation fails, the entrypoint or an argument
             is invalid, or the `tx` scenario is malformed.
+    
+    Note:
+        Experimental. SilverScript and these bindings are under active
+        development; the API may change in breaking ways between releases.
     """
 
 def load_artifact(json: builtins.str, contract_name: typing.Optional[builtins.str] = None) -> ContractArtifact:
     r"""
     Load a portable ABI artifact from JSON.
     
-    **Experimental:** SilverScript and these bindings are under active
-    development; the API and the artifact schema may change in breaking ways
-    between releases. See the `kaspa.experimental.silverscript` module docs.
-    
-    Takes what
-    [`CompiledContract.artifact_json`][kaspa.experimental.silverscript.CompiledContract.artifact_json]
-    returns, or what upstream `silverc -c` writes. Compile once and ship the
-    artifact; derive addresses and build unlocking scripts from it at runtime
-    with no source and no compiler.
+    Takes what `CompiledContract.artifact_json` returns, or what upstream
+    `silverc -c` writes. Compile once and ship the artifact; derive addresses
+    and build unlocking scripts from it at runtime with no source and no
+    compiler.
     
     `debug_call` and compiling with different constructor arguments need the
     source and are not available from an artifact — an artifact describes one
@@ -582,5 +655,10 @@ def load_artifact(json: builtins.str, contract_name: typing.Optional[builtins.st
     Raises:
         SilverScriptError: If the JSON is malformed, its schema version is
             unsupported, or `contract_name` is absent or ambiguous.
+    
+    Note:
+        Experimental. SilverScript and these bindings are under active
+        development; the API and the artifact schema may change in breaking
+        ways between releases.
     """
 

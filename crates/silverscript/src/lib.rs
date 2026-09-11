@@ -1,6 +1,7 @@
 //! Python bindings for the SilverScript compiler (`kaspa.experimental.silverscript`).
 //!
-//! A separate extension module from the core `kaspa`, since SilverScript pins a different rusty-kaspa dep commit.
+//! A separate extension module from the core `kaspa`, since SilverScript pins
+//! a different rusty-kaspa dep commit.
 
 use std::collections::BTreeMap;
 
@@ -412,6 +413,10 @@ pub struct PyParamAbi {
 #[gen_stub_pymethods]
 #[pymethods]
 impl PyParamAbi {
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The ParamAbi as a repr string.
     pub fn __repr__(&self) -> String {
         format!(
             "ParamAbi(name={:?}, type_name={:?})",
@@ -447,6 +452,10 @@ impl PyEntryAbi {
         PyBytes::new(py, &self.dispatch_tag)
     }
 
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The EntryAbi as a repr string.
     pub fn __repr__(&self) -> String {
         format!(
             "EntryAbi(name={:?}, params={}, dispatch_tag={:?})",
@@ -583,9 +592,9 @@ impl PyCompiledContract {
     /// The contract ABI: one entry per callable entrypoint, ordered
     /// alphabetically by name.
     ///
-    /// The same order a `ContractArtifact` reports, so an entrypoint keeps its
-    /// position whichever route you reached it by. To reach one entry, prefer
-    /// `entry(name)` over indexing.
+    /// The same order a `ContractArtifact` reports, so an entrypoint keeps the
+    /// same position either way. To reach one entry, prefer `entry(name)` over
+    /// indexing.
     #[getter]
     pub fn abi(&self) -> Vec<PyEntryAbi> {
         self.abi.clone()
@@ -614,10 +623,8 @@ impl PyCompiledContract {
     /// `(offset, len)`: byte offset and length of the contract state within
     /// the script.
     ///
-    /// Named for the artifact's `compiled.state_span`, which carries the same
-    /// two numbers and is the spelling you meet when you parse
-    /// `artifact_json()`. (The compiler's own struct calls the first number
-    /// `start`; it is the same offset.)
+    /// The same two numbers, under the same name, as the artifact's
+    /// `compiled.state_span` in `artifact_json()`.
     #[getter]
     pub fn state_span(&self) -> (usize, usize) {
         self.state_span
@@ -707,6 +714,10 @@ impl PyCompiledContract {
         Ok(PyBytes::new(py, &bytes))
     }
 
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The CompiledContract as a repr string.
     pub fn __repr__(&self) -> String {
         format!(
             "CompiledContract(name={:?}, bytecode={} bytes, entries={})",
@@ -751,10 +762,6 @@ pub(crate) fn abi_entries(contract: &SilContractArtifact) -> Vec<PyEntryAbi> {
 
 /// Compile SilverScript `source` into a `CompiledContract`.
 ///
-/// **Experimental:** SilverScript and these bindings are under active
-/// development; the API and the compiler's output may change in breaking ways
-/// between releases. See the `kaspa.experimental.silverscript` module docs.
-///
 /// Args:
 ///     source: The SilverScript contract source.
 ///     constructor_args: Native Python values matching the contract's
@@ -771,6 +778,11 @@ pub(crate) fn abi_entries(contract: &SilContractArtifact) -> Vec<PyEntryAbi> {
 /// Raises:
 ///     SilverScriptError: If compilation fails (syntax error, type error, or
 ///         incompatible pragma).
+///
+/// Note:
+///     Experimental. SilverScript and these bindings are under active
+///     development; the API and the compiler's output may change in breaking
+///     ways between releases.
 #[gen_stub_pyfunction(module = "kaspa.experimental.silverscript")]
 #[pyfunction]
 #[pyo3(name = "compile")]

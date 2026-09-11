@@ -1,13 +1,12 @@
 //! Source-level contract call debugging (`debug_call`).
 //!
-//! Simulates a full transaction spend through SilverScript's `DebugSession` —
-//! the engine behind the upstream CLI debugger — and reports the outcome as a
+//! Simulates a full transaction spend through SilverScript's `DebugSession`,
+//! the engine behind the upstream CLI debugger, and reports the outcome as a
 //! plain result object: pass/fail, a source-level failure report with decoded
-//! variables per frame, and captured `console.log` output. Unlike the upstream
-//! interactive debugger there is no interactive stepping or breakpoint
-//! surface: a Python script is not an IDE, so the session always runs to
-//! completion — with `trace=True` it records what the CLI debugger would show
-//! at each step along the way.
+//! variables per frame, and captured `console.log` output. There is no
+//! interactive stepping or breakpoint surface; the session always runs to
+//! completion, and with `trace=True` it records what the CLI debugger would
+//! show at each step along the way.
 //!
 //! The transaction harness is a port of the upstream CLI debugger's scenario
 //! builder (`debugger/cli/src/main.rs`), adapted to native Python values in
@@ -117,6 +116,10 @@ impl PyDebugVariable {
         debug_value_to_py(py, &self.value)
     }
 
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The DebugVariable as a repr string.
     pub fn __repr__(&self) -> String {
         format!(
             "DebugVariable(name={:?}, type_name={:?}, value={})",
@@ -163,6 +166,10 @@ impl PyFailureFrame {
         self.variables.clone()
     }
 
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The FailureFrame as a repr string.
     pub fn __repr__(&self) -> String {
         format!(
             "FailureFrame(function_name={:?}, line={:?}, {} variable(s))",
@@ -208,14 +215,25 @@ impl PyFailureReport {
 
     /// Format the report for terminal display: failing source lines with
     /// context, plus each frame's variables.
+    ///
+    /// Returns:
+    ///     str: The rendered report.
     pub fn render(&self) -> &str {
         &self.rendered
     }
 
+    /// The string representation.
+    ///
+    /// Returns:
+    ///     str: The rendered failure report.
     pub fn __str__(&self) -> &str {
         &self.rendered
     }
 
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The FailureReport as a repr string.
     pub fn __repr__(&self) -> String {
         format!(
             "FailureReport(message={:?}, {} frame(s))",
@@ -268,6 +286,10 @@ impl PyTraceStep {
         self.variables.clone()
     }
 
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The TraceStep as a repr string.
     pub fn __repr__(&self) -> String {
         format!(
             "TraceStep(line={}, function_name={}, statement={}, {} variable(s))",
@@ -348,6 +370,10 @@ impl PyDebugCallResult {
         self.trace.clone()
     }
 
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The DebugCallResult as a repr string.
     pub fn __repr__(&self) -> String {
         format!(
             "DebugCallResult(function_name={:?}, success={}, error={})",
@@ -939,16 +965,15 @@ struct CompiledWithAbi<'i> {
     artifact: SilAbiArtifact,
 }
 
-/// The contract's first entrypoint in source order — `debug_call`'s default
+/// The contract's first entrypoint in source order: `debug_call`'s default
 /// target when no function name is given.
 ///
-/// Deliberately *not* `abi[0]`, which is alphabetical on both
-/// `CompiledContract` and `ContractArtifact`. `debug_call` requires source, so
-/// declaration order is unambiguously available here, and "the first
-/// entrypoint you declared" is the friendlier default for a human debugging.
-/// (Upstream's debugger CLI instead defaults to the alphabetically first entry
-/// via `entries.first_key_value()`.) Source order has to come from the AST —
-/// the artifact keys its entries alphabetically and cannot recover it.
+/// Deliberately not `abi[0]`, which is alphabetical on both `CompiledContract`
+/// and `ContractArtifact`. `debug_call` requires source, so declaration order
+/// is available here, and is the more predictable default when debugging.
+/// (Upstream's debugger CLI defaults to the alphabetically first entry via
+/// `entries.first_key_value()`.) Source order has to come from the AST: the
+/// artifact keys its entries alphabetically and cannot recover it.
 fn first_entrypoint(contract: &CompiledContract<'_>) -> Option<String> {
     contract
         .ast
@@ -1731,9 +1756,6 @@ fn run_harness(
 
 /// Debug a SilverScript contract call by simulating the full spend locally.
 ///
-/// **Experimental:** SilverScript and these bindings are under active
-/// development; the API may change in breaking ways between releases.
-///
 /// Compiles `source` with debug info, builds a synthetic transaction that
 /// spends the contract's P2SH UTXO with a call to the chosen entrypoint, and
 /// executes it through SilverScript's source-level debug engine. The result
@@ -1742,8 +1764,36 @@ fn run_harness(
 /// arguments, contract state) in each frame. `console.log` output is captured
 /// either way.
 ///
-/// This simulates script validation on a synthetic transaction — it does not
+/// This simulates script validation on a synthetic transaction: it does not
 /// touch the network and says nothing about fees, mass, or maturity.
+///
+/// The `tx` scenario dict takes the following keys:
+///
+/// Transaction keys:
+///     - 'version' (int): Transaction version (default 1).
+///     - 'lock_time' (int): Transaction lock time (default 0).
+///     - 'active_input_index' (int): The input being debugged (default 0).
+///     - 'inputs' (list[dict]): Required. At least one input.
+///     - 'outputs' (list[dict]): The transaction outputs.
+///
+/// Input keys:
+///     - 'utxo_value' (int): Required. The spent UTXO value in sompi.
+///     - 'covenant_id' (bytes | str): 32 bytes or hex.
+///     - 'state' (dict): Contract state fields carried by the spent UTXO.
+///     - 'constructor_args' (list): Constructor arguments for this input.
+///     - 'prev_txid' (bytes | str), 'prev_index' (int), 'sequence' (int),
+///       'sig_op_count' (int): Outpoint and input metadata.
+///     - 'signature_script' (bytes | str), 'utxo_script' (bytes | str): Raw
+///       script overrides.
+///
+/// Output keys:
+///     - 'value' (int): Required. The output value in sompi.
+///     - 'covenant_id' (bytes | str): 32 bytes or hex.
+///     - 'authorizing_input' (int): Index of the authorizing input.
+///     - 'state' (dict): The post-transition contract state to verify.
+///     - 'constructor_args' (list): Constructor arguments for this output.
+///     - 'script' (bytes | str), 'p2pk_pubkey' (bytes | str): Raw script
+///       overrides.
 ///
 /// Args:
 ///     source: The SilverScript contract source.
@@ -1752,22 +1802,12 @@ fn run_harness(
 ///         name (e.g. `"add"`).
 ///     args: Native Python values matching the entrypoint's parameters. For
 ///         covenant transition functions the leading `State` parameter is
-///         synthesized from the scenario's output states — pass only the
+///         synthesized from the scenario's output states, so pass only the
 ///         source-level arguments after it.
 ///     constructor_args: Native Python values for the contract's constructor
 ///         parameters.
-///     tx: Optional transaction scenario dict. Defaults to a single-input,
-///         single-output spend of the contract. Keys: `version` (default 1),
-///         `lock_time` (default 0), `active_input_index` (default 0; the
-///         input being debugged), `inputs`, and `outputs`. Each input dict
-///         accepts `utxo_value` (required), `covenant_id` (32 bytes or hex),
-///         `state` (dict of contract state fields carried by the spent UTXO),
-///         `constructor_args`, `prev_txid`, `prev_index`, `sequence`,
-///         `sig_op_count`, `signature_script`, and `utxo_script` (raw bytes
-///         overrides). Each output dict accepts `value` (required),
-///         `covenant_id`, `authorizing_input`, `state` (the post-transition
-///         contract state to verify), `constructor_args`, `script`, and
-///         `p2pk_pubkey`.
+///     tx: Transaction scenario dict (see above). Defaults to a single-input,
+///         single-output spend of the contract.
 ///     trace: When True, record a per-statement execution trace on
 ///         `result.trace`: each executed statement with its source line,
 ///         enclosing function, and the variables in scope when it was
@@ -1783,6 +1823,10 @@ fn run_harness(
 /// Raises:
 ///     SilverScriptError: If compilation fails, the entrypoint or an argument
 ///         is invalid, or the `tx` scenario is malformed.
+///
+/// Note:
+///     Experimental. SilverScript and these bindings are under active
+///     development; the API may change in breaking ways between releases.
 #[gen_stub_pyfunction(module = "kaspa.experimental.silverscript")]
 #[pyfunction]
 #[pyo3(name = "debug_call")]
