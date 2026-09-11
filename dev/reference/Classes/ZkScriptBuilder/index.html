@@ -4039,6 +4039,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#kaspa.ZkScriptBuilder.append_r0_groth16_verifier_dynamic_image_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;append_r0_groth16_verifier_dynamic_image_id
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#kaspa.ZkScriptBuilder.append_r0_groth16_verifier_with_fixed_journal" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -14783,6 +14794,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#kaspa.ZkScriptBuilder.append_r0_groth16_verifier_dynamic_image_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;append_r0_groth16_verifier_dynamic_image_id
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#kaspa.ZkScriptBuilder.append_r0_groth16_verifier_with_fixed_journal" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -15213,6 +15235,54 @@ id. Expects <code>[..., journal_hash, compressed_proof]</code> on the stack.</p>
             <td class="doc-raises-details">
               <div class="doc-md-description">
                 <p>If <code>image_id</code> is malformed or the fragment cannot be appended.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="kaspa.ZkScriptBuilder.append_r0_groth16_verifier_dynamic_image_id" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">append_r0_groth16_verifier_dynamic_image_id</span>
+
+
+<a href="#kaspa.ZkScriptBuilder.append_r0_groth16_verifier_dynamic_image_id" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">append_r0_groth16_verifier_dynamic_image_id</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Append the r0-over-groth16 verifier fragment that takes the image id
+from the stack instead of baking it into the script. Expects
+<code>[..., journal_hash, compressed_proof, image_id]</code> on the stack.</p>
+<p><code>append_r0_groth16_verifier(image_id)</code> is equivalent to pushing
+<code>image_id</code> with <code>add_data</code> and then calling this.</p>
+
+
+<table>
+      <thead>
+        <tr>
+          <th><span class="doc-section-title">RAISES</span></th>
+          <th><span>DESCRIPTION</span></th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+              <span class="doc-raises-annotation">
+                  <code><span title="ZkError">ZkError</span></code>
+              </span>
+            </td>
+            <td class="doc-raises-details">
+              <div class="doc-md-description">
+                <p>If the fragment cannot be appended (or the builder is consumed).</p>
               </div>
             </td>
           </tr>
@@ -16041,7 +16111,7 @@ be decoded, or <code>journal</code> is malformed.</p>
   </span>
 
 <a href="#kaspa.ZkScriptBuilder.new_r0" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">new_r0</span><span class="p">(</span><span class="n">covenants_enabled</span><span class="p">:</span> <span class="n"><span title="builtins.bool">bool</span></span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">sigop_script_units</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.int">int</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.ZkScriptBuilder" href="#kaspa.ZkScriptBuilder">ZkScriptBuilder</a></span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">new_r0</span><span class="p">(</span><span class="n">covenants_enabled</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.bool">bool</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sigop_script_units</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.int">int</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.ZkScriptBuilder" href="#kaspa.ZkScriptBuilder">ZkScriptBuilder</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -16066,19 +16136,19 @@ breaking change.</p>
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>Use the post-Toccata script limits (default:
-True). The zk proof pushes exceed the pre-Toccata 520-byte
-element limit, so finalizing always fails when this is False;
-only pass False to build fragments under pre-Toccata rules.</p>
+                <p>Deprecated and ignored. Covenant opcodes and
+their script limits are always enabled. Passing a value emits
+a DeprecationWarning; the parameter will be removed in a
+future major version.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
                     <b>TYPE:</b>
-                      <code><span title="builtins.bool">bool</span></code>
+                      <code><span title="typing.Optional">Optional</span>[<span title="builtins.bool">bool</span>]</code>
                   </span>
                   <span class="doc-param-default">
                     <b>DEFAULT:</b>
-                      <code>True</code>
+                      <code>None</code>
                   </span>
               </p>
             </td>

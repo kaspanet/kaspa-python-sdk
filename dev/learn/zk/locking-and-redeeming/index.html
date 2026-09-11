@@ -14751,16 +14751,15 @@ is a static factory (there is no constructor — matching the WASM SDK, so
 future non-RISC-Zero backends can add their own factories):</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">kaspa</span><span class="w"> </span><span class="kn">import</span> <span class="n">ZkScriptBuilder</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">builder</span> <span class="o">=</span> <span class="n">ZkScriptBuilder</span><span class="o">.</span><span class="n">new_r0</span><span class="p">(</span><span class="n">covenants_enabled</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">builder</span> <span class="o">=</span> <span class="n">ZkScriptBuilder</span><span class="o">.</span><span class="n">new_r0</span><span class="p">()</span>
 </span></code></pre></div>
 <ul>
-<li><strong><code>covenants_enabled</code></strong> (default <code>True</code>) selects the post-Toccata
-  script limits. The sig script's pushes — the redeem script itself,
-  and for succinct proofs the witness — exceed the pre-Toccata 520-byte
-  element limit, so finalizing always fails when this is <code>False</code>; only
-  pass <code>False</code> to build fragments under pre-Toccata rules.</li>
 <li><strong><code>sigop_script_units</code></strong> overrides the script units charged per
   signature operation; omit it for the engine default.</li>
+<li><strong><code>covenants_enabled</code></strong> is deprecated and ignored: covenant opcodes and
+  their script limits are always enabled, so the proof-sized pushes the
+  sig script needs are always allowed. Passing it emits a
+  <code>DeprecationWarning</code>; it will be removed in a future major version.</li>
 </ul>
 <h2 id="committing-the-lock-side">Committing: the lock side<a class="headerlink" href="#committing-the-lock-side" title="Permanent link">&para;</a></h2>
 <p>Committing binds the builder to a specific program and writes the
@@ -14804,8 +14803,8 @@ its <code>journal</code> argument is likewise the 32-byte journal digest.</p>
   committed script intact — fix the input and finalize again.</li>
 </ul>
 <h2 id="spending-the-locked-utxo">Spending the locked UTXO<a class="headerlink" href="#spending-the-locked-utxo" title="Permanent link">&para;</a></h2>
-<p>The redeem transaction differs from an ordinary P2SH spend in three
-ways, all visible in
+<p>The redeem transaction differs from an ordinary P2SH spend in two
+ways, both visible in
 <a href="https://github.com/kaspanet/kaspa-python-sdk/blob/main/examples/zk/groth16_onchain.py"><code>examples/zk/groth16_onchain.py</code></a>:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">kaspa</span><span class="w"> </span><span class="kn">import</span> <span class="n">TransactionInput</span><span class="p">,</span> <span class="n">TransactionOutpoint</span><span class="p">,</span> <span class="n">Hash</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
@@ -14830,9 +14829,6 @@ ways, all visible in
   script opcodes — so the redeem input needs a <code>compute_budget</code> with
   headroom (the example uses 1600 for Groth16). Too low and the redeem
   fails.</li>
-<li><strong>Activation.</strong> <code>OpZkPrecompile</code> only runs where Toccata is active —
-  pre-check the virtual DAA score against the activation score before
-  submitting.</li>
 </ul>
 <p>Everything else — sizing the fee from
 <a href="../../../reference/Functions/calculate_transaction_mass/"><code>calculate_transaction_mass</code></a>,

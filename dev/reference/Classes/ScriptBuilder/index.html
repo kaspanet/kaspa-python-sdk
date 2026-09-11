@@ -15077,7 +15077,9 @@ transactions.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Whether covenant opcodes and post-Toccata script limits are enabled.</p>
+        <p>Deprecated. Covenant opcodes and their script limits are always
+enabled, so this is always True. Reading it emits a DeprecationWarning;
+the property will be removed in a future major version.</p>
 
 
 <table>
@@ -15094,7 +15096,7 @@ transactions.</p>
             </td>
             <td class="doc-returns-details">
               <div class="doc-md-description">
-                <p>True if covenants are enabled for this builder.</p>
+                <p>Always True.</p>
               </div>
                 <p>
                   <span class="doc-returns-annotation">
@@ -15250,7 +15252,7 @@ transactions.</p>
 
 
 <a href="#kaspa.ScriptBuilder.__new__" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">__new__</span><span class="p">(</span><span class="n">covenants_enabled</span><span class="p">:</span> <span class="n"><span title="builtins.bool">bool</span></span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">sigop_script_units</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.int">int</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.ScriptBuilder" href="#kaspa.ScriptBuilder">ScriptBuilder</a></span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">__new__</span><span class="p">(</span><span class="n">covenants_enabled</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.bool">bool</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sigop_script_units</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.int">int</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.ScriptBuilder" href="#kaspa.ScriptBuilder">ScriptBuilder</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -15272,17 +15274,19 @@ transactions.</p>
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>Enable covenant opcodes and post-Toccata script
-limits (default: False).</p>
+                <p>Deprecated and ignored. Covenant opcodes and
+their script limits are always enabled. Passing a value emits
+a DeprecationWarning; the parameter will be removed in a
+future major version.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
                     <b>TYPE:</b>
-                      <code><span title="builtins.bool">bool</span></code>
+                      <code><span title="typing.Optional">Optional</span>[<span title="builtins.bool">bool</span>]</code>
                   </span>
                   <span class="doc-param-default">
                     <b>DEFAULT:</b>
-                      <code>False</code>
+                      <code>None</code>
                   </span>
               </p>
             </td>
@@ -16280,7 +16284,7 @@ Defaults to the native engine default when omitted.</p>
   </span>
 
 <a href="#kaspa.ScriptBuilder.from_script" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">from_script</span><span class="p">(</span><span class="n">script</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.Binary" href="../Binary/#kaspa.Binary">Binary</a></span><span class="p">,</span> <span class="n">covenants_enabled</span><span class="p">:</span> <span class="n"><span title="builtins.bool">bool</span></span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">sigop_script_units</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.int">int</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.ScriptBuilder" href="#kaspa.ScriptBuilder">ScriptBuilder</a></span>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">from_script</span><span class="p">(</span><span class="n">script</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.Binary" href="../Binary/#kaspa.Binary">Binary</a></span><span class="p">,</span> <span class="n">covenants_enabled</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.bool">bool</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sigop_script_units</span><span class="p">:</span> <span class="n"><span title="typing.Optional">Optional</span></span><span class="p">[</span><span class="n"><span title="builtins.int">int</span></span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="kaspa.ScriptBuilder" href="#kaspa.ScriptBuilder">ScriptBuilder</a></span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -16318,17 +16322,19 @@ Defaults to the native engine default when omitted.</p>
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>Enable covenant opcodes and post-Toccata script
-limits (default: False).</p>
+                <p>Deprecated and ignored. Covenant opcodes and
+their script limits are always enabled. Passing a value emits
+a DeprecationWarning; the parameter will be removed in a
+future major version.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
                     <b>TYPE:</b>
-                      <code><span title="builtins.bool">bool</span></code>
+                      <code><span title="typing.Optional">Optional</span>[<span title="builtins.bool">bool</span>]</code>
                   </span>
                   <span class="doc-param-default">
                     <b>DEFAULT:</b>
-                      <code>False</code>
+                      <code>None</code>
                   </span>
               </p>
             </td>
