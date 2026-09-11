@@ -451,10 +451,13 @@ pub struct PyEntryAbi {
 impl PyEntryAbi {
     /// The entrypoint's four-byte dispatch tag.
     ///
-    /// `blake3("name(type,type)")[:4]` — content-addressed, so it depends only
-    /// on the entrypoint's name and parameter types, never on constructor
-    /// arguments. Every signature script built for this entrypoint ends with
-    /// this value as its final data push.
+    /// `blake3("name(type,type)")[:4]` — content-addressed over the
+    /// entrypoint's name and its *resolved* parameter types. Constructor
+    /// arguments reach it only through a parameter whose array length is one of
+    /// them (`byte[n]`), where a different `n` resolves to a different type and
+    /// so a different tag; for every other parameter shape the tag is the same
+    /// across every instance of the contract. Every signature script built for
+    /// this entrypoint ends with this value as its final data push.
     #[getter]
     pub fn dispatch_tag<'py>(&self, py: Python<'py>) -> Bound<'py, PyBytes> {
         PyBytes::new(py, &self.dispatch_tag)

@@ -588,11 +588,28 @@ class TestAbi:
 
     def test_dispatch_tag_is_content_addressed(self):
         # The tag is blake3("name(type,type)")[:4], so it depends only on the
-        # entry's name and parameter types — never on constructor arguments.
+        # entry's name and its resolved parameter types. Two instances of the
+        # same contract share their tags however different their scripts are.
         a = silverscript.compile(GUARD, [100])
         b = silverscript.compile(GUARD, [101])
         assert a.bytecode != b.bytecode
         assert a.abi[0].dispatch_tag == b.abi[0].dispatch_tag
+
+    def test_ctor_sized_parameter_changes_the_dispatch_tag(self):
+        # The one way a constructor argument reaches the tag: it resolves the
+        # length of an array parameter, so a different length is a different
+        # parameter type and therefore a different tag. Anything that caches
+        # tags across instances of such a contract is wrong.
+        source = """
+        pragma silverscript ^0.1.0;
+        contract Sized(int n) {
+            entry take(byte[n] blob) { require(blob.length == n); }
+        }
+        """
+        four = silverscript.compile(source, [4]).entry("take")
+        eight = silverscript.compile(source, [8]).entry("take")
+        assert (four.params[0].type_name, eight.params[0].type_name) == ("byte[4]", "byte[8]")
+        assert four.dispatch_tag != eight.dispatch_tag
 
     def test_dispatch_tags_are_distinct_per_entry(self):
         contract = silverscript.compile(MULTI, [10])

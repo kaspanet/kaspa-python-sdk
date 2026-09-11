@@ -262,6 +262,10 @@ pub struct PyTraceStep {
 impl PyTraceStep {
     /// 1-based source line of the statement. None when no source mapping
     /// exists (e.g. generated dispatch code).
+    ///
+    /// A covenant transition also pauses once on a span the engine leaves
+    /// unset, which reads as line 1 — the CLI debugger highlights that line at
+    /// the same pause, so the step is recorded rather than dropped.
     #[getter]
     pub fn line(&self) -> Option<u32> {
         self.line
@@ -585,7 +589,14 @@ fn typed_value_to_expr(
                     bytes.len()
                 )));
             }
-            return Ok(Expr::bytes(bytes));
+            // The literal has to carry the field's declared dimension, as
+            // upstream's `parse_byte_array_arg` does: `Expr::bytes` tags it
+            // `byte[N]` (`ArrayDim::Fixed`), which a `byte[]` field rejects.
+            return Ok(if type_ref.is_dynamic_array() {
+                Expr::dynamic_bytes(bytes)
+            } else {
+                Expr::bytes(bytes)
+            });
         }
         let Value::List(items) = value else {
             return Err(mismatch());
@@ -1734,10 +1745,12 @@ fn run_harness(
 
     // With tracing, run_to_completion's own loop (`while step_into()`) with a
     // snapshot of what the CLI debugger would print at each pause; execution
-    // is identical either way. Covenant transition calls record no pauses:
-    // the engine verifies their bodies as a whole (shadow evaluation), so
-    // `step_into` never lands inside them — the CLI debugger steps them the
-    // same way.
+    // is identical either way. A covenant transition's `return(State { … })` is
+    // the one statement that records no pause — the engine verifies the
+    // produced state as a whole (shadow evaluation) rather than stepping it —
+    // so a transition body that is nothing but that return traces to zero
+    // steps. Every statement ahead of it steps like any other. The CLI debugger
+    // pauses in the same places.
     let mut trace_steps = trace.then(Vec::new);
     let run_result = if let Some(steps) = trace_steps.as_mut() {
         loop {
@@ -1837,9 +1850,11 @@ fn run_harness(
 ///         `result.trace`: each executed statement with its source line,
 ///         enclosing function, and the variables in scope when it was
 ///         reached. Tracing changes what is recorded, not what executes.
-///         Covenant transition calls record no per-statement pauses (the
-///         engine verifies their bodies as a whole, as in the CLI debugger);
-///         the failure report still decodes them on failure.
+///         One statement never appears: a covenant transition's
+///         `return(State { ... })`, whose produced state the engine verifies as
+///         a whole instead of stepping (as in the CLI debugger). A transition
+///         body that is only that return therefore traces to nothing, while its
+///         other statements trace normally.
 ///
 /// Returns:
 ///     DebugCallResult: The simulation outcome. Script failures are reported

@@ -390,10 +390,13 @@ class EntryAbi:
         r"""
         The entrypoint's four-byte dispatch tag.
         
-        `blake3("name(type,type)")[:4]` — content-addressed, so it depends only
-        on the entrypoint's name and parameter types, never on constructor
-        arguments. Every signature script built for this entrypoint ends with
-        this value as its final data push.
+        `blake3("name(type,type)")[:4]` — content-addressed over the
+        entrypoint's name and its *resolved* parameter types. Constructor
+        arguments reach it only through a parameter whose array length is one of
+        them (`byte[n]`), where a different `n` resolves to a different type and
+        so a different tag; for every other parameter shape the tag is the same
+        across every instance of the contract. Every signature script built for
+        this entrypoint ends with this value as its final data push.
         """
     def __repr__(self) -> builtins.str:
         r"""
@@ -512,6 +515,10 @@ class TraceStep:
         r"""
         1-based source line of the statement. None when no source mapping
         exists (e.g. generated dispatch code).
+        
+        A covenant transition also pauses once on a span the engine leaves
+        unset, which reads as line 1 — the CLI debugger highlights that line at
+        the same pause, so the step is recorded rather than dropped.
         """
     @property
     def function_name(self) -> typing.Optional[builtins.str]:
@@ -630,9 +637,11 @@ def debug_call(source: builtins.str, function_name: typing.Optional[builtins.str
             `result.trace`: each executed statement with its source line,
             enclosing function, and the variables in scope when it was
             reached. Tracing changes what is recorded, not what executes.
-            Covenant transition calls record no per-statement pauses (the
-            engine verifies their bodies as a whole, as in the CLI debugger);
-            the failure report still decodes them on failure.
+            One statement never appears: a covenant transition's
+            `return(State { ... })`, whose produced state the engine verifies as
+            a whole instead of stepping (as in the CLI debugger). A transition
+            body that is only that return therefore traces to nothing, while its
+            other statements trace normally.
     
     Returns:
         DebugCallResult: The simulation outcome. Script failures are reported

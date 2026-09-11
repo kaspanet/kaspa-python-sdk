@@ -24,13 +24,24 @@ no parameters.
 A compile failure — a syntax error, a type error, an incompatible
 `pragma` — raises
 [`SilverScriptError`](../../reference/SilverScript/Exceptions/SilverScriptError.md).
-The message points to the byte span of the offending source.
+Where the compiler records the location, the message ends with the byte span of
+the offending source:
 
 ```python
 try:
-    silverscript.compile("contract B() { entry m() { byte x = 256; } }")
+    silverscript.compile("pragma silverscript ^9.9.9; contract B() {}")
 except silverscript.SilverScriptError as e:
-    print(e)        # ... (at bytes <start>..<end>)
+    print(e)
+# unsupported feature: SilverScript compiler cannot support pragmas that cover
+# future major versions ... (at bytes 20..26)
+```
+
+Not every error carries one. A type error names the offending declaration
+instead, and a syntax error arrives as the parser's own caret diagram:
+
+```python
+silverscript.compile("contract B() { entry m() { byte x = 256; } }")
+# SilverScriptError: unsupported feature: variable 'x' expects byte
 ```
 
 ## Constructor args embed state into the script
@@ -102,10 +113,16 @@ for a name the contract doesn't declare — the same error `build_sig_script`
 gives for the same typo.
 
 `dispatch_tag` is the entrypoint's four-byte identity —
-`blake3("name(type,type)")[:4]`. It is content-addressed, so it depends only
-on the entrypoint's name and parameter types, never on constructor arguments:
-every instance of a contract shares the same tags. It is also the final data
-push of every signature script built for that entrypoint.
+`blake3("name(type,type)")[:4]`. It is content-addressed over the name and the
+*resolved* parameter types, so every instance of a contract normally shares the
+same tags, whatever its constructor arguments. The one exception is a parameter
+whose array length is itself a constructor parameter: `entry take(byte[n] blob)`
+on `contract Sized(int n)` resolves to `byte[4]` for `n = 4` and `byte[8]` for
+`n = 8` — different types, and so different tags. Read the tag off the instance
+you are spending rather than caching it across instances of such a contract.
+
+The tag is also the final data push of every signature script built for that
+entrypoint.
 
 ## The portable artifact
 

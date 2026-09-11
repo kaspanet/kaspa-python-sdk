@@ -84,6 +84,23 @@ contract Counter(int init_count) {
 }
 """
 
+# The same transition with statements ahead of the return. Those step like any
+# others; only the `return(State { ... })` is verified as a whole and records no
+# pause — which is why COUNTER above, whose bodies are nothing but that return,
+# traces to nothing.
+COUNTER_STEPPED = """
+pragma silverscript ^0.1.0;
+contract Counter(int init_count) {
+    int count = init_count;
+    #[covenant(binding = auth, from = 1, to = 1, mode = transition)]
+    function add(State prev_state, int amount) : (State) {
+        int next = prev_state.count + amount;
+        require(next >= 0);
+        return(State { count: next });
+    }
+}
+"""
+
 BYTE_BOX = """
 pragma silverscript ^0.1.0;
 contract ByteBox(byte tag) {
@@ -111,6 +128,48 @@ contract Marker(byte init_tag) {
     }
 }
 """
+
+# A dynamic `byte[]` state field, bare and nested in a struct. `byte[]` and
+# `byte[N]` are distinct types to the compiler, so an explicit `state` literal
+# has to carry the declared dimension: tagging a `byte[]` value `byte[N]` is
+# rejected as a field type mismatch. The entrypoint compares both fields
+# against its argument, so the spliced bytes are observable as pass/fail.
+DYNAMIC_BYTES_STATE = """
+pragma silverscript ^0.1.0;
+contract Blobs(byte[] seed) {
+    struct Wrapped { int amount; byte[] tag; }
+    byte[] data = seed;
+    Wrapped wrapped = Wrapped { amount: 1, tag: seed };
+    entry check(byte[] expected) {
+        require(data == expected);
+        require(wrapped.tag == expected);
+    }
+}
+"""
+
+
+def dynamic_bytes_state(value):
+    """An explicit `Blobs` state setting both dynamic byte fields to `value`."""
+    return {"data": value, "wrapped": {"amount": 9, "tag": value}}
+
+
+def dynamic_bytes_call(expected, state=None, on_output=False):
+    """Call `Blobs.check(expected)` against a `seed` of `0x0102`.
+
+    `state` goes on the input, or on the output with `on_output`.
+    """
+    input_spec = {"utxo_value": 5000}
+    output_spec = {"value": 5000}
+    if state is not None:
+        (output_spec if on_output else input_spec)["state"] = state
+    return silverscript.debug_call(
+        DYNAMIC_BYTES_STATE,
+        "check",
+        [expected],
+        [b"\x01\x02"],
+        tx={"inputs": [input_spec], "outputs": [output_spec]},
+    )
+
 
 # A covenant whose state is a byte array — exercises type-directed state
 # conversion (ints, int lists, and hex strings in byte positions).
@@ -485,16 +544,37 @@ class TestTrace:
         assert helper_steps[0].function_name == "checkPositive"
         assert {v.name: v.value for v in helper_steps[0].variables}["v"] == 30
 
-    def test_trace_covenant_transition_records_no_pauses(self):
-        # Covenant transition bodies are verified as a whole by the engine
-        # (shadow evaluation), not stepped statement-by-statement — the
-        # upstream CLI debugger steps them the same way. The trace is
-        # present but empty; the failure report still decodes them.
+    def test_trace_skips_a_covenant_transitions_return(self):
+        # A transition's `return(State { ... })` is the one statement that
+        # records no pause: the engine verifies the state it produces as a whole
+        # (shadow evaluation) rather than stepping it, as the upstream CLI
+        # debugger does. COUNTER's bodies are nothing but that return, so the
+        # trace is present and empty.
         result = silverscript.debug_call(
             COUNTER, "add", [5], [0], tx=counter_scenario(10, 15), trace=True
         )
         assert result.success is True
         assert result.trace == []
+
+    def test_trace_covers_a_covenant_transitions_other_statements(self):
+        # The statements ahead of that return are not skipped. This is the half
+        # the docs used to deny: "the trace of a transition is empty" held only
+        # for a body with nothing else in it.
+        result = silverscript.debug_call(
+            COUNTER_STEPPED, "add", [5], [0], tx=counter_scenario(10, 15), trace=True
+        )
+        assert result.success is True
+        # A transition also pauses once with a default (zero) span, which renders
+        # as line 1. The upstream CLI debugger highlights the same line at that
+        # pause, so it is recorded rather than suppressed; skip it here so the
+        # real statements are what this asserts on.
+        assert [(s.line, s.statement) for s in result.trace if s.line != 1] == [
+            (7, "int next = prev_state.count + amount;"),
+            (8, "require(next >= 0);"),
+        ]
+        assert all(s.function_name == "add" for s in result.trace)
+        # The return itself never appears.
+        assert not any("return(" in (s.statement or "") for s in result.trace)
 
     def test_trace_alongside_console(self):
         result = silverscript.debug_call(LOGGER, "go", [7], trace=True)
@@ -697,6 +777,90 @@ class TestByteValues:
     def test_covenant_byte_arg_out_of_range_raises(self):
         with pytest.raises(silverscript.SilverScriptError):
             silverscript.debug_call(MARKER, "retag", [256], [1], tx=marker_scenario(1, 2))
+
+
+# ---------------------------------------------------------------------------
+# Dynamic `byte[]` state
+# ---------------------------------------------------------------------------
+
+class TestDynamicByteState:
+    """An explicit `state` for a `byte[]` field keeps the declared dimension.
+
+    The state literal built for a one-dimensional byte field used to be tagged
+    `byte[N]` unconditionally, so every contract with a dynamic byte state field
+    raised "contract field 'data' expects byte[]" and had no expressible `tx`
+    scenario at all — bare field or struct member, input or output. The
+    fixed-size case happened to work, because `byte[N]` was the right tag there.
+    """
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param(b"\x03\x04", id="bytes"),
+            pytest.param(bytearray(b"\x03\x04"), id="bytearray"),
+            pytest.param([3, 4], id="int-list"),
+            pytest.param("0x0304", id="hex-string"),
+        ],
+    )
+    def test_input_state_accepts_every_byte_spelling(self, value):
+        assert dynamic_bytes_call(b"\x03\x04", dynamic_bytes_state(value)).success is True
+
+    def test_input_state_replaces_the_constructor_state(self):
+        # Same length as the constructor's `seed`, different bytes: the spliced
+        # state is what the entrypoint reads.
+        state = dynamic_bytes_state(b"\x03\x04")
+        assert dynamic_bytes_call(b"\x03\x04", state).success is True
+        assert dynamic_bytes_call(b"\x01\x02", state).success is False
+
+    def test_constructor_state_is_unaffected(self):
+        # Without an explicit state the constructor's `seed` is still the state.
+        assert dynamic_bytes_call(b"\x01\x02").success is True
+        assert dynamic_bytes_call(b"\x03\x04").success is False
+
+    def test_output_state_accepts_dynamic_bytes(self):
+        # An output state materializes its own script; the active input's state
+        # still comes from the constructor.
+        result = dynamic_bytes_call(
+            b"\x01\x02", dynamic_bytes_state(b"\x03\x04"), on_output=True
+        )
+        assert result.success is True
+
+    def test_length_change_is_refused_as_a_size_change(self):
+        # A dynamic field's length is encoded in the script, so a different
+        # length moves the template bytes around the state region. That is the
+        # one case the splice must refuse — and it must refuse it as a size
+        # change, not as a field type mismatch.
+        with pytest.raises(silverscript.SilverScriptError) as excinfo:
+            dynamic_bytes_call(b"\x03\x04\x05", dynamic_bytes_state(b"\x03\x04\x05"))
+        assert "changes encoded script size" in str(excinfo.value)
+
+    def test_declared_length_is_still_enforced_for_fixed_fields(self):
+        # The `byte[N]` tag the dynamic case needed fixing away from is still
+        # the right one for a fixed field, length check included.
+        tx = {
+            "inputs": [{
+                "utxo_value": 5000,
+                "covenant_id": COVENANT_ID,
+                "state": {"tag": b"\x01\x02\x03\x04"},
+            }],
+            "outputs": [{
+                "value": 5000,
+                "covenant_id": COVENANT_ID,
+                "authorizing_input": 0,
+                "state": {"tag": b"\x09\x09\x09\x09"},
+            }],
+        }
+        result = silverscript.debug_call(
+            TAGGED, "retag", [b"\x09\x09\x09\x09"], [b"\x01\x02\x03\x04"], tx=tx
+        )
+        assert result.success is True
+
+        tx["inputs"][0]["state"] = {"tag": b"\x01\x02"}
+        with pytest.raises(silverscript.SilverScriptError) as excinfo:
+            silverscript.debug_call(
+                TAGGED, "retag", [b"\x09\x09\x09\x09"], [b"\x01\x02\x03\x04"], tx=tx
+            )
+        assert "expects 4 bytes, got 2" in str(excinfo.value)
 
 
 # ---------------------------------------------------------------------------
