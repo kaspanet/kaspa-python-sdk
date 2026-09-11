@@ -2,6 +2,8 @@
 //!
 //! A separate extension module from the core `kaspa`, since SilverScript pins a different rusty-kaspa dep commit.
 
+use std::collections::BTreeMap;
+
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::{PyBool, PyByteArray, PyBytes, PyDict, PyInt, PyList, PyString, PyTuple};
@@ -11,10 +13,12 @@ use self_cell::self_cell;
 
 use kaspa_python_sdk_core::create_py_exception;
 use silverscript_abi::{
-    ArtifactValue, CodecError, SilAbiArtifact, TypeArtifact,
+    ArtifactValue, CodecError, SilAbiArtifact, SilContractArtifact, SilEntryArtifact, TypeArtifact,
     encode_contract_covenant_decl_sig_script, encode_contract_entry_sig_script,
 };
-use silverscript_lang::ast::{ContractAst, Expr, parse_contract_ast};
+use silverscript_lang::ast::{
+    ContractAst, Expr, STATE_TYPE_NAME, TypeBase, TypeRef, parse_contract_ast,
+};
 use silverscript_lang::compiler::{
     CompileOptions, CompiledContract, artifact_value_to_expr, compile_contract,
     sil_abi_artifact_from_compiled,
@@ -139,6 +143,173 @@ pub(crate) fn value_to_artifact(value: &Value) -> ArtifactValue {
     }
 }
 
+/// Build portable ABI values with no declared types to narrow against.
+pub(crate) fn untyped_artifacts(values: &[Value]) -> Vec<ArtifactValue> {
+    values.iter().map(value_to_artifact).collect()
+}
+
+/// Narrow a value to a portable ABI `byte`: an `int` in `0..=255`, or the
+/// one-byte `bytes` a `byte` decodes back out of the debugger as.
+fn byte_artifact(value: &Value) -> PyResult<ArtifactValue> {
+    match value {
+        Value::Int(int) => u8::try_from(*int).map(ArtifactValue::Byte).map_err(|_| {
+            PySilverScriptError::new_err(format!("byte expects value in 0..=255, got {int}"))
+        }),
+        Value::Bytes(bytes) if bytes.len() == 1 => Ok(ArtifactValue::Byte(bytes[0])),
+        other => Ok(value_to_artifact(other)),
+    }
+}
+
+/// The declared types a call's arguments are narrowed against.
+///
+/// The codec is variant-strict — a `byte` parameter takes only
+/// `ArtifactValue::Byte`, which no Python value maps to on its own — so the
+/// narrowing is directed by the declared type, never by the value.
+pub(crate) struct ArgTypes<'a> {
+    artifact: &'a SilAbiArtifact,
+    contract: &'a SilContractArtifact,
+}
+
+impl<'a> ArgTypes<'a> {
+    /// Resolve `contract_name`'s declared types within an artifact.
+    pub(crate) fn new(artifact: &'a SilAbiArtifact, contract_name: &str) -> Option<Self> {
+        artifact
+            .contract(contract_name)
+            .map(|contract| Self { artifact, contract })
+    }
+
+    pub(crate) fn contract(&self) -> &'a SilContractArtifact {
+        self.contract
+    }
+
+    /// Narrow a call's arguments against the entry the codec encodes them
+    /// with. An unresolved entry or wrong argument count is left untyped for
+    /// the codec to report.
+    pub(crate) fn lower_call(
+        &self,
+        values: &[Value],
+        entry: Option<&SilEntryArtifact>,
+    ) -> PyResult<Vec<ArtifactValue>> {
+        match entry {
+            Some(entry) if entry.params.len() == values.len() => values
+                .iter()
+                .zip(&entry.params)
+                .map(|(value, param)| self.lower(value, &param.ty))
+                .collect(),
+            _ => Ok(untyped_artifacts(values)),
+        }
+    }
+
+    /// Narrow one value against its declared type. Anything the untyped
+    /// conversion already gets right is left for the codec to check.
+    pub(crate) fn lower(&self, value: &Value, ty: &TypeArtifact) -> PyResult<ArtifactValue> {
+        match ty {
+            TypeArtifact::Byte => byte_artifact(value),
+            TypeArtifact::FixedArray { item, .. } | TypeArtifact::DynamicArray { item } => {
+                let Value::List(items) = value else {
+                    return Ok(value_to_artifact(value));
+                };
+                items
+                    .iter()
+                    .map(|item_value| self.lower(item_value, item))
+                    .collect::<PyResult<Vec<_>>>()
+                    .map(ArtifactValue::Array)
+            }
+            TypeArtifact::Struct { name } => {
+                let (Value::Struct(entries), Some(fields)) = (value, self.struct_fields(name))
+                else {
+                    return Ok(value_to_artifact(value));
+                };
+                entries
+                    .iter()
+                    .map(|(field_name, field_value)| {
+                        // Unknown fields are left for the codec to name.
+                        let value = match fields.iter().find(|(name, _)| name == field_name) {
+                            Some((_, ty)) => self.lower(field_value, ty)?,
+                            None => value_to_artifact(field_value),
+                        };
+                        Ok((field_name.clone(), value))
+                    })
+                    .collect::<PyResult<BTreeMap<_, _>>>()
+                    .map(ArtifactValue::Object)
+            }
+            _ => Ok(value_to_artifact(value)),
+        }
+    }
+
+    /// A struct type's declared fields, resolved as the codec resolves them:
+    /// `State` is the runtime state, anything else a declared struct.
+    fn struct_fields(&self, name: &str) -> Option<Vec<(&'a str, &'a TypeArtifact)>> {
+        if name == STATE_TYPE_NAME {
+            return Some(
+                self.contract
+                    .runtime_state
+                    .fields
+                    .iter()
+                    .map(|field| (field.name.as_str(), &field.ty))
+                    .collect(),
+            );
+        }
+        self.artifact.structs.get(name).map(|declared| {
+            declared
+                .fields
+                .iter()
+                .map(|field| (field.name.as_str(), &field.ty))
+                .collect()
+        })
+    }
+}
+
+/// Narrow a constructor argument against its declared source-level type.
+///
+/// Mirrors the type walk in `artifact_value_to_expr`, which lowers these
+/// against the declared `TypeRef` rather than the portable ABI's `TypeArtifact`.
+fn ctor_artifact_for(
+    value: &Value,
+    type_ref: &TypeRef,
+    contract: &ContractAst<'_>,
+) -> PyResult<ArtifactValue> {
+    if type_ref.is_array() {
+        // A one-dimensional `byte[]`/`byte[N]` is `bytes`, not an array.
+        if matches!(type_ref.base, TypeBase::Byte) && type_ref.array_dims.len() == 1 {
+            return Ok(value_to_artifact(value));
+        }
+        let (Value::List(items), Some(element_type)) = (value, type_ref.array_element_type())
+        else {
+            return Ok(value_to_artifact(value));
+        };
+        return items
+            .iter()
+            .map(|item| ctor_artifact_for(item, &element_type, contract))
+            .collect::<PyResult<Vec<_>>>()
+            .map(ArtifactValue::Array);
+    }
+    match (&type_ref.base, value) {
+        (TypeBase::Byte, _) => byte_artifact(value),
+        (TypeBase::Custom(name), Value::Struct(entries)) => {
+            let Some(declared) = contract.structs.iter().find(|item| item.name == *name) else {
+                return Ok(value_to_artifact(value));
+            };
+            entries
+                .iter()
+                .map(|(field_name, field_value)| {
+                    let declared_field = declared
+                        .fields
+                        .iter()
+                        .find(|field| field.name == *field_name);
+                    let value = match declared_field {
+                        Some(field) => ctor_artifact_for(field_value, &field.type_ref, contract)?,
+                        None => value_to_artifact(field_value),
+                    };
+                    Ok((field_name.clone(), value))
+                })
+                .collect::<PyResult<BTreeMap<_, _>>>()
+                .map(ArtifactValue::Object)
+        }
+        _ => Ok(value_to_artifact(value)),
+    }
+}
+
 /// Lower constructor arguments against the contract's declared parameter types.
 ///
 /// Mirrors upstream's private `artifact_values_to_constructor_args`, which is
@@ -158,8 +329,8 @@ pub(crate) fn ctor_exprs_for<'i>(
         .iter()
         .zip(&contract.params)
         .map(|(value, param)| {
-            artifact_value_to_expr(&value_to_artifact(value), &param.type_ref, contract)
-                .map_err(map_err)
+            let value = ctor_artifact_for(value, &param.type_ref, contract)?;
+            artifact_value_to_expr(&value, &param.type_ref, contract).map_err(map_err)
         })
         .collect()
 }
@@ -301,8 +472,19 @@ impl PyCompiledContract {
         args: Vec<Value>,
         covenant: Option<bool>,
     ) -> PyResult<Vec<u8>> {
-        let call_args: Vec<ArtifactValue> = args.iter().map(value_to_artifact).collect();
         let artifact = &self.compiled.borrow_dependent().artifact;
+        let call_args = match ArgTypes::new(artifact, &self.contract_name) {
+            Some(types) => {
+                let entry = match covenant {
+                    None => types.contract().entry(function_name),
+                    Some(is_leader) => types
+                        .contract()
+                        .covenant_decl_entry(function_name, is_leader),
+                };
+                types.lower_call(&args, entry)?
+            }
+            None => untyped_artifacts(&args),
+        };
         match covenant {
             None => encode_contract_entry_sig_script(
                 artifact,

@@ -63,6 +63,23 @@ contract H(byte[4] tag) {
 }
 """
 
+# A `byte` scalar in every position it can appear: constructor param,
+# entrypoint param, and a struct field.
+BYTE_BOX = """
+pragma silverscript ^0.1.0;
+contract ByteBox(byte tag) {
+    entry f(byte b) { require(b == tag); }
+}
+"""
+
+TAGGED = """
+pragma silverscript ^0.1.0;
+contract Tagged(Tag init) {
+    struct Tag { byte marker; int n; }
+    entry f(Tag t) { require(t.marker == init.marker); require(t.n > init.n); }
+}
+"""
+
 LIST_ARG = """
 pragma silverscript ^0.1.0;
 contract L() {
@@ -361,6 +378,91 @@ class TestArgConversion:
         # number encoding -> a clean SilverScriptError, not a crash.
         with pytest.raises(silverscript.SilverScriptError):
             silverscript.compile(GUARD, [I64_MIN])
+
+
+# ---------------------------------------------------------------------------
+# The `byte` type — narrowing is directed by the declared type, not the value
+# ---------------------------------------------------------------------------
+
+class TestByteArguments:
+    def test_abi_type_name(self):
+        contract = silverscript.compile(BYTE_BOX, [1])
+        assert [(i.name, i.type_name) for i in contract.abi[0].inputs] == [("b", "byte")]
+
+    def test_arg_from_int(self):
+        # One-byte data push, canonically encoded (OP_2), then the dispatch tag.
+        contract = silverscript.compile(BYTE_BOX, [1])
+        assert contract.build_sig_script("f", [2]).hex() == "52044358458f"
+
+    def test_arg_zero_pushes_one_zero_byte(self):
+        # Not OP_0: that pushes an empty item, not a one-byte one.
+        contract = silverscript.compile(BYTE_BOX, [1])
+        assert contract.build_sig_script("f", [0]).hex() == "0100044358458f"
+
+    def test_arg_max(self):
+        contract = silverscript.compile(BYTE_BOX, [1])
+        assert contract.build_sig_script("f", [255]).hex() == "01ff044358458f"
+
+    def test_single_byte_bytes_equivalent_to_int(self):
+        contract = silverscript.compile(BYTE_BOX, [1])
+        assert contract.build_sig_script("f", [b"\x07"]) == contract.build_sig_script("f", [7])
+
+    @pytest.mark.parametrize("value", [256, -1, I64_MAX])
+    def test_arg_out_of_range_raises(self, value):
+        contract = silverscript.compile(BYTE_BOX, [1])
+        with pytest.raises(silverscript.SilverScriptError):
+            contract.build_sig_script("f", [value])
+
+    def test_arg_rejects_multi_byte_bytes(self):
+        contract = silverscript.compile(BYTE_BOX, [1])
+        with pytest.raises(silverscript.SilverScriptError):
+            contract.build_sig_script("f", [b"\x01\x02"])
+
+    def test_arg_rejects_bool(self):
+        # bool stays distinct from int here too — True is not 1.
+        contract = silverscript.compile(BYTE_BOX, [1])
+        with pytest.raises(silverscript.SilverScriptError):
+            contract.build_sig_script("f", [True])
+
+    def test_constructor_arg(self):
+        assert silverscript.compile(BYTE_BOX, [1]).script.hex() == (
+            "76044358458f8763757682519d7576010187697551676a68"
+        )
+
+    def test_constructor_arg_single_byte_bytes_equivalent_to_int(self):
+        assert silverscript.compile(BYTE_BOX, [1]).script == silverscript.compile(BYTE_BOX, [b"\x01"]).script
+
+    def test_constructor_arg_is_baked_into_the_script(self):
+        assert silverscript.compile(BYTE_BOX, [1]).script != silverscript.compile(BYTE_BOX, [2]).script
+
+    def test_constructor_arg_out_of_range_raises(self):
+        with pytest.raises(silverscript.SilverScriptError):
+            silverscript.compile(BYTE_BOX, [256])
+
+    def test_struct_field(self):
+        contract = silverscript.compile(TAGGED, [{"marker": 1, "n": 5}])
+        assert contract.build_sig_script("f", [{"marker": 1, "n": 6}]).hex() == "5156043e5e9af9"
+
+    def test_struct_field_out_of_range_raises(self):
+        contract = silverscript.compile(TAGGED, [{"marker": 1, "n": 5}])
+        with pytest.raises(silverscript.SilverScriptError):
+            contract.build_sig_script("f", [{"marker": 300, "n": 6}])
+
+    def test_struct_constructor_field_out_of_range_raises(self):
+        with pytest.raises(silverscript.SilverScriptError):
+            silverscript.compile(TAGGED, [{"marker": 300, "n": 5}])
+
+    def test_int_arg_is_not_narrowed_to_byte(self):
+        # `check` declares `int`, so a byte-sized value is still encoded as a
+        # script number: 0 as OP_0 and 255 as two bytes, not 0x00 / 0xff.
+        contract = silverscript.compile(GUARD, [100])
+        assert contract.build_sig_script("check", [0]).hex() == "0004b0823999"
+        assert contract.build_sig_script("check", [255]).hex() == "02ff0004b0823999"
+
+    def test_int_constructor_arg_is_not_narrowed_to_byte(self):
+        assert silverscript.compile(GUARD, [255]).script.hex() == (
+            "7604b08239998763757682599f69757602ff00a0697551676a68"
+        )
 
 
 # ---------------------------------------------------------------------------

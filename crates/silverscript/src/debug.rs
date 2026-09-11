@@ -47,8 +47,8 @@ use silverscript_lang::compiler::{
 };
 
 use crate::{
-    PySilverScriptError, Value, collect_args, ctor_exprs_for, map_codec_err, map_err, py_to_value,
-    value_to_artifact,
+    ArgTypes, PySilverScriptError, Value, collect_args, ctor_exprs_for, map_codec_err, map_err,
+    py_to_value, untyped_artifacts,
 };
 
 const DEBUG_OPTS: CompileOptions = CompileOptions {
@@ -462,10 +462,6 @@ fn expr_to_debug_value(expr: &Expr<'_>) -> PyResult<DebugValue> {
             "unsupported resolved state expression in debugger: {other:?}"
         ))),
     }
-}
-
-fn debug_value_to_artifact(value: &DebugValue) -> Option<ArtifactValue> {
-    debug_value_to_value(value).map(|value| value_to_artifact(&value))
 }
 
 // ---------------------------------------------------------------------------
@@ -935,10 +931,6 @@ fn parse_tx_spec(obj: Option<&Bound<'_, PyAny>>) -> PyResult<TxSpec> {
 // Harness helpers (ported from the upstream CLI debugger)
 // ---------------------------------------------------------------------------
 
-fn ctor_artifacts(ctor: &[Value]) -> Vec<ArtifactValue> {
-    ctor.iter().map(value_to_artifact).collect()
-}
-
 /// A compiled contract plus the portable ABI artifact that encodes calls into
 /// it. Signature scripts are built from the artifact in SilverScript 1.0, so
 /// the two are always needed together.
@@ -1104,7 +1096,7 @@ fn synthesized_covenant_prefix_args(
     entrypoint_name: &str,
     target: &ResolvedCovenantCallTarget,
     output_states: Option<&[DebugValue]>,
-) -> PyResult<Vec<ArtifactValue>> {
+) -> PyResult<Vec<Value>> {
     // A cov-bound declaration routes non-leader spends through the contract's
     // single shared delegate entrypoint, which takes no synthesized prefix.
     if target.binding == DebugCovenantBinding::Cov
@@ -1133,21 +1125,33 @@ fn synthesized_covenant_prefix_args(
                 states.len()
             )));
         }
-        return Ok(vec![debug_value_to_artifact(&states[0]).ok_or_else(
-            || err("failed to materialize synthesized output State"),
-        )?]);
+        return Ok(vec![debug_value_to_value(&states[0]).ok_or_else(|| {
+            err("failed to materialize synthesized output State")
+        })?]);
     }
     if is_state_array_type(&first_param.type_ref) {
-        return Ok(vec![ArtifactValue::Array(
+        return Ok(vec![Value::List(
             states
                 .iter()
-                .map(debug_value_to_artifact)
+                .map(debug_value_to_value)
                 .collect::<Option<Vec<_>>>()
                 .ok_or_else(|| err("failed to materialize synthesized output State[]"))?,
         )]);
     }
 
     Ok(Vec::new())
+}
+
+/// Narrow a call's arguments against the entrypoint's declared types.
+fn entry_call_artifacts(
+    compiled: &CompiledWithAbi<'_>,
+    entrypoint_name: &str,
+    args: &[Value],
+) -> PyResult<Vec<ArtifactValue>> {
+    match ArgTypes::new(&compiled.artifact, &compiled.contract.contract_name) {
+        Some(types) => types.lower_call(args, types.contract().entry(entrypoint_name)),
+        None => Ok(untyped_artifacts(args)),
+    }
 }
 
 fn build_covenant_input_sigscript(
@@ -1158,7 +1162,7 @@ fn build_covenant_input_sigscript(
     output_states: Option<&[DebugValue]>,
 ) -> PyResult<Vec<u8>> {
     let entrypoint_name = target.generated_entrypoint_name_for(is_leader);
-    let typed_args = if target.binding == DebugCovenantBinding::Cov && !is_leader {
+    let args = if target.binding == DebugCovenantBinding::Cov && !is_leader {
         Vec::new()
     } else {
         let function = compiled
@@ -1168,9 +1172,8 @@ fn build_covenant_input_sigscript(
             .iter()
             .find(|function| function.name == entrypoint_name)
             .ok_or_else(|| err("generated covenant entrypoint not found"))?;
-        let user_args = ctor_artifacts(call_args);
         if call_args.len() == function.params.len() {
-            user_args
+            call_args.to_vec()
         } else {
             let mut all_args = synthesized_covenant_prefix_args(
                 &compiled.contract,
@@ -1178,10 +1181,11 @@ fn build_covenant_input_sigscript(
                 target,
                 output_states,
             )?;
-            all_args.extend(user_args);
+            all_args.extend_from_slice(call_args);
             all_args
         }
     };
+    let typed_args = entry_call_artifacts(compiled, &entrypoint_name, &args)?;
     encode_contract_entry_sig_script(
         &compiled.artifact,
         &compiled.contract.contract_name,
@@ -1524,7 +1528,7 @@ fn run_harness(
             &active_compiled.artifact,
             &active_compiled.contract.contract_name,
             &selected_name,
-            &ctor_artifacts(call_args),
+            &entry_call_artifacts(active_compiled, &selected_name, call_args)?,
         )
         .map_err(map_codec_err)?
     };

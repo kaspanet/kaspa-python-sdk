@@ -56,6 +56,7 @@ SilverScript types (the `type_name`s you can read off the
 | --- | --- |
 | `int` | `int` (must fit in a signed 64-bit integer) |
 | `bool` | `bool` (a real bool — not `0`/`1`) |
+| `byte` | `int` in `0..=255` (a one-byte `bytes` also works) |
 | `byte[N]` | `bytes` / `bytearray` of length `N` |
 | `pubkey` | `bytes` (an x-only public key) |
 | `sig` | `bytes` (a signature) |
@@ -66,6 +67,9 @@ A few rules worth knowing:
 
 - **`bool` is distinct from `int`.** `True` is not `1` here — pass the
   type the entrypoint declares.
+- **Which Python value means what is decided by the declared type, not the
+  value.** `1` is a `byte` for a `byte` parameter and an `int` for an `int`
+  one; a small `int` is never silently treated as a `byte`.
 - **`list` and `tuple` are interchangeable** for array arguments.
 - **Out-of-range and mistyped values raise
   [`SilverScriptError`](../../reference/SilverScript/Exceptions/SilverScriptError.md)**,

@@ -84,6 +84,27 @@ contract Counter(int init_count) {
 }
 """
 
+BYTE_BOX = """
+pragma silverscript ^0.1.0;
+contract ByteBox(byte tag) {
+    entry f(byte b) { require(b == tag); }
+}
+"""
+
+# A covenant whose state and argument are scalar `byte`s — the synthesized
+# output State argument has to narrow to a `byte` too.
+MARKER = """
+pragma silverscript ^0.1.0;
+contract Marker(byte init_tag) {
+    byte tag = init_tag;
+    #[covenant(binding = auth, from = 1, to = 1, mode = transition)]
+    function retag(State prev_state, byte next) : (State) {
+        require(next != prev_state.tag);
+        return(State { tag: next });
+    }
+}
+"""
+
 # A covenant whose state is a byte array — exercises type-directed state
 # conversion (ints, int lists, and hex strings in byte positions).
 TAGGED = """
@@ -116,6 +137,27 @@ def counter_scenario(prev_count, next_count):
                 "covenant_id": COVENANT_ID,
                 "authorizing_input": 0,
                 "state": {"count": next_count},
+            }
+        ],
+    }
+
+
+def marker_scenario(prev_tag, next_tag):
+    """A 1-in/1-out Marker transition: prev byte state in, next byte state out."""
+    return {
+        "inputs": [
+            {
+                "utxo_value": 5000,
+                "covenant_id": COVENANT_ID,
+                "state": {"tag": prev_tag},
+            }
+        ],
+        "outputs": [
+            {
+                "value": 5000,
+                "covenant_id": COVENANT_ID,
+                "authorizing_input": 0,
+                "state": {"tag": next_tag},
             }
         ],
     }
@@ -391,6 +433,51 @@ class TestTxScenario:
                 TAGGED, "retag", [b"\xaa\xbb\xcc\xdd"], [b"\x01\x02\x03\x04"], tx=tx
             )
             assert result.success is True, f"spelling {prev!r} -> {next_!r}"
+
+
+# ---------------------------------------------------------------------------
+# `byte` arguments and state
+# ---------------------------------------------------------------------------
+
+class TestByteValues:
+    def test_byte_arg_passes(self):
+        assert silverscript.debug_call(BYTE_BOX, "f", [1], [1]).success is True
+
+    def test_byte_arg_fails(self):
+        assert silverscript.debug_call(BYTE_BOX, "f", [2], [1]).success is False
+
+    def test_single_byte_bytes_equivalent_to_int(self):
+        assert silverscript.debug_call(BYTE_BOX, "f", [b"\x01"], [1]).success is True
+
+    def test_byte_arg_out_of_range_raises(self):
+        with pytest.raises(silverscript.SilverScriptError):
+            silverscript.debug_call(BYTE_BOX, "f", [256], [1])
+
+    def test_byte_variable_decodes_in_source_terms(self):
+        variables = {
+            v.name: v
+            for v in silverscript.debug_call(BYTE_BOX, "f", [2], [1]).failure.frames[0].variables
+        }
+        assert variables["b"].type_name == "byte"
+        assert variables["tag"].value == b"\x01"
+
+    def test_covenant_byte_state_transition_passes(self):
+        result = silverscript.debug_call(
+            MARKER, "retag", [2], [1], tx=marker_scenario(1, 2)
+        )
+        assert result.success is True
+
+    def test_covenant_byte_state_wrong_next_state_fails(self):
+        # The synthesized output State is the byte the transition must produce.
+        result = silverscript.debug_call(
+            MARKER, "retag", [2], [1], tx=marker_scenario(1, 3)
+        )
+        assert result.success is False
+        assert "verification failed" in result.error
+
+    def test_covenant_byte_arg_out_of_range_raises(self):
+        with pytest.raises(silverscript.SilverScriptError):
+            silverscript.debug_call(MARKER, "retag", [256], [1], tx=marker_scenario(1, 2))
 
 
 # ---------------------------------------------------------------------------
