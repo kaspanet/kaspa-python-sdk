@@ -189,10 +189,24 @@ class TestDebugCallBasics:
         assert "verification failed" in result.error
         assert isinstance(result.failure, silverscript.FailureReport)
 
-    def test_default_entrypoint_is_first_abi_entry(self):
+    def test_default_entrypoint_is_first_declared(self):
+        # debug_call defaults to the first entrypoint *declared in the source*,
+        # not the first in `.abi` (which is alphabetical). debug_call requires
+        # source anyway, so declaration order is unambiguous here.
         result = silverscript.debug_call(GUARD, args=[150], constructor_args=[100])
         assert result.function_name == "check"
         assert result.success is True
+
+    def test_default_entrypoint_is_declaration_order_not_alphabetical(self):
+        # ORDER declares zebra first; alphabetically "alpha" would win.
+        src = (
+            "contract Order() {\n"
+            "    entry zebra(int a)  { require(a > 0); }\n"
+            "    entry alpha(int a)  { require(a > 0); }\n"
+            "}\n"
+        )
+        assert silverscript.debug_call(src, args=[5]).function_name == "zebra"
+        assert [e.name for e in silverscript.compile(src).abi] == ["alpha", "zebra"]
 
     def test_multi_entrypoint_selection(self):
         assert silverscript.debug_call(MULTI, "add", [20], [10]).success is True

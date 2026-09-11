@@ -59,8 +59,9 @@ is read-only. Its properties:
 | [`bytecode`](../../reference/SilverScript/Classes/CompiledContract.md) | The locking (redeem) script `bytes`. |
 | [`contract_name`](../../reference/SilverScript/Classes/CompiledContract.md) | The contract name from the source. |
 | [`compiler_version`](../../reference/SilverScript/Classes/CompiledContract.md) | The compiler version that produced it. |
-| [`abi`](../../reference/SilverScript/Classes/CompiledContract.md) | One [`EntryAbi`](../../reference/SilverScript/Classes/EntryAbi.md) per callable entrypoint, in source order. |
-| [`state_layout`](../../reference/SilverScript/Classes/CompiledContract.md) | `(start, len)`: the byte offset and length of the contract state within the script. |
+| [`abi`](../../reference/SilverScript/Classes/CompiledContract.md) | One [`EntryAbi`](../../reference/SilverScript/Classes/EntryAbi.md) per callable entrypoint, ordered alphabetically by name. |
+| [`entry(name)`](../../reference/SilverScript/Classes/CompiledContract.md) | One entrypoint's [`EntryAbi`](../../reference/SilverScript/Classes/EntryAbi.md), by name. |
+| [`state_span`](../../reference/SilverScript/Classes/CompiledContract.md) | `(offset, len)`: the byte offset and length of the contract state within the script. |
 | [`template_hash`](../../reference/SilverScript/Classes/CompiledContract.md) | 32-byte digest over the script's template parts, matching the `templateHash()` builtin. |
 
 ## Reading the ABI
@@ -78,11 +79,27 @@ and a `type_name` — the SilverScript type, e.g. `"int"`, `"byte[32]"`,
 ```python
 contract = silverscript.compile(SOURCE, [100])
 
+# One entrypoint, by name:
+entry = contract.entry("check")
+print(entry.params[0].type_name)   # int
+
+# Or enumerate them all:
 for entry in contract.abi:
     args = ", ".join(f"{p.type_name} {p.name}" for p in entry.params)
     print(f"{entry.name}({args})")
 # check(int amount)
 ```
+
+`abi` is ordered alphabetically by entrypoint name — the same order a
+[`ContractArtifact`](../../reference/SilverScript/Classes/ContractArtifact.md)
+reports, so an entrypoint keeps its position whichever route you reached it
+by. Declaration order isn't available: it exists only while the source is
+parsed, and a compiled artifact doesn't carry it.
+[`entry(name)`](../../reference/SilverScript/Classes/CompiledContract.md)
+raises
+[`SilverScriptError`](../../reference/SilverScript/Exceptions/SilverScriptError.md)
+for a name the contract doesn't declare — the same error `build_sig_script`
+gives for the same typo.
 
 `dispatch_tag` is the entrypoint's four-byte identity —
 `blake3("name(type,type)")[:4]`. It is content-addressed, so it depends only
@@ -128,8 +145,9 @@ Three things about the encoding are worth knowing before you parse it:
   similar and are not interchangeable; if you are hand-writing JSON for
   upstream tooling, check which one that tool wants.
 
-Note that `state_layout` appears here under the artifact's own spelling,
-`compiled.state_span`, with the keys `offset` and `len`.
+`state_span` appears here as `compiled.state_span`, an object with the keys
+`offset` and `len` rather than a two-tuple — the same two numbers the
+attribute gives you.
 
 ## Loading an artifact back
 
@@ -158,8 +176,9 @@ would have produced. Both encode against this same artifact — it is the only
 thing `build_sig_script` ever reads.
 
 A `ContractArtifact` carries `contract_name`, `compiler_version`,
-`schema_version`, `bytecode`, `template_hash`, `state_span` and `abi`, plus
-both `build_sig_script` methods and `to_json()`. Two things it can't do,
+`schema_version`, `bytecode`, `template_hash`, `state_span`, `abi` and
+`entry(name)`, plus both `build_sig_script` methods and `to_json()`. Two
+things it can't do,
 because they need the source: [`debug_call`](debugging.md), and compiling with
 different constructor arguments — those are a different contract, and so a
 different artifact.
@@ -167,14 +186,6 @@ different artifact.
 If the JSON holds more than one contract, name the one you want:
 `load_artifact(text, "Guard")`. Omitting the name is fine for anything
 `compile()` produced, which is always a single contract.
-
-!!! warning "`ContractArtifact.abi` is alphabetical"
-    [`CompiledContract.abi`](../../reference/SilverScript/Classes/CompiledContract.md)
-    is in source order, read off the parsed source. An artifact has no parsed
-    source — its entries live in a sorted map — so
-    [`ContractArtifact.abi`](../../reference/SilverScript/Classes/ContractArtifact.md)
-    comes back alphabetically. Select entries by `name` rather than by index
-    and the difference never bites.
 
 ### Checking an artifact you didn't build
 

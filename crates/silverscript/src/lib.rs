@@ -205,10 +205,7 @@ impl<'a> ArgTypes<'a> {
         is_leader: bool,
     ) -> PyResult<Option<&'a SilEntryArtifact>> {
         if !self.contract.cov_decl_to_abi.contains_key(name) {
-            return Err(map_codec_err(CodecError::UnknownEntry {
-                contract: self.contract_name.to_string(),
-                entry: name.to_string(),
-            }));
+            return Err(unknown_entry(self.contract_name, name));
         }
         Ok(self.contract.covenant_decl_entry(name, is_leader))
     }
@@ -493,9 +490,18 @@ pub struct PyCompiledContract {
     contract_name: String,
     compiler_version: String,
     abi: Vec<PyEntryAbi>,
-    state_layout: (usize, usize),
+    state_span: (usize, usize),
     // The native `CompiledContract` compiled once at construction and reused.
     compiled: CompiledCell,
+}
+
+/// The error both `entry()` and the sig-script encoders raise for a name the
+/// contract doesn't declare. Shared so one typo reads the same either way.
+pub(crate) fn unknown_entry(contract: &str, entry: &str) -> PyErr {
+    map_codec_err(CodecError::UnknownEntry {
+        contract: contract.to_string(),
+        entry: entry.to_string(),
+    })
 }
 
 /// Build a signature (unlocking) script from a portable ABI artifact.
@@ -574,16 +580,47 @@ impl PyCompiledContract {
         PyBytes::new(py, &self.compiled.borrow_dependent().contract.bytecode)
     }
 
-    /// The contract ABI: one entry per callable entrypoint, in source order.
+    /// The contract ABI: one entry per callable entrypoint, ordered
+    /// alphabetically by name.
+    ///
+    /// The same order a `ContractArtifact` reports, so an entrypoint keeps its
+    /// position whichever route you reached it by. To reach one entry, prefer
+    /// `entry(name)` over indexing.
     #[getter]
     pub fn abi(&self) -> Vec<PyEntryAbi> {
         self.abi.clone()
     }
 
-    /// `(start, len)`: byte offset and length of the contract state within the script.
+    /// Look up one entrypoint's ABI by name.
+    ///
+    /// Args:
+    ///     name: The entrypoint name, as it appears in `abi`.
+    ///
+    /// Returns:
+    ///     EntryAbi: The entrypoint's ABI.
+    ///
+    /// Raises:
+    ///     SilverScriptError: If the contract declares no such entrypoint. The
+    ///         message matches the one `build_sig_script` raises for the same
+    ///         name.
+    pub fn entry(&self, name: &str) -> PyResult<PyEntryAbi> {
+        let artifact = &self.compiled.borrow_dependent().artifact;
+        artifact
+            .contract(&self.contract_name)
+            .and_then(|contract| entry_abi(contract, name))
+            .ok_or_else(|| unknown_entry(&self.contract_name, name))
+    }
+
+    /// `(offset, len)`: byte offset and length of the contract state within
+    /// the script.
+    ///
+    /// Named for the artifact's `compiled.state_span`, which carries the same
+    /// two numbers and is the spelling you meet when you parse
+    /// `artifact_json()`. (The compiler's own struct calls the first number
+    /// `start`; it is the same offset.)
     #[getter]
-    pub fn state_layout(&self) -> (usize, usize) {
-        self.state_layout
+    pub fn state_span(&self) -> (usize, usize) {
+        self.state_span
     }
 
     /// The canonical length-bound template hash: a 32-byte digest over the
@@ -681,7 +718,7 @@ impl PyCompiledContract {
 }
 
 /// Build one Python-facing ABI entry, if the contract declares it.
-fn entry_abi(contract: &SilContractArtifact, name: &str) -> Option<PyEntryAbi> {
+pub(crate) fn entry_abi(contract: &SilContractArtifact, name: &str) -> Option<PyEntryAbi> {
     contract.entries.get(name).map(|entry| PyEntryAbi {
         name: name.to_string(),
         params: entry
@@ -696,41 +733,15 @@ fn entry_abi(contract: &SilContractArtifact, name: &str) -> Option<PyEntryAbi> {
     })
 }
 
-/// Build the Python-facing ABI for `contract_name` from a portable ABI artifact.
+/// Build the Python-facing ABI for a contract, in the artifact's own
+/// (alphabetical) `BTreeMap` order.
 ///
-/// Source-ordered: the AST is walked first, and anything it doesn't name (a
-/// compiler-generated covenant entry) is appended in the artifact's own order.
-fn abi_entries(
-    artifact: &SilAbiArtifact,
-    contract_name: &str,
-    ast: &ContractAst<'_>,
-) -> Vec<PyEntryAbi> {
-    let Some(contract) = artifact.contract(contract_name) else {
-        return Vec::new();
-    };
-
-    let mut out: Vec<PyEntryAbi> = Vec::with_capacity(contract.entries.len());
-    for function in &ast.functions {
-        if let Some(entry) = entry_abi(contract, &function.name) {
-            out.push(entry);
-        }
-    }
-    for name in contract.entries.keys() {
-        if !out.iter().any(|entry| &entry.name == name)
-            && let Some(entry) = entry_abi(contract, name)
-        {
-            out.push(entry);
-        }
-    }
-    out
-}
-
-/// Build the Python-facing ABI for a contract reached through a loaded
-/// artifact, in the artifact's own (alphabetical) `BTreeMap` order.
-///
-/// Source order lives only in the AST, which a loaded artifact doesn't carry —
-/// see `ContractArtifact.abi`.
-pub(crate) fn abi_entries_sorted(contract: &SilContractArtifact) -> Vec<PyEntryAbi> {
+/// One order for the whole module, whichever route the caller took. Source
+/// declaration order exists only while the AST is in memory and cannot be
+/// recovered from a serialized artifact, so preserving it here would mean
+/// `CompiledContract.abi` and `ContractArtifact.abi` disagreeing — same name,
+/// same element type, different element at `[0]`.
+pub(crate) fn abi_entries(contract: &SilContractArtifact) -> Vec<PyEntryAbi> {
     contract
         .entries
         .keys()
@@ -787,14 +798,18 @@ pub fn py_compile(
         Ok(CompiledParts { contract, artifact })
     })?;
 
-    let (contract_name, compiler_version, abi, state_layout) = {
+    let (contract_name, compiler_version, abi, state_span) = {
         let parts = compiled.borrow_dependent();
         let contract = &parts.contract;
         let contract_name = contract.contract_name.clone();
         (
             contract_name.clone(),
             contract.compiler_version.clone(),
-            abi_entries(&parts.artifact, &contract_name, &contract.ast),
+            parts
+                .artifact
+                .contract(&contract_name)
+                .map(abi_entries)
+                .unwrap_or_default(),
             (contract.state_layout.start, contract.state_layout.len),
         )
     };
@@ -803,7 +818,7 @@ pub fn py_compile(
         contract_name,
         compiler_version,
         abi,
-        state_layout,
+        state_span,
         compiled,
     })
 }

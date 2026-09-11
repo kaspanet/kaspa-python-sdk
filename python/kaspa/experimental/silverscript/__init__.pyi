@@ -28,12 +28,23 @@ class CompiledContract:
     @property
     def abi(self) -> builtins.list[EntryAbi]:
         r"""
-        The contract ABI: one entry per callable entrypoint, in source order.
+        The contract ABI: one entry per callable entrypoint, ordered
+        alphabetically by name.
+        
+        The same order a `ContractArtifact` reports, so an entrypoint keeps its
+        position whichever route you reached it by. To reach one entry, prefer
+        `entry(name)` over indexing.
         """
     @property
-    def state_layout(self) -> tuple[builtins.int, builtins.int]:
+    def state_span(self) -> tuple[builtins.int, builtins.int]:
         r"""
-        `(start, len)`: byte offset and length of the contract state within the script.
+        `(offset, len)`: byte offset and length of the contract state within
+        the script.
+        
+        Named for the artifact's `compiled.state_span`, which carries the same
+        two numbers and is the spelling you meet when you parse
+        `artifact_json()`. (The compiler's own struct calls the first number
+        `start`; it is the same offset.)
         """
     @property
     def template_hash(self) -> bytes:
@@ -42,6 +53,21 @@ class CompiledContract:
         script's template parts (the prefix before and suffix after the state
         region). Matches the SilverScript `templateHash(prefix, suffix)` builtin,
         so contracts can commit to this value and later reconstruct it on-chain.
+        """
+    def entry(self, name: builtins.str) -> EntryAbi:
+        r"""
+        Look up one entrypoint's ABI by name.
+        
+        Args:
+            name: The entrypoint name, as it appears in `abi`.
+        
+        Returns:
+            EntryAbi: The entrypoint's ABI.
+        
+        Raises:
+            SilverScriptError: If the contract declares no such entrypoint. The
+                message matches the one `build_sig_script` raises for the same
+                name.
         """
     def artifact_json(self) -> builtins.str:
         r"""
@@ -141,20 +167,33 @@ class ContractArtifact:
         `(offset, len)`: byte offset and length of the contract state within the
         script.
         
-        The artifact's spelling of
-        [`CompiledContract.state_layout`][kaspa.experimental.silverscript.CompiledContract.state_layout],
-        which names the same two numbers `(start, len)`.
+        The same two numbers, under the same name, as
+        [`CompiledContract.state_span`][kaspa.experimental.silverscript.CompiledContract.state_span].
         """
     @property
     def abi(self) -> builtins.list[EntryAbi]:
         r"""
-        The contract ABI: one entry per callable entrypoint, **alphabetically**.
+        The contract ABI: one entry per callable entrypoint, ordered
+        alphabetically by name.
         
-        Unlike
-        [`CompiledContract.abi`][kaspa.experimental.silverscript.CompiledContract.abi],
-        which is in source order. An artifact stores its entries in a sorted map
-        and doesn't carry the source, so source order cannot be recovered here.
-        Select entries by `name`, not by index.
+        The same order
+        [`CompiledContract.abi`][kaspa.experimental.silverscript.CompiledContract.abi]
+        reports. To reach one entry, prefer `entry(name)` over indexing.
+        """
+    def entry(self, name: builtins.str) -> EntryAbi:
+        r"""
+        Look up one entrypoint's ABI by name.
+        
+        Args:
+            name: The entrypoint name, as it appears in `abi`.
+        
+        Returns:
+            EntryAbi: The entrypoint's ABI.
+        
+        Raises:
+            SilverScriptError: If the artifact declares no such entrypoint. The
+                message matches the one `build_sig_script` raises for the same
+                name.
         """
     def build_sig_script(self, function_name: builtins.str, args: typing.Optional[typing.Any] = None) -> bytes:
         r"""

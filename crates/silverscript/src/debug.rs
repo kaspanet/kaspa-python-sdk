@@ -940,8 +940,15 @@ struct CompiledWithAbi<'i> {
 }
 
 /// The contract's first entrypoint in source order — `debug_call`'s default
-/// target when no function name is given. The artifact keys its entries
-/// alphabetically, so source order has to come from the AST.
+/// target when no function name is given.
+///
+/// Deliberately *not* `abi[0]`, which is alphabetical on both
+/// `CompiledContract` and `ContractArtifact`. `debug_call` requires source, so
+/// declaration order is unambiguously available here, and "the first
+/// entrypoint you declared" is the friendlier default for a human debugging.
+/// (Upstream's debugger CLI instead defaults to the alphabetically first entry
+/// via `entries.first_key_value()`.) Source order has to come from the AST —
+/// the artifact keys its entries alphabetically and cannot recover it.
 fn first_entrypoint(contract: &CompiledContract<'_>) -> Option<String> {
     contract
         .ast

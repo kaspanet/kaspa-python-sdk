@@ -12,7 +12,8 @@ use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pyfunction, gen_stub_pyme
 use silverscript_abi::{SilAbiArtifact, SilContractArtifact, to_pretty_json};
 
 use crate::{
-    PyEntryAbi, PySilverScriptError, abi_entries_sorted, collect_args, sig_script, to_json_err,
+    PyEntryAbi, PySilverScriptError, abi_entries, collect_args, entry_abi, sig_script, to_json_err,
+    unknown_entry,
 };
 
 /// A portable ABI artifact: everything needed to build unlocking scripts for a
@@ -86,25 +87,39 @@ impl PyContractArtifact {
     /// `(offset, len)`: byte offset and length of the contract state within the
     /// script.
     ///
-    /// The artifact's spelling of
-    /// [`CompiledContract.state_layout`][kaspa.experimental.silverscript.CompiledContract.state_layout],
-    /// which names the same two numbers `(start, len)`.
+    /// The same two numbers, under the same name, as
+    /// [`CompiledContract.state_span`][kaspa.experimental.silverscript.CompiledContract.state_span].
     #[getter]
     pub fn state_span(&self) -> (usize, usize) {
         let span = &self.contract().compiled.state_span;
         (span.offset, span.len)
     }
 
-    /// The contract ABI: one entry per callable entrypoint, **alphabetically**.
+    /// The contract ABI: one entry per callable entrypoint, ordered
+    /// alphabetically by name.
     ///
-    /// Unlike
-    /// [`CompiledContract.abi`][kaspa.experimental.silverscript.CompiledContract.abi],
-    /// which is in source order. An artifact stores its entries in a sorted map
-    /// and doesn't carry the source, so source order cannot be recovered here.
-    /// Select entries by `name`, not by index.
+    /// The same order
+    /// [`CompiledContract.abi`][kaspa.experimental.silverscript.CompiledContract.abi]
+    /// reports. To reach one entry, prefer `entry(name)` over indexing.
     #[getter]
     pub fn abi(&self) -> Vec<PyEntryAbi> {
         self.abi.clone()
+    }
+
+    /// Look up one entrypoint's ABI by name.
+    ///
+    /// Args:
+    ///     name: The entrypoint name, as it appears in `abi`.
+    ///
+    /// Returns:
+    ///     EntryAbi: The entrypoint's ABI.
+    ///
+    /// Raises:
+    ///     SilverScriptError: If the artifact declares no such entrypoint. The
+    ///         message matches the one `build_sig_script` raises for the same
+    ///         name.
+    pub fn entry(&self, name: &str) -> PyResult<PyEntryAbi> {
+        entry_abi(self.contract(), name).ok_or_else(|| unknown_entry(&self.contract_name, name))
     }
 
     /// Build the signature (unlocking) script for an entrypoint.
@@ -294,7 +309,7 @@ pub fn load_artifact(json: &str, contract_name: Option<&str>) -> PyResult<PyCont
         .map_err(|err| PySilverScriptError::new_err(err.to_string()))?;
 
     let contract_name = resolve_contract_name(&artifact, contract_name)?;
-    let abi = abi_entries_sorted(
+    let abi = abi_entries(
         artifact
             .contract(&contract_name)
             .expect("contract_name was just resolved"),

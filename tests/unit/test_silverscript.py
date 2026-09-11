@@ -201,10 +201,10 @@ class TestCompile:
         assert isinstance(contract.bytecode, bytes)
         assert len(contract.bytecode) > 0
 
-    def test_state_layout_is_pair(self):
+    def test_state_span_is_pair(self):
         contract = silverscript.compile(GUARD, [100])
-        assert isinstance(contract.state_layout, tuple)
-        assert len(contract.state_layout) == 2
+        assert isinstance(contract.state_span, tuple)
+        assert len(contract.state_span) == 2
 
     def test_abi(self):
         contract = silverscript.compile(GUARD, [100])
@@ -299,9 +299,13 @@ class TestUpstreamParity:
         recipient = bytes([4]) * 32
         timeout = 1_640_000_000_000
         contract = silverscript.compile(TRANSFER_WITH_TIMEOUT, [sender, recipient, timeout])
-        assert [(i.name, i.type_name) for e in contract.abi for i in e.params] == [
-            ("recipientSig", "sig"),
-            ("senderSig", "sig"),
+        # Keyed by name rather than flattened across the ABI: this asserts which
+        # parameter belongs to which entrypoint, which a flat list never did.
+        assert [(i.name, i.type_name) for i in contract.entry("transfer").params] == [
+            ("recipientSig", "sig")
+        ]
+        assert [(i.name, i.type_name) for i in contract.entry("reclaim").params] == [
+            ("senderSig", "sig")
         ]
 
         sig = bytes([5]) * 65
@@ -508,6 +512,31 @@ class TestAbi:
         for entry in contract.abi:
             assert [(i.name, i.type_name) for i in entry.params] == [("amount", "int")]
 
+    def test_abi_is_alphabetical(self):
+        # MULTI can't show this — "add" precedes "sub" in both source and
+        # alphabetical order. ORDER declares zebra, alpha, middle, so it can.
+        assert [e.name for e in silverscript.compile(ORDER).abi] == ["alpha", "middle", "zebra"]
+
+    def test_entry_looks_up_by_name(self):
+        contract = silverscript.compile(MULTI, [10])
+        entry = contract.entry("sub")
+        assert entry.name == "sub"
+        assert [(i.name, i.type_name) for i in entry.params] == [("amount", "int")]
+        assert entry.dispatch_tag == next(e.dispatch_tag for e in contract.abi if e.name == "sub")
+
+    def test_entry_unknown_name_raises(self):
+        contract = silverscript.compile(GUARD, [100])
+        with pytest.raises(silverscript.SilverScriptError) as exc:
+            contract.entry("does_not_exist")
+        assert str(exc.value) == "unknown entry `Guard::does_not_exist`"
+
+    def test_entry_reaches_mangled_covenant_names(self):
+        # Covenant entries are compiler-generated; entry() addresses them by
+        # the name the ABI actually carries.
+        contract = silverscript.compile(COUNTER, [0])
+        name = "__covenant_entrypoint_auth_add"
+        assert contract.entry(name).name == name
+
     def test_byte_array_input_type_name(self):
         contract = silverscript.compile(BYTES4, [b"\x01\x02\x03\x04"])
         assert [(i.name, i.type_name) for e in contract.abi for i in e.params] == [("x", "byte[4]")]
@@ -582,13 +611,13 @@ class TestPortableArtifact:
         compiled = json.loads(contract.artifact_json())["contracts"]["Guard"]["compiled"]
         assert bytes(compiled["template_hash"]) == contract.template_hash
 
-    def test_state_span_matches_state_layout(self):
-        # state_span{offset,len} is the artifact's spelling of state_layout.
+    def test_state_span_matches_the_artifact_json(self):
+        # The attribute and the JSON key carry the same two numbers.
         contract = silverscript.compile(COUNTER, [0])
         span = json.loads(contract.artifact_json())["contracts"]["Counter"]["compiled"][
             "state_span"
         ]
-        assert (span["offset"], span["len"]) == contract.state_layout
+        assert (span["offset"], span["len"]) == contract.state_span
         assert span["len"] > 0
 
     def test_stateless_contract_has_empty_state_span(self):
@@ -683,18 +712,35 @@ class TestContractArtifact:
         assert artifact.compiler_version == contract.compiler_version
         assert artifact.bytecode == contract.bytecode
         assert artifact.template_hash == contract.template_hash
-        # state_span is the artifact's spelling of state_layout.
-        assert artifact.state_span == contract.state_layout
+        # One name, one meaning, both routes.
+        assert artifact.state_span == contract.state_span
         assert artifact.schema_version == 1
 
-    def test_abi_is_alphabetical_not_source_order(self):
-        # The one real difference between the two routes. CompiledContract.abi
-        # keeps source order from the AST; a loaded artifact has no AST, only
-        # the artifact's sorted map. Index accordingly — or select by name.
+    def test_abi_order_agrees_across_routes(self):
+        # One ordering rule for the module: alphabetical, whichever route you
+        # took. ORDER declares zebra, alpha, middle — so source order and
+        # alphabetical genuinely differ, and this would catch a regression to
+        # source-ordering on either side.
         contract = silverscript.compile(ORDER)
         artifact = silverscript.load_artifact(contract.artifact_json())
-        assert [e.name for e in contract.abi] == ["zebra", "alpha", "middle"]
-        assert [e.name for e in artifact.abi] == ["alpha", "middle", "zebra"]
+        assert [e.name for e in contract.abi] == ["alpha", "middle", "zebra"]
+        assert [e.name for e in artifact.abi] == [e.name for e in contract.abi]
+
+    def test_entry_lookup_agrees_across_routes(self):
+        contract = silverscript.compile(ORDER)
+        artifact = silverscript.load_artifact(contract.artifact_json())
+        for name in ("zebra", "alpha", "middle"):
+            assert contract.entry(name).name == artifact.entry(name).name == name
+            assert contract.entry(name).dispatch_tag == artifact.entry(name).dispatch_tag
+
+    def test_entry_unknown_name_matches_build_sig_script_error(self):
+        # One typo, one message — whichever method the caller reached for.
+        artifact = silverscript.load_artifact(silverscript.compile(GUARD, [100]).artifact_json())
+        with pytest.raises(silverscript.SilverScriptError) as lookup:
+            artifact.entry("nope")
+        with pytest.raises(silverscript.SilverScriptError) as build:
+            artifact.build_sig_script("nope", [1])
+        assert str(lookup.value) == str(build.value) == "unknown entry `Guard::nope`"
 
     def test_abi_entries_carry_the_same_dispatch_tags(self):
         contract = silverscript.compile(ORDER)
@@ -886,14 +932,14 @@ class TestCompileOptions:
 
 class TestStateLayout:
     def test_plain_contract_has_empty_state(self):
-        # state_layout marks the covenant *State* region, not constructor
+        # state_span marks the covenant *State* region, not constructor
         # immediates: a plain (non-covenant) contract reports (0, 0) even though
         # its constructor value is embedded elsewhere in the script.
-        assert silverscript.compile(GUARD, [100]).state_layout == (0, 0)
+        assert silverscript.compile(GUARD, [100]).state_span == (0, 0)
 
     def test_covenant_contract_has_nonempty_state(self):
         contract = silverscript.compile(COUNTER, [0])
-        start, length = contract.state_layout
+        start, length = contract.state_span
         assert length > 0
         assert 0 <= start
         assert start + length <= len(contract.bytecode)
