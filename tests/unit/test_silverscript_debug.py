@@ -155,6 +155,32 @@ contract Deadline(temporal init_deadline) {
 }
 """
 
+# Every nesting a `temporal` can occupy in an explicit `state` dict: a bare
+# field, a struct member, and an array element. Each one goes through the same
+# type-directed conversion, so all three have to accept a plain int.
+TEMPORAL_SHAPES = """
+pragma silverscript ^0.1.0;
+contract Shapes(temporal init) {
+    struct Window { temporal opens; temporal closes; }
+    temporal flat = init;
+    Window window = Window { opens: init, closes: init };
+    temporal[2] pair = temporal[2]{init, init};
+    entry check(temporal t) {
+        require(t >= flat && t >= window.opens && t >= pair[0]);
+    }
+}
+"""
+
+
+def shapes_state(flat):
+    """An explicit `Shapes` state, with `flat` the only varying field."""
+    return {
+        "flat": flat,
+        "window": {"opens": 200, "closes": 300},
+        "pair": [400, 500],
+    }
+
+
 # A cov-bound covenant group: every input of the group is spent in one
 # transaction, the lowest-index input is the leader and runs the declaration
 # body, the rest defer to the shared delegate entrypoint. Ported from
@@ -742,6 +768,136 @@ class TestTemporalState:
             silverscript.SilverScriptError, match="unsupported resolved state expression"
         ):
             silverscript.debug_call(source, "check", [0], [1700000000])
+
+
+# ---------------------------------------------------------------------------
+# `temporal` in an explicit `state` dict
+# ---------------------------------------------------------------------------
+
+class TestTemporalExplicitState:
+    def test_explicit_temporal_state_is_accepted(self):
+        # `state` used to raise "expects temporal" for any temporal field, so
+        # no timelock could be debugged against a chosen deadline at all.
+        result = silverscript.debug_call(
+            DEADLINE,
+            "after",
+            [1700000000],
+            constructor_args=[1],
+            tx={
+                "inputs": [
+                    {"utxo_value": 5000, "state": {"deadline": 1700000000}}
+                ],
+                "outputs": [{"value": 5000}],
+            },
+        )
+        assert result.success is True
+
+    def test_explicit_temporal_state_below_deadline_fails(self):
+        result = silverscript.debug_call(
+            DEADLINE,
+            "after",
+            [1699999999],
+            constructor_args=[1],
+            tx={
+                "inputs": [
+                    {"utxo_value": 5000, "state": {"deadline": 1700000000}}
+                ],
+                "outputs": [{"value": 5000}],
+            },
+        )
+        assert result.success is False
+        assert "verification failed" in result.error
+
+    def test_explicit_state_overrides_the_constructor_deadline(self):
+        # The constructor puts the deadline in the past; the explicit state
+        # moves it past the argument. The outcome follows the explicit state,
+        # which is what makes it worth passing.
+        assert silverscript.debug_call(
+            DEADLINE,
+            "after",
+            [1700000000],
+            constructor_args=[1],
+            tx={
+                "inputs": [
+                    {"utxo_value": 5000, "state": {"deadline": 1700000001}}
+                ],
+                "outputs": [{"value": 5000}],
+            },
+        ).success is False
+
+    def test_temporal_decodes_at_every_nesting(self):
+        # Fails on the argument, so the spliced state is reported back.
+        result = silverscript.debug_call(
+            TEMPORAL_SHAPES,
+            "check",
+            [1],
+            constructor_args=[1],
+            tx={
+                "inputs": [{"utxo_value": 5000, "state": shapes_state(100)}],
+                "outputs": [{"value": 5000}],
+            },
+        )
+        decoded = {
+            v.name: (v.type_name, v.value)
+            for v in result.failure.frames[0].variables
+        }
+        assert decoded["flat"] == ("temporal", 100)
+        # Struct members are reported under upstream's flattened names.
+        assert decoded["__struct__6_window_5_opens"] == ("temporal", 200)
+        assert decoded["__struct__6_window_6_closes"] == ("temporal", 300)
+        # Arrays report as their packed little-endian bytes, 8 per element.
+        assert decoded["pair"] == (
+            "temporal[2]",
+            (400).to_bytes(8, "little") + (500).to_bytes(8, "little"),
+        )
+
+    def test_every_nesting_is_enforced(self):
+        # The three nestings hold 100/200/400; an argument at each boundary
+        # passes and one below it fails, so every decoded value is load-bearing
+        # and not merely reported.
+        for boundary in (100, 200, 400):
+            scenario = {
+                "inputs": [{"utxo_value": 5000, "state": shapes_state(100)}],
+                "outputs": [{"value": 5000}],
+            }
+            assert silverscript.debug_call(
+                TEMPORAL_SHAPES, "check", [boundary], constructor_args=[1], tx=scenario
+            ).success is (boundary == 400)
+
+    def test_output_state_accepts_temporal(self):
+        # Outputs convert their state through the same path as inputs.
+        assert silverscript.debug_call(
+            TEMPORAL_SHAPES,
+            "check",
+            [400],
+            constructor_args=[1],
+            tx={
+                "inputs": [{"utxo_value": 5000, "state": shapes_state(100)}],
+                "outputs": [{"value": 5000, "state": shapes_state(100)}],
+            },
+        ).success is True
+
+    def test_non_int_temporal_state_is_rejected(self):
+        # `temporal` accepts an int, not a date string: upstream's scalar
+        # parser is `parse_int_arg`, which does not parse dates either.
+        with pytest.raises(
+            silverscript.SilverScriptError, match="state field 'flat' expects temporal"
+        ):
+            silverscript.debug_call(
+                TEMPORAL_SHAPES,
+                "check",
+                [400],
+                constructor_args=[1],
+                tx={
+                    "inputs": [
+                        {
+                            "utxo_value": 5000,
+                            "state": shapes_state("2023-11-14T22:13:20"),
+                        }
+                    ],
+                    "outputs": [{"value": 5000}],
+                },
+            )
 
 
 # ---------------------------------------------------------------------------

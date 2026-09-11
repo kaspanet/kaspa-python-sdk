@@ -618,6 +618,7 @@ fn typed_value_to_expr(
 
     match (&type_ref.base, value) {
         (TypeBase::Int, Value::Int(value)) => Ok(Expr::int(*value)),
+        (TypeBase::Temporal, Value::Int(value)) => Ok(Expr::temporal(*value)),
         (TypeBase::Bool, Value::Bool(value)) => Ok(Expr::bool(*value)),
         (TypeBase::String, Value::Str(value)) => Ok(Expr::string(value.clone())),
         (TypeBase::Byte, Value::Int(value)) if (0..=255).contains(value) => {
