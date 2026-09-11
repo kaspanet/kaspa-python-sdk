@@ -34,6 +34,9 @@ GROTH16_JOURNAL_HASH = "5df6e0e2761359d30a8275058e299fcc0381534545f55cf43e41983f
 # Public inputs matching succinct.rcpt.hex.
 SUCCINCT_JOURNAL = "5df6e0e2761359d30a8275058e299fcc0381534545f55cf43e41983f5d4c9456"
 
+# The post-Toccata script size limit (kaspa_txscript::MAX_SCRIPTS_SIZE).
+MAX_SCRIPT_SIZE = 1_000_000
+
 
 def groth_receipt() -> str:
     return (DATA / "groth.rcpt.hex").read_text().strip()
@@ -199,15 +202,39 @@ def test_bad_receipt_raises():
         b.finalize_with_groth16_proof("deadbeef", GROTH16_JOURNAL_HASH)
 
 
-def test_failed_finalize_preserves_builder():
-    # A malformed (31-byte) journal hash makes finalize fail — the builder must
-    # survive with its state and committed script intact instead of being
-    # consumed.
+def test_failed_finalize_on_bad_argument_preserves_builder():
+    # A malformed (31-byte) journal hash is rejected before finalize touches
+    # anything — the builder must survive with its state and committed script
+    # intact instead of being consumed.
     b = ZkScriptBuilder.new_r0()
     b.commit_to_groth16(GROTH16_IMAGE_ID)
     script_before = b.script()
     with pytest.raises(ZkError):
         b.finalize_with_groth16_proof(groth_receipt(), GROTH16_JOURNAL_HASH[:-2])
+    assert b.script() == script_before
+    assert "state='groth16'" in repr(b)
+
+
+def test_failed_finalize_mid_build_preserves_builder():
+    # The same guarantee, but failing inside the scratch builder finalize uses
+    # — after the journal hash and proof pushes have landed. Padding the redeem
+    # script to within SLACK of the limit leaves room to commit but not for the
+    # sig script's redeem push.
+    PUSH_HEADER = 5  # OpPushData4 + 4-byte length
+    SLACK = 100  # < the 163 bytes the journal hash and proof pushes take
+
+    probe = ZkScriptBuilder.new_r0()
+    probe.commit_to_groth16(GROTH16_IMAGE_ID)
+    verifier_len = len(probe.script()) // 2
+
+    b = ZkScriptBuilder.new_r0()
+    b.add_data(bytes(MAX_SCRIPT_SIZE - verifier_len - PUSH_HEADER - SLACK))
+    b.commit_to_groth16(GROTH16_IMAGE_ID)
+    assert len(b.script()) // 2 <= MAX_SCRIPT_SIZE
+
+    script_before = b.script()
+    with pytest.raises(ZkError, match="maximum allowed canonical script length"):
+        b.finalize_with_groth16_proof(groth_receipt(), GROTH16_JOURNAL_HASH)
     assert b.script() == script_before
     assert "state='groth16'" in repr(b)
 
