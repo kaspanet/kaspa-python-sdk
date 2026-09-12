@@ -26,11 +26,11 @@ instead — see [Covenants](covenants.md).
 
 ## Calling an entrypoint
 
-Only functions marked `entrypoint` are callable from a spend. Pass the
+Only functions declared with `entry` are callable from a spend. Pass the
 entrypoint name and a list of positional arguments, in the order the
 entrypoint declares them; the compiler emits the right unlocking script —
-including any selector it needs to pick the function when a contract has
-several entrypoints. You don't construct or read these bytes yourself —
+including the four-byte dispatch tag that selects the entrypoint. You don't
+construct or read these bytes yourself —
 you put them on the input (see
 [Spending a locked UTXO](#spending-a-locked-utxo)).
 
@@ -56,9 +56,14 @@ SilverScript types (the `type_name`s you can read off the
 | --- | --- |
 | `int` | `int` (must fit in a signed 64-bit integer) |
 | `bool` | `bool` (a real bool — not `0`/`1`) |
+| `temporal` | `int` (a time value in milliseconds) |
+| `byte` | `int` in `0..=255` (a one-byte `bytes` also works) |
+| `byte[]` | `bytes` / `bytearray` (not a `list`) |
 | `byte[N]` | `bytes` / `bytearray` of length `N` |
-| `pubkey` | `bytes` (an x-only public key) |
-| `sig` | `bytes` (a signature) |
+| `string` | `str` (encoded as UTF-8) |
+| `pubkey` | `bytes` (a 32-byte x-only public key) |
+| `sig` | `bytes` (a 65-byte signature — 64 plus the sighash type byte) |
+| `datasig` | `bytes` (a 64-byte signature over a message, for `checkMsgSig`) |
 | `T[]` | `list` or `tuple` of `T` |
 | struct / `State` | `dict` |
 
@@ -66,6 +71,9 @@ A few rules worth knowing:
 
 - **`bool` is distinct from `int`.** `True` is not `1` here — pass the
   type the entrypoint declares.
+- **Which Python value means what is decided by the declared type, not the
+  value.** `1` is a `byte` for a `byte` parameter and an `int` for an `int`
+  one; a small `int` is never silently treated as a `byte`.
 - **`list` and `tuple` are interchangeable** for array arguments.
 - **Out-of-range and mistyped values raise
   [`SilverScriptError`](../../reference/SilverScript/Exceptions/SilverScriptError.md)**,
@@ -91,7 +99,7 @@ call = contract.build_sig_script("check", [150])
 
 # Push the redeem script so it rides along in the same signature_script.
 redeem = bytes.fromhex(
-    ScriptBuilder().add_data(contract.script).to_string()
+    ScriptBuilder().add_data(contract.bytecode).to_string()
 )
 signature_script = call + redeem
 ```
@@ -102,17 +110,27 @@ spends the locked UTXO. The full P2SH mechanics — wrapping the lock,
 building the address, the spend side — are in
 [Transactions → Scripts](../transactions/scripts.md).
 
-## Building twice recompiles
+## Compile once, build many
 
-A [`CompiledContract`](../../reference/SilverScript/Classes/CompiledContract.md)
-stores its source and constructor args, not a borrowed parse tree. So
-each call to
+[`compile`](../../reference/SilverScript/Functions/compile.md) does all
+the expensive work up front: it parses the source, compiles the contract,
+and builds its [portable ABI artifact](compiling.md#the-portable-artifact)
+once, then keeps them on the
+[`CompiledContract`](../../reference/SilverScript/Classes/CompiledContract.md).
+
+Each later call to
 [`build_sig_script`](../../reference/SilverScript/Classes/CompiledContract.md)
-recompiles the contract from scratch before assembling the script. It's
-deterministic — the same call always yields the same bytes — but each
-call pays the full compile cost. That matters only if you build many
-unlocking scripts in a hot loop; for one spend per transaction, it's
-irrelevant.
+works from that stored artifact — it converts your arguments to the
+declared parameter types, pushes them, and appends the entrypoint's
+four-byte dispatch tag. Nothing is recompiled. Building many unlocking
+scripts from one contract is cheap, and it's deterministic: the same call
+always yields the same bytes.
+
+Because the artifact is all `build_sig_script` reads, you don't even need
+the contract: [`load_artifact`](../../reference/SilverScript/Functions/load_artifact.md)
+restores one from JSON and builds the same bytes with no source and no
+compiler — see
+[Loading an artifact back](compiling.md#loading-an-artifact-back).
 
 Next: stateful contracts that carry state from one UTXO to the next —
 [Covenants](covenants.md).

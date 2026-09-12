@@ -34,6 +34,18 @@ The generator (`src/bin/stub_gen.rs`) performs:
 3. Appends RPC TypedDicts from `kaspa_rpc.pyi` (manually maintained)
 4. Outputs `python/kaspa/__init__.pyi` and `python/kaspa/exceptions/__init__.pyi`
 
+The SilverScript bindings have their own generator
+(`crates/silverscript/src/bin/stub_gen.rs`) writing
+`python/kaspa/experimental/silverscript/__init__.pyi`. CI regenerates that stub
+and fails if the committed copy differs, so two things are worth knowing:
+
+- `pyo3-stub-gen` embeds Rust doc comments in the stub, so **editing a doc
+  comment in `crates/silverscript/` makes the stub stale**. Re-run `./build-dev`
+  and commit the regenerated `.pyi` in the same change.
+- `pyo3-stub-gen` is a caret requirement. `Cargo.lock` pins it, so CI is
+  deterministic, but a `cargo update` that bumps it can reformat every stub at
+  once. Regenerate and review in a standalone commit if that happens.
+
 ### API Reference Generation
 
 At docs build time (`mkdocs build` or `mkdocs serve`):

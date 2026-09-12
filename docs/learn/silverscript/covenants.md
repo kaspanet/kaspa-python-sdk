@@ -31,9 +31,38 @@ The `is_leader` keyword (default `False`) matters only for covenants that
 spend several UTXOs of the same covenant in one transition and pick one
 input as the **leader**. The leader input carries the entrypoint's
 arguments and runs the covenant's logic; the other inputs are
-**delegates** — they take no arguments and only prove they belong to the
-same covenant, deferring to the leader. Build the leader's unlocking
-script with `is_leader=True` and each delegate's with `is_leader=False`.
+**delegates**, which prove they belong to the same covenant and defer to
+the leader. Build the leader's unlocking script with `is_leader=True` and
+each delegate's with `is_leader=False`.
+
+A delegate takes no arguments unless the contract declares a
+`#[covenant.delegate]` body. When it does, every delegate input runs that
+body, and `build_sig_script_for_covenant_decl(..., is_leader=False)`
+takes *its* parameters — which are unrelated to the declaration's. So the
+same declaration is spent with two different argument lists. For
+
+```
+#[covenant(binding = cov, from = 2, to = 2)]
+function transfer(State[] prev_states, State[] new_states, int amount, bool allowed) { ... }
+
+#[covenant.delegate]
+function authorizeDelegate(byte[] witness) { ... }
+```
+
+the two inputs are built as:
+
+```python
+leader = contract.build_sig_script_for_covenant_decl(
+    "transfer", [new_states, amount, allowed], is_leader=True
+)
+delegate = contract.build_sig_script_for_covenant_decl(
+    "transfer", [witness], is_leader=False
+)
+```
+
+The leader's list starts with the transition's output states: `new_states`
+is passed, while `prev_states` is not — the engine reads it from the
+inputs being spent.
 
 The Counter here never needs it. Its `binding = auth` compiles to a single
 entrypoint with no leader/delegate split, so `is_leader` is ignored — you
@@ -85,13 +114,13 @@ contract Counter(int init_count) {
 
     #[covenant(binding = auth, from = 1, to = 1, mode = transition)]
     function add(State prev_state, int amount) : (State) {
-        return({ count: prev_state.count + amount });
+        return(State { count: prev_state.count + amount });
     }
 
     #[covenant(binding = auth, from = 1, to = 1, mode = transition)]
     function subtract(State prev_state, int amount) : (State) {
         require(prev_state.count - amount >= 0);
-        return({ count: prev_state.count - amount });
+        return(State { count: prev_state.count - amount });
     }
 }
 ```

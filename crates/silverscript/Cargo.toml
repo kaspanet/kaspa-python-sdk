@@ -21,9 +21,9 @@ kaspa-python-sdk-core = { path = "../core" }
 pyo3 = { version = "0.27.1" }
 pyo3-stub-gen = "0.17.2"
 self_cell = "1"
-silverscript-lang = { git = "https://github.com/kaspanet/silverscript.git", rev = "2a3961cadc76bb16a425042172ffe32481da89b5" }
-# The debug harness executes spends through the same rusty-kaspa revision the
-# silverscript workspace pins (tag v2.0.1) — distinct from the core module's rev.
-debugger-session = { git = "https://github.com/kaspanet/silverscript.git", rev = "2a3961cadc76bb16a425042172ffe32481da89b5" }
-kaspa-consensus-core = { git = "https://github.com/kaspanet/rusty-kaspa", tag = "v2.0.1" }
-kaspa-txscript = { git = "https://github.com/kaspanet/rusty-kaspa", tag = "v2.0.1" }
+serde_json = "1.0.149"
+silverscript-lang = { git = "https://github.com/kaspanet/silverscript.git", rev = "3ed973335b59269293564805cc2c58a14595ec03" }
+silverscript-abi = { git = "https://github.com/kaspanet/silverscript.git", rev = "3ed973335b59269293564805cc2c58a14595ec03" }
+debugger-session = { git = "https://github.com/kaspanet/silverscript.git", rev = "3ed973335b59269293564805cc2c58a14595ec03" }
+kaspa-consensus-core = { git = "https://github.com/kaspanet/rusty-kaspa", rev = "a41a333b08848f41bf737b72592e463a6011b8ac" }
+kaspa-txscript = { git = "https://github.com/kaspanet/rusty-kaspa", rev = "a41a333b08848f41bf737b72592e463a6011b8ac" }

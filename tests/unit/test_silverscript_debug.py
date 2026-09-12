@@ -14,7 +14,7 @@ import kaspa.experimental.silverscript as silverscript
 GUARD = """
 pragma silverscript ^0.1.0;
 contract Guard(int threshold) {
-    entrypoint function check(int amount) {
+    entry check(int amount) {
         int margin = amount - threshold;
         require(margin > 0);
     }
@@ -24,8 +24,8 @@ contract Guard(int threshold) {
 MULTI = """
 pragma silverscript ^0.1.0;
 contract Multi(int base) {
-    entrypoint function add(int amount) { require(amount > base); }
-    entrypoint function sub(int amount) { require(amount < base); }
+    entry add(int amount) { require(amount > base); }
+    entry sub(int amount) { require(amount < base); }
 }
 """
 
@@ -35,7 +35,7 @@ contract C() {
     function checkPositive(int v) {
         require(v > 10);
     }
-    entrypoint function go(int x) {
+    entry go(int x) {
         checkPositive(x);
     }
 }
@@ -44,7 +44,7 @@ contract C() {
 LOGGER = """
 pragma silverscript ^0.1.0;
 contract Logger() {
-    entrypoint function go(int x) {
+    entry go(int x) {
         console.log("x is", x);
         require(x > 0);
     }
@@ -54,7 +54,7 @@ contract Logger() {
 ANNOUNCEMENT = """
 pragma silverscript ^0.1.0;
 contract Announcement() {
-    entrypoint function announce() {
+    entry announce() {
         require(tx.outputs[0].value == 0);
     }
 }
@@ -63,7 +63,7 @@ contract Announcement() {
 BYTES4 = """
 pragma silverscript ^0.1.0;
 contract H(byte[4] tag) {
-    entrypoint function go(byte[4] x) { require(x == tag); }
+    entry go(byte[4] x) { require(x == tag); }
 }
 """
 
@@ -75,14 +75,101 @@ contract Counter(int init_count) {
     int count = init_count;
     #[covenant(binding = auth, from = 1, to = 1, mode = transition)]
     function add(State prev_state, int amount) : (State) {
-        return({ count: prev_state.count + amount });
+        return(State { count: prev_state.count + amount });
     }
     #[covenant(binding = auth, from = 1, to = 1, mode = transition)]
     function subtract(State prev_state, int amount) : (State) {
-        return({ count: prev_state.count - amount });
+        return(State { count: prev_state.count - amount });
     }
 }
 """
+
+# The same transition with statements ahead of the return. Those step like any
+# others; only the `return(State { ... })` is verified as a whole and records no
+# pause — which is why COUNTER above, whose bodies are nothing but that return,
+# traces to nothing.
+COUNTER_STEPPED = """
+pragma silverscript ^0.1.0;
+contract Counter(int init_count) {
+    int count = init_count;
+    #[covenant(binding = auth, from = 1, to = 1, mode = transition)]
+    function add(State prev_state, int amount) : (State) {
+        int next = prev_state.count + amount;
+        require(next >= 0);
+        return(State { count: next });
+    }
+}
+"""
+
+BYTE_BOX = """
+pragma silverscript ^0.1.0;
+contract ByteBox(byte tag) {
+    entry f(byte b) { require(b == tag); }
+}
+"""
+
+BLOB = """
+pragma silverscript ^0.1.0;
+contract Blob(byte[] tag) {
+    entry go(byte[] data) { require(data == tag); }
+}
+"""
+
+# A covenant whose state and argument are scalar `byte`s — the synthesized
+# output State argument has to narrow to a `byte` too.
+MARKER = """
+pragma silverscript ^0.1.0;
+contract Marker(byte init_tag) {
+    byte tag = init_tag;
+    #[covenant(binding = auth, from = 1, to = 1, mode = transition)]
+    function retag(State prev_state, byte next) : (State) {
+        require(next != prev_state.tag);
+        return(State { tag: next });
+    }
+}
+"""
+
+# A dynamic `byte[]` state field, bare and nested in a struct. `byte[]` and
+# `byte[N]` are distinct types to the compiler, so an explicit `state` literal
+# has to carry the declared dimension: tagging a `byte[]` value `byte[N]` is
+# rejected as a field type mismatch. The entrypoint compares both fields
+# against its argument, so the spliced bytes are observable as pass/fail.
+DYNAMIC_BYTES_STATE = """
+pragma silverscript ^0.1.0;
+contract Blobs(byte[] seed) {
+    struct Wrapped { int amount; byte[] tag; }
+    byte[] data = seed;
+    Wrapped wrapped = Wrapped { amount: 1, tag: seed };
+    entry check(byte[] expected) {
+        require(data == expected);
+        require(wrapped.tag == expected);
+    }
+}
+"""
+
+
+def dynamic_bytes_state(value):
+    """An explicit `Blobs` state setting both dynamic byte fields to `value`."""
+    return {"data": value, "wrapped": {"amount": 9, "tag": value}}
+
+
+def dynamic_bytes_call(expected, state=None, on_output=False):
+    """Call `Blobs.check(expected)` against a `seed` of `0x0102`.
+
+    `state` goes on the input, or on the output with `on_output`.
+    """
+    input_spec = {"utxo_value": 5000}
+    output_spec = {"value": 5000}
+    if state is not None:
+        (output_spec if on_output else input_spec)["state"] = state
+    return silverscript.debug_call(
+        DYNAMIC_BYTES_STATE,
+        "check",
+        [expected],
+        [b"\x01\x02"],
+        tx={"inputs": [input_spec], "outputs": [output_spec]},
+    )
+
 
 # A covenant whose state is a byte array — exercises type-directed state
 # conversion (ints, int lists, and hex strings in byte positions).
@@ -92,7 +179,100 @@ contract Tagged(byte[4] init_tag) {
     byte[4] tag = init_tag;
     #[covenant(binding = auth, from = 1, to = 1, mode = transition)]
     function retag(State prev_state, byte[4] next) : (State) {
-        return({ tag: next });
+        return(State { tag: next });
+    }
+}
+"""
+
+# Every shape a resolved state initializer can take beyond a bare literal:
+# a temporal constructor parameter, a `date(...)` literal, a unit-suffixed
+# literal, and the `temporal`/`int`/`string`/`byte` cast calls. The compiler's
+# constant folder leaves each of these in the AST, so the debugger has to
+# decode them all.
+TEMPORAL_FORMS = """
+pragma silverscript ^0.1.0;
+contract Forms(temporal init_deadline) {
+    temporal from_param = init_deadline;
+    temporal from_date = date("2030-01-01T00:00:00");
+    temporal from_cast = temporal(1700000000);
+    temporal from_units = 3 days;
+    int from_int_cast = int(init_deadline);
+    string from_string_cast = string("tagged");
+    byte from_byte_cast = byte(0x07);
+    entry check(int a) { require(a > 0); }
+}
+"""
+
+# The minimal timelock shape: a temporal state field compared against a
+# temporal argument, so the decoded state value is observable as pass/fail and
+# not only as a reported variable.
+DEADLINE = """
+pragma silverscript ^0.1.0;
+contract Deadline(temporal init_deadline) {
+    temporal deadline = init_deadline;
+    entry after(temporal t) { require(t >= deadline); }
+}
+"""
+
+# Every nesting a `temporal` can occupy in an explicit `state` dict: a bare
+# field, a struct member, and an array element. Each one goes through the same
+# type-directed conversion, so all three have to accept a plain int.
+TEMPORAL_SHAPES = """
+pragma silverscript ^0.1.0;
+contract Shapes(temporal init) {
+    struct Window { temporal opens; temporal closes; }
+    temporal flat = init;
+    Window window = Window { opens: init, closes: init };
+    temporal[2] pair = temporal[2]{init, init};
+    entry check(temporal t) {
+        require(t >= flat && t >= window.opens && t >= pair[0]);
+    }
+}
+"""
+
+
+def shapes_state(flat):
+    """An explicit `Shapes` state, with `flat` the only varying field."""
+    return {
+        "flat": flat,
+        "window": {"opens": 200, "closes": 300},
+        "pair": [400, 500],
+    }
+
+
+# A cov-bound covenant group: every input of the group is spent in one
+# transaction, the lowest-index input is the leader and runs the declaration
+# body, the rest defer to the shared delegate entrypoint. Ported from
+# upstream's `cov_debug_demo` CLI fixture.
+COV_GROUP = """
+pragma silverscript ^0.1.0;
+contract CovDebugDemo(int initial_value) {
+    int value = initial_value;
+    #[covenant(binding = cov, from = 2, to = 2, mode = verification)]
+    function rebalance(State[] prev_states, State[] new_states) {
+        require(prev_states.length == 2);
+        require(prev_states[0].value == 10);
+        require(prev_states[1].value == 20);
+        require(new_states.length == 2);
+    }
+}
+"""
+
+# The same shape, but with a `#[covenant.delegate]` body that declares its own
+# parameters: a delegate spend carries the delegate's arguments, not the
+# leader's. Ported from upstream's `cov_distinct_delegate_args` CLI fixture.
+COV_DELEGATE_ARGS = """
+pragma silverscript ^0.1.0;
+contract CovDistinctDelegateArgs() {
+    byte dummy = 0x00;
+    #[covenant(binding = cov, from = 2, to = 2)]
+    function transfer(State[] prev_states, State[] new_states, int amount, bool allowed) {
+        require(amount >= 0);
+        require(allowed);
+    }
+    #[covenant.delegate]
+    function authorizeDelegate(byte[] witness) {
+        require(witness.length > 0);
     }
 }
 """
@@ -121,6 +301,72 @@ def counter_scenario(prev_count, next_count):
     }
 
 
+def marker_scenario(prev_tag, next_tag):
+    """A 1-in/1-out Marker transition: prev byte state in, next byte state out."""
+    return {
+        "inputs": [
+            {
+                "utxo_value": 5000,
+                "covenant_id": COVENANT_ID,
+                "state": {"tag": prev_tag},
+            }
+        ],
+        "outputs": [
+            {
+                "value": 5000,
+                "covenant_id": COVENANT_ID,
+                "authorizing_input": 0,
+                "state": {"tag": next_tag},
+            }
+        ],
+    }
+
+
+def cov_group_scenario(active_input_index):
+    """A 2-in/2-out cov-bound group, debugging one of its two inputs."""
+    return {
+        "active_input_index": active_input_index,
+        "inputs": [
+            {
+                "utxo_value": 5000,
+                "covenant_id": COVENANT_ID,
+                "constructor_args": [10],
+            },
+            {
+                "utxo_value": 5000,
+                "covenant_id": COVENANT_ID,
+                "constructor_args": [20],
+            },
+        ],
+        "outputs": [
+            {
+                "value": 5000,
+                "covenant_id": COVENANT_ID,
+                "authorizing_input": 0,
+                "constructor_args": [30],
+            },
+            {
+                "value": 5000,
+                "covenant_id": COVENANT_ID,
+                "authorizing_input": 0,
+                "constructor_args": [40],
+            },
+        ],
+    }
+
+
+def delegate_args_scenario(active_input_index):
+    """A 2-in/0-out cov-bound group whose delegate takes its own arguments."""
+    return {
+        "active_input_index": active_input_index,
+        "inputs": [
+            {"utxo_value": 5000, "covenant_id": COVENANT_ID},
+            {"utxo_value": 5000, "covenant_id": COVENANT_ID},
+        ],
+        "outputs": [],
+    }
+
+
 # ---------------------------------------------------------------------------
 # Pass / fail basics
 # ---------------------------------------------------------------------------
@@ -140,10 +386,24 @@ class TestDebugCallBasics:
         assert "verification failed" in result.error
         assert isinstance(result.failure, silverscript.FailureReport)
 
-    def test_default_entrypoint_is_first_abi_entry(self):
+    def test_default_entrypoint_is_first_declared(self):
+        # debug_call defaults to the first entrypoint *declared in the source*,
+        # not the first in `.abi` (which is alphabetical). debug_call requires
+        # source anyway, so declaration order is unambiguous here.
         result = silverscript.debug_call(GUARD, args=[150], constructor_args=[100])
         assert result.function_name == "check"
         assert result.success is True
+
+    def test_default_entrypoint_is_declaration_order_not_alphabetical(self):
+        # ORDER declares zebra first; alphabetically "alpha" would win.
+        src = (
+            "contract Order() {\n"
+            "    entry zebra(int a)  { require(a > 0); }\n"
+            "    entry alpha(int a)  { require(a > 0); }\n"
+            "}\n"
+        )
+        assert silverscript.debug_call(src, args=[5]).function_name == "zebra"
+        assert [e.name for e in silverscript.compile(src).abi] == ["alpha", "zebra"]
 
     def test_multi_entrypoint_selection(self):
         assert silverscript.debug_call(MULTI, "add", [20], [10]).success is True
@@ -284,16 +544,37 @@ class TestTrace:
         assert helper_steps[0].function_name == "checkPositive"
         assert {v.name: v.value for v in helper_steps[0].variables}["v"] == 30
 
-    def test_trace_covenant_transition_records_no_pauses(self):
-        # Covenant transition bodies are verified as a whole by the engine
-        # (shadow evaluation), not stepped statement-by-statement — the
-        # upstream CLI debugger steps them the same way. The trace is
-        # present but empty; the failure report still decodes them.
+    def test_trace_skips_a_covenant_transitions_return(self):
+        # A transition's `return(State { ... })` is the one statement that
+        # records no pause: the engine verifies the state it produces as a whole
+        # (shadow evaluation) rather than stepping it, as the upstream CLI
+        # debugger does. COUNTER's bodies are nothing but that return, so the
+        # trace is present and empty.
         result = silverscript.debug_call(
             COUNTER, "add", [5], [0], tx=counter_scenario(10, 15), trace=True
         )
         assert result.success is True
         assert result.trace == []
+
+    def test_trace_covers_a_covenant_transitions_other_statements(self):
+        # The statements ahead of that return are not skipped. This is the half
+        # the docs used to deny: "the trace of a transition is empty" held only
+        # for a body with nothing else in it.
+        result = silverscript.debug_call(
+            COUNTER_STEPPED, "add", [5], [0], tx=counter_scenario(10, 15), trace=True
+        )
+        assert result.success is True
+        # A transition also pauses once with a default (zero) span, which renders
+        # as line 1. The upstream CLI debugger highlights the same line at that
+        # pause, so it is recorded rather than suppressed; skip it here so the
+        # real statements are what this asserts on.
+        assert [(s.line, s.statement) for s in result.trace if s.line != 1] == [
+            (7, "int next = prev_state.count + amount;"),
+            (8, "require(next >= 0);"),
+        ]
+        assert all(s.function_name == "add" for s in result.trace)
+        # The return itself never appears.
+        assert not any("return(" in (s.statement or "") for s in result.trace)
 
     def test_trace_alongside_console(self):
         result = silverscript.debug_call(LOGGER, "go", [7], trace=True)
@@ -391,6 +672,488 @@ class TestTxScenario:
                 TAGGED, "retag", [b"\xaa\xbb\xcc\xdd"], [b"\x01\x02\x03\x04"], tx=tx
             )
             assert result.success is True, f"spelling {prev!r} -> {next_!r}"
+
+
+# ---------------------------------------------------------------------------
+# `binding = cov` covenant groups: leader and delegate spends
+# ---------------------------------------------------------------------------
+
+class TestCovBinding:
+    def test_group_leader_spend(self):
+        # Input 0 is the lowest-index member, so it runs the declaration body.
+        result = silverscript.debug_call(COV_GROUP, "rebalance", tx=cov_group_scenario(0))
+        assert result.success is True
+
+    def test_group_delegate_spend(self):
+        # Input 1 defers to the shared delegate entrypoint, which takes no
+        # arguments here because the contract declares no delegate body.
+        result = silverscript.debug_call(COV_GROUP, "rebalance", tx=cov_group_scenario(1))
+        assert result.success is True
+
+    def test_group_leader_sees_every_input_state(self):
+        # `prev_states[1].value == 20` comes from the companion input, which
+        # the leader reads out of that input's redeem script.
+        tx = cov_group_scenario(0)
+        tx["inputs"][1]["constructor_args"] = [21]
+        result = silverscript.debug_call(COV_GROUP, "rebalance", tx=tx)
+        assert result.success is False
+
+    def test_delegate_body_args_are_the_delegate_s_own(self):
+        # A parameterised `#[covenant.delegate]` body means a delegate spend
+        # carries that body's arguments, not the leader's.
+        result = silverscript.debug_call(
+            COV_DELEGATE_ARGS, "transfer", [b"\x01"], tx=delegate_args_scenario(1)
+        )
+        assert result.success is True
+
+    def test_leader_args_unaffected_by_parameterised_delegate(self):
+        result = silverscript.debug_call(
+            COV_DELEGATE_ARGS, "transfer", [1, True], tx=delegate_args_scenario(0)
+        )
+        assert result.success is True
+
+    def test_delegate_body_require_can_fail(self):
+        # An empty witness fails the delegate's own `require`, proving the
+        # argument reached the delegate body rather than being dropped.
+        result = silverscript.debug_call(
+            COV_DELEGATE_ARGS, "transfer", [b""], tx=delegate_args_scenario(1)
+        )
+        assert result.success is False
+
+    def test_leader_body_require_can_fail(self):
+        result = silverscript.debug_call(
+            COV_DELEGATE_ARGS, "transfer", [1, False], tx=delegate_args_scenario(0)
+        )
+        assert result.success is False
+
+
+# ---------------------------------------------------------------------------
+# `byte` arguments and state
+# ---------------------------------------------------------------------------
+
+class TestByteValues:
+    def test_byte_arg_passes(self):
+        assert silverscript.debug_call(BYTE_BOX, "f", [1], [1]).success is True
+
+    def test_byte_arg_fails(self):
+        assert silverscript.debug_call(BYTE_BOX, "f", [2], [1]).success is False
+
+    def test_single_byte_bytes_equivalent_to_int(self):
+        assert silverscript.debug_call(BYTE_BOX, "f", [b"\x01"], [1]).success is True
+
+    def test_byte_arg_out_of_range_raises(self):
+        with pytest.raises(silverscript.SilverScriptError):
+            silverscript.debug_call(BYTE_BOX, "f", [256], [1])
+
+    def test_byte_array_type_name_matches_the_abi(self):
+        # Both surfaces name the parameter `byte[]`; they used to disagree.
+        result = silverscript.debug_call(BLOB, "go", [b"\xcc"], [b"\xaa\xbb"])
+        variables = {v.name: v for v in result.failure.frames[0].variables}
+        abi_name = silverscript.compile(BLOB, [b"\xaa\xbb"]).abi[0].params[0].type_name
+        assert variables["data"].type_name == abi_name == "byte[]"
+
+    def test_byte_variable_decodes_in_source_terms(self):
+        variables = {
+            v.name: v
+            for v in silverscript.debug_call(BYTE_BOX, "f", [2], [1]).failure.frames[0].variables
+        }
+        assert variables["b"].type_name == "byte"
+        assert variables["tag"].value == b"\x01"
+
+    def test_covenant_byte_state_transition_passes(self):
+        result = silverscript.debug_call(
+            MARKER, "retag", [2], [1], tx=marker_scenario(1, 2)
+        )
+        assert result.success is True
+
+    def test_covenant_byte_state_wrong_next_state_fails(self):
+        # The synthesized output State is the byte the transition must produce.
+        result = silverscript.debug_call(
+            MARKER, "retag", [2], [1], tx=marker_scenario(1, 3)
+        )
+        assert result.success is False
+        assert "verification failed" in result.error
+
+    def test_covenant_byte_arg_out_of_range_raises(self):
+        with pytest.raises(silverscript.SilverScriptError):
+            silverscript.debug_call(MARKER, "retag", [256], [1], tx=marker_scenario(1, 2))
+
+
+# ---------------------------------------------------------------------------
+# Dynamic `byte[]` state
+# ---------------------------------------------------------------------------
+
+class TestDynamicByteState:
+    """An explicit `state` for a `byte[]` field keeps the declared dimension.
+
+    The state literal built for a one-dimensional byte field used to be tagged
+    `byte[N]` unconditionally, so every contract with a dynamic byte state field
+    raised "contract field 'data' expects byte[]" and had no expressible `tx`
+    scenario at all — bare field or struct member, input or output. The
+    fixed-size case happened to work, because `byte[N]` was the right tag there.
+    """
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            pytest.param(b"\x03\x04", id="bytes"),
+            pytest.param(bytearray(b"\x03\x04"), id="bytearray"),
+            pytest.param([3, 4], id="int-list"),
+            pytest.param("0x0304", id="hex-string"),
+        ],
+    )
+    def test_input_state_accepts_every_byte_spelling(self, value):
+        assert dynamic_bytes_call(b"\x03\x04", dynamic_bytes_state(value)).success is True
+
+    def test_input_state_replaces_the_constructor_state(self):
+        # Same length as the constructor's `seed`, different bytes: the spliced
+        # state is what the entrypoint reads.
+        state = dynamic_bytes_state(b"\x03\x04")
+        assert dynamic_bytes_call(b"\x03\x04", state).success is True
+        assert dynamic_bytes_call(b"\x01\x02", state).success is False
+
+    def test_constructor_state_is_unaffected(self):
+        # Without an explicit state the constructor's `seed` is still the state.
+        assert dynamic_bytes_call(b"\x01\x02").success is True
+        assert dynamic_bytes_call(b"\x03\x04").success is False
+
+    def test_output_state_accepts_dynamic_bytes(self):
+        # An output state materializes its own script; the active input's state
+        # still comes from the constructor.
+        result = dynamic_bytes_call(
+            b"\x01\x02", dynamic_bytes_state(b"\x03\x04"), on_output=True
+        )
+        assert result.success is True
+
+    def test_length_change_is_refused_as_a_size_change(self):
+        # A dynamic field's length is encoded in the script, so a different
+        # length moves the template bytes around the state region. That is the
+        # one case the splice must refuse — and it must refuse it as a size
+        # change, not as a field type mismatch.
+        with pytest.raises(silverscript.SilverScriptError) as excinfo:
+            dynamic_bytes_call(b"\x03\x04\x05", dynamic_bytes_state(b"\x03\x04\x05"))
+        assert "changes encoded script size" in str(excinfo.value)
+
+    def test_declared_length_is_still_enforced_for_fixed_fields(self):
+        # The `byte[N]` tag the dynamic case needed fixing away from is still
+        # the right one for a fixed field, length check included.
+        tx = {
+            "inputs": [{
+                "utxo_value": 5000,
+                "covenant_id": COVENANT_ID,
+                "state": {"tag": b"\x01\x02\x03\x04"},
+            }],
+            "outputs": [{
+                "value": 5000,
+                "covenant_id": COVENANT_ID,
+                "authorizing_input": 0,
+                "state": {"tag": b"\x09\x09\x09\x09"},
+            }],
+        }
+        result = silverscript.debug_call(
+            TAGGED, "retag", [b"\x09\x09\x09\x09"], [b"\x01\x02\x03\x04"], tx=tx
+        )
+        assert result.success is True
+
+        tx["inputs"][0]["state"] = {"tag": b"\x01\x02"}
+        with pytest.raises(silverscript.SilverScriptError) as excinfo:
+            silverscript.debug_call(
+                TAGGED, "retag", [b"\x09\x09\x09\x09"], [b"\x01\x02\x03\x04"], tx=tx
+            )
+        assert "expects 4 bytes, got 2" in str(excinfo.value)
+
+
+# ---------------------------------------------------------------------------
+# `temporal` state
+# ---------------------------------------------------------------------------
+
+class TestTemporalState:
+    def test_every_initializer_form_decodes(self):
+        # `debug_call` used to abort outright on each of these, so a contract
+        # with any temporal state -- every timelock -- was undebuggable.
+        result = silverscript.debug_call(
+            TEMPORAL_FORMS, "check", [0], [1700000000]
+        )
+        variables = {v.name: v for v in result.failure.frames[0].variables}
+        decoded = {name: (v.type_name, v.value) for name, v in variables.items()}
+        assert decoded == {
+            "a": ("int", 0),
+            "init_deadline": ("temporal", 1700000000),
+            "from_param": ("temporal", 1700000000),
+            "from_date": ("temporal", 1893456000000),
+            "from_cast": ("temporal", 1700000000),
+            "from_units": ("temporal", 259200000),
+            "from_int_cast": ("int", 1700000000),
+            "from_string_cast": ("string", "tagged"),
+            "from_byte_cast": ("byte", b"\x07"),
+        }
+
+    def test_int_cast_retags_a_temporal_as_int(self):
+        # `int(t)` and `temporal(n)` carry the same number; only the reported
+        # type distinguishes them.
+        variables = {
+            v.name: v
+            for v in silverscript.debug_call(
+                TEMPORAL_FORMS, "check", [0], [1700000000]
+            ).failure.frames[0].variables
+        }
+        assert variables["from_int_cast"].value == variables["from_param"].value
+        assert variables["from_int_cast"].type_name == "int"
+        assert variables["from_param"].type_name == "temporal"
+
+    def test_deadline_reached_passes(self):
+        assert silverscript.debug_call(
+            DEADLINE, "after", [1700000000], [1700000000]
+        ).success is True
+
+    def test_deadline_not_reached_fails(self):
+        result = silverscript.debug_call(
+            DEADLINE, "after", [1699999999], [1700000000]
+        )
+        assert result.success is False
+        assert "verification failed" in result.error
+
+    def test_temporal_state_is_the_compiled_value_not_the_argument(self):
+        # The deadline the script enforces comes from the constructor, so
+        # moving it past the argument flips the outcome.
+        assert silverscript.debug_call(
+            DEADLINE, "after", [1700000000], [1700000001]
+        ).success is False
+
+    def test_constant_folded_initializer_is_still_unsupported(self):
+        # A shared gap with the upstream CLI debugger: `is_const_expr` admits
+        # constant integer arithmetic, but neither debugger decodes it. Pinned
+        # so that closing it upstream is a visible change here.
+        source = TEMPORAL_FORMS.replace(
+            "temporal from_cast = temporal(1700000000);",
+            "temporal from_cast = temporal(1700000000 + 1);",
+        )
+        with pytest.raises(
+            silverscript.SilverScriptError, match="unsupported resolved state expression"
+        ):
+            silverscript.debug_call(source, "check", [0], [1700000000])
+
+
+# ---------------------------------------------------------------------------
+# `temporal` in an explicit `state` dict
+# ---------------------------------------------------------------------------
+
+class TestTemporalExplicitState:
+    def test_explicit_temporal_state_is_accepted(self):
+        # `state` used to raise "expects temporal" for any temporal field, so
+        # no timelock could be debugged against a chosen deadline at all.
+        result = silverscript.debug_call(
+            DEADLINE,
+            "after",
+            [1700000000],
+            constructor_args=[1],
+            tx={
+                "inputs": [
+                    {"utxo_value": 5000, "state": {"deadline": 1700000000}}
+                ],
+                "outputs": [{"value": 5000}],
+            },
+        )
+        assert result.success is True
+
+    def test_explicit_temporal_state_below_deadline_fails(self):
+        result = silverscript.debug_call(
+            DEADLINE,
+            "after",
+            [1699999999],
+            constructor_args=[1],
+            tx={
+                "inputs": [
+                    {"utxo_value": 5000, "state": {"deadline": 1700000000}}
+                ],
+                "outputs": [{"value": 5000}],
+            },
+        )
+        assert result.success is False
+        assert "verification failed" in result.error
+
+    def test_explicit_state_overrides_the_constructor_deadline(self):
+        # The constructor puts the deadline in the past; the explicit state
+        # moves it past the argument. The outcome follows the explicit state,
+        # which is what makes it worth passing.
+        assert silverscript.debug_call(
+            DEADLINE,
+            "after",
+            [1700000000],
+            constructor_args=[1],
+            tx={
+                "inputs": [
+                    {"utxo_value": 5000, "state": {"deadline": 1700000001}}
+                ],
+                "outputs": [{"value": 5000}],
+            },
+        ).success is False
+
+    def test_temporal_decodes_at_every_nesting(self):
+        # Fails on the argument, so the spliced state is reported back.
+        result = silverscript.debug_call(
+            TEMPORAL_SHAPES,
+            "check",
+            [1],
+            constructor_args=[1],
+            tx={
+                "inputs": [{"utxo_value": 5000, "state": shapes_state(100)}],
+                "outputs": [{"value": 5000}],
+            },
+        )
+        decoded = {
+            v.name: (v.type_name, v.value)
+            for v in result.failure.frames[0].variables
+        }
+        assert decoded["flat"] == ("temporal", 100)
+        # Struct members are reported under upstream's flattened names.
+        assert decoded["__struct__6_window_5_opens"] == ("temporal", 200)
+        assert decoded["__struct__6_window_6_closes"] == ("temporal", 300)
+        # Arrays report as their packed little-endian bytes, 8 per element.
+        assert decoded["pair"] == (
+            "temporal[2]",
+            (400).to_bytes(8, "little") + (500).to_bytes(8, "little"),
+        )
+
+    def test_every_nesting_is_enforced(self):
+        # The three nestings hold 100/200/400; an argument at each boundary
+        # passes and one below it fails, so every decoded value is load-bearing
+        # and not merely reported.
+        for boundary in (100, 200, 400):
+            scenario = {
+                "inputs": [{"utxo_value": 5000, "state": shapes_state(100)}],
+                "outputs": [{"value": 5000}],
+            }
+            assert silverscript.debug_call(
+                TEMPORAL_SHAPES, "check", [boundary], constructor_args=[1], tx=scenario
+            ).success is (boundary == 400)
+
+    def test_output_state_accepts_temporal(self):
+        # Outputs convert their state through the same path as inputs.
+        assert silverscript.debug_call(
+            TEMPORAL_SHAPES,
+            "check",
+            [400],
+            constructor_args=[1],
+            tx={
+                "inputs": [{"utxo_value": 5000, "state": shapes_state(100)}],
+                "outputs": [{"value": 5000, "state": shapes_state(100)}],
+            },
+        ).success is True
+
+    def test_non_int_temporal_state_is_rejected(self):
+        # `temporal` accepts an int, not a date string: upstream's scalar
+        # parser is `parse_int_arg`, which does not parse dates either.
+        with pytest.raises(
+            silverscript.SilverScriptError, match="state field 'flat' expects temporal"
+        ):
+            silverscript.debug_call(
+                TEMPORAL_SHAPES,
+                "check",
+                [400],
+                constructor_args=[1],
+                tx={
+                    "inputs": [
+                        {
+                            "utxo_value": 5000,
+                            "state": shapes_state("2023-11-14T22:13:20"),
+                        }
+                    ],
+                    "outputs": [{"value": 5000}],
+                },
+            )
+
+
+# ---------------------------------------------------------------------------
+# The active input's compile is what gets debugged
+# ---------------------------------------------------------------------------
+
+# Any raw `utxo_script` stands in for an already-deployed UTXO: it suppresses
+# redeem-script derivation for that input, which is the precondition for the
+# lockscript fallback. The debug session is handed the redeem script directly,
+# so this SPK's bytes never participate in the run.
+DEPLOYED_UTXO_SCRIPT = b"\x51"
+
+
+def guard_input(threshold, deployed=False):
+    """A `Guard` input pinned to its own constructor args."""
+    utxo = {"utxo_value": 5000, "constructor_args": [threshold]}
+    if deployed:
+        utxo["utxo_script"] = DEPLOYED_UTXO_SCRIPT
+    return utxo
+
+
+def guard_call(amount, root_threshold, input_threshold, deployed=False):
+    """`check(amount)` where the root and the active input disagree on the threshold."""
+    return silverscript.debug_call(
+        GUARD,
+        "check",
+        [amount],
+        [root_threshold],
+        tx={
+            "inputs": [guard_input(input_threshold, deployed)],
+            "outputs": [{"value": 5000}],
+        },
+    )
+
+
+class TestActiveInputCompile:
+    @pytest.mark.parametrize("deployed", [False, True], ids=["derived", "deployed"])
+    def test_active_constructor_args_win_over_the_root(self, deployed):
+        # The root says 5 and the active input says 100; 50 clears only the
+        # root's. The input's own args are what the spend is against.
+        assert guard_call(50, 5, 100, deployed).success is False
+        # And reversed, so neither answer can be right by accident.
+        assert guard_call(50, 100, 5, deployed).success is True
+
+    @pytest.mark.parametrize("deployed", [False, True], ids=["derived", "deployed"])
+    def test_the_active_threshold_is_exactly_the_boundary(self, deployed):
+        # Not merely "fails" — it fails at 100 and passes at 101, which pins
+        # the value actually compiled into the script.
+        assert guard_call(100, 5, 100, deployed).success is False
+        assert guard_call(101, 5, 100, deployed).success is True
+
+    @pytest.mark.parametrize("deployed", [False, True], ids=["derived", "deployed"])
+    def test_reported_variables_agree_with_the_script_that_ran(self, deployed):
+        # A debugger that runs one contract instance and reports another is
+        # worse than no debugger. `threshold` is read straight out of the
+        # debug info's recorded constructor args, and `margin` is evaluated
+        # from it, so both move if the wrong compile is consulted.
+        result = guard_call(50, 5, 100, deployed)
+        assert result.success is False
+        variables = {v.name: v for v in result.failure.frames[0].variables}
+        assert variables["threshold"].value == 100
+        assert variables["threshold"].origin == "ctor"
+        assert variables["margin"].value == -50
+        assert "margin = -50" in str(result.failure)
+
+    @pytest.mark.parametrize("deployed", [False, True], ids=["derived", "deployed"])
+    def test_root_args_still_apply_when_the_input_names_none(self, deployed):
+        # The fallback chain is input args -> root args; an input that names
+        # none must still pick up the root's.
+        utxo = {"utxo_value": 5000}
+        if deployed:
+            utxo["utxo_script"] = DEPLOYED_UTXO_SCRIPT
+        tx = {"inputs": [utxo], "outputs": [{"value": 5000}]}
+        assert silverscript.debug_call(GUARD, "check", [50], [100], tx=tx).success is False
+        assert silverscript.debug_call(GUARD, "check", [101], [100], tx=tx).success is True
+
+    @pytest.mark.parametrize("deployed", [False, True], ids=["derived", "deployed"])
+    def test_active_means_the_selected_index_not_input_zero(self, deployed):
+        # Two inputs disagreeing, with index 1 active: the answer must follow
+        # index 1, and flip when the active index moves to 0.
+        tx = {
+            "inputs": [guard_input(5, deployed), guard_input(100, deployed)],
+            "outputs": [{"value": 5000}],
+            "active_input_index": 1,
+        }
+        result = silverscript.debug_call(GUARD, "check", [50], [5], tx=tx)
+        assert result.success is False
+        variables = {v.name: v.value for v in result.failure.frames[0].variables}
+        assert variables["threshold"] == 100
+
+        tx["active_input_index"] = 0
+        assert silverscript.debug_call(GUARD, "check", [50], [5], tx=tx).success is True
 
 
 # ---------------------------------------------------------------------------

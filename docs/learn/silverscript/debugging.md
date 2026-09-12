@@ -25,7 +25,7 @@ import kaspa.experimental.silverscript as silverscript
 GUARD = """
 pragma silverscript ^0.1.0;
 contract Guard(int threshold) {
-    entrypoint function check(int amount) {
+    entry check(int amount) {
         int margin = amount - threshold;
         require(margin > 0);
     }
@@ -52,7 +52,8 @@ A failing script is reported in the
 [`DebugCallResult`](../../reference/SilverScript/Classes/DebugCallResult.md),
 not raised; only usage errors (bad source, unknown entrypoint, a
 malformed `tx` scenario) raise `SilverScriptError`. When
-`function_name` is omitted the contract's first entrypoint is called.
+`function_name` is omitted the contract's first entrypoint *in source
+order* is called — not `abi[0]`, which is ordered by name.
 
 ## The failure report
 
@@ -121,11 +122,50 @@ whole history, not just the crash site. Calls into helper functions
 are traced through, statement by statement, like the frames of the
 failure report. Tracing changes what is recorded, not what executes.
 
-One limitation, shared with the upstream CLI debugger: covenant
-transition calls record no per-statement pauses — the engine verifies
-their bodies as a whole, so the trace of a transition is empty. The
-[failure report](#the-failure-report) still decodes the transition's
-variables (`prev_state`, arguments) when it fails.
+One statement never shows up, in the upstream CLI debugger either: a
+covenant transition's `return(State { ... })`. The engine verifies the
+state it produces as a whole rather than stepping it. Everything ahead
+of that return traces normally:
+
+```python
+TRANSITION = """pragma silverscript ^0.1.0;
+contract Counter(int init_count) {
+    int count = init_count;
+    #[covenant(binding = auth, from = 1, to = 1, mode = transition)]
+    function add(State prev_state, int amount) : (State) {
+        int next = prev_state.count + amount;
+        require(next >= 0);
+        return(State { count: next });
+    }
+}
+"""
+COVENANT_ID = "0x" + "11" * 32
+result = silverscript.debug_call(
+    TRANSITION, "add", args=[1], constructor_args=[0], trace=True,
+    tx={
+        "inputs": [{"utxo_value": 5000, "covenant_id": COVENANT_ID}],
+        "outputs": [{"value": 5000, "covenant_id": COVENANT_ID,
+                     "constructor_args": [1]}],
+    },
+)
+for step in result.trace:
+    print(step.line, step.statement)
+# 6 int next = prev_state.count + amount;
+# 1 pragma silverscript ^0.1.0;
+# 7 require(next >= 0);
+```
+
+So a transition whose body is only that return — as in the
+[Counter walkthrough](covenants.md#worked-example-counter) — traces to
+nothing at all. The [failure report](#the-failure-report) still decodes
+the transition's variables (`prev_state`, arguments) when it fails,
+return statement included.
+
+The entry at line 1 is a pause the engine reports with no source span,
+which renders as the first line of the file. The upstream CLI debugger
+highlights that same line there, so `debug_call` records the step rather
+than hiding one the CLI would show; filter on `line == 1` if a
+transition's trace is being read programmatically.
 
 ## The transaction scenario
 

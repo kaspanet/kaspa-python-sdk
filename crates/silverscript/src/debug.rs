@@ -1,13 +1,12 @@
 //! Source-level contract call debugging (`debug_call`).
 //!
-//! Simulates a full transaction spend through SilverScript's `DebugSession` —
-//! the engine behind the upstream CLI debugger — and reports the outcome as a
+//! Simulates a full transaction spend through SilverScript's `DebugSession`,
+//! the engine behind the upstream CLI debugger, and reports the outcome as a
 //! plain result object: pass/fail, a source-level failure report with decoded
-//! variables per frame, and captured `console.log` output. Unlike the upstream
-//! interactive debugger there is no interactive stepping or breakpoint
-//! surface: a Python script is not an IDE, so the session always runs to
-//! completion — with `trace=True` it records what the CLI debugger would show
-//! at each step along the way.
+//! variables per frame, and captured `console.log` output. There is no
+//! interactive stepping or breakpoint surface; the session always runs to
+//! completion, and with `trace=True` it records what the CLI debugger would
+//! show at each step along the way.
 //!
 //! The transaction harness is a port of the upstream CLI debugger's scenario
 //! builder (`debugger/cli/src/main.rs`), adapted to native Python values in
@@ -37,14 +36,20 @@ use kaspa_txscript::{EngineCtx, EngineFlags, pay_to_script_hash_script};
 use pyo3::prelude::*;
 use pyo3::types::{PyByteArray, PyBytes, PyDict, PyList, PyString};
 use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pyfunction, gen_stub_pymethods};
+use silverscript_abi::{ArtifactValue, SilAbiArtifact, encode_contract_entry_sig_script};
 use silverscript_lang::ast::{
-    ArrayDim, ContractAst, Expr, ExprKind, StateFieldExpr, TypeBase, TypeRef, parse_contract_ast,
+    ArrayDim, ContractAst, Expr, ExprKind, STATE_TYPE_NAME, StateFieldExpr, TypeBase, TypeRef,
+    parse_contract_ast, parse_type_ref,
 };
 use silverscript_lang::compiler::{
     CompileOptions, CompiledContract, compile_contract, compile_contract_ast,
+    sil_abi_artifact_from_compiled,
 };
 
-use crate::{PySilverScriptError, Value, collect_args, map_err, py_to_value, value_to_expr};
+use crate::{
+    ArgTypes, PySilverScriptError, Value, collect_args, ctor_exprs_for, map_codec_err, map_err,
+    py_to_value, sig_script, untyped_artifacts,
+};
 
 const DEBUG_OPTS: CompileOptions = CompileOptions {
     allow_entrypoint_return: false,
@@ -112,6 +117,10 @@ impl PyDebugVariable {
         debug_value_to_py(py, &self.value)
     }
 
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The DebugVariable as a repr string.
     pub fn __repr__(&self) -> String {
         format!(
             "DebugVariable(name={:?}, type_name={:?}, value={})",
@@ -158,6 +167,10 @@ impl PyFailureFrame {
         self.variables.clone()
     }
 
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The FailureFrame as a repr string.
     pub fn __repr__(&self) -> String {
         format!(
             "FailureFrame(function_name={:?}, line={:?}, {} variable(s))",
@@ -203,14 +216,25 @@ impl PyFailureReport {
 
     /// Format the report for terminal display: failing source lines with
     /// context, plus each frame's variables.
+    ///
+    /// Returns:
+    ///     str: The rendered report.
     pub fn render(&self) -> &str {
         &self.rendered
     }
 
+    /// The string representation.
+    ///
+    /// Returns:
+    ///     str: The rendered failure report.
     pub fn __str__(&self) -> &str {
         &self.rendered
     }
 
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The FailureReport as a repr string.
     pub fn __repr__(&self) -> String {
         format!(
             "FailureReport(message={:?}, {} frame(s))",
@@ -238,6 +262,10 @@ pub struct PyTraceStep {
 impl PyTraceStep {
     /// 1-based source line of the statement. None when no source mapping
     /// exists (e.g. generated dispatch code).
+    ///
+    /// A covenant transition also pauses once on a span the engine leaves
+    /// unset, which reads as line 1 — the CLI debugger highlights that line at
+    /// the same pause, so the step is recorded rather than dropped.
     #[getter]
     pub fn line(&self) -> Option<u32> {
         self.line
@@ -263,6 +291,10 @@ impl PyTraceStep {
         self.variables.clone()
     }
 
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The TraceStep as a repr string.
     pub fn __repr__(&self) -> String {
         format!(
             "TraceStep(line={}, function_name={}, statement={}, {} variable(s))",
@@ -327,8 +359,9 @@ impl PyDebugCallResult {
         self.console.clone()
     }
 
-    /// The entrypoint that was called (resolved to the first ABI entry when
-    /// `function_name` was omitted).
+    /// The entrypoint that was called. When `function_name` was omitted this
+    /// is the contract's first entrypoint in *source* order, which need not be
+    /// `abi[0]`: the ABI is ordered by name.
     #[getter]
     pub fn function_name(&self) -> &str {
         &self.function_name
@@ -343,6 +376,10 @@ impl PyDebugCallResult {
         self.trace.clone()
     }
 
+    /// The detailed string representation.
+    ///
+    /// Returns:
+    ///     str: The DebugCallResult as a repr string.
     pub fn __repr__(&self) -> String {
         format!(
             "DebugCallResult(function_name={:?}, success={}, error={})",
@@ -375,7 +412,7 @@ fn failed_result(function_name: String, error: String, trace: bool) -> PyDebugCa
 
 fn debug_value_to_py<'py>(py: Python<'py>, value: &DebugValue) -> PyResult<Bound<'py, PyAny>> {
     Ok(match value {
-        DebugValue::Int(value) => value.into_pyobject(py)?.into_any(),
+        DebugValue::Int(value) | DebugValue::Temporal(value) => value.into_pyobject(py)?.into_any(),
         DebugValue::Bool(value) => value.into_pyobject(py)?.to_owned().into_any(),
         DebugValue::Bytes(bytes) => PyBytes::new(py, bytes).into_any(),
         DebugValue::String(value) => PyString::new(py, value).into_any(),
@@ -399,7 +436,7 @@ fn debug_value_to_py<'py>(py: Python<'py>, value: &DebugValue) -> PyResult<Bound
 
 fn debug_value_to_value(value: &DebugValue) -> Option<Value> {
     Some(match value {
-        DebugValue::Int(value) => Value::Int(*value),
+        DebugValue::Int(value) | DebugValue::Temporal(value) => Value::Int(*value),
         DebugValue::Bool(value) => Value::Bool(*value),
         DebugValue::Bytes(bytes) => Value::Bytes(bytes.clone()),
         DebugValue::String(value) => Value::Str(value.clone()),
@@ -422,10 +459,13 @@ fn debug_value_to_value(value: &DebugValue) -> Option<Value> {
 fn expr_to_debug_value(expr: &Expr<'_>) -> PyResult<DebugValue> {
     match &expr.kind {
         ExprKind::Int(value) => Ok(DebugValue::Int(*value)),
+        ExprKind::Temporal(value) | ExprKind::DateLiteral(value) => {
+            Ok(DebugValue::Temporal(*value))
+        }
         ExprKind::Bool(value) => Ok(DebugValue::Bool(*value)),
         ExprKind::Byte(value) => Ok(DebugValue::Bytes(vec![*value])),
         ExprKind::String(value) => Ok(DebugValue::String(value.clone())),
-        ExprKind::Array(values) => {
+        ExprKind::Array { values, .. } => {
             if values
                 .iter()
                 .all(|value| matches!(value.kind, ExprKind::Byte(_)))
@@ -447,20 +487,37 @@ fn expr_to_debug_value(expr: &Expr<'_>) -> PyResult<DebugValue> {
                     .collect::<PyResult<Vec<_>>>()?,
             ))
         }
-        ExprKind::StructLiteral(fields) => Ok(DebugValue::Object(
+        ExprKind::StructLiteral { fields, .. } => Ok(DebugValue::Object(
             fields
                 .iter()
                 .map(|field| Ok((field.name.clone(), expr_to_debug_value(&field.expr)?)))
                 .collect::<PyResult<Vec<_>>>()?,
         )),
+        // Cast calls: `is_const_expr` admits a single-argument call whose name
+        // is a type, so a resolved initializer can still be wrapped in one.
+        // `temporal(...)` and `int(...)` retag the value; any other cast is
+        // representationally a no-op here.
+        ExprKind::Call { name, args, .. } if name == "temporal" && args.len() == 1 => {
+            match expr_to_debug_value(&args[0])? {
+                DebugValue::Int(value) | DebugValue::Temporal(value) => {
+                    Ok(DebugValue::Temporal(value))
+                }
+                value => Ok(value),
+            }
+        }
+        ExprKind::Call { name, args, .. } if name == "int" && args.len() == 1 => {
+            match expr_to_debug_value(&args[0])? {
+                DebugValue::Int(value) | DebugValue::Temporal(value) => Ok(DebugValue::Int(value)),
+                value => Ok(value),
+            }
+        }
+        ExprKind::Call { name, args, .. } if parse_type_ref(name).is_ok() && args.len() == 1 => {
+            expr_to_debug_value(&args[0])
+        }
         other => Err(err(format!(
             "unsupported resolved state expression in debugger: {other:?}"
         ))),
     }
-}
-
-fn debug_value_to_expr(value: &DebugValue) -> Option<Expr<'static>> {
-    debug_value_to_value(value).map(|value| value_to_expr(&value))
 }
 
 // ---------------------------------------------------------------------------
@@ -474,7 +531,7 @@ type StateShapes = HashMap<String, Vec<(String, TypeRef)>>;
 fn state_shapes(contract: &ContractAst<'_>) -> StateShapes {
     let mut shapes = HashMap::new();
     shapes.insert(
-        "State".to_string(),
+        STATE_TYPE_NAME.to_string(),
         contract
             .fields
             .iter()
@@ -532,7 +589,14 @@ fn typed_value_to_expr(
                     bytes.len()
                 )));
             }
-            return Ok(Expr::bytes(bytes));
+            // The literal has to carry the field's declared dimension, as
+            // upstream's `parse_byte_array_arg` does: `Expr::bytes` tags it
+            // `byte[N]` (`ArrayDim::Fixed`), which a `byte[]` field rejects.
+            return Ok(if type_ref.is_dynamic_array() {
+                Expr::dynamic_bytes(bytes)
+            } else {
+                Expr::bytes(bytes)
+            });
         }
         let Value::List(items) = value else {
             return Err(mismatch());
@@ -546,14 +610,12 @@ fn typed_value_to_expr(
             )));
         }
         let element_type = type_ref.array_element_type().ok_or_else(mismatch)?;
-        return Ok(Expr::new(
-            ExprKind::Array(
-                items
-                    .iter()
-                    .map(|item| typed_value_to_expr(item, &element_type, shapes, what))
-                    .collect::<PyResult<Vec<_>>>()?,
-            ),
-            Default::default(),
+        return Ok(Expr::array(
+            type_ref.clone(),
+            items
+                .iter()
+                .map(|item| typed_value_to_expr(item, &element_type, shapes, what))
+                .collect::<PyResult<Vec<_>>>()?,
         ));
     }
 
@@ -563,11 +625,12 @@ fn typed_value_to_expr(
         let Value::Struct(entries) = value else {
             return Err(mismatch());
         };
-        return typed_struct_to_expr(entries, fields, shapes, "struct field");
+        return typed_struct_to_expr(entries, fields, shapes, "struct field", name);
     }
 
     match (&type_ref.base, value) {
         (TypeBase::Int, Value::Int(value)) => Ok(Expr::int(*value)),
+        (TypeBase::Temporal, Value::Int(value)) => Ok(Expr::temporal(*value)),
         (TypeBase::Bool, Value::Bool(value)) => Ok(Expr::bool(*value)),
         (TypeBase::String, Value::Str(value)) => Ok(Expr::string(value.clone())),
         (TypeBase::Byte, Value::Int(value)) if (0..=255).contains(value) => {
@@ -603,6 +666,7 @@ fn typed_struct_to_expr(
     fields: &[(String, TypeRef)],
     shapes: &StateShapes,
     field_kind: &str,
+    struct_name: &str,
 ) -> PyResult<Expr<'static>> {
     // Unknown keys first: a misspelled field would otherwise surface as
     // "missing" the field it failed to name.
@@ -633,7 +697,14 @@ fn typed_struct_to_expr(
             })
         })
         .collect::<PyResult<Vec<_>>>()?;
-    Ok(Expr::new(ExprKind::StructLiteral(out), Default::default()))
+    Ok(Expr::new(
+        ExprKind::StructLiteral {
+            name: struct_name.to_string(),
+            fields: out,
+            name_span: Default::default(),
+        },
+        Default::default(),
+    ))
 }
 
 /// Validate and convert an explicit `state` dict against the contract's
@@ -644,8 +715,10 @@ fn state_value_to_expr(state: &Value, shapes: &StateShapes) -> PyResult<Expr<'st
     let Value::Struct(entries) = state else {
         return Err(err("state value must be a dict of state fields"));
     };
-    let fields = shapes.get("State").expect("State shape always present");
-    typed_struct_to_expr(entries, fields, shapes, "state field")
+    let fields = shapes
+        .get(STATE_TYPE_NAME)
+        .expect("State shape always present");
+    typed_struct_to_expr(entries, fields, shapes, "state field", STATE_TYPE_NAME)
 }
 
 // ---------------------------------------------------------------------------
@@ -924,34 +997,64 @@ fn parse_tx_spec(obj: Option<&Bound<'_, PyAny>>) -> PyResult<TxSpec> {
 // Harness helpers (ported from the upstream CLI debugger)
 // ---------------------------------------------------------------------------
 
-fn ctor_exprs(ctor: &[Value]) -> Vec<Expr<'static>> {
-    ctor.iter().map(value_to_expr).collect()
+/// A compiled contract plus the portable ABI artifact that encodes calls into
+/// it. Signature scripts are built from the artifact in SilverScript 1.0, so
+/// the two are always needed together.
+struct CompiledWithAbi<'i> {
+    contract: CompiledContract<'i>,
+    artifact: SilAbiArtifact,
+}
+
+/// The contract's first entrypoint in source order: `debug_call`'s default
+/// target when no function name is given.
+///
+/// Deliberately not `abi[0]`, which is alphabetical on both `CompiledContract`
+/// and `ContractArtifact`. `debug_call` requires source, so declaration order
+/// is available here, and is the more predictable default when debugging.
+/// (Upstream's debugger CLI defaults to the alphabetically first entry via
+/// `entries.first_key_value()`.) Source order has to come from the AST: the
+/// artifact keys its entries alphabetically and cannot recover it.
+fn first_entrypoint(contract: &CompiledContract<'_>) -> Option<String> {
+    contract
+        .ast
+        .functions
+        .iter()
+        .find(|function| function.entrypoint)
+        .map(|function| function.name.clone())
 }
 
 /// Per-`debug_call` compile memoization (upstream CLI parity): scenarios reuse
 /// the same constructor args across inputs and outputs, so each distinct
 /// ctor-args vector is compiled exactly once and shared everywhere the
 /// compiled contract is needed.
-struct CtorCompileCache<'i> {
+struct CtorCompileCache<'a, 'i> {
     source: &'i str,
-    compiled: HashMap<Vec<Value>, CompiledContract<'i>>,
+    ast: &'a ContractAst<'i>,
+    compiled: HashMap<Vec<Value>, CompiledWithAbi<'i>>,
 }
 
-impl<'i> CtorCompileCache<'i> {
-    fn new(source: &'i str) -> Self {
+impl<'a, 'i> CtorCompileCache<'a, 'i> {
+    fn new(source: &'i str, ast: &'a ContractAst<'i>) -> Self {
         Self {
             source,
+            ast,
             compiled: HashMap::new(),
         }
     }
 
-    fn get(&mut self, ctor: &[Value]) -> PyResult<&CompiledContract<'i>> {
+    fn get(&mut self, ctor: &[Value]) -> PyResult<&CompiledWithAbi<'i>> {
         if !self.compiled.contains_key(ctor) {
-            let compiled =
-                compile_contract(self.source, &ctor_exprs(ctor), DEBUG_OPTS).map_err(map_err)?;
-            self.compiled.insert(ctor.to_vec(), compiled);
+            let exprs = ctor_exprs_for(ctor, self.ast)?;
+            let contract = compile_contract(self.source, &exprs, DEBUG_OPTS).map_err(map_err)?;
+            let artifact = sil_abi_artifact_from_compiled(&contract, &exprs).map_err(map_err)?;
+            self.compiled
+                .insert(ctor.to_vec(), CompiledWithAbi { contract, artifact });
         }
         Ok(&self.compiled[ctor])
+    }
+
+    fn get_contract(&mut self, ctor: &[Value]) -> PyResult<&CompiledContract<'i>> {
+        Ok(&self.get(ctor)?.contract)
     }
 }
 
@@ -964,7 +1067,7 @@ fn resolve_state_for_ctor_args(
         return Ok(state.clone());
     }
     let fields = contract
-        .resolve_contract_state_values(&ctor_exprs(ctor))
+        .resolve_contract_state_values(&ctor_exprs_for(ctor, contract)?)
         .map_err(map_err)?;
     let state = DebugValue::Object(
         fields
@@ -980,7 +1083,10 @@ fn contract_with_explicit_state<'i>(
     contract: &ContractAst<'i>,
     state: &Expr<'i>,
 ) -> PyResult<ContractAst<'i>> {
-    let ExprKind::StructLiteral(entries) = &state.kind else {
+    let ExprKind::StructLiteral {
+        fields: entries, ..
+    } = &state.kind
+    else {
         return Err(err("state value must be a dict of state fields"));
     };
 
@@ -1014,7 +1120,7 @@ fn materialize_script_for_explicit_state<'i>(
     ctor: &[Value],
     state: &Expr<'i>,
 ) -> PyResult<Vec<u8>> {
-    let instance_args = ctor_exprs(ctor);
+    let instance_args = ctor_exprs_for(ctor, contract)?;
     let materialized_contract = contract_with_explicit_state(contract, state)?;
     let materialized = compile_contract_ast(&materialized_contract, &instance_args, DEBUG_OPTS)
         .map_err(map_err)?;
@@ -1028,29 +1134,30 @@ fn materialize_script_for_explicit_state<'i>(
             "explicit state changes encoded script size; provide a raw 'utxo_script'/'script' instead",
         ));
     }
-    if base_compiled.script.len() < base_end || materialized.script.len() < materialized_end {
+    if base_compiled.bytecode.len() < base_end || materialized.bytecode.len() < materialized_end {
         return Err(err("state layout exceeds compiled script length"));
     }
-    if base_compiled.script[..base_start] != materialized.script[..materialized_start]
-        || base_compiled.script[base_end..] != materialized.script[materialized_end..]
+    if base_compiled.bytecode[..base_start] != materialized.bytecode[..materialized_start]
+        || base_compiled.bytecode[base_end..] != materialized.bytecode[materialized_end..]
     {
         return Err(err(
             "explicit state changed non-state bytecode; provide a raw 'utxo_script'/'script' instead",
         ));
     }
 
-    let mut script = base_compiled.script.clone();
+    let mut script = base_compiled.bytecode.clone();
     script[base_start..base_end]
-        .copy_from_slice(&materialized.script[materialized_start..materialized_end]);
+        .copy_from_slice(&materialized.bytecode[materialized_start..materialized_end]);
     Ok(script)
 }
 
 fn is_state_type(type_ref: &TypeRef) -> bool {
-    type_ref.is_custom() && matches!(&type_ref.base, TypeBase::Custom(name) if name == "State")
+    type_ref.is_custom()
+        && matches!(&type_ref.base, TypeBase::Custom(name) if name == STATE_TYPE_NAME)
 }
 
 fn is_state_array_type(type_ref: &TypeRef) -> bool {
-    matches!(&type_ref.base, TypeBase::Custom(name) if name == "State")
+    matches!(&type_ref.base, TypeBase::Custom(name) if name == STATE_TYPE_NAME)
         && matches!(type_ref.array_dims.as_slice(), [ArrayDim::Dynamic])
 }
 
@@ -1062,8 +1169,12 @@ fn synthesized_covenant_prefix_args(
     entrypoint_name: &str,
     target: &ResolvedCovenantCallTarget,
     output_states: Option<&[DebugValue]>,
-) -> PyResult<Vec<Expr<'static>>> {
-    if target.binding == DebugCovenantBinding::Cov && entrypoint_name.starts_with("__delegate_") {
+) -> PyResult<Vec<Value>> {
+    // A cov-bound declaration routes non-leader spends through the contract's
+    // single shared delegate entrypoint, which takes no synthesized prefix.
+    if target.binding == DebugCovenantBinding::Cov
+        && target.delegate_entrypoint_name.as_deref() == Some(entrypoint_name)
+    {
         return Ok(Vec::new());
     }
 
@@ -1087,60 +1198,77 @@ fn synthesized_covenant_prefix_args(
                 states.len()
             )));
         }
-        return Ok(vec![debug_value_to_expr(&states[0]).ok_or_else(|| {
+        return Ok(vec![debug_value_to_value(&states[0]).ok_or_else(|| {
             err("failed to materialize synthesized output State")
         })?]);
     }
     if is_state_array_type(&first_param.type_ref) {
-        return Ok(vec![Expr::new(
-            ExprKind::Array(
-                states
-                    .iter()
-                    .map(debug_value_to_expr)
-                    .collect::<Option<Vec<_>>>()
-                    .ok_or_else(|| err("failed to materialize synthesized output State[]"))?,
-            ),
-            Default::default(),
+        return Ok(vec![Value::List(
+            states
+                .iter()
+                .map(debug_value_to_value)
+                .collect::<Option<Vec<_>>>()
+                .ok_or_else(|| err("failed to materialize synthesized output State[]"))?,
         )]);
     }
 
     Ok(Vec::new())
 }
 
+/// Narrow a call's arguments against the entrypoint's declared types.
+fn entry_call_artifacts(
+    compiled: &CompiledWithAbi<'_>,
+    entrypoint_name: &str,
+    args: &[Value],
+) -> PyResult<Vec<ArtifactValue>> {
+    match ArgTypes::new(&compiled.artifact, &compiled.contract.contract_name) {
+        Some(types) => types.lower_call(args, types.contract().entry(entrypoint_name)),
+        None => Ok(untyped_artifacts(args)),
+    }
+}
+
 fn build_covenant_input_sigscript(
-    compiled: &CompiledContract<'_>,
+    compiled: &CompiledWithAbi<'_>,
     target: &ResolvedCovenantCallTarget,
     is_leader: bool,
     call_args: &[Value],
     output_states: Option<&[DebugValue]>,
 ) -> PyResult<Vec<u8>> {
     let entrypoint_name = target.generated_entrypoint_name_for(is_leader);
-    let typed_args = if target.binding == DebugCovenantBinding::Cov && !is_leader {
-        Vec::new()
+    let args = if target.binding == DebugCovenantBinding::Cov && !is_leader {
+        // A cov-bound delegate call carries the delegate entrypoint's own
+        // arguments, which are unrelated to the leader's — `#[covenant.delegate]`
+        // gives the generated `__delegate` entrypoint that body's parameters.
+        call_args.to_vec()
     } else {
         let function = compiled
+            .contract
             .ast
             .functions
             .iter()
             .find(|function| function.name == entrypoint_name)
             .ok_or_else(|| err("generated covenant entrypoint not found"))?;
-        let user_exprs = ctor_exprs(call_args);
         if call_args.len() == function.params.len() {
-            user_exprs
+            call_args.to_vec()
         } else {
             let mut all_args = synthesized_covenant_prefix_args(
-                compiled,
+                &compiled.contract,
                 &entrypoint_name,
                 target,
                 output_states,
             )?;
-            all_args.extend(user_exprs);
+            all_args.extend_from_slice(call_args);
             all_args
         }
     };
-    compiled
-        .build_sig_script(&entrypoint_name, typed_args)
-        .map_err(map_err)
+    let typed_args = entry_call_artifacts(compiled, &entrypoint_name, &args)?;
+    encode_contract_entry_sig_script(
+        &compiled.artifact,
+        &compiled.contract.contract_name,
+        &entrypoint_name,
+        &typed_args,
+    )
+    .map_err(map_codec_err)
 }
 
 fn covenant_flags() -> EngineFlags {
@@ -1252,22 +1380,22 @@ fn run_harness(
         ctor_args.to_vec()
     };
 
-    let mut compile_cache = CtorCompileCache::new(source);
+    let mut compile_cache = CtorCompileCache::new(source, &parsed_contract);
     let shapes = state_shapes(&parsed_contract);
     let root_compiled = compile_cache.get(&root_ctor)?;
-    let debug_info = root_compiled.debug_info.clone();
 
     let selected_name = match function_name {
         Some(name) => name.to_string(),
-        None => root_compiled
-            .abi
-            .first()
-            .map(|entry| entry.name.clone())
+        None => first_entrypoint(&root_compiled.contract)
             .ok_or_else(|| err("contract has no entrypoints"))?,
     };
 
-    let covenant_target =
-        resolve_covenant_call_target(&parsed_contract, root_compiled, &selected_name);
+    let covenant_target = root_compiled
+        .artifact
+        .contract(&root_compiled.contract.contract_name)
+        .and_then(|artifact| {
+            resolve_covenant_call_target(&parsed_contract, artifact, &selected_name)
+        });
 
     // Memoize per-constructor-args state resolution alongside the compiles.
     let mut ctor_state_cache: HashMap<Vec<Value>, DebugValue> = HashMap::new();
@@ -1307,13 +1435,13 @@ fn run_harness(
         let redeem_script = if input.utxo_script.is_none() {
             if let Some(state_expr) = &input_state_expr {
                 Some(materialize_script_for_explicit_state(
-                    compile_cache.get(&input_ctor)?,
+                    compile_cache.get_contract(&input_ctor)?,
                     &parsed_contract,
                     &input_ctor,
                     state_expr,
                 )?)
             } else {
-                Some(compile_cache.get(&input_ctor)?.script.clone())
+                Some(compile_cache.get_contract(&input_ctor)?.bytecode.clone())
             }
         } else {
             None
@@ -1369,13 +1497,13 @@ fn run_harness(
         } else {
             let output_script = if let Some(state_expr) = &output_state_expr {
                 materialize_script_for_explicit_state(
-                    compile_cache.get(&output_ctor)?,
+                    compile_cache.get_contract(&output_ctor)?,
                     &parsed_contract,
                     &output_ctor,
                     state_expr,
                 )?
             } else {
-                compile_cache.get(&output_ctor)?.script.clone()
+                compile_cache.get_contract(&output_ctor)?.bytecode.clone()
             };
             pay_to_script_hash_script(&output_script)
         };
@@ -1450,6 +1578,11 @@ fn run_harness(
         .clone()
         .unwrap_or_else(|| root_ctor.clone());
     let active_compiled = compile_cache.get(&active_ctor)?;
+    // The session debugs the active input's contract instance, so its source
+    // mapping and recorded constructor args have to come from that compile —
+    // the root compile's would report the wrong values for the script that
+    // actually runs.
+    let debug_info = active_compiled.contract.debug_info.clone();
     let active_is_cov_leader = companion_leader_index
         .map(|index| index == tx.active_input_index)
         .unwrap_or(true);
@@ -1471,9 +1604,15 @@ fn run_harness(
             )?,
         }
     } else {
-        active_compiled
-            .build_sig_script(&selected_name, ctor_exprs(call_args))
-            .map_err(map_err)?
+        // The same path `CompiledContract.build_sig_script` takes, so a script
+        // debugged here and one built for broadcast cannot drift apart.
+        sig_script(
+            &active_compiled.artifact,
+            &active_compiled.contract.contract_name,
+            &selected_name,
+            call_args,
+            None,
+        )?
     };
 
     // --- Assemble the transaction ---
@@ -1487,32 +1626,13 @@ fn run_harness(
             } else {
                 active_sigscript.clone()
             }
-        } else if let Some(target) = covenant_target.as_ref()
-            && target.binding == DebugCovenantBinding::Cov
-            && input.covenant_id == active_covenant_id
-            && input_redeem_scripts[input_idx].is_some()
-        {
-            // Companion input of the same covenant group: auto-build its
-            // leader/delegate call so the group verifies as a whole.
-            let is_leader = Some(input_idx) == companion_leader_index;
-            let input_ctor = input
-                .constructor_args
-                .clone()
-                .unwrap_or_else(|| root_ctor.clone());
-            let auto_action = build_covenant_input_sigscript(
-                compile_cache.get(&input_ctor)?,
-                target,
-                is_leader,
-                call_args,
-                covenant_group_output_states.as_deref(),
-            )?;
-            combine_action_and_redeem(
-                &auto_action,
-                input_redeem_scripts[input_idx]
-                    .as_ref()
-                    .expect("checked is_some above"),
-            )?
         } else if let Some(redeem) = input_redeem_scripts[input_idx].as_ref() {
+            // Non-active input: only its redeem script matters. The session
+            // evaluates the active input alone, and a cov-bound leader reads
+            // its group companions through `OpTxInputScriptSigLen` /
+            // `OpTxInputScriptSigSubstr`, which take the *tail* of the
+            // signature script — the redeem push — to prove membership. An
+            // action prefix here would never be executed.
             sigscript_push_script(redeem)?
         } else {
             vec![]
@@ -1573,7 +1693,7 @@ fn run_harness(
         .ok_or_else(|| err("missing utxo entry for active input"))?;
     let active_lockscript = match input_redeem_scripts[tx.active_input_index].clone() {
         Some(script) => script,
-        None => compile_cache.get(&root_ctor)?.script.clone(),
+        None => compile_cache.get_contract(&active_ctor)?.bytecode.clone(),
     };
     let covenant_input_states = active_utxo.covenant_id.and_then(|covenant_id| {
         let mut values = Vec::new();
@@ -1625,10 +1745,12 @@ fn run_harness(
 
     // With tracing, run_to_completion's own loop (`while step_into()`) with a
     // snapshot of what the CLI debugger would print at each pause; execution
-    // is identical either way. Covenant transition calls record no pauses:
-    // the engine verifies their bodies as a whole (shadow evaluation), so
-    // `step_into` never lands inside them — the CLI debugger steps them the
-    // same way.
+    // is identical either way. A covenant transition's `return(State { … })` is
+    // the one statement that records no pause — the engine verifies the
+    // produced state as a whole (shadow evaluation) rather than stepping it —
+    // so a transition body that is nothing but that return traces to zero
+    // steps. Every statement ahead of it steps like any other. The CLI debugger
+    // pauses in the same places.
     let mut trace_steps = trace.then(Vec::new);
     let run_result = if let Some(steps) = trace_steps.as_mut() {
         loop {
@@ -1667,9 +1789,6 @@ fn run_harness(
 
 /// Debug a SilverScript contract call by simulating the full spend locally.
 ///
-/// **Experimental:** SilverScript and these bindings are under active
-/// development; the API may change in breaking ways between releases.
-///
 /// Compiles `source` with debug info, builds a synthetic transaction that
 /// spends the contract's P2SH UTXO with a call to the chosen entrypoint, and
 /// executes it through SilverScript's source-level debug engine. The result
@@ -1678,39 +1797,64 @@ fn run_harness(
 /// arguments, contract state) in each frame. `console.log` output is captured
 /// either way.
 ///
-/// This simulates script validation on a synthetic transaction — it does not
+/// This simulates script validation on a synthetic transaction: it does not
 /// touch the network and says nothing about fees, mass, or maturity.
+///
+/// The `tx` scenario dict takes the following keys:
+///
+/// Transaction keys:
+///     - 'version' (int): Transaction version (default 1).
+///     - 'lock_time' (int): Transaction lock time (default 0).
+///     - 'active_input_index' (int): The input being debugged (default 0).
+///     - 'inputs' (list[dict]): Required. At least one input.
+///     - 'outputs' (list[dict]): The transaction outputs.
+///
+/// Input keys:
+///     - 'utxo_value' (int): Required. The spent UTXO value in sompi.
+///     - 'covenant_id' (bytes | str): 32 bytes or hex.
+///     - 'state' (dict): Contract state fields carried by the spent UTXO.
+///     - 'constructor_args' (list): Constructor arguments for this input,
+///       overriding the top-level 'constructor_args'. The active input's are
+///       the ones the debugged call runs against.
+///     - 'prev_txid' (bytes | str), 'prev_index' (int), 'sequence' (int),
+///       'sig_op_count' (int): Outpoint and input metadata.
+///     - 'signature_script' (bytes | str), 'utxo_script' (bytes | str): Raw
+///       script overrides.
+///
+/// Output keys:
+///     - 'value' (int): Required. The output value in sompi.
+///     - 'covenant_id' (bytes | str): 32 bytes or hex.
+///     - 'authorizing_input' (int): Index of the authorizing input.
+///     - 'state' (dict): The post-transition contract state to verify.
+///     - 'constructor_args' (list): Constructor arguments for this output,
+///       overriding the top-level 'constructor_args'.
+///     - 'script' (bytes | str), 'p2pk_pubkey' (bytes | str): Raw script
+///       overrides.
 ///
 /// Args:
 ///     source: The SilverScript contract source.
 ///     function_name: The entrypoint to call. Defaults to the contract's
-///         first entrypoint. For covenant functions, use the source-level
-///         name (e.g. `"add"`).
+///         first entrypoint in *source* order, which need not be `abi[0]`:
+///         the ABI is ordered by name. For covenant functions, use the
+///         source-level name (e.g. `"add"`).
 ///     args: Native Python values matching the entrypoint's parameters. For
 ///         covenant transition functions the leading `State` parameter is
-///         synthesized from the scenario's output states — pass only the
+///         synthesized from the scenario's output states, so pass only the
 ///         source-level arguments after it.
 ///     constructor_args: Native Python values for the contract's constructor
-///         parameters.
-///     tx: Optional transaction scenario dict. Defaults to a single-input,
-///         single-output spend of the contract. Keys: `version` (default 1),
-///         `lock_time` (default 0), `active_input_index` (default 0; the
-///         input being debugged), `inputs`, and `outputs`. Each input dict
-///         accepts `utxo_value` (required), `covenant_id` (32 bytes or hex),
-///         `state` (dict of contract state fields carried by the spent UTXO),
-///         `constructor_args`, `prev_txid`, `prev_index`, `sequence`,
-///         `sig_op_count`, `signature_script`, and `utxo_script` (raw bytes
-///         overrides). Each output dict accepts `value` (required),
-///         `covenant_id`, `authorizing_input`, `state` (the post-transition
-///         contract state to verify), `constructor_args`, `script`, and
-///         `p2pk_pubkey`.
+///         parameters, used for inputs and outputs that do not name their
+///         own. Defaults to the active input's 'constructor_args'.
+///     tx: Transaction scenario dict (see above). Defaults to a single-input,
+///         single-output spend of the contract.
 ///     trace: When True, record a per-statement execution trace on
 ///         `result.trace`: each executed statement with its source line,
 ///         enclosing function, and the variables in scope when it was
 ///         reached. Tracing changes what is recorded, not what executes.
-///         Covenant transition calls record no per-statement pauses (the
-///         engine verifies their bodies as a whole, as in the CLI debugger);
-///         the failure report still decodes them on failure.
+///         One statement never appears: a covenant transition's
+///         `return(State { ... })`, whose produced state the engine verifies as
+///         a whole instead of stepping (as in the CLI debugger). A transition
+///         body that is only that return therefore traces to nothing, while its
+///         other statements trace normally.
 ///
 /// Returns:
 ///     DebugCallResult: The simulation outcome. Script failures are reported
@@ -1719,6 +1863,10 @@ fn run_harness(
 /// Raises:
 ///     SilverScriptError: If compilation fails, the entrypoint or an argument
 ///         is invalid, or the `tx` scenario is malformed.
+///
+/// Note:
+///     Experimental. SilverScript and these bindings are under active
+///     development; the API may change in breaking ways between releases.
 #[gen_stub_pyfunction(module = "kaspa.experimental.silverscript")]
 #[pyfunction]
 #[pyo3(name = "debug_call")]
