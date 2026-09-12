@@ -16,7 +16,7 @@
         <link rel="prev" href="../compile/">
       
       
-        <link rel="next" href="../../../../contributing/">
+        <link rel="next" href="../load_artifact/">
       
       
         
@@ -13672,6 +13672,8 @@
       
         
       
+        
+      
     
     
     
@@ -13752,6 +13754,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../Classes/ContractArtifact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ContractArtifact
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../Classes/DebugCallResult/" class="md-nav__link">
         
   
@@ -13788,6 +13818,34 @@
     
   
     DebugVariable
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Classes/EntryAbi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    EntryAbi
   
 
     
@@ -13864,42 +13922,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../Classes/FunctionAbiEntry/" class="md-nav__link">
+      <a href="../../Classes/ParamAbi/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    FunctionAbiEntry
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../Classes/FunctionInputAbi/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    FunctionInputAbi
+    ParamAbi
   
 
     
@@ -14051,6 +14081,8 @@
   
     
     
+      
+        
       
         
       
@@ -14210,6 +14242,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../load_artifact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    load_artifact
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -14689,8 +14749,6 @@
     <div class="doc doc-contents first">
 
         <p>Debug a SilverScript contract call by simulating the full spend locally.</p>
-<p><strong>Experimental:</strong> SilverScript and these bindings are under active
-development; the API may change in breaking ways between releases.</p>
 <p>Compiles <code>source</code> with debug info, builds a synthetic transaction that
 spends the contract's P2SH UTXO with a call to the chosen entrypoint, and
 executes it through SilverScript's source-level debug engine. The result
@@ -14698,9 +14756,51 @@ reports pass/fail; on failure it includes a source-level report with the
 failing statement, the call stack, and the decoded variables (locals,
 arguments, contract state) in each frame. <code>console.log</code> output is captured
 either way.</p>
-<p>This simulates script validation on a synthetic transaction — it does not
+<p>This simulates script validation on a synthetic transaction: it does not
 touch the network and says nothing about fees, mass, or maturity.</p>
+<p>The <code>tx</code> scenario dict takes the following keys:</p>
 
+
+<details class="transaction-keys" open>
+  <summary>Transaction keys</summary>
+  <ul>
+<li>'version' (int): Transaction version (default 1).</li>
+<li>'lock_time' (int): Transaction lock time (default 0).</li>
+<li>'active_input_index' (int): The input being debugged (default 0).</li>
+<li>'inputs' (list[dict]): Required. At least one input.</li>
+<li>'outputs' (list[dict]): The transaction outputs.</li>
+</ul>
+</details>
+
+<details class="input-keys" open>
+  <summary>Input keys</summary>
+  <ul>
+<li>'utxo_value' (int): Required. The spent UTXO value in sompi.</li>
+<li>'covenant_id' (bytes | str): 32 bytes or hex.</li>
+<li>'state' (dict): Contract state fields carried by the spent UTXO.</li>
+<li>'constructor_args' (list): Constructor arguments for this input,
+  overriding the top-level 'constructor_args'. The active input's are
+  the ones the debugged call runs against.</li>
+<li>'prev_txid' (bytes | str), 'prev_index' (int), 'sequence' (int),
+  'sig_op_count' (int): Outpoint and input metadata.</li>
+<li>'signature_script' (bytes | str), 'utxo_script' (bytes | str): Raw
+  script overrides.</li>
+</ul>
+</details>
+
+<details class="output-keys" open>
+  <summary>Output keys</summary>
+  <ul>
+<li>'value' (int): Required. The output value in sompi.</li>
+<li>'covenant_id' (bytes | str): 32 bytes or hex.</li>
+<li>'authorizing_input' (int): Index of the authorizing input.</li>
+<li>'state' (dict): The post-transition contract state to verify.</li>
+<li>'constructor_args' (list): Constructor arguments for this output,
+  overriding the top-level 'constructor_args'.</li>
+<li>'script' (bytes | str), 'p2pk_pubkey' (bytes | str): Raw script
+  overrides.</li>
+</ul>
+</details>
 
 <table>
       <thead>
@@ -14733,8 +14833,9 @@ touch the network and says nothing about fees, mass, or maturity.</p>
             <td class="doc-param-details">
               <div class="doc-md-description">
                 <p>The entrypoint to call. Defaults to the contract's
-first entrypoint. For covenant functions, use the source-level
-name (e.g. <code>"add"</code>).</p>
+first entrypoint in <em>source</em> order, which need not be <code>abi[0]</code>:
+the ABI is ordered by name. For covenant functions, use the
+source-level name (e.g. <code>"add"</code>).</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -14756,7 +14857,7 @@ name (e.g. <code>"add"</code>).</p>
               <div class="doc-md-description">
                 <p>Native Python values matching the entrypoint's parameters. For
 covenant transition functions the leading <code>State</code> parameter is
-synthesized from the scenario's output states — pass only the
+synthesized from the scenario's output states, so pass only the
 source-level arguments after it.</p>
               </div>
               <p>
@@ -14778,7 +14879,8 @@ source-level arguments after it.</p>
             <td class="doc-param-details">
               <div class="doc-md-description">
                 <p>Native Python values for the contract's constructor
-parameters.</p>
+parameters, used for inputs and outputs that do not name their
+own. Defaults to the active input's 'constructor_args'.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -14798,18 +14900,8 @@ parameters.</p>
             </td>
             <td class="doc-param-details">
               <div class="doc-md-description">
-                <p>Optional transaction scenario dict. Defaults to a single-input,
-single-output spend of the contract. Keys: <code>version</code> (default 1),
-<code>lock_time</code> (default 0), <code>active_input_index</code> (default 0; the
-input being debugged), <code>inputs</code>, and <code>outputs</code>. Each input dict
-accepts <code>utxo_value</code> (required), <code>covenant_id</code> (32 bytes or hex),
-<code>state</code> (dict of contract state fields carried by the spent UTXO),
-<code>constructor_args</code>, <code>prev_txid</code>, <code>prev_index</code>, <code>sequence</code>,
-<code>sig_op_count</code>, <code>signature_script</code>, and <code>utxo_script</code> (raw bytes
-overrides). Each output dict accepts <code>value</code> (required),
-<code>covenant_id</code>, <code>authorizing_input</code>, <code>state</code> (the post-transition
-contract state to verify), <code>constructor_args</code>, <code>script</code>, and
-<code>p2pk_pubkey</code>.</p>
+                <p>Transaction scenario dict (see above). Defaults to a single-input,
+single-output spend of the contract.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -14833,9 +14925,11 @@ contract state to verify), <code>constructor_args</code>, <code>script</code>, a
 <code>result.trace</code>: each executed statement with its source line,
 enclosing function, and the variables in scope when it was
 reached. Tracing changes what is recorded, not what executes.
-Covenant transition calls record no per-statement pauses (the
-engine verifies their bodies as a whole, as in the CLI debugger);
-the failure report still decodes them on failure.</p>
+One statement never appears: a covenant transition's
+<code>return(State { ... })</code>, whose produced state the engine verifies as
+a whole instead of stepping (as in the CLI debugger). A transition
+body that is only that return therefore traces to nothing, while its
+other statements trace normally.</p>
               </div>
               <p>
                   <span class="doc-param-annotation">
@@ -14906,6 +15000,12 @@ is invalid, or the <code>tx</code> scenario is malformed.</p>
       </tbody>
     </table>
 
+
+<details class="note" open>
+  <summary>Note</summary>
+  <p>Experimental. SilverScript and these bindings are under active
+development; the API may change in breaking ways between releases.</p>
+</details>
 
     </div>
 

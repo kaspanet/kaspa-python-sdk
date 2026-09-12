@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://kaspanet.github.io/kaspa-python-sdk/dev/reference/SilverScript/Classes/DebugCallResult/">
       
       
-        <link rel="prev" href="../CompiledContract/">
+        <link rel="prev" href="../ContractArtifact/">
       
       
         <link rel="next" href="../DebugVariable/">
@@ -13674,6 +13674,8 @@
       
         
       
+        
+      
     
     
     
@@ -13734,6 +13736,34 @@
     
   
     CompiledContract
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ContractArtifact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ContractArtifact
   
 
     
@@ -13945,6 +13975,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../EntryAbi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    EntryAbi
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../FailureFrame/" class="md-nav__link">
         
   
@@ -14001,42 +14059,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../FunctionAbiEntry/" class="md-nav__link">
+      <a href="../ParamAbi/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    FunctionAbiEntry
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../FunctionInputAbi/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    FunctionInputAbi
+    ParamAbi
   
 
     
@@ -14191,6 +14221,8 @@
       
         
       
+        
+      
     
     
     
@@ -14279,6 +14311,34 @@
     
   
     debug_call
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Functions/load_artifact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    load_artifact
   
 
     
@@ -14957,8 +15017,9 @@ the debug session started (e.g. in the signature script).</p>
 
     <div class="doc doc-contents ">
 
-        <p>The entrypoint that was called (resolved to the first ABI entry when
-<code>function_name</code> was omitted).</p>
+        <p>The entrypoint that was called. When <code>function_name</code> was omitted this
+is the contract's first entrypoint in <em>source</em> order, which need not be
+<code>abi[0]</code>: the ABI is ordered by name.</p>
 
     </div>
 
@@ -15030,6 +15091,36 @@ the failing statement, snapshotted when it was reached.</p>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
+
+        <p>The detailed string representation.</p>
+
+
+<table>
+      <thead>
+        <tr>
+          <th><span class="doc-section-title">RETURNS</span></th>
+          <th><span>DESCRIPTION</span></th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>str</code>
+            </td>
+            <td class="doc-returns-details">
+              <div class="doc-md-description">
+                <p>The DebugCallResult as a repr string.</p>
+              </div>
+                <p>
+                  <span class="doc-returns-annotation">
+                    <b>TYPE:</b>
+                      <code><span title="builtins.str">str</span></code>
+                  </span>
+                </p>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     </div>

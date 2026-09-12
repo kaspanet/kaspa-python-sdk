@@ -13777,6 +13777,8 @@
       
         
       
+        
+      
     
     
     
@@ -13857,6 +13859,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../reference/SilverScript/Classes/ContractArtifact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ContractArtifact
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../reference/SilverScript/Classes/DebugCallResult/" class="md-nav__link">
         
   
@@ -13893,6 +13923,34 @@
     
   
     DebugVariable
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/SilverScript/Classes/EntryAbi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    EntryAbi
   
 
     
@@ -13969,42 +14027,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../reference/SilverScript/Classes/FunctionAbiEntry/" class="md-nav__link">
+      <a href="../../../reference/SilverScript/Classes/ParamAbi/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    FunctionAbiEntry
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../reference/SilverScript/Classes/FunctionInputAbi/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    FunctionInputAbi
+    ParamAbi
   
 
     
@@ -14159,6 +14189,8 @@
       
         
       
+        
+      
     
     
     
@@ -14247,6 +14279,34 @@
     
   
     debug_call
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/SilverScript/Functions/load_artifact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    load_artifact
   
 
     
@@ -14762,6 +14822,12 @@ script the node accepts.</p>
   failure report with decoded variables
   (<a href="../../../reference/SilverScript/Functions/debug_call/"><code>debug_call</code></a>;
   see <a href="../debugging/">Debugging</a>).</li>
+<li><strong>Ship the compiled contract instead of its source</strong> — compile once,
+  then derive addresses and build unlocking scripts from the portable
+  artifact with no compiler
+  (<a href="../../../reference/SilverScript/Functions/load_artifact/"><code>load_artifact</code></a> →
+  <a href="../../../reference/SilverScript/Classes/ContractArtifact/"><code>ContractArtifact</code></a>;
+  see <a href="../compiling/#loading-an-artifact-back">Compiling Contracts</a>).</li>
 </ul>
 <p>Everything else (wrapping the locking script in a P2SH address,
 building &amp; signing the transaction, submitting) is
@@ -14783,7 +14849,7 @@ its own. The Silverscript compiler takes plain Python values (<code>int</code>, 
 <a href="../../../reference/Classes/ScriptBuilder/"><code>ScriptBuilder</code></a>, and it hands
 back script <code>bytes</code>. Those <code>bytes</code> are the whole interface to core
 <code>kaspa</code> SDK: compile, read
-<a href="../../../reference/SilverScript/Classes/CompiledContract/"><code>contract.script</code></a>,
+<a href="../../../reference/SilverScript/Classes/CompiledContract/"><code>contract.bytecode</code></a>,
 then build the transaction with core as usual.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">kaspa.experimental.silverscript</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">silverscript</span>   <span class="c1"># Silverscript</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">kaspa</span><span class="w"> </span><span class="kn">import</span> <span class="n">ScriptBuilder</span>             <span class="c1"># Kaspa core SDK</span>
@@ -14807,7 +14873,7 @@ need SilverScript — see <a href="../../transactions/scripts/">Scripts</a>.</p>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">SOURCE</span> <span class="o">=</span> <span class="s2">"""</span>
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="s2">pragma silverscript ^0.1.0;</span>
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="s2">contract Guard(int threshold) {</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="s2">    entrypoint function check(int amount) {</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="s2">    entry check(int amount) {</span>
 </span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="s2">        require(amount &gt; threshold);</span>
 </span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="s2">    }</span>
 </span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="s2">}</span>
@@ -14817,7 +14883,7 @@ need SilverScript — see <a href="../../transactions/scripts/">Scripts</a>.</p>
 </span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="n">contract</span> <span class="o">=</span> <span class="n">silverscript</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">SOURCE</span><span class="p">,</span> <span class="p">[</span><span class="mi">100</span><span class="p">])</span>
 </span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>
 </span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="c1"># The redeem script</span>
-</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="n">redeem</span> <span class="o">=</span> <span class="n">contract</span><span class="o">.</span><span class="n">script</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="n">redeem</span> <span class="o">=</span> <span class="n">contract</span><span class="o">.</span><span class="n">bytecode</span>
 </span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>
 </span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="c1"># Wrap it in a P2SH lock and turn that into a fundable address.</span>
 </span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="n">spk</span> <span class="o">=</span> <span class="n">ScriptBuilder</span><span class="o">.</span><span class="n">from_script</span><span class="p">(</span><span class="n">redeem</span><span class="p">)</span><span class="o">.</span><span class="n">create_pay_to_script_hash_script</span><span class="p">()</span>
@@ -14849,7 +14915,7 @@ production secrets this way — see
 <tbody>
 <tr>
 <td><a href="../compiling/">Compiling Contracts</a></td>
-<td><a href="../../../reference/SilverScript/Functions/compile/"><code>compile</code></a>, constructor args, the <a href="../../../reference/SilverScript/Classes/CompiledContract/"><code>CompiledContract</code></a> surface, reading the ABI.</td>
+<td><a href="../../../reference/SilverScript/Functions/compile/"><code>compile</code></a>, constructor args, the <a href="../../../reference/SilverScript/Classes/CompiledContract/"><code>CompiledContract</code></a> surface, reading the ABI, the portable artifact.</td>
 </tr>
 <tr>
 <td><a href="../unlocking-scripts/">Unlocking Scripts</a></td>

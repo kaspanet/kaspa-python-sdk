@@ -2220,10 +2220,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#building-twice-recompiles" class="md-nav__link">
+  <a href="#compile-once-build-many" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Building twice recompiles
+        Compile once, build many
       
     </span>
   </a>
@@ -13766,6 +13766,8 @@
       
         
       
+        
+      
     
     
     
@@ -13846,6 +13848,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../reference/SilverScript/Classes/ContractArtifact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ContractArtifact
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../reference/SilverScript/Classes/DebugCallResult/" class="md-nav__link">
         
   
@@ -13882,6 +13912,34 @@
     
   
     DebugVariable
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/SilverScript/Classes/EntryAbi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    EntryAbi
   
 
     
@@ -13958,42 +14016,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../reference/SilverScript/Classes/FunctionAbiEntry/" class="md-nav__link">
+      <a href="../../../reference/SilverScript/Classes/ParamAbi/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    FunctionAbiEntry
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../reference/SilverScript/Classes/FunctionInputAbi/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    FunctionInputAbi
+    ParamAbi
   
 
     
@@ -14148,6 +14178,8 @@
       
         
       
+        
+      
     
     
     
@@ -14236,6 +14268,34 @@
     
   
     debug_call
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/SilverScript/Functions/load_artifact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    load_artifact
   
 
     
@@ -14643,10 +14703,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#building-twice-recompiles" class="md-nav__link">
+  <a href="#compile-once-build-many" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Building twice recompiles
+        Compile once, build many
       
     </span>
   </a>
@@ -14739,11 +14799,11 @@ unlocking script <code>bytes</code>. Those bytes go into a transaction input's
 <a href="../../../reference/SilverScript/Classes/CompiledContract/"><code>build_sig_script_for_covenant_decl</code></a>
 instead — see <a href="../covenants/">Covenants</a>.</p>
 <h2 id="calling-an-entrypoint">Calling an entrypoint<a class="headerlink" href="#calling-an-entrypoint" title="Permanent link">&para;</a></h2>
-<p>Only functions marked <code>entrypoint</code> are callable from a spend. Pass the
+<p>Only functions declared with <code>entry</code> are callable from a spend. Pass the
 entrypoint name and a list of positional arguments, in the order the
 entrypoint declares them; the compiler emits the right unlocking script —
-including any selector it needs to pick the function when a contract has
-several entrypoints. You don't construct or read these bytes yourself —
+including the four-byte dispatch tag that selects the entrypoint. You don't
+construct or read these bytes yourself —
 you put them on the input (see
 <a href="#spending-a-locked-utxo">Spending a locked UTXO</a>).</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># check(int amount) — args are a positional list matching the parameters.</span>
@@ -14774,16 +14834,36 @@ SilverScript types (the <code>type_name</code>s you can read off the
 <td><code>bool</code> (a real bool — not <code>0</code>/<code>1</code>)</td>
 </tr>
 <tr>
+<td><code>temporal</code></td>
+<td><code>int</code> (a time value in milliseconds)</td>
+</tr>
+<tr>
+<td><code>byte</code></td>
+<td><code>int</code> in <code>0..=255</code> (a one-byte <code>bytes</code> also works)</td>
+</tr>
+<tr>
+<td><code>byte[]</code></td>
+<td><code>bytes</code> / <code>bytearray</code> (not a <code>list</code>)</td>
+</tr>
+<tr>
 <td><code>byte[N]</code></td>
 <td><code>bytes</code> / <code>bytearray</code> of length <code>N</code></td>
 </tr>
 <tr>
+<td><code>string</code></td>
+<td><code>str</code> (encoded as UTF-8)</td>
+</tr>
+<tr>
 <td><code>pubkey</code></td>
-<td><code>bytes</code> (an x-only public key)</td>
+<td><code>bytes</code> (a 32-byte x-only public key)</td>
 </tr>
 <tr>
 <td><code>sig</code></td>
-<td><code>bytes</code> (a signature)</td>
+<td><code>bytes</code> (a 65-byte signature — 64 plus the sighash type byte)</td>
+</tr>
+<tr>
+<td><code>datasig</code></td>
+<td><code>bytes</code> (a 64-byte signature over a message, for <code>checkMsgSig</code>)</td>
 </tr>
 <tr>
 <td><code>T[]</code></td>
@@ -14799,6 +14879,9 @@ SilverScript types (the <code>type_name</code>s you can read off the
 <ul>
 <li><strong><code>bool</code> is distinct from <code>int</code>.</strong> <code>True</code> is not <code>1</code> here — pass the
   type the entrypoint declares.</li>
+<li><strong>Which Python value means what is decided by the declared type, not the
+  value.</strong> <code>1</code> is a <code>byte</code> for a <code>byte</code> parameter and an <code>int</code> for an <code>int</code>
+  one; a small <code>int</code> is never silently treated as a <code>byte</code>.</li>
 <li><strong><code>list</code> and <code>tuple</code> are interchangeable</strong> for array arguments.</li>
 <li><strong>Out-of-range and mistyped values raise
   <a href="../../../reference/SilverScript/Exceptions/SilverScriptError/"><code>SilverScriptError</code></a></strong>,
@@ -14819,7 +14902,7 @@ you concatenate the contract call with the pushed redeem script:</p>
 </span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
 </span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="c1"># Push the redeem script so it rides along in the same signature_script.</span>
 </span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="n">redeem</span> <span class="o">=</span> <span class="nb">bytes</span><span class="o">.</span><span class="n">fromhex</span><span class="p">(</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    <span class="n">ScriptBuilder</span><span class="p">()</span><span class="o">.</span><span class="n">add_data</span><span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">script</span><span class="p">)</span><span class="o">.</span><span class="n">to_string</span><span class="p">()</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    <span class="n">ScriptBuilder</span><span class="p">()</span><span class="o">.</span><span class="n">add_data</span><span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">bytecode</span><span class="p">)</span><span class="o">.</span><span class="n">to_string</span><span class="p">()</span>
 </span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="p">)</span>
 </span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="n">signature_script</span> <span class="o">=</span> <span class="n">call</span> <span class="o">+</span> <span class="n">redeem</span>
 </span></code></pre></div>
@@ -14828,16 +14911,24 @@ you concatenate the contract call with the pushed redeem script:</p>
 spends the locked UTXO. The full P2SH mechanics — wrapping the lock,
 building the address, the spend side — are in
 <a href="../../transactions/scripts/">Transactions → Scripts</a>.</p>
-<h2 id="building-twice-recompiles">Building twice recompiles<a class="headerlink" href="#building-twice-recompiles" title="Permanent link">&para;</a></h2>
-<p>A <a href="../../../reference/SilverScript/Classes/CompiledContract/"><code>CompiledContract</code></a>
-stores its source and constructor args, not a borrowed parse tree. So
-each call to
+<h2 id="compile-once-build-many">Compile once, build many<a class="headerlink" href="#compile-once-build-many" title="Permanent link">&para;</a></h2>
+<p><a href="../../../reference/SilverScript/Functions/compile/"><code>compile</code></a> does all
+the expensive work up front: it parses the source, compiles the contract,
+and builds its <a href="../compiling/#the-portable-artifact">portable ABI artifact</a>
+once, then keeps them on the
+<a href="../../../reference/SilverScript/Classes/CompiledContract/"><code>CompiledContract</code></a>.</p>
+<p>Each later call to
 <a href="../../../reference/SilverScript/Classes/CompiledContract/"><code>build_sig_script</code></a>
-recompiles the contract from scratch before assembling the script. It's
-deterministic — the same call always yields the same bytes — but each
-call pays the full compile cost. That matters only if you build many
-unlocking scripts in a hot loop; for one spend per transaction, it's
-irrelevant.</p>
+works from that stored artifact — it converts your arguments to the
+declared parameter types, pushes them, and appends the entrypoint's
+four-byte dispatch tag. Nothing is recompiled. Building many unlocking
+scripts from one contract is cheap, and it's deterministic: the same call
+always yields the same bytes.</p>
+<p>Because the artifact is all <code>build_sig_script</code> reads, you don't even need
+the contract: <a href="../../../reference/SilverScript/Functions/load_artifact/"><code>load_artifact</code></a>
+restores one from JSON and builds the same bytes with no source and no
+compiler — see
+<a href="../compiling/#loading-an-artifact-back">Loading an artifact back</a>.</p>
 <p>Next: stateful contracts that carry state from one UTXO to the next —
 <a href="../covenants/">Covenants</a>.</p>
 

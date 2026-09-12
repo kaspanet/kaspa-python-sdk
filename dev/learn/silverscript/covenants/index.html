@@ -13755,6 +13755,8 @@
       
         
       
+        
+      
     
     
     
@@ -13835,6 +13837,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../reference/SilverScript/Classes/ContractArtifact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ContractArtifact
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../reference/SilverScript/Classes/DebugCallResult/" class="md-nav__link">
         
   
@@ -13871,6 +13901,34 @@
     
   
     DebugVariable
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/SilverScript/Classes/EntryAbi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    EntryAbi
   
 
     
@@ -13947,42 +14005,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../reference/SilverScript/Classes/FunctionAbiEntry/" class="md-nav__link">
+      <a href="../../../reference/SilverScript/Classes/ParamAbi/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    FunctionAbiEntry
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../reference/SilverScript/Classes/FunctionInputAbi/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    FunctionInputAbi
+    ParamAbi
   
 
     
@@ -14137,6 +14167,8 @@
       
         
       
+        
+      
     
     
     
@@ -14225,6 +14257,34 @@
     
   
     debug_call
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/SilverScript/Functions/load_artifact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    load_artifact
   
 
     
@@ -14721,9 +14781,31 @@ declaration entrypoint and builds the unlocking script for it:</p>
 spend several UTXOs of the same covenant in one transition and pick one
 input as the <strong>leader</strong>. The leader input carries the entrypoint's
 arguments and runs the covenant's logic; the other inputs are
-<strong>delegates</strong> — they take no arguments and only prove they belong to the
-same covenant, deferring to the leader. Build the leader's unlocking
-script with <code>is_leader=True</code> and each delegate's with <code>is_leader=False</code>.</p>
+<strong>delegates</strong>, which prove they belong to the same covenant and defer to
+the leader. Build the leader's unlocking script with <code>is_leader=True</code> and
+each delegate's with <code>is_leader=False</code>.</p>
+<p>A delegate takes no arguments unless the contract declares a
+<code>#[covenant.delegate]</code> body. When it does, every delegate input runs that
+body, and <code>build_sig_script_for_covenant_decl(..., is_leader=False)</code>
+takes <em>its</em> parameters — which are unrelated to the declaration's. So the
+same declaration is spent with two different argument lists. For</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>#[covenant(binding = cov, from = 2, to = 2)]
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>function transfer(State[] prev_states, State[] new_states, int amount, bool allowed) { ... }
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>#[covenant.delegate]
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>function authorizeDelegate(byte[] witness) { ... }
+</span></code></pre></div>
+<p>the two inputs are built as:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">leader</span> <span class="o">=</span> <span class="n">contract</span><span class="o">.</span><span class="n">build_sig_script_for_covenant_decl</span><span class="p">(</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="s2">"transfer"</span><span class="p">,</span> <span class="p">[</span><span class="n">new_states</span><span class="p">,</span> <span class="n">amount</span><span class="p">,</span> <span class="n">allowed</span><span class="p">],</span> <span class="n">is_leader</span><span class="o">=</span><span class="kc">True</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="p">)</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">delegate</span> <span class="o">=</span> <span class="n">contract</span><span class="o">.</span><span class="n">build_sig_script_for_covenant_decl</span><span class="p">(</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="s2">"transfer"</span><span class="p">,</span> <span class="p">[</span><span class="n">witness</span><span class="p">],</span> <span class="n">is_leader</span><span class="o">=</span><span class="kc">False</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="p">)</span>
+</span></code></pre></div>
+<p>The leader's list starts with the transition's output states: <code>new_states</code>
+is passed, while <code>prev_states</code> is not — the engine reads it from the
+inputs being spent.</p>
 <p>The Counter here never needs it. Its <code>binding = auth</code> compiles to a single
 entrypoint with no leader/delegate split, so <code>is_leader</code> is ignored — you
 reach for <code>is_leader=True</code> only when building the leader input of a
@@ -14752,27 +14834,27 @@ Every later transition reuses that id.</p>
 runs the whole loop live on testnet-10. The contract holds one <code>count</code>
 in covenant state. Each spend is a 1:1 transition that updates the count
 and re-locks the funds:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>genesis        count = 0
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>add(5)         count -&gt; 5
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>subtract(3)    count -&gt; 2
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>genesis        count = 0
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>add(5)         count -&gt; 5
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>subtract(3)    count -&gt; 2
 </span></code></pre></div>
 <p>The contract:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pragma silverscript ^0.1.0;
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>contract Counter(int init_count) {
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    int count = init_count;
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    #[covenant(binding = auth, from = 1, to = 1, mode = transition)]
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    function add(State prev_state, int amount) : (State) {
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>        return({ count: prev_state.count + amount });
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    }
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
-</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    #[covenant(binding = auth, from = 1, to = 1, mode = transition)]
-</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>    function subtract(State prev_state, int amount) : (State) {
-</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>        require(prev_state.count - amount &gt;= 0);
-</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>        return({ count: prev_state.count - amount });
-</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>    }
-</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>}
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pragma silverscript ^0.1.0;
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>contract Counter(int init_count) {
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    int count = init_count;
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    #[covenant(binding = auth, from = 1, to = 1, mode = transition)]
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    function add(State prev_state, int amount) : (State) {
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>        return(State { count: prev_state.count + amount });
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    }
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>    #[covenant(binding = auth, from = 1, to = 1, mode = transition)]
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>    function subtract(State prev_state, int amount) : (State) {
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>        require(prev_state.count - amount &gt;= 0);
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>        return(State { count: prev_state.count - amount });
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>    }
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>}
 </span></code></pre></div>
 <p>A few things from the example worth noting:</p>
 <ul>

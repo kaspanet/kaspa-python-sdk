@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://kaspanet.github.io/kaspa-python-sdk/dev/reference/SilverScript/Classes/TraceStep/">
       
       
-        <link rel="prev" href="../FunctionInputAbi/">
+        <link rel="prev" href="../ParamAbi/">
       
       
         <link rel="next" href="../../Exceptions/SilverScriptError/">
@@ -13674,6 +13674,8 @@
       
         
       
+        
+      
     
     
     
@@ -13754,6 +13756,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../ContractArtifact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ContractArtifact
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../DebugCallResult/" class="md-nav__link">
         
   
@@ -13790,6 +13820,34 @@
     
   
     DebugVariable
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EntryAbi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    EntryAbi
   
 
     
@@ -13866,42 +13924,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../FunctionAbiEntry/" class="md-nav__link">
+      <a href="../ParamAbi/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    FunctionAbiEntry
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../FunctionInputAbi/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    FunctionInputAbi
+    ParamAbi
   
 
     
@@ -14169,6 +14199,8 @@
       
         
       
+        
+      
     
     
     
@@ -14257,6 +14289,34 @@
     
   
     debug_call
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Functions/load_artifact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    load_artifact
   
 
     
@@ -14867,6 +14927,9 @@ any mapped function.</p>
 
         <p>1-based source line of the statement. None when no source mapping
 exists (e.g. generated dispatch code).</p>
+<p>A covenant transition also pauses once on a span the engine leaves
+unset, which reads as line 1 — the CLI debugger highlights that line at
+the same pause, so the step is recorded rather than dropped.</p>
 
     </div>
 
@@ -14936,6 +14999,36 @@ executes, so a local it defines appears from the following step on.</p>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
+
+        <p>The detailed string representation.</p>
+
+
+<table>
+      <thead>
+        <tr>
+          <th><span class="doc-section-title">RETURNS</span></th>
+          <th><span>DESCRIPTION</span></th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>str</code>
+            </td>
+            <td class="doc-returns-details">
+              <div class="doc-md-description">
+                <p>The TraceStep as a repr string.</p>
+              </div>
+                <p>
+                  <span class="doc-returns-annotation">
+                    <b>TYPE:</b>
+                      <code><span title="builtins.str">str</span></code>
+                  </span>
+                </p>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     </div>

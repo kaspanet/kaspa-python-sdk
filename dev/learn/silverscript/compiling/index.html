@@ -2191,6 +2191,45 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#the-portable-artifact" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The portable artifact
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#loading-an-artifact-back" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Loading an artifact back
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Loading an artifact back">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#checking-an-artifact-you-didnt-build" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Checking an artifact you didn't build
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -13755,6 +13794,8 @@
       
         
       
+        
+      
     
     
     
@@ -13835,6 +13876,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../reference/SilverScript/Classes/ContractArtifact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ContractArtifact
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../reference/SilverScript/Classes/DebugCallResult/" class="md-nav__link">
         
   
@@ -13871,6 +13940,34 @@
     
   
     DebugVariable
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/SilverScript/Classes/EntryAbi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    EntryAbi
   
 
     
@@ -13947,42 +14044,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../reference/SilverScript/Classes/FunctionAbiEntry/" class="md-nav__link">
+      <a href="../../../reference/SilverScript/Classes/ParamAbi/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    FunctionAbiEntry
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../reference/SilverScript/Classes/FunctionInputAbi/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    FunctionInputAbi
+    ParamAbi
   
 
     
@@ -14137,6 +14206,8 @@
       
         
       
+        
+      
     
     
     
@@ -14225,6 +14296,34 @@
     
   
     debug_call
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/SilverScript/Functions/load_artifact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    load_artifact
   
 
     
@@ -14631,6 +14730,45 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#the-portable-artifact" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The portable artifact
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#loading-an-artifact-back" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Loading an artifact back
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Loading an artifact back">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#checking-an-artifact-you-didnt-build" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Checking an artifact you didn't build
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -14716,17 +14854,25 @@ no parameters.</p>
 <p>A compile failure — a syntax error, a type error, an incompatible
 <code>pragma</code> — raises
 <a href="../../../reference/SilverScript/Exceptions/SilverScriptError/"><code>SilverScriptError</code></a>.
-The message points to the byte span of the offending source.</p>
+Where the compiler records the location, the message ends with the byte span of
+the offending source:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">try</span><span class="p">:</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="n">silverscript</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">"contract B() { entrypoint function m() { byte x = 256; } }"</span><span class="p">)</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="n">silverscript</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">"pragma silverscript ^9.9.9; contract B() </span><span class="si">{}</span><span class="s2">"</span><span class="p">)</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="k">except</span> <span class="n">silverscript</span><span class="o">.</span><span class="n">SilverScriptError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>        <span class="c1"># ... (at bytes &lt;start&gt;..&lt;end&gt;)</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="c1"># unsupported feature: SilverScript compiler cannot support pragmas that cover</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="c1"># future major versions ... (at bytes 20..26)</span>
+</span></code></pre></div>
+<p>Not every error carries one. A type error names the offending declaration
+instead, and a syntax error arrives as the parser's own caret diagram:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">silverscript</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">"contract B() { entry m() { byte x = 256; } }"</span><span class="p">)</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="c1"># SilverScriptError: unsupported feature: variable 'x' expects byte</span>
 </span></code></pre></div>
 <h2 id="constructor-args-embed-state-into-the-script">Constructor args embed state into the script<a class="headerlink" href="#constructor-args-embed-state-into-the-script" title="Permanent link">&para;</a></h2>
 <p>Constructor arguments are compiled <strong>into</strong> the locking script. Two
 different argument sets produce two different scripts, and so two
 different P2SH addresses:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">silverscript</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">SOURCE</span><span class="p">,</span> <span class="p">[</span><span class="mi">100</span><span class="p">])</span><span class="o">.</span><span class="n">script</span> <span class="o">!=</span> <span class="n">silverscript</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">SOURCE</span><span class="p">,</span> <span class="p">[</span><span class="mi">101</span><span class="p">])</span><span class="o">.</span><span class="n">script</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">silverscript</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">SOURCE</span><span class="p">,</span> <span class="p">[</span><span class="mi">100</span><span class="p">])</span><span class="o">.</span><span class="n">bytecode</span> <span class="o">!=</span> <span class="n">silverscript</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">SOURCE</span><span class="p">,</span> <span class="p">[</span><span class="mi">101</span><span class="p">])</span><span class="o">.</span><span class="n">bytecode</span>
 </span></code></pre></div>
 <p>This is a key mental model for SilverScript. A <code>Counter</code> at <code>count = 0</code> and the
 same <code>Counter</code> at <code>count = 5</code> are different scripts, and as a result, are different
@@ -14745,7 +14891,7 @@ is read-only. Its properties:</p>
 </thead>
 <tbody>
 <tr>
-<td><a href="../../../reference/SilverScript/Classes/CompiledContract/"><code>script</code></a></td>
+<td><a href="../../../reference/SilverScript/Classes/CompiledContract/"><code>bytecode</code></a></td>
 <td>The locking (redeem) script <code>bytes</code>.</td>
 </tr>
 <tr>
@@ -14757,16 +14903,20 @@ is read-only. Its properties:</p>
 <td>The compiler version that produced it.</td>
 </tr>
 <tr>
-<td><a href="../../../reference/SilverScript/Classes/CompiledContract/"><code>without_selector</code></a></td>
-<td><code>True</code> if the contract has a single entrypoint (no function selector). See <a href="../unlocking-scripts/">Unlocking Scripts</a>.</td>
-</tr>
-<tr>
 <td><a href="../../../reference/SilverScript/Classes/CompiledContract/"><code>abi</code></a></td>
-<td>One <a href="../../../reference/SilverScript/Classes/FunctionAbiEntry/"><code>FunctionAbiEntry</code></a> per callable entrypoint.</td>
+<td>One <a href="../../../reference/SilverScript/Classes/EntryAbi/"><code>EntryAbi</code></a> per callable entrypoint, ordered alphabetically by name.</td>
 </tr>
 <tr>
-<td><a href="../../../reference/SilverScript/Classes/CompiledContract/"><code>state_layout</code></a></td>
-<td><code>(start, len)</code>: the byte offset and length of the contract state within the script.</td>
+<td><a href="../../../reference/SilverScript/Classes/CompiledContract/"><code>entry(name)</code></a></td>
+<td>One entrypoint's <a href="../../../reference/SilverScript/Classes/EntryAbi/"><code>EntryAbi</code></a>, by name.</td>
+</tr>
+<tr>
+<td><a href="../../../reference/SilverScript/Classes/CompiledContract/"><code>state_span</code></a></td>
+<td><code>(offset, len)</code>: the byte offset and length of the contract state within the script.</td>
+</tr>
+<tr>
+<td><a href="../../../reference/SilverScript/Classes/CompiledContract/"><code>template_hash</code></a></td>
+<td>32-byte digest over the script's template parts, matching the <code>templateHash()</code> builtin.</td>
 </tr>
 </tbody>
 </table>
@@ -14774,18 +14924,123 @@ is read-only. Its properties:</p>
 <p>The <a href="../../../reference/SilverScript/Classes/CompiledContract/"><code>abi</code></a> tells
 you which entrypoints a contract exposes and what arguments each one
 takes.</p>
-<p>Each <a href="../../../reference/SilverScript/Classes/FunctionAbiEntry/"><code>FunctionAbiEntry</code></a>
-has a <code>name</code> and a list of <code>inputs</code>. Each
-<a href="../../../reference/SilverScript/Classes/FunctionInputAbi/"><code>FunctionInputAbi</code></a>
-has a <code>name</code> and a <code>type_name</code> — the SilverScript type, e.g. <code>"int"</code>,
-<code>"byte[32]"</code>, <code>"pubkey"</code>, <code>"sig"</code>.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">contract</span> <span class="o">=</span> <span class="n">silverscript</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">SOURCE</span><span class="p">,</span> <span class="p">[</span><span class="mi">100</span><span class="p">])</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">contract</span><span class="o">.</span><span class="n">abi</span><span class="p">:</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">args</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">i</span><span class="o">.</span><span class="n">type_name</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">i</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">entry</span><span class="o">.</span><span class="n">inputs</span><span class="p">)</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">entry</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="n">args</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="c1"># check(int amount)</span>
+<p>Each <a href="../../../reference/SilverScript/Classes/EntryAbi/"><code>EntryAbi</code></a> has a
+<code>name</code>, a list of <code>params</code>, and a <code>dispatch_tag</code>. Each
+<a href="../../../reference/SilverScript/Classes/ParamAbi/"><code>ParamAbi</code></a> has a <code>name</code>
+and a <code>type_name</code> — the SilverScript type, e.g. <code>"int"</code>, <code>"byte[32]"</code>,
+<code>"pubkey"</code>, <code>"sig"</code>.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">contract</span> <span class="o">=</span> <span class="n">silverscript</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">SOURCE</span><span class="p">,</span> <span class="p">[</span><span class="mi">100</span><span class="p">])</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="c1"># One entrypoint, by name:</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">entry</span> <span class="o">=</span> <span class="n">contract</span><span class="o">.</span><span class="n">entry</span><span class="p">(</span><span class="s2">"check"</span><span class="p">)</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="nb">print</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">type_name</span><span class="p">)</span>   <span class="c1"># int</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="c1"># Or enumerate them all:</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">contract</span><span class="o">.</span><span class="n">abi</span><span class="p">:</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    <span class="n">args</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">p</span><span class="o">.</span><span class="n">type_name</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">entry</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">entry</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="n">args</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="c1"># check(int amount)</span>
 </span></code></pre></div>
+<p><code>abi</code> is ordered alphabetically by entrypoint name — the same order a
+<a href="../../../reference/SilverScript/Classes/ContractArtifact/"><code>ContractArtifact</code></a>
+reports, so an entrypoint keeps its position whichever route you reached it
+by. Declaration order isn't available: it exists only while the source is
+parsed, and a compiled artifact doesn't carry it.
+<a href="../../../reference/SilverScript/Classes/CompiledContract/"><code>entry(name)</code></a>
+raises
+<a href="../../../reference/SilverScript/Exceptions/SilverScriptError/"><code>SilverScriptError</code></a>
+for a name the contract doesn't declare — the same error <code>build_sig_script</code>
+gives for the same typo.</p>
+<p><code>dispatch_tag</code> is the entrypoint's four-byte identity —
+<code>blake3("name(type,type)")[:4]</code>. It is content-addressed over the name and the
+<em>resolved</em> parameter types, so every instance of a contract normally shares the
+same tags, whatever its constructor arguments. The one exception is a parameter
+whose array length is itself a constructor parameter: <code>entry take(byte[n] blob)</code>
+on <code>contract Sized(int n)</code> resolves to <code>byte[4]</code> for <code>n = 4</code> and <code>byte[8]</code> for
+<code>n = 8</code> — different types, and so different tags. Read the tag off the instance
+you are spending rather than caching it across instances of such a contract.</p>
+<p>The tag is also the final data push of every signature script built for that
+entrypoint.</p>
+<h2 id="the-portable-artifact">The portable artifact<a class="headerlink" href="#the-portable-artifact" title="Permanent link">&para;</a></h2>
+<p>Behind the ABI is a <em>portable artifact</em> — the full machine-readable
+description of the compiled contract. <code>compile()</code> builds it once, and it is
+what each <code>build_sig_script</code> call encodes against.
+<a href="../../../reference/SilverScript/Classes/CompiledContract/"><code>artifact_json()</code></a>
+hands it to you as JSON:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">contract</span> <span class="o">=</span> <span class="n">silverscript</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">SOURCE</span><span class="p">,</span> <span class="p">[</span><span class="mi">100</span><span class="p">])</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">artifact</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">contract</span><span class="o">.</span><span class="n">artifact_json</span><span class="p">())</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="nb">print</span><span class="p">(</span><span class="n">artifact</span><span class="p">[</span><span class="s2">"contracts"</span><span class="p">][</span><span class="s2">"Guard"</span><span class="p">][</span><span class="s2">"entries"</span><span class="p">][</span><span class="s2">"check"</span><span class="p">][</span><span class="s2">"dispatch_tag"</span><span class="p">])</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="c1"># b0823999</span>
+</span></code></pre></div>
+<p>For the same source and constructor arguments this is byte-for-byte what the
+upstream <code>silverc</code> compiler writes, so an artifact produced here and one
+produced by <code>silverc contract.sil</code> are interchangeable. That makes it a
+portable build output: compile in CI, commit the artifact, and let other
+tooling read it without a compiler.</p>
+<p>Three things about the encoding are worth knowing before you parse it:</p>
+<ul>
+<li><strong><code>bytecode</code> and <code>template_hash</code> are JSON arrays of integers, not hex.</strong>
+  Use <code>bytes(...)</code> to recover the raw value:
+  <code>bytes(artifact["contracts"]["Guard"]["compiled"]["bytecode"]) == contract.bytecode</code>.</li>
+<li><strong><code>dispatch_tag</code> <em>is</em> hex</strong> — an eight-character string, unlike the two
+  fields above.</li>
+<li><strong>Types are tagged objects</strong>, e.g. <code>{"kind": "int"}</code>. The matching value
+  form, <code>{"kind": "int", "value": 100}</code>, is the <em>portable</em> dialect — what
+  <code>silverc --constructor-args</code> reads. It is not the type-directed JSON the
+  SilverScript debugger CLI and <code>.test.json</code> fixtures use. The two look
+  similar and are not interchangeable; if you are hand-writing JSON for
+  upstream tooling, check which one that tool wants.</li>
+</ul>
+<p><code>state_span</code> appears here as <code>compiled.state_span</code>, an object with the keys
+<code>offset</code> and <code>len</code> rather than a two-tuple — the same two numbers the
+attribute gives you.</p>
+<h2 id="loading-an-artifact-back">Loading an artifact back<a class="headerlink" href="#loading-an-artifact-back" title="Permanent link">&para;</a></h2>
+<p><a href="../../../reference/SilverScript/Functions/load_artifact/"><code>load_artifact</code></a>
+reads that JSON back into a
+<a href="../../../reference/SilverScript/Classes/ContractArtifact/"><code>ContractArtifact</code></a>:
+a contract you can derive an address from and spend, with no source and no
+compiler.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="c1"># In CI, once:</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="n">Path</span><span class="p">(</span><span class="s2">"guard.json"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">silverscript</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">SOURCE</span><span class="p">,</span> <span class="p">[</span><span class="mi">100</span><span class="p">])</span><span class="o">.</span><span class="n">artifact_json</span><span class="p">())</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="c1"># At runtime, from guard.json alone:</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="n">artifact</span> <span class="o">=</span> <span class="n">silverscript</span><span class="o">.</span><span class="n">load_artifact</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s2">"guard.json"</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">())</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="n">artifact</span><span class="o">.</span><span class="n">bytecode</span>                           <span class="c1"># the same redeem script</span>
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="n">artifact</span><span class="o">.</span><span class="n">build_sig_script</span><span class="p">(</span><span class="s2">"check"</span><span class="p">,</span> <span class="p">[</span><span class="mi">150</span><span class="p">])</span>   <span class="c1"># the same unlocking script</span>
+</span></code></pre></div>
+<p>The bytes are identical to the ones the
+<a href="../../../reference/SilverScript/Classes/CompiledContract/"><code>CompiledContract</code></a>
+would have produced. Both encode against this same artifact — it is the only
+thing <code>build_sig_script</code> ever reads.</p>
+<p>A <code>ContractArtifact</code> carries <code>contract_name</code>, <code>compiler_version</code>,
+<code>schema_version</code>, <code>bytecode</code>, <code>template_hash</code>, <code>state_span</code>, <code>abi</code> and
+<code>entry(name)</code>, plus both <code>build_sig_script</code> methods and <code>to_json()</code>. Two
+things it can't do,
+because they need the source: <a href="../debugging/"><code>debug_call</code></a>, and compiling with
+different constructor arguments — those are a different contract, and so a
+different artifact.</p>
+<p>If the JSON holds more than one contract, name the one you want:
+<code>load_artifact(text, "Guard")</code>. Omitting the name is fine for anything
+<code>compile()</code> produced, which is always a single contract.</p>
+<h3 id="checking-an-artifact-you-didnt-build">Checking an artifact you didn't build<a class="headerlink" href="#checking-an-artifact-you-didnt-build" title="Permanent link">&para;</a></h3>
+<p><code>load_artifact</code> checks that the JSON parses and that its schema version is one
+this release understands. It does not check that the artifact describes itself
+consistently — <code>check_consistency()</code> does:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">artifact</span><span class="o">.</span><span class="n">check_consistency</span><span class="p">()</span>   <span class="c1"># raises SilverScriptError if it doesn't hold together</span>
+</span></code></pre></div>
+<p>That verifies the recorded <code>template_hash</code> against the bytecode, the state span
+against the script, and the entrypoints' dispatch tags for collisions. It
+catches corruption and casual edits.</p>
+<p>It cannot tell you the bytecode was compiled from any particular source —
+nothing inside an artifact can. An artifact is exactly as trustworthy as where
+you got it: take it from a build you control, or compare its <code>template_hash</code>
+against a value you already trust.</p>
 <p>Next: turn one of these entrypoints into an unlocking script in
 <a href="../unlocking-scripts/">Unlocking Scripts</a>.</p>
 

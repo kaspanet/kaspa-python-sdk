@@ -13645,6 +13645,8 @@
       
         
       
+        
+      
     
     
     
@@ -13725,6 +13727,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../reference/SilverScript/Classes/ContractArtifact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ContractArtifact
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../reference/SilverScript/Classes/DebugCallResult/" class="md-nav__link">
         
   
@@ -13761,6 +13791,34 @@
     
   
     DebugVariable
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/SilverScript/Classes/EntryAbi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    EntryAbi
   
 
     
@@ -13837,42 +13895,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../reference/SilverScript/Classes/FunctionAbiEntry/" class="md-nav__link">
+      <a href="../reference/SilverScript/Classes/ParamAbi/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    FunctionAbiEntry
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../reference/SilverScript/Classes/FunctionInputAbi/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    FunctionInputAbi
+    ParamAbi
   
 
     
@@ -14027,6 +14057,8 @@
       
         
       
+        
+      
     
     
     
@@ -14115,6 +14147,34 @@
     
   
     debug_call
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/SilverScript/Functions/load_artifact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    load_artifact
   
 
     
@@ -15227,7 +15287,7 @@
 <p><em>Target: 2.0.2</em></p>
 <h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
 <ul>
-<li>New <code>kaspa.experimental.silverscript</code> module — compile <a href="https://github.com/kaspanet/silverscript">SilverScript</a> script-based smart-contract source and build transaction scripts from Python. <code>compile()</code> returns a <code>CompiledContract</code> exposing the locking script, ABI, state layout, and <code>template_hash</code> (the canonical 32-byte length-bound hash over the script's template parts around the covenant state region, matching the SilverScript <code>templateHash(prefix, suffix)</code> builtin), plus <code>build_sig_script()</code> / <code>build_sig_script_for_covenant_decl()</code> for unlocking scripts.</li>
+<li>New <code>kaspa.experimental.silverscript</code> module — compile <a href="https://github.com/kaspanet/silverscript">SilverScript</a> (v1.0.0) contract source from Python. <code>compile()</code> returns a <code>CompiledContract</code> exposing the locking script (<code>bytecode</code>), ABI, state layout, and <code>template_hash</code>, plus <code>build_sig_script()</code> / <code>build_sig_script_for_covenant_decl()</code> for unlocking scripts. Each <code>EntryAbi</code> in the ABI carries the entrypoint's <code>name</code>, <code>params</code>, and four-byte <code>dispatch_tag</code>. <code>artifact_json()</code> returns the contract's portable ABI artifact as JSON — for the same source and constructor arguments this is byte-for-byte what the upstream <code>silverc</code> compiler writes, so artifacts are interchangeable between the two. <code>load_artifact()</code> reads that JSON back into a <code>ContractArtifact</code> — the same <code>bytecode</code>, <code>template_hash</code>, <code>state_span</code>, <code>abi</code> and <code>build_sig_script()</code> / <code>build_sig_script_for_covenant_decl()</code>, with no source and no compiler, so a contract can be compiled once in CI and its artifact shipped in place of its source. <code>ContractArtifact.check_consistency()</code> verifies an artifact's recorded template hash, state span and dispatch tags against its own bytecode, and <code>to_json()</code> serializes it back. On both classes <code>abi</code> is ordered alphabetically by entrypoint name, and <code>entry(name)</code> looks up a single entrypoint's <code>EntryAbi</code> directly, raising <code>SilverScriptError</code> for a name the contract doesn't declare.</li>
 <li>Example under <code>examples/silverscript/</code> — a Counter covenant run live on testnet-10, one transaction at a time: genesis, then permissionless <code>add</code>/<code>subtract</code> state transitions.</li>
 <li>Class <code>ZkScriptBuilder</code> exposed to Python. Staged builder that turns RISC Zero zero-knowledge proofs into Kaspa transaction scripts, mirroring the WASM SDK: <code>new_r0()</code>, <code>commit_to_groth16()</code> / <code>commit_to_succinct()</code>, and <code>finalize_with_groth16_proof()</code> / <code>finalize_with_succinct_proof()</code>, plus fragment methods for composing scripts by hand (<code>add_data</code>, <code>push_r0_groth16_proof</code>, <code>push_r0_succinct_witness</code>, and <code>append_r0_groth16_verifier</code> / <code>append_r0_succinct_verifier</code> with their <code>*_with_fixed_journal</code> variants). <code>append_r0_groth16_verifier_dynamic_image_id()</code> is the same r0-over-groth16 verifier with the image id taken from the stack (<code>[..., journal_hash, compressed_proof, image_id]</code>) instead of baked into the script, so <code>append_r0_groth16_verifier(image_id)</code> is exactly <code>add_data(image_id)</code> followed by it; mirrors the WASM SDK's <code>appendR0Groth16VerifierDynamicImageId</code>. The produced P2SH scripts lock a UTXO behind on-chain verification of a specific proof (by image id, and optionally a fixed journal) via the <code>OpZkPrecompile</code> opcode. <code>new_r0()</code> also accepts the deprecated, ignored <code>covenants_enabled</code> argument described under Changed.</li>
 <li>Class <code>FinalizedR0Script</code> exposed to Python. The result of finalizing a <code>ZkScriptBuilder</code>, with <code>sig_script</code> and <code>redeem_script</code> properties.</li>
@@ -15236,10 +15296,12 @@
 <li>Exception <code>ZkError</code> added to <code>kaspa.exceptions</code>, raised by the ZK bindings.</li>
 <li>Example under <code>examples/zk/</code> demonstrating a fully on-chain Groth16 commit→redeem round-trip.</li>
 <li>Function <code>compute_sighash()</code> exposed to Python. Computes the signature hash (sighash) for a transaction input.</li>
-<li>Function <code>debug_call()</code> added to <code>kaspa.experimental.silverscript</code>, with result classes <code>DebugCallResult</code>, <code>FailureReport</code>, <code>FailureFrame</code>, and <code>DebugVariable</code>. Simulates a contract entrypoint call locally through SilverScript's source-level debug engine (the engine behind the upstream CLI debugger) and runs it to completion — no stepping or breakpoints. With <code>trace=True</code> the result additionally carries a per-statement execution trace (<code>TraceStep</code>: source line, statement text, enclosing function, and the variables in scope when the statement was reached).</li>
+<li>Function <code>debug_call()</code> added to <code>kaspa.experimental.silverscript</code>, with result classes <code>DebugCallResult</code>, <code>FailureReport</code>, <code>FailureFrame</code>, <code>DebugVariable</code>, and <code>TraceStep</code>. Simulates a contract entrypoint call locally through SilverScript's source-level debug engine (the engine behind the upstream CLI debugger) and runs it to completion — no stepping or breakpoints. Omitting <code>function_name</code> calls the contract's first entrypoint in source order — not <code>abi[0]</code>, which is ordered by name. The <code>tx</code> argument describes the transaction the call is simulated in (inputs, outputs, covenant bindings and states), so covenant transitions and <code>tx</code> introspection can be debugged without a node. With <code>trace=True</code> the result additionally carries a per-statement execution trace (<code>TraceStep</code>: source line, statement text, enclosing function, and the variables in scope when the statement was reached). One statement is never traced: a covenant transition's <code>return(State { ... })</code>, whose produced state the engine verifies as a whole rather than stepping — so a transition body that is only that return traces to nothing, while its other statements trace normally.</li>
 </ul>
 <h3 id="changed">Changed<a class="headerlink" href="#changed" title="Permanent link">&para;</a></h3>
 <ul>
+<li><strong><code>kaspa.experimental.silverscript</code> (experimental): renamed to match SilverScript v1.0 vocabulary.</strong> <code>CompiledContract.script</code> is now <code>CompiledContract.bytecode</code>; <code>FunctionAbiEntry</code> / <code>FunctionInputAbi</code> are now <code>EntryAbi</code> / <code>ParamAbi</code>; <code>EntryAbi.inputs</code> is now <code>EntryAbi.params</code>. SilverScript 1.0 renamed <code>script</code> to <code>bytecode</code> and reserves <em>function</em> for internal, non-entry functions, so the old names described a shape the compiler no longer has. <code>CompiledContract.state_layout</code> is now <code>CompiledContract.state_span</code>, still a <code>(offset, len)</code> pair — it names the same two numbers as the portable artifact's <code>compiled.state_span</code> and as <code>ContractArtifact.state_span</code>, so one spelling covers the attribute and the JSON key alike. The <code>script</code>, <code>utxo_script</code>, and <code>signature_script</code> keys accepted by <code>debug_call(tx=...)</code> are unrelated: they are raw script bytes, matching <code>ScriptPublicKey.script</code>, and are unchanged.</li>
+<li><strong>Affects <code>2.0.2rc1</code> only.</strong> <code>kaspa.experimental.silverscript</code> first appeared in the <code>2.0.2rc1</code> pre-release, which also exposed <code>CompiledContract.without_selector</code> (removed — SilverScript 1.0 gives every entrypoint an unconditional dispatch tag) and produced different <code>template_hash</code> values (BLAKE2b-256 to BLAKE3) and different signature-script bytes. <strong>A contract deployed against <code>2.0.2rc1</code> therefore has a different P2SH address under this release, and a UTXO locked by an rc1 script cannot be spent with a signature script built here.</strong> The module is experimental; its API may change in breaking ways between releases.</li>
 <li>The <code>covenants_enabled</code> argument of <code>ScriptBuilder()</code> and <code>ScriptBuilder.from_script()</code> is deprecated and ignored, and the <code>ScriptBuilder.covenants_enabled</code> property is deprecated and always <code>True</code>. rusty-kaspa removed the flag along with the pre-Toccata script limits now that Toccata is active on every network, so every builder gets the covenant opcodes, explicit push opcodes, and the post-Toccata limits (1,000,000-byte script and element size, 1,000,000 ops) — a default <code>ScriptBuilder()</code> now accepts pushes over 520 bytes. Passing the argument (either value) or reading the property emits a <code>DeprecationWarning</code>; both will be removed in a future major version. Mirrors the WASM SDK, where <code>ScriptBuilderFlags.covenantsEnabled</code> is now a deprecated no-op.</li>
 </ul>
 <h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
@@ -15255,7 +15317,7 @@
 <ul>
 <li>The crate is now a Cargo workspace with three members: the core <code>kaspa</code> crate, <code>crates/silverscript</code> (the SilverScript bindings — a second <code>cdylib</code> with its own isolated rusty-kaspa dependency graph), and <code>crates/core</code> (<code>kaspa-python-sdk-core</code>, a dependency-light crate sharing the <code>create_py_exception!</code> macro between the two). The SilverScript bindings are injected into the wheel under <code>kaspa/experimental/silverscript/</code>.</li>
 <li>Bumped the pinned <code>rusty-kaspa</code> dependency for the core <code>kaspa</code> module from <code>cfafeb4c0</code> (v2.0.1) to <code>c338d49</code> (master). The range adds the <code>kaspa-txscript-zk-sdk</code> crate backing the new ZK bindings — pulling in <code>risc0-zkvm</code> and <code>borsh</code> as direct dependencies for decoding RISC Zero receipts — along with Windows link fixes for the ZK precompiles (kaspa-txscript enables risc0-zkvm-platform <code>export-syscalls</code> on Windows, resolving LNK2019). It also carries the Toccata cleanup series (upstream #1082-#1089, #1101), which drops the fork gates now that Toccata is active on every network: <code>EngineFlags::covenants_enabled</code>, the pre-Toccata script limits, the forked block version, and the pre-Toccata sigop counter are all gone. The Python-visible consequences are recorded under Changed (the <code>covenants_enabled</code> deprecation) and Fixed (the <code>SighashType</code> mapping); the remainder is consensus, mempool, and P2P internals with no Python-visible effect — mass and fee parameters (<code>mass_per_tx_byte</code>, <code>mass_per_script_pub_key_byte</code>, <code>mass_per_sig_op</code>, <code>storage_mass_parameter</code>) and opcode script-unit pricing are unchanged, and no RPC types changed.</li>
-<li>The SilverScript member pins <code>silverscript-lang</code> at <code>2a3961ca</code>, which tracks rusty-kaspa tag <code>v2.0.1</code> — the same upstream line as the core module, though still built as two isolated dependency graphs / extension modules.</li>
+<li>The SilverScript member pins <code>silverscript-lang</code>, <code>silverscript-abi</code>, and <code>debugger-session</code> at <code>3ed9733</code> (SilverScript <code>v1.0.0</code>), which tracks rusty-kaspa <code>a41a333b</code> — an ancestor of the core module's <code>c338d49</code>, so the two members resolve isolated dependency graphs. SilverScript 1.0 raises the Rust MSRV to 1.94.0.</li>
 </ul>
 <h2 id="201-2026-06-18">[2.0.1] - 2026-06-18<a class="headerlink" href="#201-2026-06-18" title="Permanent link">&para;</a></h2>
 <h3 id="added_1">Added<a class="headerlink" href="#added_1" title="Permanent link">&para;</a></h3>

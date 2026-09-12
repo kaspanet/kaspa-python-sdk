@@ -13647,6 +13647,8 @@
       
         
       
+        
+      
     
     
     
@@ -13727,6 +13729,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../reference/SilverScript/Classes/ContractArtifact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ContractArtifact
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../reference/SilverScript/Classes/DebugCallResult/" class="md-nav__link">
         
   
@@ -13763,6 +13793,34 @@
     
   
     DebugVariable
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/SilverScript/Classes/EntryAbi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    EntryAbi
   
 
     
@@ -13839,42 +13897,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/SilverScript/Classes/FunctionAbiEntry/" class="md-nav__link">
+      <a href="../../reference/SilverScript/Classes/ParamAbi/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    FunctionAbiEntry
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../reference/SilverScript/Classes/FunctionInputAbi/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    FunctionInputAbi
+    ParamAbi
   
 
     
@@ -14029,6 +14059,8 @@
       
         
       
+        
+      
     
     
     
@@ -14117,6 +14149,34 @@
     
   
     debug_call
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/SilverScript/Functions/load_artifact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    load_artifact
   
 
     
@@ -14855,6 +14915,18 @@
 <li>Appends RPC TypedDicts from <code>kaspa_rpc.pyi</code> (manually maintained)</li>
 <li>Outputs <code>python/kaspa/__init__.pyi</code> and <code>python/kaspa/exceptions/__init__.pyi</code></li>
 </ol>
+<p>The SilverScript bindings have their own generator
+(<code>crates/silverscript/src/bin/stub_gen.rs</code>) writing
+<code>python/kaspa/experimental/silverscript/__init__.pyi</code>. CI regenerates that stub
+and fails if the committed copy differs, so two things are worth knowing:</p>
+<ul>
+<li><code>pyo3-stub-gen</code> embeds Rust doc comments in the stub, so <strong>editing a doc
+  comment in <code>crates/silverscript/</code> makes the stub stale</strong>. Re-run <code>./build-dev</code>
+  and commit the regenerated <code>.pyi</code> in the same change.</li>
+<li><code>pyo3-stub-gen</code> is a caret requirement. <code>Cargo.lock</code> pins it, so CI is
+  deterministic, but a <code>cargo update</code> that bumps it can reformat every stub at
+  once. Regenerate and review in a standalone commit if that happens.</li>
+</ul>
 <h3 id="api-reference-generation">API Reference Generation<a class="headerlink" href="#api-reference-generation" title="Permanent link">&para;</a></h3>
 <p>At docs build time (<code>mkdocs build</code> or <code>mkdocs serve</code>):</p>
 <ol>

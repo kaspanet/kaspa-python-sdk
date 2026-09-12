@@ -13799,6 +13799,8 @@
       
         
       
+        
+      
     
     
     
@@ -13879,6 +13881,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../reference/SilverScript/Classes/ContractArtifact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ContractArtifact
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../reference/SilverScript/Classes/DebugCallResult/" class="md-nav__link">
         
   
@@ -13915,6 +13945,34 @@
     
   
     DebugVariable
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/SilverScript/Classes/EntryAbi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    EntryAbi
   
 
     
@@ -13991,42 +14049,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../reference/SilverScript/Classes/FunctionAbiEntry/" class="md-nav__link">
+      <a href="../../../reference/SilverScript/Classes/ParamAbi/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    FunctionAbiEntry
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../reference/SilverScript/Classes/FunctionInputAbi/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    FunctionInputAbi
+    ParamAbi
   
 
     
@@ -14181,6 +14211,8 @@
       
         
       
+        
+      
     
     
     
@@ -14269,6 +14301,34 @@
     
   
     debug_call
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/SilverScript/Functions/load_artifact/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    load_artifact
   
 
     
@@ -14806,7 +14866,7 @@ a recording of every step along the way
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">GUARD</span> <span class="o">=</span> <span class="s2">"""</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="s2">pragma silverscript ^0.1.0;</span>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="s2">contract Guard(int threshold) {</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="s2">    entrypoint function check(int amount) {</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="s2">    entry check(int amount) {</span>
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="s2">        int margin = amount - threshold;</span>
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="s2">        require(margin &gt; 0);</span>
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="s2">    }</span>
@@ -14830,7 +14890,8 @@ a recording of every step along the way
 <a href="../../../reference/SilverScript/Classes/DebugCallResult/"><code>DebugCallResult</code></a>,
 not raised; only usage errors (bad source, unknown entrypoint, a
 malformed <code>tx</code> scenario) raise <code>SilverScriptError</code>. When
-<code>function_name</code> is omitted the contract's first entrypoint is called.</p>
+<code>function_name</code> is omitted the contract's first entrypoint <em>in source
+order</em> is called — not <code>abi[0]</code>, which is ordered by name.</p>
 <h2 id="the-failure-report">The failure report<a class="headerlink" href="#the-failure-report" title="Permanent link">&para;</a></h2>
 <p><code>result.failure</code> is a
 <a href="../../../reference/SilverScript/Classes/FailureReport/"><code>FailureReport</code></a>:
@@ -14883,24 +14944,59 @@ including the failing statement, alongside the failure report — the
 whole history, not just the crash site. Calls into helper functions
 are traced through, statement by statement, like the frames of the
 failure report. Tracing changes what is recorded, not what executes.</p>
-<p>One limitation, shared with the upstream CLI debugger: covenant
-transition calls record no per-statement pauses — the engine verifies
-their bodies as a whole, so the trace of a transition is empty. The
-<a href="#the-failure-report">failure report</a> still decodes the transition's
-variables (<code>prev_state</code>, arguments) when it fails.</p>
+<p>One statement never shows up, in the upstream CLI debugger either: a
+covenant transition's <code>return(State { ... })</code>. The engine verifies the
+state it produces as a whole rather than stepping it. Everything ahead
+of that return traces normally:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">TRANSITION</span> <span class="o">=</span> <span class="s2">"""pragma silverscript ^0.1.0;</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="s2">contract Counter(int init_count) {</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="s2">    int count = init_count;</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="s2">    #[covenant(binding = auth, from = 1, to = 1, mode = transition)]</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="s2">    function add(State prev_state, int amount) : (State) {</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="s2">        int next = prev_state.count + amount;</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="s2">        require(next &gt;= 0);</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="s2">        return(State { count: next });</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="s2">    }</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="s2">}</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="s2">"""</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="n">COVENANT_ID</span> <span class="o">=</span> <span class="s2">"0x"</span> <span class="o">+</span> <span class="s2">"11"</span> <span class="o">*</span> <span class="mi">32</span>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="n">result</span> <span class="o">=</span> <span class="n">silverscript</span><span class="o">.</span><span class="n">debug_call</span><span class="p">(</span>
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>    <span class="n">TRANSITION</span><span class="p">,</span> <span class="s2">"add"</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">constructor_args</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">trace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>    <span class="n">tx</span><span class="o">=</span><span class="p">{</span>
+</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>        <span class="s2">"inputs"</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"utxo_value"</span><span class="p">:</span> <span class="mi">5000</span><span class="p">,</span> <span class="s2">"covenant_id"</span><span class="p">:</span> <span class="n">COVENANT_ID</span><span class="p">}],</span>
+</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>        <span class="s2">"outputs"</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"value"</span><span class="p">:</span> <span class="mi">5000</span><span class="p">,</span> <span class="s2">"covenant_id"</span><span class="p">:</span> <span class="n">COVENANT_ID</span><span class="p">,</span>
+</span><span id="__span-5-18"><a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>                     <span class="s2">"constructor_args"</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">]}],</span>
+</span><span id="__span-5-19"><a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>    <span class="p">},</span>
+</span><span id="__span-5-20"><a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a><span class="p">)</span>
+</span><span id="__span-5-21"><a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a><span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">trace</span><span class="p">:</span>
+</span><span id="__span-5-22"><a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">line</span><span class="p">,</span> <span class="n">step</span><span class="o">.</span><span class="n">statement</span><span class="p">)</span>
+</span><span id="__span-5-23"><a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a><span class="c1"># 6 int next = prev_state.count + amount;</span>
+</span><span id="__span-5-24"><a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a><span class="c1"># 1 pragma silverscript ^0.1.0;</span>
+</span><span id="__span-5-25"><a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a><span class="c1"># 7 require(next &gt;= 0);</span>
+</span></code></pre></div>
+<p>So a transition whose body is only that return — as in the
+<a href="../covenants/#worked-example-counter">Counter walkthrough</a> — traces to
+nothing at all. The <a href="#the-failure-report">failure report</a> still decodes
+the transition's variables (<code>prev_state</code>, arguments) when it fails,
+return statement included.</p>
+<p>The entry at line 1 is a pause the engine reports with no source span,
+which renders as the first line of the file. The upstream CLI debugger
+highlights that same line there, so <code>debug_call</code> records the step rather
+than hiding one the CLI would show; filter on <code>line == 1</code> if a
+transition's trace is being read programmatically.</p>
 <h2 id="the-transaction-scenario">The transaction scenario<a class="headerlink" href="#the-transaction-scenario" title="Permanent link">&para;</a></h2>
 <p>Contracts that introspect the spending transaction (<code>tx.outputs</code>,
 covenant state) need a transaction to introspect. By default
 <code>debug_call</code> synthesizes a minimal one — a single 5000-sompi contract
 input and a single 5000-sompi output. Pass <code>tx</code> to control the shape:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">result</span> <span class="o">=</span> <span class="n">silverscript</span><span class="o">.</span><span class="n">debug_call</span><span class="p">(</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="n">ANNOUNCEMENT</span><span class="p">,</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="s2">"announce"</span><span class="p">,</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">tx</span><span class="o">=</span><span class="p">{</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>        <span class="s2">"inputs"</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"utxo_value"</span><span class="p">:</span> <span class="mi">5000</span><span class="p">}],</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>        <span class="s2">"outputs"</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"value"</span><span class="p">:</span> <span class="mi">0</span><span class="p">}],</span>
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="p">},</span>
-</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">result</span> <span class="o">=</span> <span class="n">silverscript</span><span class="o">.</span><span class="n">debug_call</span><span class="p">(</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    <span class="n">ANNOUNCEMENT</span><span class="p">,</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    <span class="s2">"announce"</span><span class="p">,</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    <span class="n">tx</span><span class="o">=</span><span class="p">{</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>        <span class="s2">"inputs"</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"utxo_value"</span><span class="p">:</span> <span class="mi">5000</span><span class="p">}],</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>        <span class="s2">"outputs"</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"value"</span><span class="p">:</span> <span class="mi">0</span><span class="p">}],</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    <span class="p">},</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="p">)</span>
 </span></code></pre></div>
 <p>The scenario dict accepts <code>version</code> (default 1), <code>lock_time</code>
 (default 0), <code>active_input_index</code> (which input's spend is being
@@ -14935,28 +15031,28 @@ parameter is synthesized from the scenario's output states. Only
 outputs that carry a covenant binding count toward that synthesis, so
 scenarios with additional plain outputs (change, payments) behave as
 they would on-chain:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">COVENANT_ID</span> <span class="o">=</span> <span class="s2">"11"</span> <span class="o">*</span> <span class="mi">32</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">result</span> <span class="o">=</span> <span class="n">silverscript</span><span class="o">.</span><span class="n">debug_call</span><span class="p">(</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    <span class="n">COUNTER</span><span class="p">,</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="s2">"add"</span><span class="p">,</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    <span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    <span class="n">constructor_args</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>    <span class="n">tx</span><span class="o">=</span><span class="p">{</span>
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>        <span class="s2">"inputs"</span><span class="p">:</span> <span class="p">[</span>
-</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>            <span class="p">{</span><span class="s2">"utxo_value"</span><span class="p">:</span> <span class="mi">5000</span><span class="p">,</span> <span class="s2">"covenant_id"</span><span class="p">:</span> <span class="n">COVENANT_ID</span><span class="p">,</span> <span class="s2">"state"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"count"</span><span class="p">:</span> <span class="mi">10</span><span class="p">}}</span>
-</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>        <span class="p">],</span>
-</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>        <span class="s2">"outputs"</span><span class="p">:</span> <span class="p">[</span>
-</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>            <span class="p">{</span>
-</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>                <span class="s2">"value"</span><span class="p">:</span> <span class="mi">5000</span><span class="p">,</span>
-</span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>                <span class="s2">"covenant_id"</span><span class="p">:</span> <span class="n">COVENANT_ID</span><span class="p">,</span>
-</span><span id="__span-6-16"><a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>                <span class="s2">"authorizing_input"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-</span><span id="__span-6-17"><a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>                <span class="s2">"state"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"count"</span><span class="p">:</span> <span class="mi">15</span><span class="p">},</span>
-</span><span id="__span-6-18"><a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a>            <span class="p">}</span>
-</span><span id="__span-6-19"><a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a>        <span class="p">],</span>
-</span><span id="__span-6-20"><a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a>    <span class="p">},</span>
-</span><span id="__span-6-21"><a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a><span class="p">)</span>
-</span><span id="__span-6-22"><a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a><span class="n">result</span><span class="o">.</span><span class="n">success</span>   <span class="c1"># True — 10 + 5 == 15</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">COVENANT_ID</span> <span class="o">=</span> <span class="s2">"11"</span> <span class="o">*</span> <span class="mi">32</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">result</span> <span class="o">=</span> <span class="n">silverscript</span><span class="o">.</span><span class="n">debug_call</span><span class="p">(</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    <span class="n">COUNTER</span><span class="p">,</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>    <span class="s2">"add"</span><span class="p">,</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>    <span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>    <span class="n">constructor_args</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>    <span class="n">tx</span><span class="o">=</span><span class="p">{</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>        <span class="s2">"inputs"</span><span class="p">:</span> <span class="p">[</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>            <span class="p">{</span><span class="s2">"utxo_value"</span><span class="p">:</span> <span class="mi">5000</span><span class="p">,</span> <span class="s2">"covenant_id"</span><span class="p">:</span> <span class="n">COVENANT_ID</span><span class="p">,</span> <span class="s2">"state"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"count"</span><span class="p">:</span> <span class="mi">10</span><span class="p">}}</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>        <span class="p">],</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>        <span class="s2">"outputs"</span><span class="p">:</span> <span class="p">[</span>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>            <span class="p">{</span>
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>                <span class="s2">"value"</span><span class="p">:</span> <span class="mi">5000</span><span class="p">,</span>
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a>                <span class="s2">"covenant_id"</span><span class="p">:</span> <span class="n">COVENANT_ID</span><span class="p">,</span>
+</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>                <span class="s2">"authorizing_input"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+</span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a>                <span class="s2">"state"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"count"</span><span class="p">:</span> <span class="mi">15</span><span class="p">},</span>
+</span><span id="__span-7-18"><a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a>            <span class="p">}</span>
+</span><span id="__span-7-19"><a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a>        <span class="p">],</span>
+</span><span id="__span-7-20"><a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a>    <span class="p">},</span>
+</span><span id="__span-7-21"><a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a><span class="p">)</span>
+</span><span id="__span-7-22"><a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a><span class="n">result</span><span class="o">.</span><span class="n">success</span>   <span class="c1"># True — 10 + 5 == 15</span>
 </span></code></pre></div>
 <p>Change the output state to <code>{"count": 14}</code> and the run fails, with the
 report showing <code>prev_state = {count: 10}</code> and <code>amount = 5</code> — the
