@@ -3062,7 +3062,7 @@ dependencies = [
 
 [[package]]
 name = "kaspa-python-sdk"
-version = "2.0.2-rc.1"
+version = "2.0.2-rc.2"
 dependencies = [
  "ahash",
  "bincode",
@@ -3104,11 +3104,11 @@ dependencies = [
 
 [[package]]
 name = "kaspa-python-sdk-core"
-version = "2.0.2-rc.1"
+version = "2.0.2-rc.2"
 
 [[package]]
 name = "kaspa-python-sdk-silverscript"
-version = "2.0.2-rc.1"
+version = "2.0.2-rc.2"
 dependencies = [
  "debugger-session",
  "kaspa-consensus-core 2.0.1 (git+https://github.com/kaspanet/rusty-kaspa?rev=a41a333b08848f41bf737b72592e463a6011b8ac)",
