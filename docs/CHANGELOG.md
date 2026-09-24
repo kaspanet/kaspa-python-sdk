@@ -5,7 +5,7 @@ search:
 
 ## [Unreleased]
 
-*Target: 2.1.0*
+## [2.1.0] - 2026-09-24
 
 ### Added
 - **SilverScript compiler bindings** in the new `kaspa.experimental.silverscript` module. The module is experimental and its API may change between releases. See the [SilverScript guide](learn/silverscript/overview.md).
