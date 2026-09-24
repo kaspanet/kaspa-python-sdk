@@ -94,7 +94,9 @@ impl PyPrivateKey {
             .map_err(|_| PyException::new_err("Failed to derive public key"))?;
         let (x_only_public_key, _) = public_key.public_key.unwrap().x_only_public_key();
         let payload = x_only_public_key.serialize();
-        let address = Address::new(NetworkType::from(network).into(), Version::PubKey, &payload);
+        let address =
+            Address::try_new(NetworkType::from(network).into(), Version::PubKey, &payload)
+                .map_err(|err| PyException::new_err(err.to_string()))?;
         Ok(address.into())
     }
 
@@ -117,11 +119,12 @@ impl PyPrivateKey {
             .to_public_key()
             .map_err(|_| PyException::new_err("Failed to derive public key"))?;
         let payload = public_key.public_key.unwrap().serialize();
-        let address = Address::new(
+        let address = Address::try_new(
             NetworkType::from(network).into(),
             Version::PubKeyECDSA,
             &payload,
-        );
+        )
+        .map_err(|err| PyException::new_err(err.to_string()))?;
         Ok(address.into())
     }
 

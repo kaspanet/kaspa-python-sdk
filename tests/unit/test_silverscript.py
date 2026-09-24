@@ -1049,7 +1049,7 @@ class TestCrossModule:
         return _kaspa.address_from_script_public_key(spk, "testnet").to_string()
 
     def test_compiled_script_wraps_into_p2sh_address(self):
-        # silverscript (@v2.0.1) bytes consumed by the core (@c338d49) module:
+        # silverscript (@v2.0.1) bytes consumed by the core (@v2.1.0) module:
         # the whole architecture rests on this handoff working.
         assert self._address(100).startswith("kaspatest:")
 
