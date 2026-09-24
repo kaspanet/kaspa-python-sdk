@@ -2,7 +2,7 @@
 # NOT a maturin build project.
 [project]
 name = "kaspa-python-sdk-silverscript"
-version = "2.0.2rc2"
+version = "2.1.0"
 
 [tool.maturin]
 module-name = "kaspa.experimental.silverscript"
