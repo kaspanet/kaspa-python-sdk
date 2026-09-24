@@ -81,7 +81,8 @@ impl PyKeypair {
         #[gen_stub(override_type(type_repr = "str | NetworkType"))] network: PyNetworkType,
     ) -> PyResult<PyAddress> {
         let payload = &self.xonly_public_key.serialize();
-        let address = Address::new(NetworkType::from(network).into(), Version::PubKey, payload);
+        let address = Address::try_new(NetworkType::from(network).into(), Version::PubKey, payload)
+            .map_err(|err| PyException::new_err(err.to_string()))?;
         Ok(address.into())
     }
 
@@ -97,11 +98,12 @@ impl PyKeypair {
         #[gen_stub(override_type(type_repr = "str | NetworkType"))] network: PyNetworkType,
     ) -> PyResult<PyAddress> {
         let payload = &self.public_key.serialize();
-        let address = Address::new(
+        let address = Address::try_new(
             NetworkType::from(network).into(),
             Version::PubKeyECDSA,
             payload,
-        );
+        )
+        .map_err(|err| PyException::new_err(err.to_string()))?;
         Ok(address.into())
     }
 

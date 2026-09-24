@@ -7,6 +7,22 @@ import pytest
 from kaspa import Address, PublicKey, ScriptPublicKey, pay_to_address_script, address_from_script_public_key
 from tests.conftest import TEST_MAINNET_ADDRESS
 
+# Well-formed bech32 (valid checksum) but malformed payload: the wrong number of
+# bytes for the version byte, a version byte with no payload, or nothing but the
+# checksum. rusty-kaspa before v2.1.0 panicked on these, which reached Python as
+# an uncatchable `pyo3_runtime.PanicException` from both `Address()` and
+# `Address.validate()`.
+MALFORMED_PAYLOAD_ADDRESSES = [
+    pytest.param("kaspa:qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqhsc8uvq", id="pubkey-20-byte-payload"),
+    pytest.param(
+        "kaspa:qyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqee0teys",
+        id="ecdsa-32-byte-payload",
+    ),
+    pytest.param("kaspa:qq675gp8rh", id="version-byte-only"),
+    pytest.param("kaspa:3xjng3c9", id="checksum-only"),
+    pytest.param("kaspatest:qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqskrcy8zz", id="testnet-20-byte-payload"),
+]
+
 
 class TestAddressCreation:
     """Tests for Address construction and validation."""
@@ -36,6 +52,17 @@ class TestAddressCreation:
     def test_validate_invalid_address_returns_false(self):
         """Test that validate() returns False for an invalid address."""
         assert Address.validate("invalid_address") is False
+
+    @pytest.mark.parametrize("address_str", MALFORMED_PAYLOAD_ADDRESSES)
+    def test_malformed_payload_raises(self, address_str):
+        """A valid checksum over a wrong-length payload is an error, not a panic."""
+        with pytest.raises(Exception, match="payload"):
+            Address(address_str)
+
+    @pytest.mark.parametrize("address_str", MALFORMED_PAYLOAD_ADDRESSES)
+    def test_validate_malformed_payload_returns_false(self, address_str):
+        """validate() returns False, rather than panicking, for a wrong-length payload."""
+        assert Address.validate(address_str) is False
 
 
 class TestAddressProperties:
