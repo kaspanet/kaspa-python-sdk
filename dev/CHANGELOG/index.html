@@ -14566,7 +14566,18 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="[Unreleased]">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#210-2026-09-24" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [2.1.0] - 2026-09-24
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[2.1.0] - 2026-09-24">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -14931,7 +14942,18 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="[Unreleased]">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#210-2026-09-24" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [2.1.0] - 2026-09-24
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[2.1.0] - 2026-09-24">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -15284,42 +15306,49 @@
   <h1>Changelog</h1>
 
 <h2 id="unreleased">[Unreleased]<a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
-<p><em>Target: 2.1.0</em></p>
+<h2 id="210-2026-09-24">[2.1.0] - 2026-09-24<a class="headerlink" href="#210-2026-09-24" title="Permanent link">&para;</a></h2>
 <h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
 <ul>
-<li>New <code>kaspa.experimental.silverscript</code> module — compile <a href="https://github.com/kaspanet/silverscript">SilverScript</a> (v1.0.0) contract source from Python. <code>compile()</code> returns a <code>CompiledContract</code> exposing the locking script (<code>bytecode</code>), ABI, state layout, and <code>template_hash</code>, plus <code>build_sig_script()</code> / <code>build_sig_script_for_covenant_decl()</code> for unlocking scripts. Each <code>EntryAbi</code> in the ABI carries the entrypoint's <code>name</code>, <code>params</code>, and four-byte <code>dispatch_tag</code>. <code>artifact_json()</code> returns the contract's portable ABI artifact as JSON — for the same source and constructor arguments this is byte-for-byte what the upstream <code>silverc</code> compiler writes, so artifacts are interchangeable between the two. <code>load_artifact()</code> reads that JSON back into a <code>ContractArtifact</code> — the same <code>bytecode</code>, <code>template_hash</code>, <code>state_span</code>, <code>abi</code> and <code>build_sig_script()</code> / <code>build_sig_script_for_covenant_decl()</code>, with no source and no compiler, so a contract can be compiled once in CI and its artifact shipped in place of its source. <code>ContractArtifact.check_consistency()</code> verifies an artifact's recorded template hash, state span and dispatch tags against its own bytecode, and <code>to_json()</code> serializes it back. On both classes <code>abi</code> is ordered alphabetically by entrypoint name, and <code>entry(name)</code> looks up a single entrypoint's <code>EntryAbi</code> directly, raising <code>SilverScriptError</code> for a name the contract doesn't declare.</li>
-<li>Example under <code>examples/silverscript/</code> — a Counter covenant run live on testnet-10, one transaction at a time: genesis, then permissionless <code>add</code>/<code>subtract</code> state transitions.</li>
-<li>Class <code>ZkScriptBuilder</code> exposed to Python. Staged builder that turns RISC Zero zero-knowledge proofs into Kaspa transaction scripts, mirroring the WASM SDK: <code>new_r0()</code>, <code>commit_to_groth16()</code> / <code>commit_to_succinct()</code>, and <code>finalize_with_groth16_proof()</code> / <code>finalize_with_succinct_proof()</code>, plus fragment methods for composing scripts by hand (<code>add_data</code>, <code>push_r0_groth16_proof</code>, <code>push_r0_succinct_witness</code>, and <code>append_r0_groth16_verifier</code> / <code>append_r0_succinct_verifier</code> with their <code>*_with_fixed_journal</code> variants). <code>append_r0_groth16_verifier_dynamic_image_id()</code> is the same r0-over-groth16 verifier with the image id taken from the stack (<code>[..., journal_hash, compressed_proof, image_id]</code>) instead of baked into the script, so <code>append_r0_groth16_verifier(image_id)</code> is exactly <code>add_data(image_id)</code> followed by it; mirrors the WASM SDK's <code>appendR0Groth16VerifierDynamicImageId</code>. The produced P2SH scripts lock a UTXO behind on-chain verification of a specific proof (by image id, and optionally a fixed journal) via the <code>OpZkPrecompile</code> opcode. <code>new_r0()</code> also accepts the deprecated, ignored <code>covenants_enabled</code> argument described under Changed.</li>
-<li>Class <code>FinalizedR0Script</code> exposed to Python. The result of finalizing a <code>ZkScriptBuilder</code>, with <code>sig_script</code> and <code>redeem_script</code> properties.</li>
-<li>Class <code>R0SuccinctWitnessParts</code> exposed to Python. The receipt-derived succinct witness items (<code>claim</code>, <code>control_index</code>, <code>control_digests</code>, <code>seal</code>) in verifier order.</li>
-<li>Functions <code>prepare_r0_groth16_proof()</code> and <code>prepare_r0_succinct_witness()</code> exposed to Python. Convert a RISC Zero receipt into the proof / witness pushes for composing sig scripts by hand.</li>
-<li>Exception <code>ZkError</code> added to <code>kaspa.exceptions</code>, raised by the ZK bindings.</li>
-<li>Example under <code>examples/zk/</code> demonstrating a fully on-chain Groth16 commit→redeem round-trip.</li>
-<li>Function <code>compute_sighash()</code> exposed to Python. Computes the signature hash (sighash) for a transaction input.</li>
-<li>Function <code>debug_call()</code> added to <code>kaspa.experimental.silverscript</code>, with result classes <code>DebugCallResult</code>, <code>FailureReport</code>, <code>FailureFrame</code>, <code>DebugVariable</code>, and <code>TraceStep</code>. Simulates a contract entrypoint call locally through SilverScript's source-level debug engine (the engine behind the upstream CLI debugger) and runs it to completion — no stepping or breakpoints. Omitting <code>function_name</code> calls the contract's first entrypoint in source order — not <code>abi[0]</code>, which is ordered by name. The <code>tx</code> argument describes the transaction the call is simulated in (inputs, outputs, covenant bindings and states), so covenant transitions and <code>tx</code> introspection can be debugged without a node. With <code>trace=True</code> the result additionally carries a per-statement execution trace (<code>TraceStep</code>: source line, statement text, enclosing function, and the variables in scope when the statement was reached). One statement is never traced: a covenant transition's <code>return(State { ... })</code>, whose produced state the engine verifies as a whole rather than stepping — so a transition body that is only that return traces to nothing, while its other statements trace normally.</li>
+<li><strong>SilverScript compiler bindings</strong> in the new <code>kaspa.experimental.silverscript</code> module. The module is experimental and its API may change between releases. See the <a href="../learn/silverscript/overview/">SilverScript guide</a>.<ul>
+<li><code>compile()</code> compiles <a href="https://github.com/kaspanet/silverscript">SilverScript</a> v1.0.0 contract source. It returns a <code>CompiledContract</code> with the locking script (<code>bytecode</code>), the ABI, the <code>state_span</code>, and the <code>template_hash</code>.</li>
+<li><code>build_sig_script()</code> and <code>build_sig_script_for_covenant_decl()</code> build the unlocking script for an entrypoint.</li>
+<li><code>artifact_json()</code> exports the portable ABI artifact. For the same source and constructor arguments it is byte-for-byte what the upstream <code>silverc</code> compiler writes.</li>
+<li><code>load_artifact()</code> reads that JSON back into a <code>ContractArtifact</code>, with no source and no compiler. <code>check_consistency()</code> verifies the artifact against its own bytecode, and <code>to_json()</code> serializes it again.</li>
+<li><code>entry(name)</code> looks up one entrypoint's <code>EntryAbi</code> (<code>name</code>, <code>params</code>, <code>dispatch_tag</code>). It raises <code>SilverScriptError</code> for a name the contract does not declare.</li>
+<li><code>debug_call()</code> runs an entrypoint through SilverScript's source-level debug engine, with no node needed. It returns a <code>DebugCallResult</code>, with a <code>FailureReport</code> when the call fails. With <code>trace=True</code> the result also carries a per-statement <code>TraceStep</code> trace. The <code>tx</code> argument describes the surrounding transaction, so covenant transitions can be debugged too.</li>
+<li><code>SilverScriptError</code> exception.</li>
+</ul>
+</li>
+<li><strong>ZK script bindings</strong> for locking a UTXO behind on-chain verification of a RISC Zero proof through the <code>OpZkPrecompile</code> opcode. Mirrors the WASM SDK. See the <a href="../learn/zk/overview/">ZK guide</a>.<ul>
+<li><code>ZkScriptBuilder</code> with <code>new_r0()</code>, <code>commit_to_groth16()</code> / <code>commit_to_succinct()</code>, and <code>finalize_with_groth16_proof()</code> / <code>finalize_with_succinct_proof()</code>.</li>
+<li>Fragment methods for composing scripts by hand: <code>add_data()</code>, <code>push_r0_groth16_proof()</code>, <code>push_r0_succinct_witness()</code>, <code>append_r0_groth16_verifier()</code>, <code>append_r0_succinct_verifier()</code>, their <code>*_with_fixed_journal</code> variants, and <code>append_r0_groth16_verifier_dynamic_image_id()</code>.</li>
+<li><code>FinalizedR0Script</code> (<code>sig_script</code>, <code>redeem_script</code>) and <code>R0SuccinctWitnessParts</code> (<code>claim</code>, <code>control_index</code>, <code>control_digests</code>, <code>seal</code>).</li>
+<li><code>prepare_r0_groth16_proof()</code> and <code>prepare_r0_succinct_witness()</code> convert a RISC Zero receipt into script pushes.</li>
+<li><code>ZkError</code> exception in <code>kaspa.exceptions</code>.</li>
+</ul>
+</li>
+<li><code>compute_sighash()</code> computes the signature hash for a transaction input.</li>
+<li>Two on-chain examples: <code>examples/silverscript/counter.py</code> runs a Counter covenant on testnet-10, and <code>examples/zk/groth16_onchain.py</code> does a Groth16 commit and redeem round trip.</li>
 </ul>
 <h3 id="changed">Changed<a class="headerlink" href="#changed" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong><code>kaspa.experimental.silverscript</code> (experimental): renamed to match SilverScript v1.0 vocabulary.</strong> <code>CompiledContract.script</code> is now <code>CompiledContract.bytecode</code>; <code>FunctionAbiEntry</code> / <code>FunctionInputAbi</code> are now <code>EntryAbi</code> / <code>ParamAbi</code>; <code>EntryAbi.inputs</code> is now <code>EntryAbi.params</code>. SilverScript 1.0 renamed <code>script</code> to <code>bytecode</code> and reserves <em>function</em> for internal, non-entry functions, so the old names described a shape the compiler no longer has. <code>CompiledContract.state_layout</code> is now <code>CompiledContract.state_span</code>, still a <code>(offset, len)</code> pair — it names the same two numbers as the portable artifact's <code>compiled.state_span</code> and as <code>ContractArtifact.state_span</code>, so one spelling covers the attribute and the JSON key alike. The <code>script</code>, <code>utxo_script</code>, and <code>signature_script</code> keys accepted by <code>debug_call(tx=...)</code> are unrelated: they are raw script bytes, matching <code>ScriptPublicKey.script</code>, and are unchanged.</li>
-<li><strong>Affects <code>2.0.2rc1</code> only.</strong> <code>kaspa.experimental.silverscript</code> first appeared in the <code>2.0.2rc1</code> pre-release, which also exposed <code>CompiledContract.without_selector</code> (removed — SilverScript 1.0 gives every entrypoint an unconditional dispatch tag) and produced different <code>template_hash</code> values (BLAKE2b-256 to BLAKE3) and different signature-script bytes. <strong>A contract deployed against <code>2.0.2rc1</code> therefore has a different P2SH address under this release, and a UTXO locked by an rc1 script cannot be spent with a signature script built here.</strong> The module is experimental; its API may change in breaking ways between releases.</li>
-<li>The <code>covenants_enabled</code> argument of <code>ScriptBuilder()</code> and <code>ScriptBuilder.from_script()</code> is deprecated and ignored, and the <code>ScriptBuilder.covenants_enabled</code> property is deprecated and always <code>True</code>. rusty-kaspa removed the flag along with the pre-Toccata script limits now that Toccata is active on every network, so every builder gets the covenant opcodes, explicit push opcodes, and the post-Toccata limits (1,000,000-byte script and element size, 1,000,000 ops) — a default <code>ScriptBuilder()</code> now accepts pushes over 520 bytes. Passing the argument (either value) or reading the property emits a <code>DeprecationWarning</code>; both will be removed in a future major version. Mirrors the WASM SDK, where <code>ScriptBuilderFlags.covenantsEnabled</code> is now a deprecated no-op.</li>
+<li>The <code>covenants_enabled</code> argument of <code>ScriptBuilder()</code> and <code>ScriptBuilder.from_script()</code> is deprecated and ignored. The <code>ScriptBuilder.covenants_enabled</code> property is deprecated and always <code>True</code>. rusty-kaspa removed the flag now that Toccata is active on every network. Every builder now has the covenant opcodes, the explicit push opcodes, and the post-Toccata limits (1,000,000-byte scripts and elements, 1,000,000 ops), so a default <code>ScriptBuilder()</code> accepts pushes over 520 bytes. Using the argument or the property emits a <code>DeprecationWarning</code>. Both will be removed in a future major version. <code>ZkScriptBuilder.new_r0()</code> accepts the same deprecated argument.</li>
 </ul>
 <h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
 <ul>
-<li><code>UtxoEntry.to_dict()</code> and <code>UtxoEntryReference.to_dict()</code> now emit <code>covenantId</code> as a hex string instead of a <code>Hash</code> object, so dicts containing covenant UTXOs (including <code>Transaction.to_dict()</code> with such inputs) are JSON-serializable. <code>from_dict</code> already accepted either form.</li>
-<li><code>TransactionInput.to_dict()</code> now includes <code>computeBudget</code>, including when nested under <code>Transaction.to_dict()</code>. The field was already accepted by <code>from_dict</code> (defaulting to 0 when omitted) and readable on the object, but omitted on serialize, so a v1 transaction that went through <code>to_dict()</code>, JSON, and <code>from_dict()</code> came back with an effective budget of 0.</li>
-<li><code>requires-python</code> upper bound changed from <code>&lt;=3.14</code> to <code>&lt;3.15</code>. Under PEP 440 version ordering <code>&lt;=3.14</code> excludes every 3.14 patch release (<code>3.14.1</code> and later).</li>
-<li><code>SighashType.AllAnyOneCanPay</code> now maps to the <code>All | AnyOneCanPay</code> hashtype (<code>0x81</code>). Previously it mapped to the bare <code>AnyOneCanPay</code> bit (<code>0x80</code>), which is not a valid hashtype, so <code>create_input_signature</code> and <code>sign_input</code> with that type produced a digest and hashtype byte the script engine rejects. <code>NoneAnyOneCanPay</code> (<code>0x82</code>) and <code>SingleAnyOneCanPay</code> (<code>0x84</code>) were already correct. Upstream fix, rusty-kaspa <code>3563f06ba</code>.</li>
-<li>The type stubs no longer declare <code>UtxoEntries</code> twice. Previously an internal argument-conversion helper emitted a second, <code>__repr__</code>-only declaration that could shadow the real class for type checkers (last declaration wins), hiding every method except <code>__repr__</code>. Parameters that took the helper (<code>utxo_entry_source</code> on <code>create_transaction</code>; <code>entries</code> / <code>priority_entries</code> on <code>Generator</code>, <code>create_transactions</code>, and <code>estimate_transactions</code>) are now annotated <code>typing.Sequence[UtxoEntryReference]</code>, matching what they actually accept — a list, not a <code>UtxoEntries</code> instance.</li>
-<li><code>Address(...)</code> and <code>Address.validate(...)</code> no longer panic on an address string whose checksum is valid but whose payload is the wrong length for its version, or that has no payload at all. Previously both surfaced a <code>pyo3_runtime.PanicException</code> — a <code>BaseException</code>, so <code>except Exception</code> did not catch it and <code>validate</code> raised instead of returning. <code>Address(...)</code> now raises a regular <code>Exception</code> and <code>validate</code> returns <code>False</code>. Upstream fix, rusty-kaspa #1138.</li>
+<li><code>Address(...)</code> and <code>Address.validate(...)</code> no longer panic on an address whose checksum is valid but whose payload has the wrong length for its version, or no payload at all. The panic surfaced as a <code>pyo3_runtime.PanicException</code>, which <code>except Exception</code> does not catch. <code>Address(...)</code> now raises <code>Exception</code> and <code>validate</code> returns <code>False</code>.</li>
+<li><code>SighashType.AllAnyOneCanPay</code> now maps to hashtype <code>0x81</code> (<code>All | AnyOneCanPay</code>). It mapped to the bare <code>AnyOneCanPay</code> bit (<code>0x80</code>), which is not a valid hashtype, so signatures made with it were rejected by the script engine. <code>NoneAnyOneCanPay</code> and <code>SingleAnyOneCanPay</code> were already correct.</li>
+<li><code>TransactionInput.to_dict()</code> now includes <code>computeBudget</code>, also when nested under <code>Transaction.to_dict()</code>. <code>from_dict</code> already accepted the key, but serialization dropped it, so a round trip through JSON reset the budget to 0.</li>
+<li><code>UtxoEntry.to_dict()</code> and <code>UtxoEntryReference.to_dict()</code> now emit <code>covenantId</code> as a hex string instead of a <code>Hash</code> object, so dicts with covenant UTXOs are JSON-serializable. <code>from_dict</code> accepts either form.</li>
+<li>The type stubs no longer declare <code>UtxoEntries</code> twice. The duplicate could hide every method except <code>__repr__</code> from type checkers. The parameters behind it (<code>utxo_entry_source</code> on <code>create_transaction</code>; <code>entries</code> and <code>priority_entries</code> on <code>Generator</code>, <code>create_transactions</code>, and <code>estimate_transactions</code>) are now annotated <code>typing.Sequence[UtxoEntryReference]</code>, which is what they accept.</li>
+<li>The <code>requires-python</code> upper bound is now <code>&lt;3.15</code> instead of <code>&lt;=3.14</code>, which excluded every 3.14 patch release.</li>
 </ul>
 <h3 id="development">Development<a class="headerlink" href="#development" title="Permanent link">&para;</a></h3>
 <p><em>Internal SDK changes — not visible through the Python package API.</em></p>
 <ul>
-<li>The crate is now a Cargo workspace with three members: the core <code>kaspa</code> crate, <code>crates/silverscript</code> (the SilverScript bindings — a second <code>cdylib</code> with its own isolated rusty-kaspa dependency graph), and <code>crates/core</code> (<code>kaspa-python-sdk-core</code>, a dependency-light crate sharing the <code>create_py_exception!</code> macro between the two). The SilverScript bindings are injected into the wheel under <code>kaspa/experimental/silverscript/</code>.</li>
-<li>Bumped the pinned <code>rusty-kaspa</code> dependency for the core <code>kaspa</code> module from <code>cfafeb4c0</code> (v2.0.1) to <code>c338d49</code> (master). The range adds the <code>kaspa-txscript-zk-sdk</code> crate backing the new ZK bindings — pulling in <code>risc0-zkvm</code> and <code>borsh</code> as direct dependencies for decoding RISC Zero receipts — along with Windows link fixes for the ZK precompiles (kaspa-txscript enables risc0-zkvm-platform <code>export-syscalls</code> on Windows, resolving LNK2019). It also carries the Toccata cleanup series (upstream #1082-#1089, #1101), which drops the fork gates now that Toccata is active on every network: <code>EngineFlags::covenants_enabled</code>, the pre-Toccata script limits, the forked block version, and the pre-Toccata sigop counter are all gone. The Python-visible consequences are recorded under Changed (the <code>covenants_enabled</code> deprecation) and Fixed (the <code>SighashType</code> mapping); the remainder is consensus, mempool, and P2P internals with no Python-visible effect — mass and fee parameters (<code>mass_per_tx_byte</code>, <code>mass_per_script_pub_key_byte</code>, <code>mass_per_sig_op</code>, <code>storage_mass_parameter</code>) and opcode script-unit pricing are unchanged, and no RPC types changed.</li>
-<li>Bumped the pinned <code>rusty-kaspa</code> dependency for the core <code>kaspa</code> module to <code>01b532e8</code> (v2.1.0).</li>
-<li>The SilverScript member pins <code>silverscript-lang</code>, <code>silverscript-abi</code>, and <code>debugger-session</code> at <code>3ed9733</code> (SilverScript <code>v1.0.0</code>).</li>
+<li>The crate is now a Cargo workspace with three members: the core <code>kaspa</code> crate, <code>crates/silverscript</code> (a second <code>cdylib</code> with its own rusty-kaspa dependency graph), and <code>crates/core</code> (shared macros). The SilverScript module is injected into the wheel under <code>kaspa/experimental/silverscript/</code>.</li>
+<li>Bumped the pinned <code>rusty-kaspa</code> dependency for the core <code>kaspa</code> module from <code>cfafeb4c0</code> (v2.0.1) to <code>01b532e8</code> (v2.1.0).</li>
+<li>Pinned <code>silverscript-lang</code>, <code>silverscript-abi</code>, and <code>debugger-session</code> at <code>3ed9733</code> (SilverScript v1.0.0).</li>
 </ul>
 <h2 id="201-2026-06-18">[2.0.1] - 2026-06-18<a class="headerlink" href="#201-2026-06-18" title="Permanent link">&para;</a></h2>
 <h3 id="added_1">Added<a class="headerlink" href="#added_1" title="Permanent link">&para;</a></h3>
