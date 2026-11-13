@@ -25,7 +25,7 @@ search:
 ### Development
 *Internal SDK changes — not visible through the Python package API.*
 
-- Bumped the pinned `rusty-kaspa` dependency for the core `kaspa` module from `01b532e8` (v2.1.0) to `4863866f`.
+- Bumped the pinned `rusty-kaspa` dependency for the core `kaspa` module from `01b532e8` (v2.1.0) to `5417ed03`.
 - `crates/silverscript` is now its own Cargo workspace with its own `Cargo.lock`, so its rusty-kaspa revision (pinned by SilverScript) no longer shares a lockfile with the core crate's.
 
 ## [2.1.0] - 2026-09-24
