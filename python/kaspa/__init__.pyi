@@ -5141,9 +5141,6 @@ def calculate_transaction_fee(network_id: NetworkId, tx: Transaction, minimum_si
     r"""
     Calculate the minimum relay fee for an unsigned transaction.
     
-    The fee prices the relay mass (compute and transient) at the network's
-    minimum relay fee rate; storage mass is not part of the relay fee.
-    
     Args:
         network_id: The network identifier.
         tx: The transaction to calculate fee for.
@@ -5159,11 +5156,6 @@ def calculate_transaction_fee(network_id: NetworkId, tx: Transaction, minimum_si
 def calculate_transaction_mass(network_id: NetworkId, tx: Transaction, minimum_signatures: typing.Optional[builtins.int] = None) -> builtins.int:
     r"""
     Calculate the mass of an unsigned transaction.
-    
-    The result is the standard (mempool) mass: the maximum of compute mass,
-    normalized transient mass, and storage mass. Compute mass includes each
-    input's compute budget and an estimated signature script sized by
-    `minimum_signatures`.
     
     Args:
         network_id: The network identifier.
@@ -5261,11 +5253,7 @@ def create_multisig_address(minimum_signatures: builtins.int, keys: typing.Seque
 
 def create_transaction(utxo_entry_source: typing.Sequence[UtxoEntryReference], outputs: Outputs, priority_fee: builtins.int, payload: typing.Optional[Binary] = None, sig_op_count: typing.Optional[builtins.int] = None, compute_budget: typing.Optional[builtins.int] = None, version: typing.Optional[builtins.int] = None) -> Transaction:
     r"""
-    Create a single transaction from UTXOs without any mass limit checks.
-    
-    Version 0 transactions commit a `sig_op_count` per input. Version 1 and
-    later commit a `compute_budget` per input instead, and are required for
-    covenant outputs.
+    Create a single transaction from UTXOs.
     
     Args:
         utxo_entry_source: List of UTXO entries to spend.
@@ -5526,10 +5514,6 @@ def sompi_to_kaspa_string_with_suffix(sompi: builtins.int, network: str | Networ
 def update_transaction_mass(network_id: NetworkId, tx: Transaction, minimum_signatures: typing.Optional[builtins.int] = None) -> builtins.bool:
     r"""
     Calculate and update the mass field of an unsigned transaction.
-    
-    The transaction's `mass` field commits to the storage mass only. The
-    standard-mass limit check uses the overall mass (see
-    `calculate_transaction_mass`).
     
     Args:
         network_id: The network identifier.
