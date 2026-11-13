@@ -215,6 +215,16 @@ tx = create_transaction(
     priority_fee=1000,
 )
 
+# Singular, version 1 — commits a compute budget per input instead of a
+# sig_op_count. Required for covenant outputs, which the Generator rejects.
+tx_v1 = create_transaction(
+    utxo_entry_source=utxos,
+    outputs=[{"address": "kaspa:...", "amount": 100_000_000}],
+    priority_fee=1000,
+    compute_budget=10,
+    version=1,
+)
+
 # Plural — Generator-equivalent.
 result = create_transactions(
     network_id="mainnet",

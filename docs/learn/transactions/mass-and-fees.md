@@ -10,15 +10,17 @@ Kaspa uses a **mass-based fee model**. Every transaction has a *mass*
 component tied to input and output values. The required fee is
 `mass × fee_rate`, where `fee_rate` is the network's current rate.
 
-## The two kinds of mass
+## The kinds of mass
 
-- **Compute / size mass** — from the transaction's serialized size
-  and signature operations.
+- **Compute mass** — from the transaction's serialized size plus each
+  input's committed script budget: `sig_op_count` on version-0 inputs,
+  `compute_budget` (100 grams per unit) on version-1 inputs.
+- **Transient mass** — from serialized size alone, normalized against
+  compute mass so that large payloads are priced.
 - **Storage mass** — from input and output *values*, specifically to
   discourage UTXO-set bloat (many tiny outputs from one large input).
 
-A transaction's overall mass combines the two; you don't compute the
-parts separately for normal use.
+A transaction's overall (standard) mass is the maximum of the three.
 
 ## Compute mass for a transaction
 
@@ -39,20 +41,25 @@ print(mass)
 print(maximum_standard_transaction_mass())   # protocol upper bound
 ```
 
-[`calculate_transaction_mass(network_id, tx)`](../../reference/Functions/calculate_transaction_mass.md) returns the mass without
-mutating the transaction. To write it onto the transaction itself
-(required before signing or serializing):
+[`calculate_transaction_mass(network_id, tx)`](../../reference/Functions/calculate_transaction_mass.md) returns the overall mass without
+mutating the transaction. Unsigned inputs are sized as if they carried
+`minimum_signatures` Schnorr signatures. To write the storage component
+onto the transaction itself (required before signing or serializing):
 
 ```python
 ok = update_transaction_mass("mainnet", tx)
-print(tx.mass, ok)   # ok is False if mass exceeds the standard limit
+print(tx.mass, ok)   # ok is False if the overall mass exceeds the standard limit
 ```
+
+`tx.mass` commits to the **storage** mass only. The node recomputes compute
+and transient mass itself.
 
 !!! warning "Order matters"
     Run [`update_transaction_mass`](../../reference/Functions/update_transaction_mass.md) after inputs and outputs are
-    settled but **before** signing or serializing. Mass is part of
-    the signed payload — sign first and you'll be signing over
-    `mass=0`.
+    settled, since the storage mass depends on their values. The
+    `mass` field is not covered by signatures or by the transaction
+    id, and the node recomputes it on submission; keeping it filled
+    keeps your local transaction hash in step with the node's.
 
 For multisig estimation, both calls take an optional
 `minimum_signatures` to size the signature script correctly:
@@ -87,10 +94,12 @@ fee = calculate_transaction_fee("mainnet", tx)
 print(fee)   # required fee in sompi, or None if mass exceeds the standard limit
 ```
 
-[`calculate_transaction_fee`](../../reference/Functions/calculate_transaction_fee.md) returns the minimum required fee at the
-network's current rate, or `None` if the transaction's mass exceeds
-[`maximum_standard_transaction_mass()`](../../reference/Functions/maximum_standard_transaction_mass.md). Split the inputs across
-multiple transactions in that case.
+[`calculate_transaction_fee`](../../reference/Functions/calculate_transaction_fee.md) returns the minimum relay fee, or `None`
+if the transaction's overall mass exceeds
+[`maximum_standard_transaction_mass()`](../../reference/Functions/maximum_standard_transaction_mass.md) (500,000 grams). Split the inputs
+across multiple transactions in that case. The relay fee prices compute
+and transient mass. Storage mass raises the overall mass (and so the
+limit check) but not the minimum fee.
 
 Since the Toccata hardfork, the network minimum relay fee is **100 sompi per gram
 of mass**. `calculate_transaction_fee` and the fee-estimate buckets are floored at

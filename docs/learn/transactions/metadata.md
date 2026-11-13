@@ -85,5 +85,5 @@ Generator(..., payload=b"invoice-12345")
 
 The transaction's mass. `0` at construction; populate with
 [`update_transaction_mass(network_id, tx)`](../../reference/Functions/update_transaction_mass.md) after inputs and outputs
-are finalized and **before** signing or serializing — mass is part
-of the signed payload. See [Mass & fees](mass-and-fees.md).
+are finalized, since storage mass depends on their values. See
+[Mass & fees](mass-and-fees.md).

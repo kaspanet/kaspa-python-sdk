@@ -43,11 +43,10 @@ pub fn py_calculate_unsigned_transaction_mass(
     let network_id: NetworkId = network_id.into();
     let consensus_params = Params::from(network_id);
     let mc = mass::MassCalculator::new(&consensus_params);
-    mc.calc_overall_mass_for_unsigned_client_transaction(
-        &tx.into(),
-        minimum_signatures.unwrap_or(1),
-    )
-    .map_err(|err| PyException::new_err(err.to_string()))
+    let masses = mc
+        .calc_unsigned_client_transaction_masses(&tx.into(), minimum_signatures.unwrap_or(1))
+        .map_err(|err| PyException::new_err(err.to_string()))?;
+    Ok(mc.calc_standard_mass(&masses))
 }
 
 /// Calculate and update the mass field of an unsigned transaction.
@@ -75,18 +74,18 @@ pub fn py_update_unsigned_transaction_mass(
     let consensus_params = Params::from(network_id);
     let mc = mass::MassCalculator::new(&consensus_params);
     let tx: kaspa_consensus_client::Transaction = tx.into();
-    let mass = mc
-        .calc_overall_mass_for_unsigned_client_transaction(&tx, minimum_signatures.unwrap_or(1))
+    let masses = mc
+        .calc_unsigned_client_transaction_masses(&tx, minimum_signatures.unwrap_or(1))
         .map_err(|err| PyException::new_err(err.to_string()))?;
-    if mass > MAXIMUM_STANDARD_TRANSACTION_MASS {
+    if mc.calc_standard_mass(&masses) > MAXIMUM_STANDARD_TRANSACTION_MASS {
         Ok(false)
     } else {
-        tx.set_mass(mass);
+        tx.set_mass(masses.contextual.storage_mass);
         Ok(true)
     }
 }
 
-/// Calculate the fee for an unsigned transaction based on its mass.
+/// Calculate the minimum relay fee for an unsigned transaction.
 ///
 /// Args:
 ///     network_id: The network identifier.
@@ -110,16 +109,13 @@ pub fn py_calculate_unsigned_transaction_fee(
     let network_id: NetworkId = network_id.into();
     let consensus_params = Params::from(network_id);
     let mc = mass::MassCalculator::new(&consensus_params);
-    let mass = mc
-        .calc_overall_mass_for_unsigned_client_transaction(
-            &tx.into(),
-            minimum_signatures.unwrap_or(1),
-        )
+    let masses = mc
+        .calc_unsigned_client_transaction_masses(&tx.into(), minimum_signatures.unwrap_or(1))
         .map_err(|err| PyException::new_err(err.to_string()))?;
-    if mass > MAXIMUM_STANDARD_TRANSACTION_MASS {
+    if mc.calc_standard_mass(&masses) > MAXIMUM_STANDARD_TRANSACTION_MASS {
         Ok(None)
     } else {
-        Ok(Some(mc.calc_fee_for_mass(mass)))
+        Ok(Some(mc.calc_minimum_relay_fee(&masses)))
     }
 }
 

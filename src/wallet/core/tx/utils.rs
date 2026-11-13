@@ -7,6 +7,7 @@ use super::generator::{
 };
 use kaspa_consensus_client::*;
 use kaspa_consensus_core::subnets::SUBNETWORK_ID_NATIVE;
+use kaspa_consensus_core::tx::ComputeCommit;
 use kaspa_wallet_core::result::Result;
 use pyo3_stub_gen::derive::gen_stub_pyfunction;
 // use pyo3::{exceptions::PyException, prelude::*};
@@ -18,26 +19,63 @@ use pyo3_stub_gen::derive::gen_stub_pyfunction;
 ///     outputs: List of payment outputs.
 ///     priority_fee: Priority fee in sompi.
 ///     payload: Optional transaction payload data.
-///     sig_op_count: Signature operations per input (default: 1).
+///     sig_op_count: Signature operations per input (version 0 only, default: 1).
+///     compute_budget: Compute budget per input (version 1+ only, required).
+///     version: Transaction version (default: 0).
 ///
 /// Returns:
 ///     Transaction: The created transaction (unsigned).
 ///
 /// Raises:
-///     Exception: If transaction creation fails or fee exceeds input amount.
+///     Exception: If transaction creation fails, fee exceeds input amount, or
+///         the commit arguments do not match the transaction version.
 #[gen_stub_pyfunction]
 #[pyfunction]
 #[pyo3(name = "create_transaction")]
-#[pyo3(signature = (utxo_entry_source, outputs, priority_fee, payload=None, sig_op_count=None))]
+#[pyo3(signature = (utxo_entry_source, outputs, priority_fee, payload=None, sig_op_count=None, compute_budget=None, version=None))]
 pub fn py_create_transaction(
     utxo_entry_source: PyUtxoEntries,
     outputs: PyOutputs,
     priority_fee: u64,
     payload: Option<PyBinary>,
     sig_op_count: Option<u8>,
+    compute_budget: Option<u16>,
+    version: Option<u16>,
 ) -> PyResult<PyTransaction> {
     let payload: Vec<u8> = payload.map(Into::into).unwrap_or_default();
-    let sig_op_count = sig_op_count.unwrap_or(1);
+    let version = version.unwrap_or_default();
+
+    // Version 0 commits sig_op_count, version 1+ commits compute_budget
+    let (sig_op_count, compute_budget) =
+        if ComputeCommit::version_expects_compute_budget_field(version) {
+            if sig_op_count.is_some() {
+                return Err(PyException::new_err(format!(
+                    "transaction version {version} uses compute_budget, not sig_op_count"
+                )));
+            }
+            let compute_budget = compute_budget.ok_or_else(|| {
+                PyException::new_err(format!(
+                    "transaction version {version} requires compute_budget"
+                ))
+            })?;
+            (0, compute_budget)
+        } else {
+            if compute_budget.is_some() {
+                return Err(PyException::new_err(format!(
+                    "transaction version {version} uses sig_op_count, not compute_budget"
+                )));
+            }
+            if outputs
+                .outputs
+                .iter()
+                .any(|output| output.covenant.is_some())
+            {
+                return Err(PyException::new_err(format!(
+                    "transaction version {version} does not support covenant outputs"
+                )));
+            }
+            (sig_op_count.unwrap_or(1), 0)
+        };
 
     let mut total_input_amount = 0;
     let mut entries = vec![];
@@ -55,7 +93,7 @@ pub fn py_create_transaction(
                 None,
                 sequence as u64,
                 sig_op_count,
-                0,
+                compute_budget,
                 Some(reference),
             )
         })
@@ -75,7 +113,7 @@ pub fn py_create_transaction(
 
     let transaction = Transaction::new(
         None,
-        0,
+        version,
         inputs,
         outputs,
         0,

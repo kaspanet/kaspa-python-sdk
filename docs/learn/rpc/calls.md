@@ -63,6 +63,43 @@ continuous tracking, subscribe to
 [`UtxoContext`](../../reference/Classes/UtxoContext.md) for per-address tracking
 on top of that subscription (see [UTXO Context](../wallet-sdk/utxo-context.md)).
 
+### `get_utxos_by_addresses_v2`
+
+Paginated variant of the call above, with an optional inclusive DAA-score
+range. Pass a response's `nextCursor` back unchanged (with the same
+addresses and bounds) to fetch the next page. `limit` defaults to 1000 entries.
+
+```python
+request = {"addresses": ["kaspa:qz..."], "fromDaaScore": 100_000_000, "limit": 500}
+cursor = None
+while True:
+    page = await client.get_utxos_by_addresses_v2({**request, "cursor": cursor})
+    for entry in page["entries"]:
+        print(entry["outpoint"], entry["utxoEntry"]["amount"])
+    cursor = page.get("nextCursor")
+    if cursor is None:
+        break
+```
+
+### `get_utxos_by_covenant_ids`
+
+Returns the UTXOs currently bound to one or more covenant ids, in ascending
+covenant-id order, with the same DAA-score bounds and cursor pagination as
+`get_utxos_by_addresses_v2`. The node must run with
+`--utxoindex --covenant-index`.
+
+```python
+request = {"covenantIds": ["<64 hex chars>"], "scriptPublicKeys": []}
+cursor = None
+while True:
+    page = await client.get_utxos_by_covenant_ids({**request, "cursor": cursor})
+    for entry in page["entries"]:
+        print(entry["address"], entry["outpoint"], entry["utxoEntry"]["amount"])
+    cursor = page.get("nextCursor")
+    if cursor is None:
+        break
+```
+
 ## Blocks
 
 ```python
@@ -110,6 +147,22 @@ block hash to the transaction ids it accepted.
 
 For a streaming version, subscribe to
 [`virtual-chain-changed`](subscriptions.md#virtual-chain-progression).
+
+### `get_transactions_by_accepting_block`
+
+Fetches full transactions, with each input's UTXO entry populated, given
+the block that accepted them. Select the block by `{"hash": ...}` or by its
+exact DAA score in the current selected-parent chain, `{"daaScore": ...}`.
+
+```python
+utxo = utxos["entries"][0]
+result = await client.get_transactions_by_accepting_block({
+    "acceptingBlock": {"daaScore": utxo["utxoEntry"]["blockDaaScore"]},
+    "transactionIds": [utxo["outpoint"]["transactionId"]],
+})
+for tx in result["transactions"]:
+    print(tx["verboseData"]["transactionId"], len(tx["inputs"]), "inputs")
+```
 
 ### `get_virtual_chain_from_block_v2`
 

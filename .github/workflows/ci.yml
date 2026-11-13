@@ -27,10 +27,14 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Check formatting
-        run: cargo fmt --all -- --check
+        run: |
+          cargo fmt --all -- --check
+          cargo fmt --all --manifest-path crates/silverscript/Cargo.toml -- --check
 
       - name: Run clippy
-        run: cargo clippy --workspace -- -D warnings
+        run: |
+          cargo clippy --workspace -- -D warnings
+          cargo clippy --manifest-path crates/silverscript/Cargo.toml -- -D warnings
 
   build-and-test:
     name: Build & Test
@@ -54,7 +58,7 @@ jobs:
 
       - name: Check SilverScript stubs are up to date
         run: |
-          cargo run -p kaspa-python-sdk-silverscript --bin stub-gen \
+          cargo run --manifest-path crates/silverscript/Cargo.toml --bin stub-gen \
             --no-default-features --target-dir target/silverscript-stubgen
           git diff --exit-code -- python/kaspa/experimental/silverscript/__init__.pyi \
             || { echo "::error::__init__.pyi is stale — run ./build-dev and commit it"; exit 1; }

@@ -283,7 +283,11 @@ class TestCovenantKeyOptional:
         assert tx.outputs[0].to_dict()["covenant"] is None
 
     def test_payment_output_dict_still_accepts_covenant(self):
-        """The covenant key still works when present (no regression)."""
+        """The covenant key still works when present (no regression).
+
+        Covenant outputs need a version-1 transaction, which commits a
+        compute budget instead of a sig_op_count.
+        """
         entry = {
             "address": ADDRESS,
             "outpoint": {"transactionId": "a" * 64, "index": 0},
@@ -303,6 +307,8 @@ class TestCovenantKeyOptional:
                 }
             ],
             0,
+            compute_budget=1,
+            version=1,
         )
         assert tx.outputs[0].to_dict()["covenant"] == {
             "authorizingInput": 0,

@@ -100,7 +100,7 @@ tx = Transaction(
     gas=0, payload="", mass=0,
 )
 
-update_transaction_mass("mainnet", tx)              # mass is signed over — fill before signing
+update_transaction_mass("mainnet", tx)              # commit storage mass once inputs/outputs are final
 signed = sign_transaction(tx, [private_key], verify_sig=True)
 
 await client.submit_transaction({

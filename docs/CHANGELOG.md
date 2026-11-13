@@ -5,6 +5,29 @@ search:
 
 ## [Unreleased]
 
+### Added
+- `RpcClient.get_utxos_by_addresses_v2(request)` pages through UTXOs with an optional inclusive DAA-score range and a `nextCursor`. Requires a node started with `--utxoindex`.
+- `RpcClient.get_utxos_by_covenant_ids(request)` pages through the UTXOs bound to covenant ids, with optional DAA-score bounds and script public key filters. Requires a node started with `--utxoindex --covenant-index`.
+- `RpcClient.get_transactions_by_accepting_block(request)` returns full transactions with populated input UTXOs, selected by accepting block hash or DAA score.
+- `create_transaction()` accepts `compute_budget` and `version`. Version 1 transactions commit a compute budget per input instead of a `sig_op_count`, and are required for covenant outputs. Version 0 (the default) now rejects covenant outputs, which are invalid on-chain without version 1.
+- `WalletGeneratorPaymentOutputCovenantNotAllowedError` exception.
+
+### Changed
+- `maximum_standard_transaction_mass()` is now 500,000 grams (was 100,000), matching rusty-kaspa's wallet-core.
+- `calculate_transaction_mass()` returns the standard mass: the maximum of compute, normalized transient, and storage mass. Compute mass now includes each input's compute budget and an estimated signature script, so fees derived from it are no longer rejected with `RejectInsufficientComputeFee` on transactions with compute budgets.
+- `update_transaction_mass()` writes the storage mass to `tx.mass` (it wrote the overall mass before). The standard-mass limit check is unchanged.
+- `calculate_transaction_fee()` prices the relay (compute and transient) mass at the minimum relay fee rate; storage mass no longer increases the result.
+- `Generator`, `create_transactions()`, and `estimate_transactions()` skip UTXOs bound to a covenant and reject covenant outputs with `WalletGeneratorPaymentOutputCovenantNotAllowedError`. Use `create_transaction(..., version=1, compute_budget=...)` for covenant transactions.
+
+### Fixed
+- The `RpcUtxoEntry` type stub now declares `scriptPublicKey` as a version-prefixed hex string, which is what RPC responses carry. It declared a `{version, script}` dict.
+
+### Development
+*Internal SDK changes — not visible through the Python package API.*
+
+- Bumped the pinned `rusty-kaspa` dependency for the core `kaspa` module from `01b532e8` (v2.1.0) to `4863866f`.
+- `crates/silverscript` is now its own Cargo workspace with its own `Cargo.lock`, so its rusty-kaspa revision (pinned by SilverScript) no longer shares a lockfile with the core crate's.
+
 ## [2.1.0] - 2026-09-24
 
 ### Added

@@ -1,3 +1,14 @@
+[workspace]
+# Standalone workspace (excluded from the root one) so this crate keeps its own
+# Cargo.lock. Its rusty-kaspa revision follows SilverScript's pin and must not
+# share a lockfile with the core crate's newer revision, due to a dependency version conflict.
+# Once that conflict is naturally resolved then a single workspace can be used again.
+
+[workspace.package]
+# Keep in sync with the root Cargo.toml `[workspace.package]`.
+version = "2.1.0"
+edition = "2024"
+
 [package]
 name = "kaspa-python-sdk-silverscript"
 version.workspace = true

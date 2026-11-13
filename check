@@ -5,9 +5,11 @@ set -e
 # Rust lints
 echo "Running cargo fmt..."
 cargo fmt --all
+cargo fmt --all --manifest-path crates/silverscript/Cargo.toml
 
 echo "Running cargo clippy..."
 cargo clippy -- -D warnings
+cargo clippy --manifest-path crates/silverscript/Cargo.toml -- -D warnings
 
 # Build development
 echo "Running ./build-dev script..."

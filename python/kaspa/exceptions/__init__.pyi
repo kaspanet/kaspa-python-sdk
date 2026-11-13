@@ -169,6 +169,10 @@ class WalletGeneratorNoFeesForFinalTransactionError(builtins.Exception):
     ...
 
 @typing.final
+class WalletGeneratorPaymentOutputCovenantNotAllowedError(builtins.Exception):
+    ...
+
+@typing.final
 class WalletGeneratorPaymentOutputNetworkTypeMismatchError(builtins.Exception):
     ...
 
