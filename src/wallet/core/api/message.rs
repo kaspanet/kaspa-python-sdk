@@ -6,9 +6,10 @@ use std::str::FromStr;
 
 crate::wrap_unit_enum_for_py!(
     /// Account Discovery Kind
-    PyAccountsDiscoveryKind, "AccountsDiscoveryKind", AccountsDiscoveryKind, {
-        Bip44
-    }
+    PyAccountsDiscoveryKind,
+    "AccountsDiscoveryKind",
+    AccountsDiscoveryKind,
+    { Bip44 }
 );
 
 impl FromStr for PyAccountsDiscoveryKind {
