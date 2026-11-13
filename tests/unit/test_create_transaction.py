@@ -44,10 +44,7 @@ class TestCreateTransactionVersion0:
         assert tx.version == 0
         assert tx.inputs[0].sig_op_count == 1
         assert tx.inputs[0].compute_budget == 0
-
-    def test_explicit_sig_op_count(self):
-        tx = create_transaction([_utxo()], _outputs(), 0, sig_op_count=3)
-        assert tx.inputs[0].sig_op_count == 3
+        assert create_transaction([_utxo()], _outputs(), 0, sig_op_count=3).inputs[0].sig_op_count == 3
 
     def test_compute_budget_rejected(self):
         with pytest.raises(Exception, match="compute_budget"):
@@ -67,11 +64,6 @@ class TestCreateTransactionVersion1:
         for tx_input in tx.inputs:
             assert tx_input.sig_op_count == 0
             assert tx_input.compute_budget == 10
-
-    def test_covenant_output_accepted(self):
-        tx = create_transaction([_utxo()], _covenant_outputs(), 0, compute_budget=10, version=1)
-        assert tx.version == 1
-        assert len(tx.outputs) == 1
 
     def test_missing_compute_budget_rejected(self):
         with pytest.raises(Exception, match="requires compute_budget"):

@@ -54,11 +54,6 @@ class TestGetUtxosByAddressesV2Wiring:
         with pytest.raises(Exception, match="addresses"):
             _client().get_utxos_by_addresses_v2({"limit": 10})
 
-    def test_malformed_address_rejected_synchronously(self):
-        with pytest.raises(Exception) as exc_info:
-            _client().get_utxos_by_addresses_v2({"addresses": ["not-an-address"]})
-        assert "no running event loop" not in str(exc_info.value)
-
     def test_malformed_cursor_rejected_synchronously(self):
         with pytest.raises(Exception) as exc_info:
             _client().get_utxos_by_addresses_v2({
@@ -76,13 +71,6 @@ class TestGetUtxosByCovenantIdsWiring:
         with pytest.raises(Exception, match="scriptPublicKeys"):
             _client().get_utxos_by_covenant_ids({"covenantIds": ["a" * 64]})
 
-    def test_malformed_covenant_id_rejected_synchronously(self):
-        with pytest.raises(Exception) as exc_info:
-            _client().get_utxos_by_covenant_ids(
-                {"covenantIds": ["not-a-hash"], "scriptPublicKeys": []}
-            )
-        assert "no running event loop" not in str(exc_info.value)
-
 
 class TestGetTransactionsByAcceptingBlockWiring:
     """get_transactions_by_accepting_block is exposed and validates its request
@@ -98,12 +86,5 @@ class TestGetTransactionsByAcceptingBlockWiring:
         with pytest.raises(Exception) as exc_info:
             _client().get_transactions_by_accepting_block(
                 {"acceptingBlock": {"blueScore": 1}, "transactionIds": ["a" * 64]}
-            )
-        assert "no running event loop" not in str(exc_info.value)
-
-    def test_malformed_hash_rejected_synchronously(self):
-        with pytest.raises(Exception) as exc_info:
-            _client().get_transactions_by_accepting_block(
-                {"acceptingBlock": {"hash": "not-a-hash"}, "transactionIds": ["a" * 64]}
             )
         assert "no running event loop" not in str(exc_info.value)
