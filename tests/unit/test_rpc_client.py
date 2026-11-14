@@ -44,3 +44,47 @@ class TestGetSeqCommitLaneProofWiring:
         # Rejected by hash parsing, not by the async runtime: confirms validation
         # runs before the await (no event loop required).
         assert "no running event loop" not in str(exc_info.value)
+
+
+class TestGetUtxosByAddressesV2Wiring:
+    """get_utxos_by_addresses_v2 is exposed and validates its request
+    (addresses + optional bounds/cursor/limit) synchronously."""
+
+    def test_missing_addresses_rejected_synchronously(self):
+        with pytest.raises(Exception, match="addresses"):
+            _client().get_utxos_by_addresses_v2({"limit": 10})
+
+    def test_malformed_cursor_rejected_synchronously(self):
+        with pytest.raises(Exception) as exc_info:
+            _client().get_utxos_by_addresses_v2({
+                "addresses": ["kaspa:qpamkvhgh0kzx50gwvvp5xs8ktmqutcy3dfs9dc3w7lm9rq0zs76vf959mmrp"],
+                "cursor": {"startDaaScore": "not-a-number"},
+            })
+        assert "no running event loop" not in str(exc_info.value)
+
+
+class TestGetUtxosByCovenantIdsWiring:
+    """get_utxos_by_covenant_ids is exposed and validates its request
+    (covenantIds + scriptPublicKeys) synchronously."""
+
+    def test_missing_required_field_rejected_synchronously(self):
+        with pytest.raises(Exception, match="scriptPublicKeys"):
+            _client().get_utxos_by_covenant_ids({"covenantIds": ["a" * 64]})
+
+
+class TestGetTransactionsByAcceptingBlockWiring:
+    """get_transactions_by_accepting_block is exposed and validates its request
+    (acceptingBlock selector + transactionIds) synchronously."""
+
+    def test_missing_required_field_rejected_synchronously(self):
+        with pytest.raises(Exception, match="transactionIds"):
+            _client().get_transactions_by_accepting_block(
+                {"acceptingBlock": {"daaScore": 1}}
+            )
+
+    def test_unknown_selector_rejected_synchronously(self):
+        with pytest.raises(Exception) as exc_info:
+            _client().get_transactions_by_accepting_block(
+                {"acceptingBlock": {"blueScore": 1}, "transactionIds": ["a" * 64]}
+            )
+        assert "no running event loop" not in str(exc_info.value)

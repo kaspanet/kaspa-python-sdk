@@ -174,6 +174,72 @@ class TestRpcClientCalls:
         })
         assert isinstance(result, dict)
 
+    async def test_get_utxos_by_addresses_v2(self, rpc_client, test_address):
+        """Test get_utxos_by_addresses_v2 RPC call, paging with the cursor."""
+        result = await rpc_client.get_utxos_by_addresses_v2({
+            "addresses": [test_address],
+            "limit": 1,
+        })
+        assert isinstance(result, dict)
+        assert isinstance(result["entries"], list)
+        if result.get("nextCursor") is not None:
+            next_page = await rpc_client.get_utxos_by_addresses_v2({
+                "addresses": [test_address],
+                "cursor": result["nextCursor"],
+                "limit": 1,
+            })
+            assert isinstance(next_page["entries"], list)
+
+    async def test_get_utxos_by_covenant_ids(self, rpc_client):
+        """Test get_utxos_by_covenant_ids RPC call (needs --covenant-index)."""
+        try:
+            result = await rpc_client.get_utxos_by_covenant_ids({
+                "covenantIds": ["0" * 64],
+                "scriptPublicKeys": [],
+            })
+        except Exception as exc:
+            if "covenant-index" in str(exc):
+                pytest.skip("node not started with --covenant-index")
+            raise
+        assert isinstance(result, dict)
+        assert isinstance(result["entries"], list)
+
+    async def test_get_transactions_by_accepting_block(self, rpc_client):
+        """Test get_transactions_by_accepting_block RPC call, selecting by hash and by DAA score."""
+        # Walk a few chain blocks back from the sink so the accepting block is settled.
+        block_hash = (await rpc_client.get_sink())["sink"]
+        for _ in range(5):
+            block = await rpc_client.get_block({"hash": block_hash, "includeTransactions": False})
+            block_hash = block["block"]["verboseData"]["selectedParentHash"]
+        chain = await rpc_client.get_virtual_chain_from_block_v2({
+            "startHash": block_hash,
+            "dataVerbosityLevel": "Low",
+        })
+        accepting = next(
+            (e for e in chain["chainBlockAcceptedTransactions"] if e["acceptedTransactions"]),
+            None,
+        )
+        if accepting is None:
+            pytest.skip("no accepted transactions in the sampled chain segment")
+        header = accepting["chainBlockHeader"]
+        tx_ids = [tx["verboseData"]["transactionId"] for tx in accepting["acceptedTransactions"]][:8]
+
+        by_hash = await rpc_client.get_transactions_by_accepting_block({
+            "acceptingBlock": {"hash": header["hash"]},
+            "transactionIds": tx_ids,
+        })
+        assert isinstance(by_hash, dict)
+        assert [tx["verboseData"]["transactionId"] for tx in by_hash["transactions"]] == tx_ids
+        for tx in by_hash["transactions"]:
+            for tx_input in tx["inputs"]:
+                assert tx_input["verboseData"]["utxoEntry"] is not None
+
+        by_daa_score = await rpc_client.get_transactions_by_accepting_block({
+            "acceptingBlock": {"daaScore": header["daaScore"]},
+            "transactionIds": tx_ids[:1],
+        })
+        assert len(by_daa_score["transactions"]) == 1
+
     async def test_get_connected_peer_info(self, rpc_client):
         """Test get_connected_peer_info RPC call."""
         result = await rpc_client.get_connected_peer_info()

@@ -3,8 +3,8 @@
 # library into python/kaspa/experimental/silverscript/ for the next `maturin`
 # build to bundle into the kaspa wheel.
 #
-# It's a separate workspace member on a different rusty-kaspa revision, and not
-# abi3. So, it's built once per CPython version and
+# It's a separate workspace, with its own Cargo.lock, on a different rusty-kaspa revision,
+# and not abi3. So, it's built once per CPython version and
 # named with the interpreter's EXT_SUFFIX, so only that version imports it.
 #
 # Output: python/kaspa/experimental/silverscript/silverscript<EXT_SUFFIX>
@@ -85,9 +85,9 @@ esac
 # Name the module with the interpreter's EXT_SUFFIX so only that version imports it.
 out="silverscript${ext_suffix}"
 
-# Enable the cdylib-only feature explicitly here (not as a crate default) so it
-# never unifies into the core crate during a workspace build.
-cargo build -p kaspa-python-sdk-silverscript --lib --features extension-module $flag $target_flag --target-dir target
+# Enable the cdylib-only feature explicitly here (not as a crate default); the
+# stub-gen binary in this crate must build without it.
+cargo build --manifest-path crates/silverscript/Cargo.toml --lib --features extension-module $flag $target_flag --target-dir target
 lib="target/${target_subdir}${profile}/${libname}"
 
 mkdir -p python/kaspa/experimental/silverscript

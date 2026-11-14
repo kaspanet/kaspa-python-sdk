@@ -1,7 +1,8 @@
 use crate::{address::PyAddress, consensus::client::transaction::PyTransaction, rpc::model::*};
 use kaspa_addresses::Address;
 use kaspa_rpc_core::{
-    RpcRawBlock, RpcTransaction, RpcTransactionInput, RpcTransactionOutput, message::*,
+    RpcGetUtxosByAddressesCursor, RpcRawBlock, RpcTransaction, RpcTransactionInput,
+    RpcTransactionOutput, message::*,
 };
 use paste::paste;
 use pyo3::{
@@ -69,7 +70,10 @@ impl_try_from_pydict!([
     GetMempoolEntry,
     GetSeqCommitLaneProof,
     GetSubnetwork,
+    GetTransactionsByAcceptingBlock,
     // GetUtxosByAddresses,
+    // GetUtxosByAddressesV2,
+    GetUtxosByCovenantIds,
     GetUtxoReturnAddress,
     GetVirtualChainFromBlock,
     GetVirtualChainFromBlockV2,
@@ -186,6 +190,51 @@ try_from_args! ( dict : PyGetUtxosByAddressesRequest, {
 
     let inner = GetUtxosByAddressesRequest { addresses };
     Ok(PyGetUtxosByAddressesRequest(inner))
+});
+
+try_from_args! ( dict : PyGetUtxosByAddressesV2Request, {
+    let items = dict.get_item("addresses")?
+        .ok_or_else(|| PyKeyError::new_err("Key `addresses` not present"))?;
+    let list = items.cast::<PyList>()
+        .map_err(|_| PyException::new_err("`addresses` should be a list"))?;
+
+    let addresses = list.iter().map(|item| {
+        if let Ok(address) = item.extract::<PyAddress>() {
+            Ok(address)
+        } else if let Ok(s) = item.extract::<String>() {
+            let address = PyAddress::try_from(s)
+                .map_err(|err| PyException::new_err(format!("{}", err)))?;
+            Ok(address)
+        } else {
+            Err(PyException::new_err("Addresses must be either an Address instance or an address as a string"))
+        }
+    }).collect::<PyResult<Vec<PyAddress>>>()?;
+    let addresses: Vec<Address> = addresses.into_iter().map(PyAddress::into).collect();
+
+    // Parse fromDaaScore / toDaaScore (optional)
+    let from_daa_score: Option<u64> = match dict.get_item("fromDaaScore")? {
+        Some(item) if !item.is_none() => Some(item.extract()?),
+        _ => None,
+    };
+    let to_daa_score: Option<u64> = match dict.get_item("toDaaScore")? {
+        Some(item) if !item.is_none() => Some(item.extract()?),
+        _ => None,
+    };
+
+    // Parse cursor (optional, echo of a previous response's nextCursor)
+    let cursor: Option<RpcGetUtxosByAddressesCursor> = match dict.get_item("cursor")? {
+        Some(item) if !item.is_none() => Some(from_pyobject(item)?),
+        _ => None,
+    };
+
+    // Parse limit (optional)
+    let limit: Option<usize> = match dict.get_item("limit")? {
+        Some(item) if !item.is_none() => Some(item.extract()?),
+        _ => None,
+    };
+
+    let inner = GetUtxosByAddressesV2Request { addresses, from_daa_score, to_daa_score, cursor, limit };
+    Ok(PyGetUtxosByAddressesV2Request(inner))
 });
 
 try_from_args! ( dict : PySubmitBlockRequest, {

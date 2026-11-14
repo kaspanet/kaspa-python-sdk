@@ -1,13 +1,8 @@
 [workspace]
-# The root package (this crate) is the workspace root and first member; the
-# SilverScript bindings are a second member that links a *different* rusty-kaspa
-# revision. Two separate cdylib extension modules keep the dependency graphs
-# isolated — they meet only in Python, via script bytes.
-members = ["crates/core", "crates/silverscript"]
+members = ["crates/core"]
+exclude = ["crates/silverscript"]
 resolver = "3"
 
-# Single source of truth for version/edition across the workspace; members
-# inherit via `version.workspace = true` / `edition.workspace = true`.
 [workspace.package]
 version = "2.1.0"
 edition = "2024"
@@ -31,20 +26,20 @@ bincode = "1.3.3"
 borsh = { version = "1.5.1", features = ["derive", "rc"], default-features = false }
 faster-hex = "0.9.0"
 futures = "0.3.31"
-kaspa-addresses = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "01b532e8b55" }
-kaspa-bip32 = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "01b532e8b55" }
-kaspa-consensus-client = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "01b532e8b55" }
-kaspa-consensus-core = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "01b532e8b55" }
-kaspa-hashes = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "01b532e8b55" }
-kaspa-notify = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "01b532e8b55" }
+kaspa-addresses = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "5417ed03f4732459cdd594ee0d1bb868c3838bde" }
+kaspa-bip32 = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "5417ed03f4732459cdd594ee0d1bb868c3838bde" }
+kaspa-consensus-client = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "5417ed03f4732459cdd594ee0d1bb868c3838bde" }
+kaspa-consensus-core = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "5417ed03f4732459cdd594ee0d1bb868c3838bde" }
+kaspa-hashes = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "5417ed03f4732459cdd594ee0d1bb868c3838bde" }
+kaspa-notify = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "5417ed03f4732459cdd594ee0d1bb868c3838bde" }
 kaspa-python-sdk-core = { path = "crates/core" }
-kaspa-rpc-core = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "01b532e8b55" }
-kaspa-txscript = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "01b532e8b55", features = ["wasm32-sdk"]}
-kaspa-txscript-zk-sdk = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "01b532e8b55", default-features = false }
-kaspa-utils = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "01b532e8b55" }
-kaspa-wallet-core = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "01b532e8b55" }
-kaspa-wallet-keys = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "01b532e8b55" }
-kaspa-wrpc-client = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "01b532e8b55" }
+kaspa-rpc-core = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "5417ed03f4732459cdd594ee0d1bb868c3838bde" }
+kaspa-txscript = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "5417ed03f4732459cdd594ee0d1bb868c3838bde", features = ["wasm32-sdk"]}
+kaspa-txscript-zk-sdk = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "5417ed03f4732459cdd594ee0d1bb868c3838bde", default-features = false }
+kaspa-utils = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "5417ed03f4732459cdd594ee0d1bb868c3838bde" }
+kaspa-wallet-core = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "5417ed03f4732459cdd594ee0d1bb868c3838bde" }
+kaspa-wallet-keys = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "5417ed03f4732459cdd594ee0d1bb868c3838bde" }
+kaspa-wrpc-client = { git = "https://github.com/kaspanet/rusty-kaspa.git", rev = "5417ed03f4732459cdd594ee0d1bb868c3838bde" }
 paste = "1.0"
 pyo3 = { version = "0.27.1", features = ['multiple-pymethods'] }
 pyo3-async-runtimes = { version = "0.27.0", features = ['tokio-runtime'] }
@@ -62,7 +57,7 @@ serde = { version = "1.0.228", features = ["derive"] }
 serde-pyobject = "0.8.0"
 serde_json = "1.0.149"
 thiserror = "2.0.18"
-workflow-core = "0.18.0"
-workflow-log = "0.18.0"
-workflow-rpc = "0.18.0"
+workflow-core = "0.19.0"
+workflow-log = "0.19.0"
+workflow-rpc = "0.19.0"
 zeroize = { version = "1.6.0", default-features = false, features = ["alloc"] }

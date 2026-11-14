@@ -20,12 +20,6 @@ class RpcOutpoint(TypedDict):
     index: int
 
 
-class RpcScriptPublicKey(TypedDict):
-    """A script public key."""
-    version: int
-    script: str
-
-
 class RpcCovenantBinding(TypedDict):
     """Binds a transaction output to the covenant and input authorizing its creation."""
     authorizingInput: int
@@ -33,9 +27,9 @@ class RpcCovenantBinding(TypedDict):
 
 
 class RpcUtxoEntry(TypedDict):
-    """A UTXO entry."""
+    """A UTXO entry. `scriptPublicKey` is a version-prefixed hex string."""
     amount: int
-    scriptPublicKey: RpcScriptPublicKey
+    scriptPublicKey: str
     blockDaaScore: int
     isCoinbase: bool
     covenantId: str | None
@@ -46,6 +40,34 @@ class RpcUtxosByAddressesEntry(TypedDict):
     address: str
     outpoint: RpcOutpoint
     utxoEntry: RpcUtxoEntry
+
+
+class RpcUtxosByCovenantIdsEntry(TypedDict):
+    """A UTXO entry of a covenant id. `address` is None for non-standard scripts."""
+    address: str | None
+    outpoint: RpcOutpoint
+    utxoEntry: RpcUtxoEntry
+
+
+class RpcGetUtxosByAddressesCursor(TypedDict):
+    """Pagination cursor for get_utxos_by_addresses_v2.
+
+    Pass a response's `nextCursor` back unchanged, with the same filters.
+    """
+    startAddress: str | None
+    startDaaScore: int
+    startOutpoint: RpcOutpoint | None
+
+
+class RpcGetUtxosByCovenantIdsCursor(TypedDict):
+    """Pagination cursor for get_utxos_by_covenant_ids.
+
+    Pass a response's `nextCursor` back unchanged, with the same filters.
+    """
+    startCovenantId: str
+    startDaaScore: int
+    startScriptPublicKey: str
+    startOutpoint: RpcOutpoint
 
 
 class RpcBalancesByAddressesEntry(TypedDict):
@@ -471,6 +493,20 @@ class RpcChainBlockAcceptedTransactions(TypedDict):
     acceptedTransactions: list[RpcOptionalTransaction]
 
 
+class RpcAcceptingBlockHash(TypedDict):
+    """Selects an accepting block by hash."""
+    hash: str
+
+
+class RpcAcceptingBlockDaaScore(TypedDict):
+    """Selects an accepting block by its exact DAA score in the current virtual
+    selected-parent chain. A reorg can invalidate a previously observed score."""
+    daaScore: int
+
+
+RpcAcceptingBlock = RpcAcceptingBlockHash | RpcAcceptingBlockDaaScore
+
+
 # =============================================================================
 # Request Types
 # =============================================================================
@@ -677,9 +713,49 @@ class GetSubnetworkRequest(TypedDict):
     subnetworkId: str
 
 
+class GetTransactionsByAcceptingBlockRequest(TypedDict):
+    """Request for get_transactions_by_accepting_block.
+
+    `transactionIds` holds 1 to 8192 unique ids accepted by the selected block;
+    results follow the requested order. For a UTXO, use its outpoint's
+    `transactionId` with `{"daaScore": utxoEntry["blockDaaScore"]}`.
+    """
+    acceptingBlock: RpcAcceptingBlock
+    transactionIds: list[str]
+
+
 class GetUtxosByAddressesRequest(TypedDict):
     """Request for get_utxos_by_addresses."""
     addresses: list[str]
+
+
+class GetUtxosByAddressesV2Request(TypedDict):
+    """Request for get_utxos_by_addresses_v2.
+
+    DAA-score bounds are inclusive. `limit` defaults to 1000 entries; more than
+    5000 requires a node started with `--unsaferpc`.
+    """
+    addresses: list[str]
+    fromDaaScore: int | None
+    toDaaScore: int | None
+    cursor: RpcGetUtxosByAddressesCursor | None
+    limit: int | None
+
+
+class GetUtxosByCovenantIdsRequest(TypedDict):
+    """Request for get_utxos_by_covenant_ids.
+
+    Requires a node started with `--utxoindex --covenant-index`. An empty
+    `scriptPublicKeys` list includes every script public key; entries are
+    version-prefixed hex strings as returned by the node. `budget` is a weighted
+    database-operation budget (default 1000; above 5000 requires `--unsaferpc`).
+    """
+    covenantIds: list[str]
+    scriptPublicKeys: list[str]
+    fromDaaScore: int | None
+    toDaaScore: int | None
+    cursor: RpcGetUtxosByCovenantIdsCursor | None
+    budget: int | None
 
 
 class GetUtxoReturnAddressRequest(TypedDict):
@@ -970,9 +1046,36 @@ class GetSubnetworkResponse(TypedDict):
     gasLimit: int
 
 
+class GetTransactionsByAcceptingBlockResponse(TypedDict):
+    """Response from get_transactions_by_accepting_block.
+
+    Inputs carry their UTXO entry under `verboseData`; containing-block metadata
+    (`blockHash`, `blockTime`) is not supplied.
+    """
+    transactions: list[RpcOptionalTransaction]
+
+
 class GetUtxosByAddressesResponse(TypedDict):
     """Response from get_utxos_by_addresses."""
     entries: list[RpcUtxosByAddressesEntry]
+
+
+class GetUtxosByAddressesV2Response(TypedDict):
+    """Response from get_utxos_by_addresses_v2.
+
+    `nextCursor` is None when there is no next page.
+    """
+    entries: list[RpcUtxosByAddressesEntry]
+    nextCursor: RpcGetUtxosByAddressesCursor | None
+
+
+class GetUtxosByCovenantIdsResponse(TypedDict):
+    """Response from get_utxos_by_covenant_ids.
+
+    Continue while `nextCursor` is present, even when `entries` is empty.
+    """
+    entries: list[RpcUtxosByCovenantIdsEntry]
+    nextCursor: RpcGetUtxosByCovenantIdsCursor | None
 
 
 class GetUtxoReturnAddressResponse(TypedDict):

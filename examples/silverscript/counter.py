@@ -52,13 +52,6 @@ RPC_URL = os.environ.get("KASPA_RPC_URL")
 SUBNETWORK_ID = bytes(20)
 TX_VERSION = 1
 COMPUTE_BUDGET = 10
-# The node's fee check prices consensus compute mass, which charges
-# GRAMS_PER_COMPUTE_BUDGET_UNIT (100) per unit of each input's compute budget —
-# a component `calculate_transaction_mass` (the wallet-side estimator) omits.
-GRAMS_PER_COMPUTE_BUDGET_UNIT = 100
-# Headroom for the other bytes the estimator misses on this shape (covenant
-# serialization, signature size rounding).
-FEE_MASS_SLACK = 200
 
 # Silverscript source
 SOURCE = """
@@ -217,8 +210,7 @@ async def build_counter_tx(
             # Genesis: measure with the covenant populated, as it ships on-chain.
             draft.populate_genesis_covenants([GenesisCovenantGroup(authorizing_input=0, outputs=[0])])
         mass = calculate_transaction_mass(NETWORK_ID, draft)
-        fee_mass = mass + GRAMS_PER_COMPUTE_BUDGET_UNIT * COMPUTE_BUDGET + FEE_MASS_SLACK
-        new_fee = fee_mass * feerate
+        new_fee = mass * feerate
         if new_fee == fee:
             break
         fee = new_fee

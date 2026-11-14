@@ -5,7 +5,10 @@ use std::str::FromStr;
 
 crate::wrap_unit_enum_for_py!(
     /// BIP-39 mnemonic word list language.
-    PyLanguage, "Language", Language, { English }
+    PyLanguage,
+    "Language",
+    Language,
+    { English }
 );
 
 impl FromStr for PyLanguage {
