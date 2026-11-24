@@ -16,18 +16,17 @@ a broken script.
 ```
               commit_to_groth16(image_id)
   unbounded ─────────────────────────────────► groth16-bounded
-      │                                              │
-      │  commit_to_succinct(                         │ finalize_with_groth16_proof(
-      │     image_id, control_id, hash_fn_id?)       │     receipt, journal_hash)
-      ▼                                              ▼
-  succinct-bounded ──────────────────────────► FinalizedR0Script
-              finalize_with_succinct_proof(     (builder is consumed)
-                  receipt, journal)
+                                                     │
+                                                     │ finalize_with_groth16_proof(
+                                                     │     receipt, journal_hash)
+                                                     ▼
+                                               FinalizedR0Script
+                                               (builder is consumed)
 ```
 
-You must finalize with the *matching* proof form: a Groth16 finalize on
-a Groth16-bounded builder, a succinct finalize on a succinct-bounded
-one. `repr(builder)` shows the current state.
+Only Groth16 receipts are supported (see
+[Groth16 receipts](overview.md#groth16-receipts) for why the succinct
+path is gone). `repr(builder)` shows the current state.
 
 Byte arguments — image ids, journal hashes, receipts — accept a hex
 string, `bytes`, or a list of ints throughout.
@@ -57,12 +56,10 @@ Committing binds the builder to a specific program and writes the
 verifier into the redeem script:
 
 ```python
-builder.commit_to_groth16(image_id)                       # Groth16
-builder.commit_to_succinct(image_id, control_id)          # succinct
+builder.commit_to_groth16(image_id)
 ```
 
-The succinct form also takes a `hash_fn_id` (currently only
-`"poseidon2"`, which is the default when omitted). After a commit,
+After a commit,
 [`script()`](../../reference/Classes/ZkScriptBuilder.md) returns the
 redeem script (hex) — hash it into the P2SH lock the usual way (see
 [Scripts → Wrapping in P2SH](../transactions/scripts.md#wrapping-in-p2sh)):
@@ -91,10 +88,6 @@ finalized.sig_script      # the proof-bearing spending script
 holds both scripts, hex-encoded. `sig_script` embeds the journal hash,
 the compressed proof, and the redeem script itself — it goes on the
 spending input's `signature_script` verbatim.
-
-The succinct twin is
-[`finalize_with_succinct_proof(receipt, journal)`](../../reference/Classes/ZkScriptBuilder.md);
-its `journal` argument is likewise the 32-byte journal digest.
 
 Two properties worth knowing:
 
@@ -131,11 +124,10 @@ spend = TransactionInput(
   valid proof for the `(image_id, journal_hash)` pair can spend the
   UTXO.
 - **Compute budget.** Proof verification is metered: a Groth16
-  verification is priced at 140,000 grams (1,400 budget units) and a
-  succinct one at 250,000 grams (2,500 units), plus the surrounding
-  script opcodes — so the redeem input needs a `compute_budget` with
-  headroom (the example uses 1600 for Groth16). Too low and the redeem
-  fails.
+  verification is priced at 140,000 grams (1,400 budget units), plus the
+  surrounding script opcodes — so the redeem input needs a
+  `compute_budget` with headroom (the example uses 1600). Too low and
+  the redeem fails.
 
 Everything else — sizing the fee from
 [`calculate_transaction_mass`](../../reference/Functions/calculate_transaction_mass.md),

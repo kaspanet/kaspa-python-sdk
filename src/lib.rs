@@ -117,13 +117,8 @@ fn kaspa(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<crypto::txscript::opcodes::PyOpcodes>()?;
     m.add_class::<crypto::txscript::zk_sdk::builder::PyZkScriptBuilder>()?;
     m.add_class::<crypto::txscript::zk_sdk::result::PyFinalizedR0Script>()?;
-    m.add_class::<crypto::txscript::zk_sdk::result::PyR0SuccinctWitnessParts>()?;
     m.add_function(wrap_pyfunction!(
         crypto::txscript::zk_sdk::utils::py_prepare_r0_groth16_proof,
-        m
-    )?)?;
-    m.add_function(wrap_pyfunction!(
-        crypto::txscript::zk_sdk::utils::py_prepare_r0_succinct_witness,
         m
     )?)?;
     m.add_class::<crypto::hashes::PyHash>()?;

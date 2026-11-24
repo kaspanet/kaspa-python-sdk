@@ -18,6 +18,11 @@ search:
 - `update_transaction_mass()` writes the storage mass to `tx.mass` (it wrote the overall mass before). The standard-mass limit check is unchanged.
 - `calculate_transaction_fee()` prices the relay (compute and transient) mass at the minimum relay fee rate; storage mass no longer increases the result.
 - `Generator`, `create_transactions()`, and `estimate_transactions()` skip UTXOs bound to a covenant and reject covenant outputs with `WalletGeneratorPaymentOutputCovenantNotAllowedError`. Use `create_transaction(..., version=1, compute_budget=...)` for covenant transactions.
+- `ZkScriptBuilder` Groth16 scripts now embed the RISC Zero 3.1 verifying key, matching rusty-kaspa's response to RISC Zero advisory [GHSA-g6qg-9j8p-7j87](https://github.com/advisories/GHSA-g6qg-9j8p-7j87). Receipts produced by earlier RISC Zero provers no longer verify on-chain. The vendored Groth16 fixture (`tests/data/zk/`, `examples/zk/data/`) and the image id and journal hash in `examples/zk/groth16_onchain.py` were regenerated to match.
+- `kaspa.experimental.silverscript.compile()` now rejects contracts that call `r0.succinct.verify()` (or its `blake2b`, `poseidon2`, and `sha256` variants) with `SilverScriptError`, following the same advisory. Compiled contracts report compiler version `0.1.2` (was `0.1.0`).
+
+### Breaking Changes
+- The RISC Zero succinct (STARK) ZK script surface is removed: `ZkScriptBuilder.commit_to_succinct()`, `finalize_with_succinct_proof()`, `push_r0_succinct_witness()`, `append_r0_succinct_verifier()`, `append_r0_succinct_verifier_with_fixed_journal()`, the `hash_fn_id` argument, `prepare_r0_succinct_witness()`, and `R0SuccinctWitnessParts`. rusty-kaspa removed the path from its ZK SDK in response to RISC Zero advisory GHSA-g6qg-9j8p-7j87 (see [what the advisory means for Kaspa's ZK covenants](https://medium.com/@michaelsuttonil/what-the-risc-zero-advisory-means-for-kaspas-zk-covenants-e8cb067ea65b)). Groth16 receipts are unaffected.
 
 ### Fixed
 - The `RpcUtxoEntry` type stub now declares `scriptPublicKey` as a version-prefixed hex string, which is what RPC responses carry. It declared a `{version, script}` dict.
@@ -25,8 +30,10 @@ search:
 ### Development
 *Internal SDK changes — not visible through the Python package API.*
 
-- Bumped the pinned `rusty-kaspa` dependency for the core `kaspa` module from `01b532e8` (v2.1.0) to `5417ed03`.
-- `crates/silverscript` is now its own Cargo workspace with its own `Cargo.lock`, so its rusty-kaspa revision (pinned by SilverScript) no longer shares a lockfile with the core crate's.
+- Bumped the pinned `rusty-kaspa` dependency for the core `kaspa` module from `01b532e8` (v2.1.0) to `68bd2e91`. `risc0-zkvm` moved from `3.0.4` to `3.1.0` with it.
+- Bumped the pinned `silverscript-lang`, `silverscript-abi`, and `debugger-session` dependencies from `3ed9733` (SilverScript v1.0.0) to `7eb0463` (SilverScript v1.0.2). `debugger-session` is now named `silverscript-debugger-session` upstream.
+- `crates/silverscript` now takes `kaspa-consensus-core` (2.1.0) and `kaspa-txscript` (2.2.0) from crates.io, matching SilverScript's own dependencies, instead of pinning a rusty-kaspa git revision.
+- `crates/silverscript` is now its own Cargo workspace with its own `Cargo.lock`, so its rusty-kaspa dependencies (which follow SilverScript's) no longer share a lockfile with the core crate's.
 
 ## [2.1.0] - 2026-09-24
 

@@ -62,8 +62,8 @@ ZK_COMPUTE_BUDGET = 1600
 
 # A matching RISC Zero Groth16 proof set (image id, journal hash, receipt) shipped
 # with rusty-kaspa's zk-sdk. The receipt is read from a file rather than inlined.
-IMAGE_ID = "75641a540ee2ad9ee5902bcdcdb8b55c0bef4a28287309b858f97b1356c6c2e0"
-JOURNAL_HASH = "5df6e0e2761359d30a8275058e299fcc0381534545f55cf43e41983f5d4c9456"
+IMAGE_ID = "1202d1e01d53a986c4a3250bc48fb78e7ca1533bc52836b6d4c969b5d5f798b2"
+JOURNAL_HASH = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 DATA = pathlib.Path(__file__).resolve().parent / "data"
 
 

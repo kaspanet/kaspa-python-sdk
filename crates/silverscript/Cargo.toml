@@ -1,8 +1,10 @@
 [workspace]
 # Standalone workspace (excluded from the root one) so this crate keeps its own
-# Cargo.lock. Its rusty-kaspa revision follows SilverScript's pin and must not
-# share a lockfile with the core crate's newer revision, due to a dependency version conflict.
-# Once that conflict is naturally resolved then a single workspace can be used again.
+# Cargo.lock. SilverScript takes its rusty-kaspa crates from crates.io, and this
+# crate must use the same source so the types line up, while the core crate
+# builds against a rusty-kaspa git revision. Both sides are on the same risc0
+# line again, so the two workspaces could be merged once the core crate also
+# moves to crates.io releases.
 
 [workspace.package]
 # Keep in sync with the root Cargo.toml `[workspace.package]`.
@@ -33,8 +35,8 @@ pyo3 = { version = "0.27.1" }
 pyo3-stub-gen = "0.17.2"
 self_cell = "1"
 serde_json = "1.0.149"
-silverscript-lang = { git = "https://github.com/kaspanet/silverscript.git", rev = "3ed973335b59269293564805cc2c58a14595ec03" }
-silverscript-abi = { git = "https://github.com/kaspanet/silverscript.git", rev = "3ed973335b59269293564805cc2c58a14595ec03" }
-debugger-session = { git = "https://github.com/kaspanet/silverscript.git", rev = "3ed973335b59269293564805cc2c58a14595ec03" }
-kaspa-consensus-core = { git = "https://github.com/kaspanet/rusty-kaspa", rev = "a41a333b08848f41bf737b72592e463a6011b8ac" }
-kaspa-txscript = { git = "https://github.com/kaspanet/rusty-kaspa", rev = "a41a333b08848f41bf737b72592e463a6011b8ac" }
+silverscript-lang = { git = "https://github.com/kaspanet/silverscript.git", rev = "7eb04634bfbae5350c1808efc7e34c4efa7f93af" }
+silverscript-abi = { git = "https://github.com/kaspanet/silverscript.git", rev = "7eb04634bfbae5350c1808efc7e34c4efa7f93af" }
+silverscript-debugger-session = { git = "https://github.com/kaspanet/silverscript.git", rev = "7eb04634bfbae5350c1808efc7e34c4efa7f93af" }
+kaspa-consensus-core = "2.1.0"
+kaspa-txscript = "2.2.0"

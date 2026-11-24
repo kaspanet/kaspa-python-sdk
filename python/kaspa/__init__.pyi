@@ -1871,40 +1871,6 @@ class PublicKeyGenerator:
         """
 
 @typing.final
-class R0SuccinctWitnessParts:
-    r"""
-    The receipt-derived succinct witness items, hex-encoded, in the order the
-    verifier consumes them (the journal is caller-owned and excluded).
-    """
-    @property
-    def claim(self) -> builtins.str:
-        r"""
-        The SHA-256 digest of the receipt claim, hex-encoded.
-        """
-    @property
-    def control_index(self) -> builtins.str:
-        r"""
-        The control inclusion-proof leaf index (u32 little-endian), hex-encoded.
-        """
-    @property
-    def control_digests(self) -> builtins.str:
-        r"""
-        The flattened control inclusion-proof sibling digests, hex-encoded.
-        """
-    @property
-    def seal(self) -> builtins.str:
-        r"""
-        The flattened STARK seal (u32 little-endian words), hex-encoded.
-        """
-    def __repr__(self) -> builtins.str:
-        r"""
-        The detailed string representation.
-        
-        Returns:
-            str: The R0SuccinctWitnessParts as a repr string.
-        """
-
-@typing.final
 class Resolver:
     r"""
     A resolver for discovering Kaspa RPC node endpoints.
@@ -4363,10 +4329,12 @@ class ZkScriptBuilder:
     
     Build flow:
         1. `ZkScriptBuilder.new_r0(...)` — unbounded.
-        2. `commit_to_groth16(image_id)` *or*
-           `commit_to_succinct(image_id, control_id, hash_fn_id=None)` — bounded.
-        3. `finalize_with_groth16_proof(receipt, journal_hash)` *or*
-           `finalize_with_succinct_proof(receipt, journal)` — a FinalizedR0Script.
+        2. `commit_to_groth16(image_id)` — bounded.
+        3. `finalize_with_groth16_proof(receipt, journal_hash)` — a FinalizedR0Script.
+    
+    Only RISC Zero Groth16 receipts are supported. The succinct (STARK) path was
+    removed from rusty-kaspa's ZK SDK following RISC Zero advisory
+    GHSA-g6qg-9j8p-7j87.
     
     Calling a method in the wrong state raises `ZkError`. The lower-level
     fragment methods (`add_data`, `push_*`, `append_*`) operate on the builder in
@@ -4434,22 +4402,6 @@ class ZkScriptBuilder:
         Raises:
             ZkError: If the builder is not unbounded or `image_id` is malformed.
         """
-    def commit_to_succinct(self, image_id: Binary, control_id: Binary, hash_fn_id: typing.Optional[builtins.str] = None) -> None:
-        r"""
-        Commit the script to unlocking only on a valid succinct proof for the
-        given image id and control id. Transitions an unbounded builder into the
-        succinct-bounded state.
-        
-        Args:
-            image_id: The 32-byte RISC Zero image id, as hex, bytes, or list.
-            control_id: The 32-byte control id, as hex, bytes, or list.
-            hash_fn_id: The hash function id; currently only "poseidon2" (also
-                the default when omitted).
-        
-        Raises:
-            ZkError: If the builder is not unbounded, an id is malformed, or the
-                hash function id is unsupported.
-        """
     def push_r0_groth16_proof(self, receipt: Binary) -> None:
         r"""
         Decode a Groth16 receipt and push the compressed proof bytes onto the
@@ -4503,52 +4455,6 @@ class ZkScriptBuilder:
         Raises:
             ZkError: If an argument is malformed or the fragment cannot be appended.
         """
-    def push_r0_succinct_witness(self, receipt: Binary) -> None:
-        r"""
-        Decode a succinct receipt and push its witness material (claim, control
-        index, control digests, seal) onto the builder.
-        
-        The caller-owned `journal` is pushed afterwards (on top) to form the
-        verifier's pre-stack.
-        
-        Args:
-            receipt: A borsh-encoded `SuccinctReceipt<ReceiptClaim>`, as hex,
-                bytes, or list.
-        
-        Raises:
-            ZkError: If the receipt cannot be decoded or the witness cannot be added.
-        """
-    def append_r0_succinct_verifier(self, image_id: Binary, control_id: Binary, hash_fn_id: typing.Optional[builtins.str] = None) -> None:
-        r"""
-        Append the r0 succinct verifier fragment for the given image id, control
-        id and hash function. Expects
-        `[..., claim, control_index, control_digests, seal, journal]`.
-        
-        Args:
-            image_id: The 32-byte RISC Zero image id, as hex, bytes, or list.
-            control_id: The 32-byte control id, as hex, bytes, or list.
-            hash_fn_id: The hash function id; currently only "poseidon2" (also
-                the default when omitted).
-        
-        Raises:
-            ZkError: If an argument is malformed or the fragment cannot be appended.
-        """
-    def append_r0_succinct_verifier_with_fixed_journal(self, image_id: Binary, control_id: Binary, hash_fn_id: typing.Optional[builtins.str] = None, *, journal: Binary) -> None:
-        r"""
-        Append a fixed-journal r0 succinct verifier fragment, binding
-        verification to `journal` baked into the script. Expects only
-        `[..., claim, control_index, control_digests, seal]`.
-        
-        Args:
-            image_id: The 32-byte RISC Zero image id, as hex, bytes, or list.
-            control_id: The 32-byte control id, as hex, bytes, or list.
-            hash_fn_id: The hash function id; currently only "poseidon2" (also
-                the default when omitted).
-            journal: The 32-byte journal, as hex, bytes, or list.
-        
-        Raises:
-            ZkError: If an argument is malformed or the fragment cannot be appended.
-        """
     def finalize_with_groth16_proof(self, receipt: Binary, journal_hash: Binary) -> FinalizedR0Script:
         r"""
         Finalize a Groth16-bounded builder with a receipt and journal hash.
@@ -4567,25 +4473,6 @@ class ZkScriptBuilder:
         Raises:
             ZkError: If the builder is not Groth16-bounded, the receipt cannot be
                 decoded, or `journal_hash` is malformed.
-        """
-    def finalize_with_succinct_proof(self, receipt: Binary, journal: Binary) -> FinalizedR0Script:
-        r"""
-        Finalize a succinct-bounded builder with a receipt and journal digest.
-        
-        Consumes the builder and returns the spending script and inner redeem
-        script, ready to unlock a zk-locked UTXO.
-        
-        Args:
-            receipt: A borsh-encoded `SuccinctReceipt<ReceiptClaim>`, as hex,
-                bytes, or list.
-            journal: The 32-byte journal digest, as hex, bytes, or list.
-        
-        Returns:
-            FinalizedR0Script: The sig script and redeem script.
-        
-        Raises:
-            ZkError: If the builder is not succinct-bounded, the receipt cannot
-                be decoded, or `journal` is malformed.
         """
     def __repr__(self) -> builtins.str:
         r"""
@@ -5423,22 +5310,6 @@ def prepare_r0_groth16_proof(receipt: Binary) -> builtins.str:
     
     Raises:
         ZkError: If the receipt cannot be decoded or the proof cannot be prepared.
-    """
-
-def prepare_r0_succinct_witness(receipt: Binary) -> R0SuccinctWitnessParts:
-    r"""
-    Convert a borsh-encoded `SuccinctReceipt<ReceiptClaim>` to its four on-stack
-    witness byte vectors (hex), without a builder.
-    
-    Args:
-        receipt: A borsh-encoded `SuccinctReceipt<ReceiptClaim>`, as hex, bytes,
-            or list of ints.
-    
-    Returns:
-        R0SuccinctWitnessParts: The claim, control index, control digests, and seal.
-    
-    Raises:
-        ZkError: If the receipt cannot be decoded or the witness cannot be prepared.
     """
 
 def sign_message(message: builtins.str, private_key: PrivateKey, no_aux_rand: builtins.bool = False) -> builtins.str:

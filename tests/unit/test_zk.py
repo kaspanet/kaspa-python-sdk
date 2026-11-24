@@ -16,23 +16,15 @@ import warnings
 
 import pytest
 
-from kaspa import (
-    FinalizedR0Script,
-    R0SuccinctWitnessParts,
-    ZkScriptBuilder,
-    prepare_r0_groth16_proof,
-    prepare_r0_succinct_witness,
-)
+import kaspa
+from kaspa import FinalizedR0Script, ZkScriptBuilder, prepare_r0_groth16_proof
 from kaspa.exceptions import ZkError
 
 DATA = pathlib.Path(__file__).resolve().parent.parent / "data" / "zk"
 
 # Public inputs matching groth.rcpt.hex (from rusty-kaspa's zk-sdk fixtures).
-GROTH16_IMAGE_ID = "75641a540ee2ad9ee5902bcdcdb8b55c0bef4a28287309b858f97b1356c6c2e0"
-GROTH16_JOURNAL_HASH = "5df6e0e2761359d30a8275058e299fcc0381534545f55cf43e41983f5d4c9456"
-
-# Public inputs matching succinct.rcpt.hex.
-SUCCINCT_JOURNAL = "5df6e0e2761359d30a8275058e299fcc0381534545f55cf43e41983f5d4c9456"
+GROTH16_IMAGE_ID = "1202d1e01d53a986c4a3250bc48fb78e7ca1533bc52836b6d4c969b5d5f798b2"
+GROTH16_JOURNAL_HASH = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
 # The post-Toccata script size limit (kaspa_txscript::MAX_SCRIPTS_SIZE).
 MAX_SCRIPT_SIZE = 1_000_000
@@ -40,10 +32,6 @@ MAX_SCRIPT_SIZE = 1_000_000
 
 def groth_receipt() -> str:
     return (DATA / "groth.rcpt.hex").read_text().strip()
-
-
-def succinct_receipt() -> str:
-    return (DATA / "succinct.rcpt.hex").read_text().strip()
 
 
 def is_hex(s: str) -> bool:
@@ -131,19 +119,6 @@ def test_add_data_appends():
 
 
 # -----------------------------------------------------------------------------
-# Succinct receipt decoding
-# -----------------------------------------------------------------------------
-
-def test_prepare_r0_succinct_witness():
-    parts = prepare_r0_succinct_witness(succinct_receipt())
-    assert isinstance(parts, R0SuccinctWitnessParts)
-    assert len(parts.claim) == 64          # 32-byte SHA-256 digest
-    assert len(parts.control_index) == 8   # u32 little-endian
-    assert is_hex(parts.control_digests)
-    assert is_hex(parts.seal)
-
-
-# -----------------------------------------------------------------------------
 # Input flexibility (PyBinary: hex str, bytes, list[int])
 # -----------------------------------------------------------------------------
 
@@ -173,13 +148,6 @@ def test_double_commit_raises():
     b.commit_to_groth16(GROTH16_IMAGE_ID)
     with pytest.raises(ZkError):
         b.commit_to_groth16(GROTH16_IMAGE_ID)
-
-
-def test_succinct_finalize_on_groth16_bounded_raises():
-    b = ZkScriptBuilder.new_r0()
-    b.commit_to_groth16(GROTH16_IMAGE_ID)
-    with pytest.raises(ZkError):
-        b.finalize_with_succinct_proof(succinct_receipt(), SUCCINCT_JOURNAL)
 
 
 def test_bad_image_id_length_raises():
@@ -253,10 +221,24 @@ def test_drain_returns_script_and_consumes_builder():
         b.add_data("deadbeef")
 
 
-def test_bad_hash_fn_id_raises():
+# -----------------------------------------------------------------------------
+# Removed succinct (STARK) surface
+# -----------------------------------------------------------------------------
+
+def test_succinct_api_is_removed():
+    # rusty-kaspa dropped the RISC Zero succinct path from the ZK SDK following
+    # advisory GHSA-g6qg-9j8p-7j87; the Python bindings dropped it with it.
+    for name in ("R0SuccinctWitnessParts", "prepare_r0_succinct_witness"):
+        assert not hasattr(kaspa, name), name
     b = ZkScriptBuilder.new_r0()
-    with pytest.raises(ZkError):
-        b.commit_to_succinct(GROTH16_IMAGE_ID, GROTH16_IMAGE_ID, "blake2b")
+    for method in (
+        "commit_to_succinct",
+        "finalize_with_succinct_proof",
+        "push_r0_succinct_witness",
+        "append_r0_succinct_verifier",
+        "append_r0_succinct_verifier_with_fixed_journal",
+    ):
+        assert not hasattr(b, method), method
 
 
 # -----------------------------------------------------------------------------
