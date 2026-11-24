@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../assets/kaspa.png">
-      <meta name="generator" content="mkdocs-ProperDocs 1.6.7, mkdocs-material-9.8.1">
+      <meta name="generator" content="mkdocs-ProperDocs 1.6.7, mkdocs-material-9.8.2">
     
     
       
@@ -2553,8 +2553,6 @@
       
         
       
-        
-      
     
     
     
@@ -3371,34 +3369,6 @@
     
   
     PublicKeyGenerator
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../reference/Classes/R0SuccinctWitnessParts/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    R0SuccinctWitnessParts
   
 
     
@@ -4557,8 +4527,6 @@
       
         
       
-        
-      
     
     
     
@@ -5151,34 +5119,6 @@
     
   
     prepare_r0_groth16_proof
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../reference/Functions/prepare_r0_succinct_witness/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    prepare_r0_succinct_witness
   
 
     
@@ -14922,6 +14862,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#breaking-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Breaking Changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#fixed" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -15116,7 +15067,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#breaking-changes" class="md-nav__link">
+  <a href="#breaking-changes_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Breaking Changes
@@ -15188,7 +15139,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#breaking-changes_1" class="md-nav__link">
+  <a href="#breaking-changes_2" class="md-nav__link">
     <span class="md-ellipsis">
       
         Breaking Changes
@@ -15348,6 +15299,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#breaking-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Breaking Changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#fixed" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -15542,7 +15504,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#breaking-changes" class="md-nav__link">
+  <a href="#breaking-changes_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Breaking Changes
@@ -15614,7 +15576,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#breaking-changes_1" class="md-nav__link">
+  <a href="#breaking-changes_2" class="md-nav__link">
     <span class="md-ellipsis">
       
         Breaking Changes
@@ -15751,6 +15713,12 @@
 <li><code>update_transaction_mass()</code> writes the storage mass to <code>tx.mass</code> (it wrote the overall mass before). The standard-mass limit check is unchanged.</li>
 <li><code>calculate_transaction_fee()</code> prices the relay (compute and transient) mass at the minimum relay fee rate; storage mass no longer increases the result.</li>
 <li><code>Generator</code>, <code>create_transactions()</code>, and <code>estimate_transactions()</code> skip UTXOs bound to a covenant and reject covenant outputs with <code>WalletGeneratorPaymentOutputCovenantNotAllowedError</code>. Use <code>create_transaction(..., version=1, compute_budget=...)</code> for covenant transactions.</li>
+<li><code>ZkScriptBuilder</code> Groth16 scripts now embed the RISC Zero 3.1 verifying key, matching rusty-kaspa's response to RISC Zero advisory <a href="https://github.com/advisories/GHSA-g6qg-9j8p-7j87">GHSA-g6qg-9j8p-7j87</a>. Receipts produced by earlier RISC Zero provers no longer verify on-chain. The vendored Groth16 fixture (<code>tests/data/zk/</code>, <code>examples/zk/data/</code>) and the image id and journal hash in <code>examples/zk/groth16_onchain.py</code> were regenerated to match.</li>
+<li><code>kaspa.experimental.silverscript.compile()</code> now rejects contracts that call <code>r0.succinct.verify()</code> (or its <code>blake2b</code>, <code>poseidon2</code>, and <code>sha256</code> variants) with <code>SilverScriptError</code>, following the same advisory. Compiled contracts report compiler version <code>0.1.2</code> (was <code>0.1.0</code>).</li>
+</ul>
+<h3 id="breaking-changes">Breaking Changes<a class="headerlink" href="#breaking-changes" title="Permanent link">&para;</a></h3>
+<ul>
+<li>The RISC Zero succinct (STARK) ZK script surface is removed: <code>ZkScriptBuilder.commit_to_succinct()</code>, <code>finalize_with_succinct_proof()</code>, <code>push_r0_succinct_witness()</code>, <code>append_r0_succinct_verifier()</code>, <code>append_r0_succinct_verifier_with_fixed_journal()</code>, the <code>hash_fn_id</code> argument, <code>prepare_r0_succinct_witness()</code>, and <code>R0SuccinctWitnessParts</code>. rusty-kaspa removed the path from its ZK SDK in response to RISC Zero advisory GHSA-g6qg-9j8p-7j87 (see <a href="https://medium.com/@michaelsuttonil/what-the-risc-zero-advisory-means-for-kaspas-zk-covenants-e8cb067ea65b">what the advisory means for Kaspa's ZK covenants</a>). Groth16 receipts are unaffected.</li>
 </ul>
 <h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
 <ul>
@@ -15759,8 +15727,10 @@
 <h3 id="development">Development<a class="headerlink" href="#development" title="Permanent link">&para;</a></h3>
 <p><em>Internal SDK changes — not visible through the Python package API.</em></p>
 <ul>
-<li>Bumped the pinned <code>rusty-kaspa</code> dependency for the core <code>kaspa</code> module from <code>01b532e8</code> (v2.1.0) to <code>5417ed03</code>.</li>
-<li><code>crates/silverscript</code> is now its own Cargo workspace with its own <code>Cargo.lock</code>, so its rusty-kaspa revision (pinned by SilverScript) no longer shares a lockfile with the core crate's.</li>
+<li>Bumped the pinned <code>rusty-kaspa</code> dependency for the core <code>kaspa</code> module from <code>01b532e8</code> (v2.1.0) to <code>68bd2e91</code>. <code>risc0-zkvm</code> moved from <code>3.0.4</code> to <code>3.1.0</code> with it.</li>
+<li>Bumped the pinned <code>silverscript-lang</code>, <code>silverscript-abi</code>, and <code>debugger-session</code> dependencies from <code>3ed9733</code> (SilverScript v1.0.0) to <code>7eb0463</code> (SilverScript v1.0.2). <code>debugger-session</code> is now named <code>silverscript-debugger-session</code> upstream.</li>
+<li><code>crates/silverscript</code> now takes <code>kaspa-consensus-core</code> (2.1.0) and <code>kaspa-txscript</code> (2.2.0) from crates.io, matching SilverScript's own dependencies, instead of pinning a rusty-kaspa git revision.</li>
+<li><code>crates/silverscript</code> is now its own Cargo workspace with its own <code>Cargo.lock</code>, so its rusty-kaspa dependencies (which follow SilverScript's) no longer share a lockfile with the core crate's.</li>
 </ul>
 <h2 id="210-2026-09-24">[2.1.0] - 2026-09-24<a class="headerlink" href="#210-2026-09-24" title="Permanent link">&para;</a></h2>
 <h3 id="added_1">Added<a class="headerlink" href="#added_1" title="Permanent link">&para;</a></h3>
@@ -15884,7 +15854,7 @@
 <li>Doc comments added or cleaned up across all Python-exposed classes, methods, and functions.</li>
 <li>Linux wheels now target <code>manylinux_2_28</code> (glibc 2.28+) instead of <code>manylinux2014</code> (glibc 2.17+). This was required because <code>openssl-sys</code> (pulled in transitively via <code>native-tls</code>/<code>tungstenite</code> for the wRPC <code>wss://</code> client) dropped support for the EOL OpenSSL 1.0.2 that the <code>manylinux2014</code> image ships; <code>manylinux_2_28</code> ships OpenSSL 1.1.1. Impact: binary wheels no longer install on EOL distros below glibc 2.28 (e.g. CentOS 7, Ubuntu 18.04).</li>
 </ul>
-<h3 id="breaking-changes">Breaking Changes<a class="headerlink" href="#breaking-changes" title="Permanent link">&para;</a></h3>
+<h3 id="breaking-changes_1">Breaking Changes<a class="headerlink" href="#breaking-changes_1" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Opcode <code>OpSubStr</code> renamed to <code>OpSubstr</code>. <code>OpUnknownXXX</code> placeholder names for opcodes <code>0xa6</code>-<code>0xa7</code>, <code>0xb2</code>-<code>0xc9</code>, <code>0xcb</code>-<code>0xd5</code>, and <code>0xd7</code>-<code>0xda</code> are replaced by their real opcode names (see Added).</li>
 <li><code>TransactionInput(...)</code> gained a <code>compute_budget</code> parameter before <code>utxo</code>; positional callers passing <code>utxo</code> must update.</li>
@@ -15942,7 +15912,7 @@
 <ul>
 <li><code>kaspa.pyi</code>: add overloads for <code>UtxoProcessor.add_event_listener</code> / <code>remove_event_listener</code> (typing only).</li>
 </ul>
-<h3 id="breaking-changes_1">Breaking Changes<a class="headerlink" href="#breaking-changes_1" title="Permanent link">&para;</a></h3>
+<h3 id="breaking-changes_2">Breaking Changes<a class="headerlink" href="#breaking-changes_2" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Python 3.9 is no longer supported. Minimum supported version is now 3.10.</li>
 <li><code>Generator</code>, <code>create_transactions</code>, and <code>estimate_transactions</code> reordered parameters to keep required arguments first (entries, change_address, network_id optional). Positional callers must update.</li>

@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../../assets/kaspa.png">
-      <meta name="generator" content="mkdocs-ProperDocs 1.6.7, mkdocs-material-9.8.1">
+      <meta name="generator" content="mkdocs-ProperDocs 1.6.7, mkdocs-material-9.8.2">
     
     
       
@@ -2674,8 +2674,6 @@
       
         
       
-        
-      
     
     
     
@@ -3492,34 +3490,6 @@
     
   
     PublicKeyGenerator
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../reference/Classes/R0SuccinctWitnessParts/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    R0SuccinctWitnessParts
   
 
     
@@ -4678,8 +4648,6 @@
       
         
       
-        
-      
     
     
     
@@ -5272,34 +5240,6 @@
     
   
     prepare_r0_groth16_proof
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../reference/Functions/prepare_r0_succinct_witness/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    prepare_r0_succinct_witness
   
 
     
@@ -15122,17 +15062,16 @@ it at runtime — a call in the wrong state raises
 a broken script.</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>              commit_to_groth16(image_id)
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  unbounded ─────────────────────────────────► groth16-bounded
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>      │                                              │
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>      │  commit_to_succinct(                         │ finalize_with_groth16_proof(
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>      │     image_id, control_id, hash_fn_id?)       │     receipt, journal_hash)
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>      ▼                                              ▼
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>  succinct-bounded ──────────────────────────► FinalizedR0Script
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>              finalize_with_succinct_proof(     (builder is consumed)
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>                  receipt, journal)
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>                                                     │
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>                                                     │ finalize_with_groth16_proof(
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>                                                     │     receipt, journal_hash)
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>                                                     ▼
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>                                               FinalizedR0Script
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>                                               (builder is consumed)
 </span></code></pre></div>
-<p>You must finalize with the <em>matching</em> proof form: a Groth16 finalize on
-a Groth16-bounded builder, a succinct finalize on a succinct-bounded
-one. <code>repr(builder)</code> shows the current state.</p>
+<p>Only Groth16 receipts are supported (see
+<a href="../overview/#groth16-receipts">Groth16 receipts</a> for why the succinct
+path is gone). <code>repr(builder)</code> shows the current state.</p>
 <p>Byte arguments — image ids, journal hashes, receipts — accept a hex
 string, <code>bytes</code>, or a list of ints throughout.</p>
 <h2 id="creating-a-builder">Creating a builder<a class="headerlink" href="#creating-a-builder" title="Permanent link">&para;</a></h2>
@@ -15154,11 +15093,9 @@ future non-RISC-Zero backends can add their own factories):</p>
 <h2 id="committing-the-lock-side">Committing: the lock side<a class="headerlink" href="#committing-the-lock-side" title="Permanent link">&para;</a></h2>
 <p>Committing binds the builder to a specific program and writes the
 verifier into the redeem script:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">builder</span><span class="o">.</span><span class="n">commit_to_groth16</span><span class="p">(</span><span class="n">image_id</span><span class="p">)</span>                       <span class="c1"># Groth16</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">builder</span><span class="o">.</span><span class="n">commit_to_succinct</span><span class="p">(</span><span class="n">image_id</span><span class="p">,</span> <span class="n">control_id</span><span class="p">)</span>          <span class="c1"># succinct</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">builder</span><span class="o">.</span><span class="n">commit_to_groth16</span><span class="p">(</span><span class="n">image_id</span><span class="p">)</span>
 </span></code></pre></div>
-<p>The succinct form also takes a <code>hash_fn_id</code> (currently only
-<code>"poseidon2"</code>, which is the default when omitted). After a commit,
+<p>After a commit,
 <a href="../../../reference/Classes/ZkScriptBuilder/"><code>script()</code></a> returns the
 redeem script (hex) — hash it into the P2SH lock the usual way (see
 <a href="../../transactions/scripts/#wrapping-in-p2sh">Scripts → Wrapping in P2SH</a>):</p>
@@ -15179,9 +15116,6 @@ consumes the builder:</p>
 holds both scripts, hex-encoded. <code>sig_script</code> embeds the journal hash,
 the compressed proof, and the redeem script itself — it goes on the
 spending input's <code>signature_script</code> verbatim.</p>
-<p>The succinct twin is
-<a href="../../../reference/Classes/ZkScriptBuilder/"><code>finalize_with_succinct_proof(receipt, journal)</code></a>;
-its <code>journal</code> argument is likewise the 32-byte journal digest.</p>
 <p>Two properties worth knowing:</p>
 <ul>
 <li><strong>Finalize consumes the builder.</strong> After a successful finalize (or a
@@ -15214,11 +15148,10 @@ ways, both visible in
   valid proof for the <code>(image_id, journal_hash)</code> pair can spend the
   UTXO.</li>
 <li><strong>Compute budget.</strong> Proof verification is metered: a Groth16
-  verification is priced at 140,000 grams (1,400 budget units) and a
-  succinct one at 250,000 grams (2,500 units), plus the surrounding
-  script opcodes — so the redeem input needs a <code>compute_budget</code> with
-  headroom (the example uses 1600 for Groth16). Too low and the redeem
-  fails.</li>
+  verification is priced at 140,000 grams (1,400 budget units), plus the
+  surrounding script opcodes — so the redeem input needs a
+  <code>compute_budget</code> with headroom (the example uses 1600). Too low and
+  the redeem fails.</li>
 </ul>
 <p>Everything else — sizing the fee from
 <a href="../../../reference/Functions/calculate_transaction_mass/"><code>calculate_transaction_mass</code></a>,
