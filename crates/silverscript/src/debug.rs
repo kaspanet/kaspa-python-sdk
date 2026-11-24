@@ -14,14 +14,6 @@
 
 use std::collections::HashMap;
 
-use debugger_session::FailureReport;
-use debugger_session::args::parse_hex_bytes;
-use debugger_session::covenant::{
-    CovenantBinding as DebugCovenantBinding, ResolvedCovenantCallTarget,
-    resolve_covenant_call_target,
-};
-use debugger_session::session::{DebugEngine, DebugSession, DebugValue, ShadowTxContext, Variable};
-use debugger_session::{format_failure_report, format_value};
 use kaspa_consensus_core::Hash;
 use kaspa_consensus_core::hashing::sighash::SigHashReusedValuesUnsync;
 use kaspa_consensus_core::mass::units::SigopCount;
@@ -37,6 +29,16 @@ use pyo3::prelude::*;
 use pyo3::types::{PyByteArray, PyBytes, PyDict, PyList, PyString};
 use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pyfunction, gen_stub_pymethods};
 use silverscript_abi::{ArtifactValue, SilAbiArtifact, encode_contract_entry_sig_script};
+use silverscript_debugger_session::FailureReport;
+use silverscript_debugger_session::args::parse_hex_bytes;
+use silverscript_debugger_session::covenant::{
+    CovenantBinding as DebugCovenantBinding, ResolvedCovenantCallTarget,
+    resolve_covenant_call_target,
+};
+use silverscript_debugger_session::session::{
+    DebugEngine, DebugSession, DebugValue, ShadowTxContext, Variable,
+};
+use silverscript_debugger_session::{format_failure_report, format_value};
 use silverscript_lang::ast::{
     ArrayDim, ContractAst, Expr, ExprKind, STATE_TYPE_NAME, StateFieldExpr, TypeBase, TypeRef,
     parse_contract_ast, parse_type_ref,
@@ -1271,11 +1273,10 @@ fn build_covenant_input_sigscript(
     .map_err(map_codec_err)
 }
 
+// Covenant opcodes and the post-Toccata limits are always on in rusty-kaspa;
+// the default flags are the covenant flags.
 fn covenant_flags() -> EngineFlags {
-    EngineFlags {
-        covenants_enabled: true,
-        ..Default::default()
-    }
+    EngineFlags::default()
 }
 
 fn build_p2pk_script(pubkey: &[u8]) -> PyResult<Vec<u8>> {

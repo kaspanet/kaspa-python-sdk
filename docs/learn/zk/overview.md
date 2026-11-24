@@ -33,19 +33,21 @@ the node.
 | **journal hash** | A digest of the journal — pins *what the program output*. | 32 bytes |
 | **receipt** | The proof plus the journal; the artifact you verify. | see below |
 
-## Groth16 vs succinct receipts
+## Groth16 receipts
 
-RISC Zero hands you the proof in one of two forms, and the builder has a
-parallel path for each:
+RISC Zero can hand you a proof as a **Groth16 receipt**: the STARK proof
+compressed into a Groth16 SNARK. A few hundred bytes, constant-size, and
+cheap to verify; it relies on RISC Zero's public trusted-setup ceremony.
+This is the form the builder consumes.
 
-- **Groth16 receipt** — the STARK proof compressed into a Groth16
-  SNARK. A few hundred bytes, constant-size, cheap to verify. This is
-  the practical on-chain choice; it relies on RISC Zero's public
-  trusted-setup ceremony.
-- **Succinct receipt** — the STARK proof directly. No trusted setup,
-  but hundreds of kilobytes, and verifying it needs extra material
-  (a `control_id` identifying the recursion circuit, and a
-  `hash_fn_id` — currently only `"poseidon2"`).
+!!! warning "Succinct (STARK) receipts are no longer supported"
+    rusty-kaspa removed the RISC Zero succinct verification path from its
+    ZK SDK in response to RISC Zero advisory
+    [GHSA-g6qg-9j8p-7j87](https://github.com/advisories/GHSA-g6qg-9j8p-7j87) — see
+    [what the advisory means for Kaspa's ZK covenants](https://medium.com/@michaelsuttonil/what-the-risc-zero-advisory-means-for-kaspas-zk-covenants-e8cb067ea65b).
+    The SDK's `commit_to_succinct` / `finalize_with_succinct_proof`
+    methods, the succinct fragments, `prepare_r0_succinct_witness`, and
+    `R0SuccinctWitnessParts` were removed with it. Use Groth16 receipts.
 
 ## The surface
 
@@ -56,8 +58,7 @@ parallel path for each:
   See [Locking & Redeeming](locking-and-redeeming.md).
 - **Compose scripts by hand**
   (the `append_*` / `push_*` fragment methods,
-  [`prepare_r0_groth16_proof`](../../reference/Functions/prepare_r0_groth16_proof.md),
-  [`prepare_r0_succinct_witness`](../../reference/Functions/prepare_r0_succinct_witness.md)) —
+  [`prepare_r0_groth16_proof`](../../reference/Functions/prepare_r0_groth16_proof.md)) —
   lower-level pieces for embedding a verifier inside a larger script.
   See [Fragments & Helpers](fragments.md).
 
@@ -77,7 +78,7 @@ and submitting the transactions) is ordinary `kaspa` work — see
 from kaspa import ZkScriptBuilder, address_from_script_public_key, pay_to_script_hash_script
 
 # From your prover: the guest program's 32-byte image id (hex).
-IMAGE_ID = "75641a540ee2ad9ee5902bcdcdb8b55c0bef4a28287309b858f97b1356c6c2e0"
+IMAGE_ID = "1202d1e01d53a986c4a3250bc48fb78e7ca1533bc52836b6d4c969b5d5f798b2"
 
 builder = ZkScriptBuilder.new_r0()
 builder.commit_to_groth16(IMAGE_ID)
@@ -109,5 +110,5 @@ P2SH address (commit), then spends it back by presenting the proof
 
 | Page | What it covers |
 | --- | --- |
-| [Locking & Redeeming](locking-and-redeeming.md) | The builder state machine, `commit_to_*` / `finalize_with_*`, [`FinalizedR0Script`](../../reference/Classes/FinalizedR0Script.md), and the on-chain spend. |
-| [Fragments & Helpers](fragments.md) | The `append_*` / `push_*` fragment methods, fixed-journal verifiers, and the standalone `prepare_*` decoders. |
+| [Locking & Redeeming](locking-and-redeeming.md) | The builder state machine, `commit_to_groth16` / `finalize_with_groth16_proof`, [`FinalizedR0Script`](../../reference/Classes/FinalizedR0Script.md), and the on-chain spend. |
+| [Fragments & Helpers](fragments.md) | The `append_*` / `push_*` fragment methods, fixed-journal verifiers, and the standalone `prepare_r0_groth16_proof` decoder. |
